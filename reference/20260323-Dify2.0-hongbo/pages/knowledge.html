@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dify2.0 Studio - 知识库</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <div class="layout">
+    <!-- Main -->
+    <div class="main" style="margin-left:0;">
+      <header class="header">
+        <div class="header-left">
+          <a class="header-brand" href="../index.html">
+            <div class="header-brand-logo">D2</div>
+            <span class="header-brand-name">Dify2.0</span>
+          </a>
+          <div class="header-divider"></div>
+          <div class="header-workspace">
+            <span class="header-workspace-dot"></span>
+            我的工作区
+            <span style="font-size:11px; color:var(--text-tertiary);">▾</span>
+          </div>
+          <span class="header-plan">免费版</span>
+        </div>
+        <div class="header-center">
+          <nav class="header-nav">
+            <a class="header-nav-item" href="explore.html">门户</a>
+            <a class="header-nav-item active" href="knowledge.html">知识库</a>
+            <a class="header-nav-item" href="agents.html">自由体</a>
+            <a class="header-nav-item" href="#" onclick="goWorkflow(event)">工作流</a>
+            <a class="header-nav-item" href="tools.html">工具中心</a>
+            <a class="header-nav-item" href="skills.html">技能中心</a>
+          
+          </nav>
+        </div>
+        <div class="header-right">
+          <div class="header-search">🔍 搜索 ⌘K</div>
+          <div class="header-icon-btn" title="插件" onclick="location.href='plugins.html'">🧩</div>
+          <button class="btn btn-primary btn-sm">+ 创建知识库</button>
+          <div class="header-avatar" onclick="location.href='settings.html'" title="设置">U</div>
+        </div>
+      </header>
+
+      <div class="content">
+        <div class="cards-grid">
+          <!-- Create Knowledge Base Card -->
+          <div class="card-create">
+            <div class="card-create-icon">＋</div>
+            <span>创建知识库</span>
+            <small style="color:var(--text-tertiary); font-size:12px;">导入文档构建知识库</small>
+          </div>
+
+          <!-- 产品文档库 -->
+          <div class="card dataset-card">
+            <div class="card-header">
+              <div class="card-icon knowledge">📚</div>
+              <div class="card-info">
+                <div class="card-name">产品文档库</div>
+                <div class="card-type">知识库</div>
+              </div>
+              <span class="card-tag published">运行中</span>
+            </div>
+            <div class="card-desc">完整的产品文档，包括用户指南、API参考和故障排除文章。</div>
+            <div class="card-stats">
+              <div class="card-stat">
+                <span class="card-stat-value">12</span>
+                <span class="card-stat-label">文档数</span>
+              </div>
+              <div class="card-stat">
+                <span class="card-stat-value">85,000</span>
+                <span class="card-stat-label">总字数</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 技术手册 -->
+          <div class="card dataset-card">
+            <div class="card-header">
+              <div class="card-icon knowledge">📚</div>
+              <div class="card-info">
+                <div class="card-name">技术手册</div>
+                <div class="card-type">知识库</div>
+              </div>
+              <span class="card-tag published">运行中</span>
+            </div>
+            <div class="card-desc">技术规格文档、架构图和各产品的工程技术文档。</div>
+            <div class="card-stats">
+              <div class="card-stat">
+                <span class="card-stat-value">8</span>
+                <span class="card-stat-label">文档数</span>
+              </div>
+              <div class="card-stat">
+                <span class="card-stat-value">120,000</span>
+                <span class="card-stat-label">总字数</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 常见问题集 -->
+          <div class="card dataset-card">
+            <div class="card-header">
+              <div class="card-icon knowledge">📚</div>
+              <div class="card-info">
+                <div class="card-name">常见问题集</div>
+                <div class="card-type">知识库</div>
+              </div>
+              <span class="card-tag draft">构建中</span>
+            </div>
+            <div class="card-desc">常见问题解答集合，涵盖客户常见咨询和技术支持主题。</div>
+            <div class="card-stats">
+              <div class="card-stat">
+                <span class="card-stat-value">25</span>
+                <span class="card-stat-label">文档数</span>
+              </div>
+              <div class="card-stat">
+                <span class="card-stat-value">45,000</span>
+                <span class="card-stat-label">总字数</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 培训资料 -->
+          <div class="card dataset-card">
+            <div class="card-header">
+              <div class="card-icon knowledge">📚</div>
+              <div class="card-info">
+                <div class="card-name">培训资料</div>
+                <div class="card-type">知识库</div>
+              </div>
+              <span class="card-tag published">运行中</span>
+            </div>
+            <div class="card-desc">内部培训资料、操作指南和标准操作流程文档。</div>
+            <div class="card-stats">
+              <div class="card-stat">
+                <span class="card-stat-value">6</span>
+                <span class="card-stat-label">文档数</span>
+              </div>
+              <div class="card-stat">
+                <span class="card-stat-value">68,000</span>
+                <span class="card-stat-label">总字数</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="../js/app.js"></script>
+  <script>
+    function goWorkflow(e) {
+      e.preventDefault();
+      // 直接跳转到工作流列表页面
+      window.location.href = '../index.html';
+    }
+  </script>
+</body>
+</html>

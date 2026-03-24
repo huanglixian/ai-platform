@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dify2.0 Studio - 工作流</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="layout">
+    <!-- Main -->
+    <div class="main" style="margin-left:0;">
+      <header class="header">
+        <div class="header-left">
+          <a class="header-brand" href="index.html">
+            <div class="header-brand-logo">D2</div>
+            <span class="header-brand-name">Dify2.0</span>
+          </a>
+          <div class="header-divider"></div>
+          <div class="header-workspace">
+            <span class="header-workspace-dot"></span>
+            我的工作区
+            <span style="font-size:11px; color:var(--text-tertiary);">▾</span>
+          </div>
+          <span class="header-plan">免费版</span>
+        </div>
+        <div class="header-center">
+          <nav class="header-nav">
+            <a class="header-nav-item" href="pages/explore.html">门户</a>
+            <a class="header-nav-item" href="pages/knowledge.html">知识库</a>
+            <a class="header-nav-item" href="pages/agents.html">自由体</a>
+            <a class="header-nav-item" href="#" onclick="goWorkflow(event)">工作流</a>
+            <a class="header-nav-item" href="pages/tools.html">工具中心</a>
+            <a class="header-nav-item" href="pages/skills.html">技能中心</a>
+          </nav>
+        </div>
+        <div class="header-right">
+          <div class="header-search">🔍 搜索 ⌘K</div>
+          <div class="header-icon-btn" title="插件" onclick="location.href='pages/plugins.html'">🧩</div>
+          <button class="btn btn-primary btn-sm">+ 创建应用</button>
+          <div class="header-avatar" onclick="location.href='pages/settings.html'" title="设置">U</div>
+        </div>
+      </header>
+
+      <div class="content">
+        <div class="cards-grid">
+          <!-- Create App Card -->
+          <div class="card-create" data-href="pages/app-editor.html">
+            <div class="card-create-icon">＋</div>
+            <span>创建应用</span>
+            <small style="color:var(--text-tertiary); font-size:12px;">从空白或模板开始</small>
+          </div>
+
+          <!-- 智能客服机器人 -->
+          <div class="card" data-href="pages/app-editor.html">
+            <div class="card-header">
+              <div class="card-icon chatflow">💬</div>
+              <div class="card-info">
+                <div class="card-name">智能客服机器人</div>
+                <div class="card-type">对话流</div>
+              </div>
+              <span class="card-tag published">已发布</span>
+            </div>
+            <div class="card-desc">基于知识库的智能客服系统，支持多轮对话和自动回复</div>
+            <div class="card-meta">
+              <span>2小时前编辑</span>
+            </div>
+          </div>
+
+          <!-- 文档分析助手 -->
+          <div class="card" data-href="pages/app-editor.html">
+            <div class="card-header">
+              <div class="card-icon workflow">⚡</div>
+              <div class="card-info">
+                <div class="card-name">文档分析助手</div>
+                <div class="card-type">工作流</div>
+              </div>
+              <span class="card-tag published">已发布</span>
+            </div>
+            <div class="card-desc">自动解析文档内容，提取关键信息并生成摘要</div>
+            <div class="card-meta">
+              <span>5小时前编辑</span>
+            </div>
+          </div>
+
+          <!-- 代码助手 -->
+          <div class="card" data-href="pages/app-editor.html">
+            <div class="card-header">
+              <div class="card-icon agent">🤖</div>
+              <div class="card-info">
+                <div class="card-name">代码助手</div>
+                <div class="card-type">智能体</div>
+              </div>
+              <span class="card-tag draft">草稿</span>
+            </div>
+            <div class="card-desc">辅助开发者编写、调试和优化代码</div>
+            <div class="card-meta">
+              <span>1天前编辑</span>
+            </div>
+          </div>
+
+          <!-- 邮件撰写助手 -->
+          <div class="card" data-href="pages/app-editor.html">
+            <div class="card-header">
+              <div class="card-icon chatbot">✉️</div>
+              <div class="card-info">
+                <div class="card-name">邮件撰写助手</div>
+                <div class="card-type">聊天机器人</div>
+              </div>
+              <span class="card-tag published">已发布</span>
+            </div>
+            <div class="card-desc">根据场景自动生成专业邮件内容</div>
+            <div class="card-meta">
+              <span>2天前编辑</span>
+            </div>
+          </div>
+
+          <!-- 报告生成器 -->
+          <div class="card" data-href="pages/app-editor.html">
+            <div class="card-header">
+              <div class="card-icon completion">📊</div>
+              <div class="card-info">
+                <div class="card-name">报告生成器</div>
+                <div class="card-type">文本生成</div>
+              </div>
+              <span class="card-tag published">已发布</span>
+            </div>
+            <div class="card-desc">根据数据和模板自动生成分析报告</div>
+            <div class="card-meta">
+              <span>3天前编辑</span>
+            </div>
+          </div>
+
+          <!-- 数据处理工作流 -->
+          <div class="card" data-href="pages/app-editor.html">
+            <div class="card-header">
+              <div class="card-icon workflow">⚡</div>
+              <div class="card-info">
+                <div class="card-name">数据处理工作流</div>
+                <div class="card-type">工作流</div>
+              </div>
+              <span class="card-tag draft">草稿</span>
+            </div>
+            <div class="card-desc">自动化数据清洗、转换和分析流程</div>
+            <div class="card-meta">
+              <span>5天前编辑</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="js/app.js"></script>
+  <script>
+    const DIFY_URL = 'http://localhost/apps';
+    const FALLBACK_URL = 'pages/app-editor.html';
+
+    function goWorkflow(e) {
+      e.preventDefault();
+      // 直接跳转到静态编辑器
+      window.location.href = 'pages/app-editor.html';
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,33 @@
+<section class="turn-card" id="{{ turn.anchor }}">
+  <header class="turn-header">
+    <div>
+      <div class="turn-index">第 {{ turn.index }} 轮</div>
+    </div>
+    <div class="turn-time">{{ turn.timestamp }}</div>
+  </header>
+
+  {% if turn.user_message %}
+    <div class="message-stack">
+      {% set message = turn.user_message %}
+      {% include "partials/message_card.html" %}
+    </div>
+  {% endif %}
+
+  {% if turn.process_messages %}
+    <details class="process-block">
+      <summary class="process-summary">思考过程（{{ turn.process_messages|length }} 条）</summary>
+      <div class="message-stack process-stack">
+        {% for message in turn.process_messages %}
+          {% include "partials/message_card.html" %}
+        {% endfor %}
+      </div>
+    </details>
+  {% endif %}
+
+  {% if turn.final_message %}
+    <div class="message-stack answer-stack">
+      {% set message = turn.final_message %}
+      {% include "partials/message_card.html" %}
+    </div>
+  {% endif %}
+</section>

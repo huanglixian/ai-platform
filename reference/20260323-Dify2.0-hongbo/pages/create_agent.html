@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dify 2.0 - 创建智能体</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { background-color: #F9FAFB; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+        .dify-card { background: white; border: 1px solid #E5E7EB; border-radius: 12px; }
+        .btn-primary { background-color: #155EEF; color: white; transition: all 0.2s; }
+        .btn-primary:hover { background-color: #004EEB; }
+        .status-badge { padding: 2px 8px; border-radius: 6px; font-size: 12px; font-weight: 500; }
+        .badge-active { background-color: #ECFDF5; color: #10B981; }
+        .badge-blue { background-color: #EFF6FF; color: #3B82F6; }
+        #fileModal textarea { line-height: 1.6; }
+        .section-header { cursor: pointer; user-select: none; }
+        .section-header:hover .section-chevron { color: #9CA3AF; }
+        .section-content { transition: all 0.3s ease; overflow: hidden; }
+        .section-content.collapsed { max-height: 0 !important; opacity: 0; }
+        .section-chevron { transition: transform 0.3s ease; }
+        .section-chevron.collapsed { transform: rotate(-90deg); }
+        /* 隐藏滚动条但保留功能 */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="h-screen flex flex-col">
+
+    <!-- 顶部导航栏 -->
+    <header class="h-14 bg-white border-b border-gray-200 flex items-center justify-between px-6 shrink-0">
+        <div class="flex items-center space-x-4">
+            <a href="agents.html" class="text-gray-500 hover:text-gray-700"><i class="fas fa-arrow-left"></i></a>
+            <h1 class="font-semibold text-gray-800">创建新智能体</h1>
+        </div>
+        <div class="flex items-center space-x-3">
+            <span class="text-sm text-gray-400 italic">未保存的更改...</span>
+            <button onclick="saveAndPreview()" class="btn-primary px-4 py-1.5 rounded-lg text-sm font-medium shadow-sm">
+                保存并调试
+            </button>
+        </div>
+    </header>
+
+    <!-- 主体内容区 -->
+    <main class="flex-1 flex overflow-hidden">
+        
+        <!-- 左侧：配置列表 (40%) -->
+        <aside class="w-[450px] border-r border-gray-200 overflow-y-auto p-6 space-y-8 no-scrollbar">
+            
+            <!-- 基础信息 -->
+            <section>
+                <h3 class="section-header text-sm font-bold text-gray-700 mb-4 flex items-center" onclick="toggleSection('basic')">
+                    <span class="w-1 h-4 bg-blue-600 rounded mr-2"></span> 基础信息
+                    <i class="section-chevron fas fa-chevron-down ml-auto text-gray-400 text-xs"></i>
+                </h3>
+                <div id="basic-content" class="section-content space-y-4">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-16 h-16 dify-card flex items-center justify-center text-2xl text-gray-400 cursor-pointer hover:bg-gray-50">
+                            <i class="fas fa-image"></i>
+                        </div>
+                        <div class="flex-1">
+                            <label class="block text-xs text-gray-500 mb-1">名称</label>
+                            <input type="text" id="agent-name" placeholder="例如：架构专家" class="w-full px-3 py-2 dify-card text-sm focus:outline-none focus:ring-2 focus:ring-blue-100">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-1">选择模型</label>
+                        <select id="model-select" class="w-full px-3 py-2 dify-card text-sm focus:outline-none" onchange="toggleModelParams()">
+                            <option value="">请选择模型</option>
+                            <option value="claude-3-opus">anthropic/claude-3-opus-20240229</option>
+                            <option value="gpt-4-turbo">gpt-4-turbo-preview</option>
+                        </select>
+                    </div>
+
+                    <!-- 模型参数配置 -->
+                    <div id="model-params" class="hidden">
+                        <div class="flex items-center justify-between mb-2">
+                            <label class="text-xs font-medium text-gray-700">模型参数</label>
+                            <button onclick="toggleModelParamsVisibility()" class="text-[10px] text-blue-600 hover:text-blue-700">
+                                <i class="fas fa-chevron-down" id="model-params-chevron"></i>
+                            </button>
+                        </div>
+                        <div id="model-params-content" class="dify-card p-3 space-y-4">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <div class="flex items-center justify-between mb-1">
+                                        <label class="text-[10px] text-gray-500">温度</label>
+                                        <span class="text-[10px] text-blue-600 font-medium" id="temperature-value">0.7</span>
+                                    </div>
+                                    <input type="range" id="temperature" min="0" max="2" step="0.1" value="0.7" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600" oninput="updateParamValue('temperature')">
+                                    <p class="text-[9px] text-gray-400 mt-1">控制输出的随机性，越高越随机</p>
+                                </div>
+                                <div>
+                                    <div class="flex items-center justify-between mb-1">
+                                        <label class="text-[10px] text-gray-500">Top P</label>
+                                        <span class="text-[10px] text-blue-600 font-medium" id="top-p-value">0.9</span>
+                                    </div>
+                                    <input type="range" id="top-p" min="0" max="1" step="0.05" value="0.9" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600" oninput="updateParamValue('top-p')">
+                                    <p class="text-[9px] text-gray-400 mt-1">核采样，控制词汇范围</p>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <div class="flex items-center justify-between mb-1">
+                                        <label class="text-[10px] text-gray-500">最大 Tokens</label>
+                                        <span class="text-[10px] text-blue-600 font-medium" id="max-tokens-value">4096</span>
+                                    </div>
+                                    <input type="range" id="max-tokens" min="256" max="8192" step="256" value="4096" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600" oninput="updateParamValue('max-tokens')">
+                                    <p class="text-[9px] text-gray-400 mt-1">单次回复的最大长度</p>
+                                </div>
+                                <div>
+                                    <div class="flex items-center justify-between mb-1">
+                                        <label class="text-[10px] text-gray-500">频率惩罚</label>
+                                        <span class="text-[10px] text-blue-600 font-medium" id="freq-penalty-value">0</span>
+                                    </div>
+                                    <input type="range" id="freq-penalty" min="-2" max="2" step="0.1" value="0" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600" oninput="updateParamValue('freq-penalty')">
+                                    <p class="text-[9px] text-gray-400 mt-1">降低重复词汇的出现</p>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex items-center justify-between mb-1">
+                                    <label class="text-[10px] text-gray-500">存在惩罚</label>
+                                    <span class="text-[10px] text-blue-600 font-medium" id="presence-penalty-value">0</span>
+                                </div>
+                                <input type="range" id="presence-penalty" min="-2" max="2" step="0.1" value="0" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600" oninput="updateParamValue('presence-penalty')">
+                                <p class="text-[9px] text-gray-400 mt-1">鼓励谈论新话题</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-1">描述</label>
+                        <textarea rows="2" placeholder="简述该智能体的功能定位..." class="w-full px-3 py-2 dify-card text-sm focus:outline-none"></textarea>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 知识库 -->
+            <section>
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="section-header text-sm font-bold text-gray-700 flex items-center" onclick="toggleSection('knowledge')">
+                        <span class="w-1 h-4 bg-blue-600 rounded mr-2"></span> 知识库绑定
+                        <i class="section-chevron fas fa-chevron-down ml-2 text-gray-400 text-xs"></i>
+                    </h3>
+                    <button class="text-blue-600 text-xs font-medium" onclick="openKnowledgeModal()">+ 绑定知识库</button>
+                </div>
+                <div id="knowledge-content" class="section-content">
+                <div class="dify-card overflow-hidden">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-gray-50 border-b border-gray-100 text-gray-500">
+                            <tr>
+                                <th class="px-4 py-2 font-medium">知识库</th>
+                                <th class="px-4 py-2 font-medium">检索模式</th>
+                                <th class="px-4 py-2 font-medium">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-gray-600" id="knowledge-table-body">
+                            <!-- 由 JavaScript 动态生成 -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- 技能 -->
+            <section>
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="section-header text-sm font-bold text-gray-700 flex items-center" onclick="toggleSection('skills')">
+                        <span class="w-1 h-4 bg-blue-600 rounded mr-2"></span> 技能
+                        <i class="section-chevron fas fa-chevron-down ml-2 text-gray-400 text-xs"></i>
+                    </h3>
+                </div>
+                <div id="skills-content" class="section-content space-y-4">
+
+                    <!-- 技能中心现有技能 -->
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-2">从技能中心选择</label>
+                        <div class="space-y-2">
+                            <div class="flex items-center justify-between p-2 dify-card hover:bg-gray-50 transition-colors">
+                                <div class="flex items-center">
+                                    <span class="text-sm mr-2">🌤️</span>
+                                    <div>
+                                        <div class="text-xs font-medium text-gray-800">天气查询</div>
+                                        <div class="text-[10px] text-gray-400">wttr.in · v1.2.0</div>
+                                    </div>
+                                </div>
+                                <input type="checkbox" class="skill-checkbox w-4 h-4 text-blue-600 rounded border-gray-300" data-skill="weather">
+                            </div>
+                            <div class="flex items-center justify-between p-2 dify-card hover:bg-gray-50 transition-colors">
+                                <div class="flex items-center">
+                                    <span class="text-sm mr-2">🔒</span>
+                                    <div>
+                                        <div class="text-xs font-medium text-gray-800">安全检查</div>
+                                        <div class="text-[10px] text-gray-400">healthcheck · v2.0.1</div>
+                                    </div>
+                                </div>
+                                <input type="checkbox" class="skill-checkbox w-4 h-4 text-blue-600 rounded border-gray-300" data-skill="healthcheck">
+                            </div>
+                            <div class="flex items-center justify-between p-2 dify-card hover:bg-gray-50 transition-colors">
+                                <div class="flex items-center">
+                                    <span class="text-sm mr-2">🛠️</span>
+                                    <div>
+                                        <div class="text-xs font-medium text-gray-800">技能创建器</div>
+                                        <div class="text-[10px] text-gray-400">skill-creator · v1.1.0</div>
+                                    </div>
+                                </div>
+                                <input type="checkbox" class="skill-checkbox w-4 h-4 text-blue-600 rounded border-gray-300" data-skill="skill-creator">
+                            </div>
+                            <div class="flex items-center justify-between p-2 dify-card hover:bg-gray-50 transition-colors">
+                                <div class="flex items-center">
+                                    <span class="text-sm mr-2">🐙</span>
+                                    <div>
+                                        <div class="text-xs font-medium text-gray-800">GitHub 集成</div>
+                                        <div class="text-[10px] text-gray-400">github · v1.4.0</div>
+                                    </div>
+                                </div>
+                                <input type="checkbox" class="skill-checkbox w-4 h-4 text-blue-600 rounded border-gray-300" data-skill="github">
+                            </div>
+                            <div class="flex items-center justify-between p-2 dify-card hover:bg-gray-50 transition-colors">
+                                <div class="flex items-center">
+                                    <span class="text-sm mr-2">📊</span>
+                                    <div>
+                                        <div class="text-xs font-medium text-gray-800">数据可视化</div>
+                                        <div class="text-[10px] text-gray-400">dataviz · v1.0.1</div>
+                                    </div>
+                                </div>
+                                <input type="checkbox" class="skill-checkbox w-4 h-4 text-blue-600 rounded border-gray-300" data-skill="dataviz">
+                            </div>
+                            <div class="flex items-center justify-between p-2 dify-card hover:bg-gray-50 transition-colors">
+                                <div class="flex items-center">
+                                    <span class="text-sm mr-2">🔔</span>
+                                    <div>
+                                        <div class="text-xs font-medium text-gray-800">通知推送</div>
+                                        <div class="text-[10px] text-gray-400">notify · v1.1.0</div>
+                                    </div>
+                                </div>
+                                <input type="checkbox" class="skill-checkbox w-4 h-4 text-blue-600 rounded border-gray-300" data-skill="notify">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 自定义技能上传 -->
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-2">上传自定义技能</label>
+                        <div class="dify-card p-3">
+                            <div id="skill-upload-area" class="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-all" onclick="document.getElementById('skill-file-input').click()">
+                                <i class="fas fa-cloud-upload-alt text-2xl text-gray-400 mb-1"></i>
+                                <p class="text-xs text-gray-600">点击或拖拽文件到此处</p>
+                                <p class="text-[10px] text-gray-400 mt-1">仅支持 .zip 压缩包，最大 10MB</p>
+                            </div>
+                            <input type="file" id="skill-file-input" class="hidden" accept=".zip" multiple onchange="handleSkillUpload(event)">
+                        </div>
+
+                        <!-- 已上传技能列表 -->
+                        <div id="uploaded-skills-list" class="space-y-2 mt-2">
+                            <!-- 动态生成 -->
+                        </div>
+
+                        <!-- 占位提示 -->
+                        <div id="no-skills-hint" class="text-center py-3 text-gray-400 text-xs">
+                            <i class="fas fa-inbox text-lg mb-1"></i>
+                            <p>暂无上传的技能</p>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- 插件配置 -->
+            <section>
+                <h3 class="section-header text-sm font-bold text-gray-700 mb-4 flex items-center" onclick="toggleSection('plugins')">
+                    <span class="w-1 h-4 bg-blue-600 rounded mr-2"></span> 插件配置
+                    <i class="section-chevron fas fa-chevron-down ml-auto text-gray-400 text-xs"></i>
+                </h3>
+                <div id="plugins-content" class="section-content space-y-2">
+                    <div class="flex items-center justify-between p-2 dify-card hover:bg-gray-50 transition-colors">
+                        <div class="flex items-center">
+                            <span class="text-sm mr-2">📋</span>
+                            <div>
+                                <div class="text-xs font-medium text-gray-800">OA 审批系统</div>
+                                <div class="text-[10px] text-gray-400">企业内部 · REST API</div>
+                            </div>
+                        </div>
+                        <input type="checkbox" class="plugin-checkbox w-4 h-4 text-blue-600 rounded border-gray-300" data-plugin="oa">
+                    </div>
+                    <div class="flex items-center justify-between p-2 dify-card hover:bg-gray-50 transition-colors">
+                        <div class="flex items-center">
+                            <span class="text-sm mr-2">📦</span>
+                            <div>
+                                <div class="text-xs font-medium text-gray-800">ERP 库存查询</div>
+                                <div class="text-[10px] text-gray-400">SAP · OData API</div>
+                            </div>
+                        </div>
+                        <input type="checkbox" class="plugin-checkbox w-4 h-4 text-blue-600 rounded border-gray-300" data-plugin="erp">
+                    </div>
+                    <div class="flex items-center justify-between p-2 dify-card hover:bg-gray-50 transition-colors">
+                        <div class="flex items-center">
+                            <span class="text-sm mr-2">💬</span>
+                            <div>
+                                <div class="text-xs font-medium text-gray-800">企业微信</div>
+                                <div class="text-[10px] text-gray-400">WeCom · REST API</div>
+                            </div>
+                        </div>
+                        <input type="checkbox" checked class="plugin-checkbox w-4 h-4 text-blue-600 rounded border-gray-300" data-plugin="wecom">
+                    </div>
+                    <div class="flex items-center justify-between p-2 dify-card hover:bg-gray-50 transition-colors">
+                        <div class="flex items-center">
+                            <span class="text-sm mr-2">📌</span>
+                            <div>
+                                <div class="text-xs font-medium text-gray-800">钉钉集成</div>
+                                <div class="text-[10px] text-gray-400">DingTalk · REST API</div>
+                            </div>
+                        </div>
+                        <input type="checkbox" class="plugin-checkbox w-4 h-4 text-blue-600 rounded border-gray-300" data-plugin="dingtalk">
+                    </div>
+                    <div class="flex items-center justify-between p-2 dify-card hover:bg-gray-50 transition-colors">
+                        <div class="flex items-center">
+                            <span class="text-sm mr-2">🗄️</span>
+                            <div>
+                                <div class="text-xs font-medium text-gray-800">业务数据库</div>
+                                <div class="text-[10px] text-gray-400">PostgreSQL · SQL 代理</div>
+                            </div>
+                        </div>
+                        <input type="checkbox" class="plugin-checkbox w-4 h-4 text-blue-600 rounded border-gray-300" data-plugin="database">
+                    </div>
+                    <div class="flex items-center justify-between p-2 dify-card hover:bg-gray-50 transition-colors">
+                        <div class="flex items-center">
+                            <span class="text-sm mr-2">🔧</span>
+                            <div>
+                                <div class="text-xs font-medium text-gray-800">Jenkins CI/CD</div>
+                                <div class="text-[10px] text-gray-400">Jenkins · REST API</div>
+                            </div>
+                        </div>
+                        <input type="checkbox" class="plugin-checkbox w-4 h-4 text-blue-600 rounded border-gray-300" data-plugin="jenkins">
+                    </div>
+                    <div class="flex items-center justify-between p-2 dify-card hover:bg-gray-50 transition-colors">
+                        <div class="flex items-center">
+                            <span class="text-sm mr-2">📡</span>
+                            <div>
+                                <div class="text-xs font-medium text-gray-800">Prometheus 监控</div>
+                                <div class="text-[10px] text-gray-400">Prometheus · PromQL API</div>
+                            </div>
+                        </div>
+                        <input type="checkbox" class="plugin-checkbox w-4 h-4 text-blue-600 rounded border-gray-300" data-plugin="prometheus">
+                    </div>
+                    <div class="flex items-center justify-between p-2 dify-card hover:bg-gray-50 transition-colors">
+                        <div class="flex items-center">
+                            <span class="text-sm mr-2">🐦</span>
+                            <div>
+                                <div class="text-xs font-medium text-gray-800">飞书</div>
+                                <div class="text-[10px] text-gray-400">Lark · REST API</div>
+                            </div>
+                        </div>
+                        <input type="checkbox" class="plugin-checkbox w-4 h-4 text-blue-600 rounded border-gray-300" data-plugin="feishu">
+                    </div>
+                    <div class="flex items-center justify-between p-2 dify-card hover:bg-gray-50 transition-colors">
+                        <div class="flex items-center">
+                            <span class="text-sm mr-2">🎯</span>
+                            <div>
+                                <div class="text-xs font-medium text-gray-800">Jira 项目管理</div>
+                                <div class="text-[10px] text-gray-400">Atlassian · REST API</div>
+                            </div>
+                        </div>
+                        <input type="checkbox" class="plugin-checkbox w-4 h-4 text-blue-600 rounded border-gray-300" data-plugin="jira">
+                    </div>
+                </div>
+            </section>
+
+                        <!-- 工作区配置 -->
+            <section>
+                <h3 class="section-header text-sm font-bold text-gray-700 mb-4 flex items-center" onclick="toggleSection('workspace')">
+                    <span class="w-1 h-4 bg-blue-600 rounded mr-2"></span> 工作区配置
+                    <i class="section-chevron fas fa-chevron-down ml-auto text-gray-400 text-xs"></i>
+                </h3>
+                <div id="workspace-content" class="section-content space-y-4">
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-1">工作区路径</label>
+                        <input type="text" value="~/.openclaw/workspace" class="w-full px-3 py-2 dify-card text-sm bg-gray-100 font-mono text-xs text-gray-500 cursor-not-allowed" readonly disabled>
+                        <p class="text-[10px] text-gray-400 mt-1">系统默认路径，创建后自动生成</p>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-500 mb-1">代理目录</label>
+                        <input type="text" value="~/.openclaw/agents/new-agent/agent" class="w-full px-3 py-2 dify-card text-sm bg-gray-100 font-mono text-xs text-gray-500 cursor-not-allowed" readonly disabled>
+                        <p class="text-[10px] text-gray-400 mt-1">根据智能体名称自动创建</p>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-1">沙箱模式</label>
+                            <select class="w-full px-3 py-2 dify-card text-sm focus:outline-none">
+                                <option value="off">关闭</option>
+                                <option value="strict">严格隔离</option>
+                                <option value="permissive">宽松模式</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-1">Elevated 权限</label>
+                            <select class="w-full px-3 py-2 dify-card text-sm focus:outline-none">
+                                <option value="disabled">禁用</option>
+                                <option value="enabled">启用</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-1">最大嵌套深度</label>
+                            <input type="number" value="2" min="1" max="10" class="w-full px-3 py-2 dify-card text-sm focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-1">默认超时 (秒)</label>
+                            <input type="number" value="900" min="60" step="30" class="w-full px-3 py-2 dify-card text-sm focus:outline-none">
+                        </div>
+                    </div>
+
+                    <!-- 自动优化工作区 -->
+                    <div class="flex items-center justify-between p-3 dify-card">
+                        <div>
+                            <label class="text-sm font-medium text-gray-700">自动优化工作区</label>
+                            <p class="text-[10px] text-gray-400 mt-0.5">根据使用情况自动调整配置和清理冗余文件</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="auto-optimize-workspace" class="sr-only peer">
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-100 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                        </label>
+                    </div>
+
+                    <!-- 工作区文件配置 -->
+                    <div class="pt-2">
+                        <label class="block text-xs text-gray-500 mb-2">工作区文件配置</label>
+                        <div class="dify-card p-3 space-y-2">
+                            <div class="flex items-center justify-between p-2 hover:bg-blue-50 rounded-lg cursor-pointer" onclick="openFileEditor('AGENTS')">
+                                <div class="flex items-center">
+                                    <i class="fas fa-file-code text-blue-400 w-5 text-xs"></i>
+                                    <code class="ml-2 text-xs text-gray-700">./AGENTS.md</code>
+                                </div>
+                                <div class="flex items-center">
+                                    <span class="text-[10px] text-gray-400 mr-2">操作指令与行为规则</span>
+                                    <i class="fas fa-chevron-right text-gray-300 text-xs"></i>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between p-2 hover:bg-blue-50 rounded-lg cursor-pointer" onclick="openFileEditor('BOOT')">
+                                <div class="flex items-center">
+                                    <i class="fas fa-file-code text-blue-400 w-5 text-xs"></i>
+                                    <code class="ml-2 text-xs text-gray-700">./BOOT.md</code>
+                                </div>
+                                <div class="flex items-center">
+                                    <span class="text-[10px] text-gray-400 mr-2">启动初始化配置</span>
+                                    <i class="fas fa-chevron-right text-gray-300 text-xs"></i>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between p-2 hover:bg-blue-50 rounded-lg cursor-pointer" onclick="openFileEditor('HEARTBEAT')">
+                                <div class="flex items-center">
+                                    <i class="fas fa-file-code text-blue-400 w-5 text-xs"></i>
+                                    <code class="ml-2 text-xs text-gray-700">./HEARTBEAT.md</code>
+                                </div>
+                                <div class="flex items-center">
+                                    <span class="text-[10px] text-gray-400 mr-2">心跳任务清单</span>
+                                    <i class="fas fa-chevron-right text-gray-300 text-xs"></i>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between p-2 hover:bg-blue-50 rounded-lg cursor-pointer" onclick="openFileEditor('IDENTITY')">
+                                <div class="flex items-center">
+                                    <i class="fas fa-file-code text-blue-400 w-5 text-xs"></i>
+                                    <code class="ml-2 text-xs text-gray-700">./IDENTITY.md</code>
+                                </div>
+                                <div class="flex items-center">
+                                    <span class="text-[10px] text-gray-400 mr-2">名称、Emoji、主题</span>
+                                    <i class="fas fa-chevron-right text-gray-300 text-xs"></i>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between p-2 hover:bg-blue-50 rounded-lg cursor-pointer" onclick="openFileEditor('MEMORY')">
+                                <div class="flex items-center">
+                                    <i class="fas fa-file-code text-blue-400 w-5 text-xs"></i>
+                                    <code class="ml-2 text-xs text-gray-700">./MEMORY.md</code>
+                                </div>
+                                <div class="flex items-center">
+                                    <span class="text-[10px] text-gray-400 mr-2">长期记忆</span>
+                                    <i class="fas fa-chevron-right text-gray-300 text-xs"></i>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between p-2 hover:bg-blue-50 rounded-lg cursor-pointer" onclick="openFileEditor('SOUL')">
+                                <div class="flex items-center">
+                                    <i class="fas fa-file-code text-blue-400 w-5 text-xs"></i>
+                                    <code class="ml-2 text-xs text-gray-700">./SOUL.md</code>
+                                </div>
+                                <div class="flex items-center">
+                                    <span class="text-[10px] text-gray-400 mr-2">人格、语气与边界</span>
+                                    <i class="fas fa-chevron-right text-gray-300 text-xs"></i>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between p-2 hover:bg-blue-50 rounded-lg cursor-pointer" onclick="openFileEditor('TOOLS')">
+                                <div class="flex items-center">
+                                    <i class="fas fa-file-code text-blue-400 w-5 text-xs"></i>
+                                    <code class="ml-2 text-xs text-gray-700">./TOOLS.md</code>
+                                </div>
+                                <div class="flex items-center">
+                                    <span class="text-[10px] text-gray-400 mr-2">本地工具备注</span>
+                                    <i class="fas fa-chevron-right text-gray-300 text-xs"></i>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between p-2 hover:bg-blue-50 rounded-lg cursor-pointer" onclick="openFileEditor('USER')">
+                                <div class="flex items-center">
+                                    <i class="fas fa-file-code text-blue-400 w-5 text-xs"></i>
+                                    <code class="ml-2 text-xs text-gray-700">./USER.md</code>
+                                </div>
+                                <div class="flex items-center">
+                                    <span class="text-[10px] text-gray-400 mr-2">用户画像与偏好</span>
+                                    <i class="fas fa-chevron-right text-gray-300 text-xs"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="text-[10px] text-gray-400 mt-2">💡 点击文件可编辑默认配置内容</p>
+                    </div>
+                </div>
+            </section>
+
+        </aside>
+
+        <!-- 右侧：实时对话预览 (60%) -->
+        <section class="flex-1 bg-white flex flex-col relative">
+            
+            <!-- 对话头部 -->
+            <div class="h-12 px-6 border-b border-gray-100 flex items-center justify-between bg-white z-10">
+                <div class="flex items-center space-x-2">
+                    <span id="preview-name" class="text-sm font-medium text-gray-700">新智能体</span>
+                    <span class="status-badge badge-active">调试模式</span>
+                </div>
+                <button onclick="clearChat()" class="text-gray-400 hover:text-gray-600 text-sm"><i class="fas fa-rotate-right mr-1"></i> 清空对话</button>
+            </div>
+
+            <!-- 聊天记录 -->
+            <div id="chat-messages" class="flex-1 overflow-y-auto p-8 space-y-6">
+                <!-- 空状态提示 -->
+                <div id="chat-empty-state" class="flex flex-col items-center justify-center h-full text-gray-400">
+                    <i class="fas fa-comments text-4xl mb-3"></i>
+                    <p class="text-sm">开始对话以测试智能体</p>
+                </div>
+            </div>
+
+            <!-- 输入框 -->
+            <div class="p-6 shrink-0 border-t border-gray-100 bg-white">
+                <div class="max-w-3xl mx-auto relative">
+                    <div class="dify-card flex items-end p-2 shadow-sm focus-within:ring-2 focus-within:ring-blue-100 transition-all">
+                        <button class="p-2 text-gray-400 hover:text-blue-500"><i class="fas fa-paperclip"></i></button>
+                        <textarea id="user-input" rows="1" placeholder="在这里输入消息测试..." class="w-full px-2 py-2 text-sm focus:outline-none resize-none no-scrollbar"></textarea>
+                        <button onclick="sendMessage()" class="bg-blue-600 text-white w-8 h-8 rounded-lg flex items-center justify-center hover:bg-blue-700 transition-all ml-2 shrink-0">
+                            <i class="fas fa-paper-plane text-xs"></i>
+                        </button>
+                    </div>
+                    <p class="text-[10px] text-gray-400 text-center mt-3 italic font-light">
+                        预览环境的模型调用将产生实际消耗
+                    </p>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- 文件编辑弹窗 -->
+    <div id="fileModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+        <div class="bg-white rounded-xl shadow-2xl w-[700px] max-h-[80vh] flex flex-col">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+                <div class="flex items-center space-x-3">
+                    <i class="fas fa-file-code text-blue-500"></i>
+                    <h3 id="modalTitle" class="font-semibold text-gray-800">编辑配置文件</h3>
+                </div>
+                <button onclick="closeFileModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="flex-1 overflow-hidden p-6">
+                <textarea id="modalContent" class="w-full h-full min-h-[400px] p-4 border border-gray-200 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-100 resize-none"></textarea>
+            </div>
+            <div class="flex items-center justify-between px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-xl">
+                <span class="text-xs text-gray-400">支持 Markdown 语法</span>
+                <div class="flex space-x-3">
+                    <button onclick="resetFileContent()" class="px-4 py-2 text-sm text-gray-600 hover:bg-gray-200 rounded-lg transition-colors">
+                        <i class="fas fa-undo mr-1"></i>重置
+                    </button>
+                    <button onclick="saveFileContent()" class="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                        <i class="fas fa-save mr-1"></i>保存
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 知识库选择弹窗 -->
+    <div id="knowledgeModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+        <div class="bg-white rounded-xl shadow-2xl w-[500px] max-h-[70vh] flex flex-col">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+                <div class="flex items-center space-x-3">
+                    <i class="fas fa-book text-blue-500"></i>
+                    <h3 class="font-semibold text-gray-800">选择知识库</h3>
+                </div>
+                <button onclick="closeKnowledgeModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-4">
+                <div class="space-y-2">
+                    <label class="flex items-center p-3 dify-card hover:bg-gray-50 cursor-pointer rounded-lg">
+                        <input type="checkbox" class="knowledge-checkbox w-4 h-4 text-blue-600 rounded border-gray-300 mr-3" data-kb="product-docs">
+                        <div class="flex-1">
+                            <div class="flex items-center">
+                                <span class="text-sm mr-2">📚</span>
+                                <div>
+                                    <div class="text-sm font-medium text-gray-800">产品文档库</div>
+                                    <div class="text-xs text-gray-400">125 份文档 · 85,000 字</div>
+                                </div>
+                            </div>
+                        </div>
+                    </label>
+                    <label class="flex items-center p-3 dify-card hover:bg-gray-50 cursor-pointer rounded-lg">
+                        <input type="checkbox" class="knowledge-checkbox w-4 h-4 text-blue-600 rounded border-gray-300 mr-3" data-kb="tech-manual">
+                        <div class="flex-1">
+                            <div class="flex items-center">
+                                <span class="text-sm mr-2">📖</span>
+                                <div>
+                                    <div class="text-sm font-medium text-gray-800">技术手册</div>
+                                    <div class="text-xs text-gray-400">48 份文档 · 120,000 字</div>
+                                </div>
+                            </div>
+                        </div>
+                    </label>
+                    <label class="flex items-center p-3 dify-card hover:bg-gray-50 cursor-pointer rounded-lg">
+                        <input type="checkbox" class="knowledge-checkbox w-4 h-4 text-blue-600 rounded border-gray-300 mr-3" data-kb="faq">
+                        <div class="flex-1">
+                            <div class="flex items-center">
+                                <span class="text-sm mr-2">❓</span>
+                                <div>
+                                    <div class="text-sm font-medium text-gray-800">常见问题集</div>
+                                    <div class="text-xs text-gray-400">156 条 FAQ · 45,000 字</div>
+                                </div>
+                            </div>
+                        </div>
+                    </label>
+                    <label class="flex items-center p-3 dify-card hover:bg-gray-50 cursor-pointer rounded-lg">
+                        <input type="checkbox" class="knowledge-checkbox w-4 h-4 text-blue-600 rounded border-gray-300 mr-3" data-kb="training">
+                        <div class="flex-1">
+                            <div class="flex items-center">
+                                <span class="text-sm mr-2">📓</span>
+                                <div>
+                                    <div class="text-sm font-medium text-gray-800">培训资料</div>
+                                    <div class="text-xs text-gray-400">24 份文档 · 68,000 字</div>
+                                </div>
+                            </div>
+                        </div>
+                    </label>
+                    <label class="flex items-center p-3 dify-card hover:bg-gray-50 cursor-pointer rounded-lg">
+                        <input type="checkbox" class="knowledge-checkbox w-4 h-4 text-blue-600 rounded border-gray-300 mr-3" data-kb="api-docs">
+                        <div class="flex-1">
+                            <div class="flex items-center">
+                                <span class="text-sm mr-2">🔌</span>
+                                <div>
+                                    <div class="text-sm font-medium text-gray-800">API 文档</div>
+                                    <div class="text-xs text-gray-400">89 个接口 · 32,000 字</div>
+                                </div>
+                            </div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+            <div class="flex items-center justify-between px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-xl">
+                <span class="text-xs text-gray-400">已选择 <span id="selected-kb-count">0</span> 个知识库</span>
+                <div class="flex space-x-3">
+                    <button onclick="closeKnowledgeModal()" class="px-4 py-2 text-sm text-gray-600 hover:bg-gray-200 rounded-lg transition-colors">取消</button>
+                    <button onclick="saveKnowledgeSelection()" class="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">确认添加</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 知识库配置弹窗 -->
+    <div id="kbConfigModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+        <div class="bg-white rounded-xl shadow-2xl w-[500px] max-h-[80vh] flex flex-col">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+                <div class="flex items-center space-x-3">
+                    <i class="fas fa-cog text-blue-500"></i>
+                    <h3 class="font-semibold text-gray-800">知识库配置</h3>
+                    <span id="kb-config-name" class="text-sm text-gray-500 ml-2"></span>
+                </div>
+                <button onclick="closeKBConfig()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-6 space-y-5">
+                <!-- 检索模式 -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">检索模式</label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <label class="relative">
+                            <input type="radio" name="retrieval-mode" value="vector" class="sr-only peer" checked>
+                            <div class="p-3 dify-card text-center cursor-pointer peer-checked:border-blue-500 peer-checked:bg-blue-50 peer-checked:text-blue-600 transition-all">
+                                <div class="text-lg mb-1">🔍</div>
+                                <div class="text-xs font-medium">向量检索</div>
+                            </div>
+                        </label>
+                        <label class="relative">
+                            <input type="radio" name="retrieval-mode" value="fulltext" class="sr-only peer">
+                            <div class="p-3 dify-card text-center cursor-pointer peer-checked:border-blue-500 peer-checked:bg-blue-50 peer-checked:text-blue-600 transition-all">
+                                <div class="text-lg mb-1">📄</div>
+                                <div class="text-xs font-medium">全文检索</div>
+                            </div>
+                        </label>
+                        <label class="relative">
+                            <input type="radio" name="retrieval-mode" value="hybrid" class="sr-only peer">
+                            <div class="p-3 dify-card text-center cursor-pointer peer-checked:border-blue-500 peer-checked:bg-blue-50 peer-checked:text-blue-600 transition-all">
+                                <div class="text-lg mb-1">🔀</div>
+                                <div class="text-xs font-medium">混合检索</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- 相似度阈值 -->
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="text-sm font-medium text-gray-700">相似度阈值</label>
+                        <span class="text-xs text-blue-600 font-medium" id="similarity-value">0.5</span>
+                    </div>
+                    <input type="range" id="similarity-threshold" min="0" max="1" step="0.01" value="0.5" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600" oninput="document.getElementById('similarity-value').textContent = this.value">
+                    <p class="text-[10px] text-gray-400 mt-1">只返回相似度高于此值的结果</p>
+                </div>
+
+                <!-- 返回结果数量 -->
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="text-sm font-medium text-gray-700">返回结果数量 (Top K)</label>
+                        <span class="text-xs text-blue-600 font-medium" id="topk-value">5</span>
+                    </div>
+                    <input type="range" id="top-k" min="1" max="20" step="1" value="5" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600" oninput="document.getElementById('topk-value').textContent = this.value">
+                    <p class="text-[10px] text-gray-400 mt-1">每次查询返回的最相关结果数</p>
+                </div>
+
+                <!-- 搜索范围 -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">搜索范围</label>
+                    <div class="space-y-2">
+                        <label class="flex items-center p-3 dify-card cursor-pointer rounded-lg">
+                            <input type="checkbox" id="search-title" class="w-4 h-4 text-blue-600 rounded border-gray-300 mr-3" checked>
+                            <div class="flex-1">
+                                <div class="text-sm text-gray-700">标题</div>
+                                <div class="text-[10px] text-gray-400">在文档标题中搜索</div>
+                            </div>
+                        </label>
+                        <label class="flex items-center p-3 dify-card cursor-pointer rounded-lg">
+                            <input type="checkbox" id="search-content" class="w-4 h-4 text-blue-600 rounded border-gray-300 mr-3" checked>
+                            <div class="flex-1">
+                                <div class="text-sm text-gray-700">正文</div>
+                                <div class="text-[10px] text-gray-400">在文档正文中搜索</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- 重排序 -->
+                <div class="flex items-center justify-between p-3 dify-card">
+                    <div>
+                        <label class="text-sm font-medium text-gray-700">启用重排序</label>
+                        <p class="text-[10px] text-gray-400 mt-0.5">使用重排序模型优化结果相关性</p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="enable-rerank" class="sr-only peer" checked>
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-100 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    </label>
+                </div>
+            </div>
+            <div class="flex items-center justify-end px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-xl space-x-3">
+                <button onclick="closeKBConfig()" class="px-4 py-2 text-sm text-gray-600 hover:bg-gray-200 rounded-lg transition-colors">取消</button>
+                <button onclick="saveKBConfig()" class="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">保存配置</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 引用外部 JavaScript -->
+    <script src="../js/create-agent.js"></script>
+</body>
+</html>

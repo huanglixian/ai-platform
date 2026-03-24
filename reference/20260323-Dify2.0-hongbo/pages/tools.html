@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dify2.0 Studio - 工具中心</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <div class="layout">
+    <!-- Main -->
+    <div class="main" style="margin-left:0;">
+      <header class="header">
+        <div class="header-left">
+          <a class="header-brand" href="../index.html">
+            <div class="header-brand-logo">D2</div>
+            <span class="header-brand-name">Dify2.0</span>
+          </a>
+          <div class="header-divider"></div>
+          <div class="header-workspace">
+            <span class="header-workspace-dot"></span>
+            我的工作区
+            <span style="font-size:11px; color:var(--text-tertiary);">▾</span>
+          </div>
+          <span class="header-plan">免费版</span>
+        </div>
+        <div class="header-center">
+          <nav class="header-nav">
+            <a class="header-nav-item" href="explore.html">门户</a>
+            <a class="header-nav-item" href="knowledge.html">知识库</a>
+            <a class="header-nav-item" href="agents.html">自由体</a>
+            <a class="header-nav-item" href="#" onclick="goWorkflow(event)">工作流</a>
+            <a class="header-nav-item active" href="tools.html">工具中心</a>
+            <a class="header-nav-item" href="skills.html">技能中心</a>
+          
+          </nav>
+        </div>
+        <div class="header-right">
+          <div class="header-search">🔍 搜索 ⌘K</div>
+          <div class="header-icon-btn" title="插件" onclick="location.href='plugins.html'">🧩</div>
+          <div class="header-avatar" onclick="location.href='settings.html'" title="设置">U</div>
+        </div>
+      </header>
+
+      <div class="content">
+        <!-- Title Bar -->
+        <div class="page-title-bar">
+          <div>
+            <h2 class="page-title">插件工具</h2>
+            <p class="page-subtitle">将外部系统的能力封装为 API 插件，集成到工作流和智能体中调用</p>
+          </div>
+          <button class="btn btn-primary btn-sm">+ 接入工具</button>
+        </div>
+
+        <!-- Filter & Search -->
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; flex-wrap:wrap; gap:12px;">
+          <div style="display:flex; gap:6px; flex-wrap:wrap;">
+            <span class="badge badge-info" style="cursor:pointer; padding:4px 12px; font-size:12px;">全部</span>
+            <span class="badge badge-gray" style="cursor:pointer; padding:4px 12px; font-size:12px;">🏢 企业系统</span>
+            <span class="badge badge-gray" style="cursor:pointer; padding:4px 12px; font-size:12px;">📊 数据服务</span>
+            <span class="badge badge-gray" style="cursor:pointer; padding:4px 12px; font-size:12px;">💬 通讯协作</span>
+            <span class="badge badge-gray" style="cursor:pointer; padding:4px 12px; font-size:12px;">🔧 DevOps</span>
+            <span class="badge badge-gray" style="cursor:pointer; padding:4px 12px; font-size:12px;">☁️ 云服务</span>
+          </div>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <input class="form-input" placeholder="搜索工具..." style="width:200px; padding:6px 12px; font-size:12px;">
+          </div>
+        </div>
+
+        <!-- Tools Grid -->
+        <div class="cards-grid">
+          <!-- OA审批系统 -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-icon tool">📋</div>
+              <div class="card-info">
+                <div class="card-name">OA 审批系统</div>
+                <div class="card-type">企业内部 · REST API</div>
+              </div>
+              <span class="badge badge-success">已接入</span>
+            </div>
+            <div class="card-desc">对接企业 OA 系统，支持审批流查询、发起审批、审批状态回调。</div>
+            <div class="card-meta">
+              <span>🔗 https://oa.internal/api</span>
+              <span>3 个端点</span>
+            </div>
+          </div>
+
+          <!-- ERP库存 -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-icon tool">📦</div>
+              <div class="card-info">
+                <div class="card-name">ERP 库存查询</div>
+                <div class="card-type">SAP · OData API</div>
+              </div>
+              <span class="badge badge-success">已接入</span>
+            </div>
+            <div class="card-desc">查询 ERP 系统的库存数据、物料信息、采购订单状态。</div>
+            <div class="card-meta">
+              <span>🔗 https://erp.internal/odata</span>
+              <span>5 个端点</span>
+            </div>
+          </div>
+
+          <!-- 数据库查询 -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-icon tool">🗄️</div>
+              <div class="card-info">
+                <div class="card-name">业务数据库</div>
+                <div class="card-type">PostgreSQL · SQL 代理</div>
+              </div>
+              <span class="badge badge-success">已接入</span>
+            </div>
+            <div class="card-desc">通过安全代理层执行只读 SQL 查询，获取业务报表和统计数据。</div>
+            <div class="card-meta">
+              <span>🔗 db-proxy.internal:5432</span>
+              <span>只读模式</span>
+            </div>
+          </div>
+
+          <!-- Jenkins -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-icon tool">🔧</div>
+              <div class="card-info">
+                <div class="card-name">Jenkins CI/CD</div>
+                <div class="card-type">Jenkins · REST API</div>
+              </div>
+              <span class="badge badge-warning">配置中</span>
+            </div>
+            <div class="card-desc">触发构建任务、查询构建状态、获取构建日志和制品下载。</div>
+            <div class="card-meta">
+              <span>🔗 https://ci.internal/api</span>
+              <span>4 个端点</span>
+            </div>
+          </div>
+
+          <!-- 监控告警 -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-icon tool">📡</div>
+              <div class="card-info">
+                <div class="card-name">Prometheus 监控</div>
+                <div class="card-type">Prometheus · PromQL API</div>
+              </div>
+              <span class="badge badge-warning">配置中</span>
+            </div>
+            <div class="card-desc">查询服务器指标、告警规则状态、历史告警记录和健康检查。</div>
+            <div class="card-meta">
+              <span>🔗 https://monitor.internal/api</span>
+              <span>3 个端点</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bottom Hint -->
+        <div style="background:var(--bg-white); border:1px solid var(--border); border-radius:12px; padding:20px 24px; text-align:center; margin-top:24px;">
+          <p style="font-size:13px; color:var(--text-secondary); margin-bottom:10px;">接入自有系统：提供 OpenAPI / Swagger 文档，自动生成工具插件</p>
+          <code style="background:#1E293B; color:#E2E8F0; padding:10px 20px; border-radius:8px; font-size:13px; display:inline-block;">导入 OpenAPI 规范 → 自动解析端点 → 配置鉴权 → 发布为插件工具</code>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="../js/app.js"></script>
+  <script>
+    function goWorkflow(e) {
+      e.preventDefault();
+      // 直接跳转到工作流列表页面
+      window.location.href = '../index.html';
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dify2.0 Studio - 编辑器</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .editor-wrap { display:flex; height:calc(100vh - 56px - 48px); overflow:hidden; }
+    /* Left component panel */
+    .comp-panel { width:220px; background:#fff; border-right:1px solid var(--border); overflow-y:auto; flex-shrink:0; }
+    .comp-panel-title { font-size:12px; font-weight:600; color:var(--text-secondary); padding:12px 14px 6px; text-transform:uppercase; letter-spacing:0.5px; }
+    .comp-item { display:flex; align-items:center; gap:8px; padding:8px 14px; cursor:grab; font-size:13px; border-radius:6px; margin:2px 8px; transition:background .15s; }
+    .comp-item:hover { background:var(--primary-light); }
+    .comp-item:active { cursor:grabbing; }
+    .comp-icon { width:28px; height:28px; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:14px; flex-shrink:0; }
+    .comp-label { font-weight:500; }
+    .comp-sub { font-size:11px; color:var(--text-tertiary); }
+    /* Canvas */
+    .canvas-area { flex:1; position:relative; overflow:hidden; background:#FAFBFC; }
+    .canvas-grid { width:200%; height:200%; background-image:radial-gradient(circle,#D1D5DB 1px,transparent 1px); background-size:20px 20px; position:absolute; top:-50%; left:-50%; }
+    /* Nodes */
+    .node { position:absolute; background:#fff; border:1.5px solid var(--border); border-radius:12px; padding:0; min-width:220px; box-shadow:0 2px 8px rgba(0,0,0,0.06); cursor:move; user-select:none; z-index:10; }
+    .node.selected { border-color:var(--primary); box-shadow:0 0 0 2px rgba(21,94,239,0.2), 0 2px 8px rgba(0,0,0,0.06); }
+    .node-head { display:flex; align-items:center; gap:8px; padding:10px 14px; border-bottom:1px solid #F3F4F6; }
+    .node-icon { width:26px; height:26px; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0; }
+    .node-title { font-size:13px; font-weight:600; flex:1; }
+    .node-body { padding:10px 14px; font-size:12px; color:var(--text-secondary); }
+    .node-port { width:10px; height:10px; border-radius:50%; background:#fff; border:2px solid var(--border); position:absolute; cursor:crosshair; z-index:20; }
+    .node-port:hover { border-color:var(--primary); background:var(--primary-light); }
+    .node-delete { position:absolute; top:-8px; right:-8px; width:20px; height:20px; border-radius:50%; background:var(--danger); color:#fff; border:2px solid #fff; font-size:12px; line-height:16px; text-align:center; cursor:pointer; display:none; z-index:30; box-shadow:0 1px 3px rgba(0,0,0,0.2); }
+    .node:hover .node-delete { display:block; }
+    .node-delete:hover { background:#B91C1C; transform:scale(1.1); }
+    .node-port.out { right:-5px; top:50%; transform:translateY(-50%); }
+    .node-port.in { left:-5px; top:50%; transform:translateY(-50%); }
+    /* SVG connections */
+    .connections-layer { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:5; }
+    /* Right config panel */
+    .config-panel { width:320px; background:#fff; border-left:1px solid var(--border); overflow-y:auto; flex-shrink:0; padding:20px; display:none; }
+    .config-panel.show { display:block; }
+    .config-panel-title { font-size:15px; font-weight:600; margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+    /* Bottom bar */
+    .canvas-bottom { position:absolute; bottom:16px; left:236px; display:flex; gap:8px; z-index:30; transition:left 0.2s ease; }
+    .zoom-btn { width:32px; height:32px; border-radius:6px; border:1px solid var(--border); background:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:16px; box-shadow:0 1px 3px rgba(0,0,0,0.06); }
+    .zoom-btn:hover { background:var(--bg); }
+    .zoom-label { padding:0 10px; height:32px; border-radius:6px; border:1px solid var(--border); background:#fff; display:flex; align-items:center; font-size:12px; color:var(--text-secondary); box-shadow:0 1px 3px rgba(0,0,0,0.06); }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <div class="main" style="margin-left:0;">
+      <header class="header">
+        <div class="header-left">
+          <a class="header-brand" href="../index.html">
+            <div class="header-brand-logo">D2</div>
+            <span class="header-brand-name">Dify2.0</span>
+          </a>
+          <div class="header-divider"></div>
+          <div class="header-workspace">
+            <span class="header-workspace-dot"></span>
+            我的工作区
+            <span style="font-size:11px; color:var(--text-tertiary);">▾</span>
+          </div>
+          <span class="header-plan">免费版</span>
+        </div>
+        <div class="header-center">
+          <nav class="header-nav">
+            <a class="header-nav-item" href="explore.html">门户</a>
+            <a class="header-nav-item" href="knowledge.html">知识库</a>
+            <a class="header-nav-item" href="agents.html">自由体</a>
+            <a class="header-nav-item active" href="#" onclick="goWorkflow(event)">工作流</a>
+            <a class="header-nav-item" href="tools.html">工具中心</a>
+            <a class="header-nav-item" href="skills.html">技能中心</a>
+          </nav>
+        </div>
+        <div class="header-right">
+          <div class="header-search">🔍 搜索 ⌘K</div>
+          <div class="header-icon-btn" title="插件" onclick="location.href='plugins.html'">🧩</div>
+          <div class="header-avatar" onclick="location.href='settings.html'" title="设置">U</div>
+        </div>
+      </header>
+
+      <!-- Toolbar -->
+      <div class="editor-toolbar">
+        <a href="../index.html" style="font-size:18px; color:var(--text-secondary); text-decoration:none; padding:4px 8px;">←</a>
+        <span style="font-weight:600; font-size:14px;">智能客服机器人</span>
+        <span class="badge badge-info">对话流</span>
+        <div style="flex:1;"></div>
+        <button class="btn btn-sm" onclick="undoAction()">↩ 撤销</button>
+        <button class="btn btn-sm" onclick="redoAction()">↪ 重做</button>
+        <a href="https://cloud.dify.ai/explore/apps" target="_blank" class="btn btn-sm" style="text-decoration:none; display:inline-flex; align-items:center; gap:4px;">🔗 Dify 云端</a>
+        <div style="width:1px; height:20px; background:var(--border); margin:0 4px;"></div>
+        <button class="btn btn-sm">▶ 运行</button>
+        <button class="btn btn-primary btn-sm">发布</button>
+      </div>
+
+      <!-- Editor Body -->
+      <div class="editor-wrap">
+        <!-- Left: Component Panel -->
+        <div class="comp-panel">
+          <div style="padding:10px 14px;">
+            <input class="form-input" placeholder="搜索组件..." style="font-size:12px; padding:6px 10px;">
+          </div>
+          <div class="comp-panel-title">基础节点</div>
+          <div class="comp-item" draggable="true" data-type="start" data-icon="▶" data-color="#EFF4FF" data-icolor="#155EEF" data-label="开始" data-desc="工作流入口">
+            <div class="comp-icon" style="background:#EFF4FF; color:#155EEF;">▶</div>
+            <div><div class="comp-label">开始</div><div class="comp-sub">工作流入口</div></div>
+          </div>
+          <div class="comp-item" draggable="true" data-type="end" data-icon="⏹" data-color="#FEF3F2" data-icolor="#D92D20" data-label="结束" data-desc="工作流出口">
+            <div class="comp-icon" style="background:#FEF3F2; color:#D92D20;">⏹</div>
+            <div><div class="comp-label">结束</div><div class="comp-sub">工作流出口</div></div>
+          </div>
+          <div class="comp-item" draggable="true" data-type="answer" data-icon="💬" data-color="#FFF7ED" data-icolor="#EA580C" data-label="回答" data-desc="输出回复内容">
+            <div class="comp-icon" style="background:#FFF7ED; color:#EA580C;">💬</div>
+            <div><div class="comp-label">回答</div><div class="comp-sub">输出回复内容</div></div>
+          </div>
+
+          <div class="comp-panel-title">模型</div>
+          <div class="comp-item" draggable="true" data-type="llm" data-icon="🧠" data-color="#F5F3FF" data-icolor="#7C3AED" data-label="大语言模型" data-desc="LLM 推理节点">
+            <div class="comp-icon" style="background:#F5F3FF; color:#7C3AED;">🧠</div>
+            <div><div class="comp-label">大语言模型</div><div class="comp-sub">LLM 推理节点</div></div>
+          </div>
+
+          <div class="comp-panel-title">知识</div>
+          <div class="comp-item" draggable="true" data-type="knowledge" data-icon="📚" data-color="#ECFDF3" data-icolor="#059669" data-label="知识检索" data-desc="RAG 检索">
+            <div class="comp-icon" style="background:#ECFDF3; color:#059669;">📚</div>
+            <div><div class="comp-label">知识检索</div><div class="comp-sub">RAG 检索</div></div>
+          </div>
+
+          <div class="comp-panel-title">逻辑</div>
+          <div class="comp-item" draggable="true" data-type="condition" data-icon="🔀" data-color="#FFF1F2" data-icolor="#E11D48" data-label="条件分支" data-desc="IF/ELSE 判断">
+            <div class="comp-icon" style="background:#FFF1F2; color:#E11D48;">🔀</div>
+            <div><div class="comp-label">条件分支</div><div class="comp-sub">IF/ELSE 判断</div></div>
+          </div>
+          <div class="comp-item" draggable="true" data-type="loop" data-icon="🔁" data-color="#FEF9C3" data-icolor="#A16207" data-label="循环" data-desc="迭代执行">
+            <div class="comp-icon" style="background:#FEF9C3; color:#A16207;">🔁</div>
+            <div><div class="comp-label">循环</div><div class="comp-sub">迭代执行</div></div>
+          </div>
+          <div class="comp-item" draggable="true" data-type="merge" data-icon="🔗" data-color="#F0F9FF" data-icolor="#0369A1" data-label="合并" data-desc="汇合多个分支">
+            <div class="comp-icon" style="background:#F0F9FF; color:#0369A1;">🔗</div>
+            <div><div class="comp-label">合并</div><div class="comp-sub">汇合多个分支</div></div>
+          </div>
+
+          <div class="comp-panel-title">工具</div>
+          <div class="comp-item" draggable="true" data-type="code" data-icon="💻" data-color="#F5F3FF" data-icolor="#6D28D9" data-label="代码执行" data-desc="Python/JS 脚本">
+            <div class="comp-icon" style="background:#F5F3FF; color:#6D28D9;">💻</div>
+            <div><div class="comp-label">代码执行</div><div class="comp-sub">Python/JS 脚本</div></div>
+          </div>
+          <div class="comp-item" draggable="true" data-type="http" data-icon="🌐" data-color="#EFF4FF" data-icolor="#155EEF" data-label="HTTP 请求" data-desc="调用外部 API">
+            <div class="comp-icon" style="background:#EFF4FF; color:#155EEF;">🌐</div>
+            <div><div class="comp-label">HTTP 请求</div><div class="comp-sub">调用外部 API</div></div>
+          </div>
+          <div class="comp-item" draggable="true" data-type="template" data-icon="📄" data-color="#F0FDF4" data-icolor="#16A34A" data-label="模板转换" data-desc="Jinja2 模板">
+            <div class="comp-icon" style="background:#F0FDF4; color:#16A34A;">📄</div>
+            <div><div class="comp-label">模板转换</div><div class="comp-sub">Jinja2 模板</div></div>
+          </div>
+          <div class="comp-item" draggable="true" data-type="variable" data-icon="📦" data-color="#FFFBEB" data-icolor="#D97706" data-label="变量赋值" data-desc="设置变量值">
+            <div class="comp-icon" style="background:#FFFBEB; color:#D97706;">📦</div>
+            <div><div class="comp-label">变量赋值</div><div class="comp-sub">设置变量值</div></div>
+          </div>
+        </div>
+
+        <!-- Center: Canvas -->
+        <div class="canvas-area" id="canvasArea">
+          <div class="canvas-grid"></div>
+          <svg class="connections-layer" id="svgLayer"></svg>
+          <div id="nodesContainer">
+            <!-- Default nodes -->
+            <div class="node selected" id="node-1" style="top:120px; left:80px;" data-type="start">
+              <div class="node-port out"></div>
+              <div class="node-head">
+                <div class="node-icon" style="background:#EFF4FF; color:#155EEF;">▶</div>
+                <div class="node-title">开始</div>
+              </div>
+              <div class="node-body">用户输入入口</div>
+            </div>
+            <div class="node" id="node-2" style="top:60px; left:380px;" data-type="llm">
+              <div class="node-delete" onclick="deleteNode('node-2')" title="删除">✕</div>
+              <div class="node-port in"></div>
+              <div class="node-port out"></div>
+              <div class="node-head">
+                <div class="node-icon" style="background:#F5F3FF; color:#7C3AED;">🧠</div>
+                <div class="node-title">大语言模型</div>
+              </div>
+              <div class="node-body">Claude Opus 4 · 意图识别</div>
+            </div>
+            <div class="node" id="node-3" style="top:220px; left:380px;" data-type="knowledge">
+              <div class="node-delete" onclick="deleteNode('node-3')" title="删除">✕</div>
+              <div class="node-port in"></div>
+              <div class="node-port out"></div>
+              <div class="node-head">
+                <div class="node-icon" style="background:#ECFDF3; color:#059669;">📚</div>
+                <div class="node-title">知识检索</div>
+              </div>
+              <div class="node-body">产品文档库 · Top 3</div>
+            </div>
+            <div class="node" id="node-4" style="top:60px; left:700px;" data-type="llm">
+              <div class="node-delete" onclick="deleteNode('node-4')" title="删除">✕</div>
+              <div class="node-port in"></div>
+              <div class="node-port out"></div>
+              <div class="node-head">
+                <div class="node-icon" style="background:#F5F3FF; color:#7C3AED;">🧠</div>
+                <div class="node-title">大语言模型</div>
+              </div>
+              <div class="node-body">Claude Opus 4 · 生成回复</div>
+            </div>
+            <div class="node" id="node-5" style="top:140px; left:1000px;" data-type="answer">
+              <div class="node-delete" onclick="deleteNode('node-5')" title="删除">✕</div>
+              <div class="node-port in"></div>
+              <div class="node-head">
+                <div class="node-icon" style="background:#FFF7ED; color:#EA580C;">💬</div>
+                <div class="node-title">回答</div>
+              </div>
+              <div class="node-body">输出最终回复</div>
+            </div>
+          </div>
+
+          <!-- Zoom -->
+          <div class="canvas-bottom">
+            <button class="zoom-btn" onclick="zoomIn()">+</button>
+            <span class="zoom-label" id="zoomLabel">100%</span>
+            <button class="zoom-btn" onclick="zoomOut()">−</button>
+            <button class="zoom-btn" style="font-size:11px; width:auto; padding:0 10px;" onclick="zoomFit()">适应</button>
+          </div>
+        </div>
+
+        <!-- Right: Config Panel -->
+        <div class="config-panel" id="configPanel"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ============ Selected Node Tracking ============
+    let selectedNodeId = null;
+
+    function deleteNode(id) {
+      const node = document.getElementById(id);
+      if (!node) return;
+      // Remove related connections
+      for (let i = connections.length - 1; i >= 0; i--) {
+        if (connections[i][0] === id || connections[i][1] === id) {
+          connections.splice(i, 1);
+        }
+      }
+      node.remove();
+      drawConnections();
+      // Clear config panel if this was selected
+      if (selectedNodeId === id) {
+        selectedNodeId = null;
+        document.getElementById('configPanel').classList.remove('show');
+        updateCanvasBottom();
+      }
+    }
+
+    function deleteSelectedNode() {
+      if (selectedNodeId) deleteNode(selectedNodeId);
+    }
+
+    // Update canvas bottom position based on config panel state
+    function updateCanvasBottom() {
+      const configPanel = document.getElementById('configPanel');
+      const canvasBottom = document.querySelector('.canvas-bottom');
+      if (configPanel.classList.contains('show')) {
+        canvasBottom.style.left = '556px'; // 236 + 320
+      } else {
+        canvasBottom.style.left = '236px';
+      }
+    }
+
+    // ============ Node Config Panel ============
+    function showNodeConfig(node) {
+      const type = node.getAttribute('data-type');
+      const title = node.querySelector('.node-title').textContent;
+      const iconEl = node.querySelector('.node-icon');
+      const bgColor = iconEl.style.background;
+      const color = iconEl.style.color;
+      const icon = iconEl.textContent;
+
+      const configPanel = document.getElementById('configPanel');
+
+      // Build config panel based on node type
+      let configHTML = '<div class="config-panel-title">' +
+        '<div class="node-icon" style="background:' + bgColor + '; color:' + color + '; width:24px; height:24px; font-size:12px;">' + icon + '</div>' +
+        title +
+        '</div>';
+
+      if (type === 'llm') {
+        configHTML += `
+          <div class="form-group">
+            <label class="form-label">节点名称</label>
+            <input class="form-input" value="` + title + `">
+          </div>
+          <div class="form-group">
+            <label class="form-label">模型</label>
+            <select class="form-select">
+              <option>anthropic/claude-opus-4</option>
+              <option>openai/gpt-4o</option>
+              <option>anthropic/claude-sonnet-4.5</option>
+              <option>deepseek/deepseek-v3</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">系统提示词</label>
+            <textarea class="form-input" rows="5" style="resize:vertical;">你是一个友好的客服助手。根据知识库内容回答问题，保持准确和简洁。</textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">温度</label>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <input type="range" min="0" max="20" value="7" style="flex:1;" oninput="this.nextElementSibling.textContent=(this.value/10).toFixed(1)">
+              <span style="font-size:13px; font-weight:500; width:30px;">0.7</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">最大 Token</label>
+            <input class="form-input" type="number" value="4096">
+          </div>
+          <div class="form-group">
+            <label class="form-label">输入变量</label>
+            <div style="background:var(--bg); border-radius:8px; padding:8px 12px; font-size:12px; font-family:monospace; color:var(--text-secondary);">
+              <div>{{query}} — 用户输入</div>
+              <div>{{context}} — 检索结果</div>
+            </div>
+          </div>
+          <div style="border-top:1px solid var(--border); padding-top:12px; margin-top:8px;">
+            <button class="btn btn-sm" style="color:var(--danger); border-color:var(--danger);" onclick="deleteSelectedNode()">删除节点</button>
+          </div>
+        `;
+      } else if (type === 'start') {
+        configHTML += `
+          <div class="form-group">
+            <label class="form-label">节点名称</label>
+            <input class="form-input" value="` + title + `">
+          </div>
+          <div class="form-group">
+            <label class="form-label">输入变量</label>
+            <div style="background:var(--bg); border-radius:8px; padding:8px 12px; font-size:12px; font-family:monospace; color:var(--text-secondary);">
+              <div>{{query}} — 用户输入</div>
+            </div>
+          </div>
+          <p style="font-size:12px; color:var(--text-tertiary); margin-top:16px;">开始节点是工作流的入口，无需配置。</p>
+        `;
+      } else if (type === 'end') {
+        configHTML += `
+          <div class="form-group">
+            <label class="form-label">节点名称</label>
+            <input class="form-input" value="` + title + `">
+          </div>
+          <p style="font-size:12px; color:var(--text-tertiary); margin-top:16px;">结束节点是工作流的出口，无需配置。</p>
+        `;
+      } else if (type === 'answer') {
+        configHTML += `
+          <div class="form-group">
+            <label class="form-label">节点名称</label>
+            <input class="form-input" value="` + title + `">
+          </div>
+          <div class="form-group">
+            <label class="form-label">输出变量</label>
+            <select class="form-select">
+              <option>{{answer}} — AI 回复</option>
+            </select>
+          </div>
+          <p style="font-size:12px; color:var(--text-tertiary); margin-top:16px;">回答节点用于输出最终回复内容。</p>
+        `;
+      } else if (type === 'knowledge') {
+        configHTML += `
+          <div class="form-group">
+            <label class="form-label">节点名称</label>
+            <input class="form-input" value="` + title + `">
+          </div>
+          <div class="form-group">
+            <label class="form-label">知识库</label>
+            <select class="form-select">
+              <option>产品文档库</option>
+              <option>帮助中心</option>
+              <option>FAQ 库</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">召回数量</label>
+            <input class="form-input" type="number" value="3" min="1" max="10">
+          </div>
+          <div class="form-group">
+            <label class="form-label">相似度阈值</label>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <input type="range" min="0" max="100" value="70" style="flex:1;" oninput="this.nextElementSibling.textContent=this.value+'%'">
+              <span style="font-size:13px; font-weight:500; width:40px;">70%</span>
+            </div>
+          </div>
+          <div style="border-top:1px solid var(--border); padding-top:12px; margin-top:8px;">
+            <button class="btn btn-sm" style="color:var(--danger); border-color:var(--danger);" onclick="deleteSelectedNode()">删除节点</button>
+          </div>
+        `;
+      } else {
+        configHTML += `
+          <div class="form-group">
+            <label class="form-label">节点名称</label>
+            <input class="form-input" value="` + title + `">
+          </div>
+          <p style="font-size:12px; color:var(--text-tertiary); margin-top:16px;">该节点的配置功能正在开发中...</p>
+          <div style="border-top:1px solid var(--border); padding-top:12px; margin-top:8px;">
+            <button class="btn btn-sm" style="color:var(--danger); border-color:var(--danger);" onclick="deleteSelectedNode()">删除节点</button>
+          </div>
+        `;
+      }
+
+      configPanel.innerHTML = configHTML;
+    }
+
+    // Delete with keyboard (Backspace / Delete)
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        // Don't delete if user is typing in an input
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
+        deleteSelectedNode();
+      }
+    });
+
+    // ============ Node Dragging ============
+    let dragNode = null, dragOffsetX = 0, dragOffsetY = 0;
+    document.querySelectorAll('.node').forEach(initNodeDrag);
+
+    function initNodeDrag(node) {
+      node.addEventListener('mousedown', function(e) {
+        if (e.target.classList.contains('node-port')) return;
+        dragNode = node;
+        const rect = node.getBoundingClientRect();
+        dragOffsetX = e.clientX - rect.left;
+        dragOffsetY = e.clientY - rect.top;
+        document.querySelectorAll('.node').forEach(n => n.classList.remove('selected'));
+        node.classList.add('selected');
+        selectedNodeId = node.id;
+        // Show config panel for selected node
+        showNodeConfig(node);
+        document.getElementById('configPanel').classList.add('show');
+        updateCanvasBottom();
+        e.preventDefault();
+      });
+    }
+    document.addEventListener('mousemove', function(e) {
+      if (!dragNode) return;
+      const canvas = document.getElementById('canvasArea');
+      const cr = canvas.getBoundingClientRect();
+      dragNode.style.left = (e.clientX - cr.left - dragOffsetX) + 'px';
+      dragNode.style.top = (e.clientY - cr.top - dragOffsetY) + 'px';
+      drawConnections();
+    });
+    document.addEventListener('mouseup', function() { dragNode = null; });
+
+    // Click canvas to deselect
+    document.getElementById('canvasArea').addEventListener('click', function(e) {
+      if (e.target.classList.contains('canvas-grid') || e.target.id === 'canvasArea' || e.target.id === 'svgLayer') {
+        document.querySelectorAll('.node').forEach(n => n.classList.remove('selected'));
+        selectedNodeId = null;
+        document.getElementById('configPanel').classList.remove('show');
+        updateCanvasBottom();
+      }
+    });
+
+    // ============ Drag from Panel to Canvas ============
+    let nodeCounter = 6;
+    const canvasArea = document.getElementById('canvasArea');
+    canvasArea.addEventListener('dragover', function(e) { e.preventDefault(); });
+    canvasArea.addEventListener('drop', function(e) {
+      e.preventDefault();
+      const type = e.dataTransfer.getData('type');
+      const icon = e.dataTransfer.getData('icon');
+      const color = e.dataTransfer.getData('color');
+      const icolor = e.dataTransfer.getData('icolor');
+      const label = e.dataTransfer.getData('label');
+      const desc = e.dataTransfer.getData('desc');
+      if (!type) return;
+      const cr = canvasArea.getBoundingClientRect();
+      const x = e.clientX - cr.left - 110;
+      const y = e.clientY - cr.top - 30;
+      const id = 'node-' + (nodeCounter++);
+      const div = document.createElement('div');
+      div.className = 'node';
+      div.id = id;
+      div.setAttribute('data-type', type);
+      div.style.top = y + 'px';
+      div.style.left = x + 'px';
+      const hasIn = type !== 'start';
+      const hasOut = type !== 'end';
+      div.innerHTML =
+        '<div class="node-delete" onclick="deleteNode(\'' + id + '\')" title="删除">✕</div>' +
+        (hasIn ? '<div class="node-port in"></div>' : '') +
+        (hasOut ? '<div class="node-port out"></div>' : '') +
+        '<div class="node-head">' +
+          '<div class="node-icon" style="background:' + color + '; color:' + icolor + ';">' + icon + '</div>' +
+          '<div class="node-title">' + label + '</div>' +
+        '</div>' +
+        '<div class="node-body">' + desc + '</div>';
+      document.getElementById('nodesContainer').appendChild(div);
+      initNodeDrag(div);
+    });
+    document.querySelectorAll('.comp-item[draggable]').forEach(item => {
+      item.addEventListener('dragstart', function(e) {
+        e.dataTransfer.setData('type', this.dataset.type);
+        e.dataTransfer.setData('icon', this.dataset.icon);
+        e.dataTransfer.setData('color', this.dataset.color);
+        e.dataTransfer.setData('icolor', this.dataset.icolor);
+        e.dataTransfer.setData('label', this.dataset.label);
+        e.dataTransfer.setData('desc', this.dataset.desc);
+      });
+    });
+
+    // ============ Draw Connections ============
+    const connections = [
+      ['node-1', 'node-2'],
+      ['node-1', 'node-3'],
+      ['node-2', 'node-4'],
+      ['node-3', 'node-4'],
+      ['node-4', 'node-5'],
+    ];
+    function drawConnections() {
+      const svg = document.getElementById('svgLayer');
+      const cr = canvasArea.getBoundingClientRect();
+      svg.innerHTML = '';
+      connections.forEach(([fromId, toId]) => {
+        const fromNode = document.getElementById(fromId);
+        const toNode = document.getElementById(toId);
+        if (!fromNode || !toNode) return;
+        const fromPort = fromNode.querySelector('.node-port.out');
+        const toPort = toNode.querySelector('.node-port.in');
+        if (!fromPort || !toPort) return;
+        const fr = fromPort.getBoundingClientRect();
+        const tr = toPort.getBoundingClientRect();
+        const x1 = fr.left + fr.width/2 - cr.left;
+        const y1 = fr.top + fr.height/2 - cr.top;
+        const x2 = tr.left + tr.width/2 - cr.left;
+        const y2 = tr.top + tr.height/2 - cr.top;
+        const dx = Math.abs(x2 - x1) * 0.5;
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', 'M' + x1 + ',' + y1 + ' C' + (x1+dx) + ',' + y1 + ' ' + (x2-dx) + ',' + y2 + ' ' + x2 + ',' + y2);
+        path.setAttribute('stroke', '#94A3B8');
+        path.setAttribute('stroke-width', '2');
+        path.setAttribute('fill', 'none');
+        // arrowhead
+        const arrow = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        arrow.setAttribute('cx', x2);
+        arrow.setAttribute('cy', y2);
+        arrow.setAttribute('r', '3');
+        arrow.setAttribute('fill', '#94A3B8');
+        svg.appendChild(path);
+        svg.appendChild(arrow);
+      });
+    }
+    setTimeout(drawConnections, 100);
+    window.addEventListener('resize', drawConnections);
+
+    // ============ Zoom ============
+    let zoomLevel = 100;
+    function zoomIn() { zoomLevel = Math.min(200, zoomLevel + 10); applyZoom(); }
+    function zoomOut() { zoomLevel = Math.max(50, zoomLevel - 10); applyZoom(); }
+    function zoomFit() { zoomLevel = 100; applyZoom(); }
+    function applyZoom() {
+      document.getElementById('zoomLabel').textContent = zoomLevel + '%';
+      const c = document.getElementById('nodesContainer');
+      c.style.transform = 'scale(' + (zoomLevel/100) + ')';
+      c.style.transformOrigin = '0 0';
+      setTimeout(drawConnections, 50);
+    }
+  </script>
+  <script>
+    function goWorkflow(e) {
+      e.preventDefault();
+      // 直接跳转到工作流列表页面
+      window.location.href = '../index.html';
+    }
+  </script>
+</body>
+</html>

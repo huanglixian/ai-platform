@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>nanobot Web</title>
+    <link rel="stylesheet" href="{{ request.url_for('static', path='app.css') }}">
+    <script type="module" defer src="{{ request.url_for('static', path='app.js') }}"></script>
+  </head>
+  <body>
+    <div class="workspace-shell">
+      {% include "partials/topbar.html" %}
+
+      {% if notice %}
+        <div class="notice-banner">{{ notice }}</div>
+      {% endif %}
+
+      <main class="workspace-content">
+        {% include "partials/sidebar.html" %}
+
+        <section class="workspace-center">
+          {% include "partials/composer.html" %}
+          {% include "partials/transcript.html" %}
+        </section>
+
+        {% include "partials/security_panel.html" %}
+      </main>
+    </div>
+  </body>
+</html>

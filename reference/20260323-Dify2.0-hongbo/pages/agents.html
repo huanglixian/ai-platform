@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dify2.0 Studio - 自由体</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <div class="layout">
+    <div class="main" style="margin-left:0;">
+      <header class="header">
+        <div class="header-left">
+          <a class="header-brand" href="../index.html">
+            <div class="header-brand-logo">D2</div>
+            <span class="header-brand-name">Dify2.0</span>
+          </a>
+          <div class="header-divider"></div>
+          <div class="header-workspace">
+            <span class="header-workspace-dot"></span>
+            我的工作区
+            <span style="font-size:11px; color:var(--text-tertiary);">▾</span>
+          </div>
+          <span class="header-plan">免费版</span>
+        </div>
+        <div class="header-center">
+          <nav class="header-nav">
+            <a class="header-nav-item" href="explore.html">门户</a>
+            <a class="header-nav-item" href="knowledge.html">知识库</a>
+            <a class="header-nav-item active" href="agents.html">自由体</a>
+            <a class="header-nav-item" href="#" onclick="goWorkflow(event)">工作流</a>
+            <a class="header-nav-item" href="tools.html">工具中心</a>
+            <a class="header-nav-item" href="skills.html">技能中心</a>
+          
+          </nav>
+        </div>
+        <div class="header-right">
+          <div class="header-search">🔍 搜索 ⌘K</div>
+          <div class="header-icon-btn" title="插件" onclick="location.href='plugins.html'">🧩</div>
+          <div class="header-avatar" onclick="location.href='settings.html'" title="设置">U</div>
+        </div>
+      </header>
+
+      <div class="content">
+        <div class="page-title-bar">
+          <div>
+            <h2 class="page-title">自由体</h2>
+            <p class="page-subtitle">创建和管理独立智能体，每个拥有独立的工作区、记忆和身份</p>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="location.href='create_agent.html'">+ 创建智能体</button>
+        </div>
+
+        <!-- Agent Cards -->
+        <div class="cards-grid">
+          <div class="card-create" data-href="create_agent.html" style="min-height:180px; cursor:pointer;">
+            <div class="card-create-icon">＋</div>
+            <span>创建智能体</span>
+            <small style="color:var(--text-tertiary); font-size:12px;">配置独立的工作区和身份</small>
+          </div>
+
+          <!-- 小虾 -->
+          <div class="card" style="min-height:180px; border-color:var(--primary);">
+            <div class="card-header">
+              <div class="card-icon chatflow" style="font-size:24px; width:48px; height:48px; border-radius:12px;">🦐</div>
+              <div class="card-info">
+                <div class="card-name">小虾</div>
+                <div class="card-type">main</div>
+              </div>
+              <span class="badge badge-success">活跃</span>
+            </div>
+            <div class="card-desc" data-full-text="全栈技术专家 — 架构设计、程序设计、代码编写">全栈技术专家 — 架构设计、程序设计、代码编写</div>
+            <div class="card-meta" style="flex-wrap:wrap; gap:12px;">
+              <span>💬 23 会话</span>
+              <span>🧠 12 记忆</span>
+              <span>🔓 沙箱关闭</span>
+            </div>
+            <div style="margin-top:8px; display:flex; gap:4px; flex-wrap:wrap;">
+              <span class="card-tag published" style="font-size:10px;">WhatsApp</span>
+              <span class="card-tag published" style="font-size:10px;">Telegram</span>
+              <span class="card-tag published" style="font-size:10px;">WebChat</span>
+            </div>
+            <div style="margin-top:8px; display:flex; gap:8px; align-items:center;" onclick="event.stopPropagation()">
+              <button onclick="showStaticAgentDetail('xiaoxia')" style="font-size:11px; padding:4px 10px; background:#F3F4F6; color:#374151; border:1px solid #E5E7EB; border-radius:6px; cursor:pointer;">详情</button>
+              <a href="create_agent.html?edit=xiaoxia" class="btn btn-sm btn-primary" style="font-size:11px; padding:4px 12px; text-decoration:none; display:inline-block; color:white;">编辑</a>
+              <button onclick="deleteStaticAgent('xiaoxia')" style="font-size:11px; padding:4px 10px; background:#FEF2F2; color:#DC2626; border:1px solid #FECACA; border-radius:6px; cursor:pointer;">删除</button>
+            </div>
+          </div>
+
+          <!-- 代码工匠 -->
+          <div class="card" style="min-height:180px;">
+            <div class="card-header">
+              <div class="card-icon completion" style="font-size:24px; width:48px; height:48px; border-radius:12px;">💻</div>
+              <div class="card-info">
+                <div class="card-name">代码工匠</div>
+                <div class="card-type">coding</div>
+              </div>
+              <span class="badge badge-success">活跃</span>
+            </div>
+            <div class="card-desc" data-full-text="专注代码审查、重构和技术文档编写">专注代码审查、重构和技术文档编写</div>
+            <div class="card-meta" style="flex-wrap:wrap; gap:12px;">
+              <span>💬 8 会话</span>
+              <span>🧠 5 记忆</span>
+              <span>🔒 沙箱开启</span>
+            </div>
+            <div style="margin-top:8px; display:flex; gap:4px;">
+              <span class="card-tag published" style="font-size:10px;">Discord</span>
+            </div>
+            <div style="margin-top:8px; display:flex; gap:8px; align-items:center;" onclick="event.stopPropagation()">
+              <button onclick="showStaticAgentDetail('coder')" style="font-size:11px; padding:4px 10px; background:#F3F4F6; color:#374151; border:1px solid #E5E7EB; border-radius:6px; cursor:pointer;">详情</button>
+              <a href="create_agent.html?edit=coder" class="btn btn-sm btn-primary" style="font-size:11px; padding:4px 12px; text-decoration:none; display:inline-block; color:white;">编辑</a>
+              <button onclick="deleteStaticAgent('coder')" style="font-size:11px; padding:4px 10px; background:#FEF2F2; color:#DC2626; border:1px solid #FECACA; border-radius:6px; cursor:pointer;">删除</button>
+            </div>
+          </div>
+
+          <!-- 家庭助手 -->
+          <div class="card" style="min-height:180px;">
+            <div class="card-header">
+              <div class="card-icon agent" style="font-size:24px; width:48px; height:48px; border-radius:12px;">👨‍👩‍👧‍👦</div>
+              <div class="card-info">
+                <div class="card-name">家庭助手</div>
+                <div class="card-type">family</div>
+              </div>
+              <span class="badge badge-warning">空闲</span>
+            </div>
+            <div class="card-desc" data-full-text="家庭群聊机器人，受限工具，安全隔离">家庭群聊机器人，受限工具，安全隔离</div>
+            <div class="card-meta" style="flex-wrap:wrap; gap:12px;">
+              <span>💬 45 会话</span>
+              <span>🧠 3 记忆</span>
+              <span>🔒 沙箱开启</span>
+            </div>
+            <div style="margin-top:8px; display:flex; gap:4px;">
+              <span class="card-tag published" style="font-size:10px;">WhatsApp 家庭群</span>
+            </div>
+            <div style="margin-top:8px; display:flex; gap:8px; align-items:center;" onclick="event.stopPropagation()">
+              <button onclick="showStaticAgentDetail('family')" style="font-size:11px; padding:4px 10px; background:#F3F4F6; color:#374151; border:1px solid #E5E7EB; border-radius:6px; cursor:pointer;">详情</button>
+              <a href="create_agent.html?edit=family" class="btn btn-sm btn-primary" style="font-size:11px; padding:4px 12px; text-decoration:none; display:inline-block; color:white;">编辑</a>
+              <button onclick="deleteStaticAgent('family')" style="font-size:11px; padding:4px 10px; background:#FEF2F2; color:#DC2626; border:1px solid #FECACA; border-radius:6px; cursor:pointer;">删除</button>
+            </div>
+          </div>
+
+          <!-- 数据分析师 -->
+          <div class="card" style="min-height:180px;">
+            <div class="card-header">
+              <div class="card-icon workflow" style="font-size:24px; width:48px; height:48px; border-radius:12px;">📊</div>
+              <div class="card-info">
+                <div class="card-name">数据分析师</div>
+                <div class="card-type">analyst</div>
+              </div>
+              <span class="badge badge-gray">草稿</span>
+            </div>
+            <div class="card-desc" data-full-text="数据清洗、可视化和报告生成">数据清洗、可视化和报告生成</div>
+            <div class="card-meta" style="flex-wrap:wrap; gap:12px;">
+              <span>💬 2 会话</span>
+              <span>🧠 1 记忆</span>
+              <span>🔒 沙箱开启</span>
+            </div>
+            <div style="margin-top:8px;">
+              <span class="card-tag draft" style="font-size:10px;">未绑定渠道</span>
+            </div>
+            <div style="margin-top:8px; display:flex; gap:8px; align-items:center;" onclick="event.stopPropagation()">
+              <button onclick="showStaticAgentDetail('analyst')" style="font-size:11px; padding:4px 10px; background:#F3F4F6; color:#374151; border:1px solid #E5E7EB; border-radius:6px; cursor:pointer;">详情</button>
+              <a href="create_agent.html?edit=analyst" class="btn btn-sm btn-primary" style="font-size:11px; padding:4px 12px; text-decoration:none; display:inline-block; color:white;">编辑</a>
+              <button onclick="deleteStaticAgent('analyst')" style="font-size:11px; padding:4px 10px; background:#FEF2F2; color:#DC2626; border:1px solid #FECACA; border-radius:6px; cursor:pointer;">删除</button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Agent Detail Panel (选中小虾) -->
+        <div id="detail" style="background:var(--bg-white); border:1px solid var(--border); border-radius:12px; margin-top:24px; overflow:hidden; display:none;">
+
+          <!-- Detail Header -->
+          <div style="display:flex; align-items:center; justify-content:space-between; padding:20px 24px; border-bottom:1px solid var(--border);">
+            <div style="display:flex; align-items:center; gap:12px;">
+              <span style="font-size:32px;">🦐</span>
+              <div>
+                <div style="font-size:18px; font-weight:700;">小虾</div>
+                <div style="font-size:12px; color:var(--text-tertiary); font-family:monospace;">agent:main · anthropic/claude-opus-4</div>
+              </div>
+              <span class="badge badge-success">活跃</span>
+            </div>
+            <button class="btn btn-sm">编辑</button>
+          </div>
+
+          <!-- Detail Tabs -->
+          <div class="tools-tabs" style="padding:0 24px; margin-bottom:0;">
+            <div class="tools-tab active" onclick="switchDetailTab(this, 'dt-overview')">概览</div>
+            <div class="tools-tab" onclick="switchDetailTab(this, 'dt-knowledge')">知识库</div>
+            <div class="tools-tab" onclick="switchDetailTab(this, 'dt-files')">记忆</div>
+            <div class="tools-tab" onclick="switchDetailTab(this, 'dt-tools')">操作</div>
+            <div class="tools-tab" onclick="switchDetailTab(this, 'dt-skills')">技能</div>
+            <div class="tools-tab" onclick="switchDetailTab(this, 'dt-sessions')">会话</div>
+          </div>
+
+          <!-- Tab: 概览 -->
+          <div id="dt-overview" class="detail-tab-content" style="padding:24px;">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px;">
+              <div>
+                <div class="form-group">
+                  <label class="form-label">名称</label>
+                  <input class="form-input" value="小虾" readonly style="background:#F9FAFB;">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">角色描述</label>
+                  <input class="form-input" value="全栈技术专家 — 架构设计、程序设计、代码编写" readonly style="background:#F9FAFB;">
+                </div>
+                <div style="display:flex; gap:16px;">
+                  <div class="form-group" style="width:80px;">
+                    <label class="form-label">Emoji</label>
+                    <input class="form-input" value="🦐" readonly style="background:#F9FAFB; text-align:center; font-size:20px;">
+                  </div>
+                  <div class="form-group" style="flex:1;">
+                    <label class="form-label">默认模型</label>
+                    <select class="form-select">
+                      <option selected>anthropic/claude-opus-4</option>
+                      <option>openai/gpt-4o</option>
+                      <option>anthropic/claude-sonnet-4.5</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <div class="form-group">
+                  <label class="form-label">工作区路径</label>
+                  <input class="form-input" value="~/.openclaw/workspace" readonly style="background:#F9FAFB; font-family:monospace; font-size:12px;">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">代理目录</label>
+                  <input class="form-input" value="~/.openclaw/agents/main/agent" readonly style="background:#F9FAFB; font-family:monospace; font-size:12px;">
+                </div>
+                <div style="display:flex; gap:16px;">
+                  <div class="form-group" style="flex:1;">
+                    <label class="form-label">会话数</label>
+                    <input class="form-input" value="23" readonly style="background:#F9FAFB;">
+                  </div>
+                  <div class="form-group" style="flex:1;">
+                    <label class="form-label">记忆文件</label>
+                    <input class="form-input" value="12" readonly style="background:#F9FAFB;">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab: 知识库 -->
+          <div id="dt-knowledge" class="detail-tab-content" style="padding:24px; display:none;">
+            <div class="page-title-bar" style="margin-bottom:16px;">
+              <div>
+                <h3 style="font-size:15px; font-weight:600;">知识库绑定</h3>
+                <p class="page-subtitle">划定该智能体可访问的知识库范围，未绑定的知识库不可检索</p>
+              </div>
+              <button class="btn btn-sm">+ 绑定知识库</button>
+            </div>
+
+            <h3 style="font-size:14px; font-weight:600; margin-bottom:12px;">已绑定</h3>
+            <div class="table-wrap" style="margin-bottom:24px;">
+              <table>
+                <thead><tr><th>知识库</th><th>文档数</th><th>总字数</th><th>权限</th><th>状态</th><th>操作</th></tr></thead>
+                <tbody>
+                  <tr>
+                    <td><span style="display:flex; align-items:center; gap:8px;">📚 产品文档库</span></td>
+                    <td>12</td>
+                    <td>85,000</td>
+                    <td><span class="badge badge-info">读取</span></td>
+                    <td><span class="badge badge-success">运行中</span></td>
+                    <td><a href="#" style="color:var(--danger); font-size:12px;">解绑</a></td>
+                  </tr>
+                  <tr>
+                    <td><span style="display:flex; align-items:center; gap:8px;">📚 技术手册</span></td>
+                    <td>8</td>
+                    <td>120,000</td>
+                    <td><span class="badge badge-info">读取</span></td>
+                    <td><span class="badge badge-success">运行中</span></td>
+                    <td><a href="#" style="color:var(--danger); font-size:12px;">解绑</a></td>
+                  </tr>
+                  <tr>
+                    <td><span style="display:flex; align-items:center; gap:8px;">📚 常见问题集</span></td>
+                    <td>25</td>
+                    <td>45,000</td>
+                    <td><span class="badge badge-warning">读写</span></td>
+                    <td><span class="badge badge-gray">构建中</span></td>
+                    <td><a href="#" style="color:var(--danger); font-size:12px;">解绑</a></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <h3 style="font-size:14px; font-weight:600; margin-bottom:12px;">未绑定</h3>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>知识库</th><th>文档数</th><th>总字数</th><th>状态</th><th>操作</th></tr></thead>
+                <tbody>
+                  <tr>
+                    <td><span style="display:flex; align-items:center; gap:8px;">📚 培训资料</span></td>
+                    <td>6</td>
+                    <td>68,000</td>
+                    <td><span class="badge badge-success">运行中</span></td>
+                    <td><a href="#" style="color:var(--primary); font-size:12px; font-weight:500;">绑定</a></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div style="margin-top:20px; padding:14px 18px; background:var(--bg); border-radius:8px; font-size:12px; color:var(--text-secondary);">
+              💡 提示：绑定知识库后，智能体在工作流和对话中可通过 RAG 检索已绑定知识库的内容。未绑定的知识库对该智能体完全不可见。
+            </div>
+          </div>
+
+          <!-- Tab: 记忆 -->
+          <div id="dt-files" class="detail-tab-content" style="padding:24px; display:none;">
+            <div class="page-title-bar" style="margin-bottom:16px;">
+              <div>
+                <h3 style="font-size:15px; font-weight:600;">记忆文件</h3>
+                <p class="page-subtitle">~/.openclaw/workspace/</p>
+              </div>
+              <button class="btn btn-sm">打开目录</button>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>文件</th><th>大小</th><th>说明</th><th>最后修改</th></tr></thead>
+                <tbody>
+                  <tr><td><code style="font-size:12px;">AGENTS.md</code></td><td>3.2 KB</td><td>操作指令与行为规则</td><td>今天 09:06</td></tr>
+                  <tr><td><code style="font-size:12px;">SOUL.md</code></td><td>1.1 KB</td><td>人格、语气与边界</td><td>昨天 14:20</td></tr>
+                  <tr><td><code style="font-size:12px;">USER.md</code></td><td>0.5 KB</td><td>用户画像与偏好</td><td>昨天 14:20</td></tr>
+                  <tr><td><code style="font-size:12px;">IDENTITY.md</code></td><td>0.3 KB</td><td>名称、Emoji、主题</td><td>昨天 14:20</td></tr>
+                  <tr><td><code style="font-size:12px;">TOOLS.md</code></td><td>0.4 KB</td><td>本地工具备注</td><td>昨天 14:20</td></tr>
+                  <tr><td><code style="font-size:12px;">HEARTBEAT.md</code></td><td>0.1 KB</td><td>心跳任务清单</td><td>今天 08:00</td></tr>
+                  <tr><td><code style="font-size:12px;">MEMORY.md</code></td><td>2.8 KB</td><td>长期记忆（仅主会话加载）</td><td>今天 09:06</td></tr>
+                  <tr><td><code style="font-size:12px;">memory/2026-03-20.md</code></td><td>1.2 KB</td><td>今日记忆</td><td>今天 10:50</td></tr>
+                  <tr><td><code style="font-size:12px;">memory/2026-03-19.md</code></td><td>4.5 KB</td><td>昨日记忆</td><td>昨天 23:10</td></tr>
+                  <tr><td><code style="font-size:12px;">memory/2026-03-18.md</code></td><td>3.8 KB</td><td>前日记忆</td><td>3月18日</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Tab: 工具 -->
+          <div id="dt-tools" class="detail-tab-content" style="padding:24px; display:none;">
+            <div class="page-title-bar" style="margin-bottom:16px;">
+              <div>
+                <h3 style="font-size:15px; font-weight:600;">操作权限</h3>
+                <p class="page-subtitle">该智能体的专属操作策略（覆盖全局默认）</p>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>工具</th><th>全局状态</th><th>本体策略</th><th>生效结果</th></tr></thead>
+                <tbody>
+                  <tr><td>📄 read</td><td><span class="badge badge-success">允许</span></td><td>—</td><td><span class="badge badge-success">允许</span></td></tr>
+                  <tr><td>✏️ edit</td><td><span class="badge badge-success">允许</span></td><td>—</td><td><span class="badge badge-success">允许</span></td></tr>
+                  <tr><td>📝 write</td><td><span class="badge badge-success">允许</span></td><td>—</td><td><span class="badge badge-success">允许</span></td></tr>
+                  <tr><td>⚡ exec</td><td><span class="badge badge-success">允许</span></td><td>—</td><td><span class="badge badge-success">允许</span></td></tr>
+                  <tr><td>🔄 process</td><td><span class="badge badge-success">允许</span></td><td>—</td><td><span class="badge badge-success">允许</span></td></tr>
+                  <tr><td>🌐 browser</td><td><span class="badge badge-info">可选</span></td><td>—</td><td><span class="badge badge-info">可选</span></td></tr>
+                  <tr><td>🔍 web_search</td><td><span class="badge badge-info">可选</span></td><td>—</td><td><span class="badge badge-info">可选</span></td></tr>
+                  <tr><td>📥 web_fetch</td><td><span class="badge badge-info">可选</span></td><td>—</td><td><span class="badge badge-info">可选</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <h3 style="font-size:15px; font-weight:600; margin:24px 0 12px;">沙箱配置</h3>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>配置项</th><th>值</th></tr></thead>
+                <tbody>
+                  <tr><td>沙箱模式</td><td><span class="badge badge-gray">关闭</span></td></tr>
+                  <tr><td>作用域</td><td>—</td></tr>
+                  <tr><td>Elevated 权限</td><td><span class="badge badge-danger">禁用</span></td></tr>
+                  <tr><td>执行安全模式</td><td><span class="badge badge-warning">需审批</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <h3 style="font-size:15px; font-weight:600; margin:24px 0 12px;">子代理设置</h3>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>参数</th><th>值</th></tr></thead>
+                <tbody>
+                  <tr><td>最大嵌套深度</td><td>2</td></tr>
+                  <tr><td>每代理最大子任务</td><td>5</td></tr>
+                  <tr><td>全局并发上限</td><td>8</td></tr>
+                  <tr><td>默认超时</td><td>900 秒</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Tab: 技能 -->
+          <div id="dt-skills" class="detail-tab-content" style="padding:24px; display:none;">
+            <div class="page-title-bar" style="margin-bottom:16px;">
+              <div>
+                <h3 style="font-size:15px; font-weight:600;">技能列表</h3>
+                <p class="page-subtitle">该智能体可使用的技能（workspace 级 > 共享级）</p>
+              </div>
+              <button class="btn btn-sm">+ 安装技能</button>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>技能</th><th>来源</th><th>状态</th><th>说明</th></tr></thead>
+                <tbody>
+                  <tr><td>🌤️ 天气查询</td><td><span class="badge badge-info">共享</span></td><td><span class="badge badge-success">已启用</span></td><td>通过 wttr.in 获取天气预报</td></tr>
+                  <tr><td>🔒 安全检查</td><td><span class="badge badge-info">共享</span></td><td><span class="badge badge-success">已启用</span></td><td>主机安全加固审计</td></tr>
+                  <tr><td>🛠️ 技能创建器</td><td><span class="badge badge-info">共享</span></td><td><span class="badge badge-success">已启用</span></td><td>创建和编辑 AgentSkills</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <h3 style="font-size:15px; font-weight:600; margin:24px 0 12px;">Workspace 专属技能</h3>
+            <div class="empty-state" style="padding:30px;">
+              <div class="empty-state-icon" style="font-size:32px;">📂</div>
+              <div class="empty-state-title" style="font-size:14px;">暂无专属技能</div>
+              <div class="empty-state-desc">将技能放入 workspace/skills/ 目录可覆盖共享技能</div>
+            </div>
+          </div>
+
+          <!-- Tab: 渠道 (hidden) -->
+          <div id="dt-channels" class="detail-tab-content" style="padding:24px; display:none;" data-hidden="true">
+            <div class="page-title-bar" style="margin-bottom:16px;">
+              <div>
+                <h3 style="font-size:15px; font-weight:600;">路由绑定</h3>
+                <p class="page-subtitle">消息从哪些渠道路由到该智能体</p>
+              </div>
+              <button class="btn btn-sm">+ 添加绑定</button>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>渠道</th><th>账号</th><th>匹配规则</th><th>DM 策略</th><th>状态</th></tr></thead>
+                <tbody>
+                  <tr><td>💬 WhatsApp</td><td>personal</td><td>channel + accountId</td><td><span class="badge badge-info">配对审批</span></td><td><span class="badge badge-success">在线</span></td></tr>
+                  <tr><td>🤖 Telegram</td><td>@mybot</td><td>channel + accountId</td><td><span class="badge badge-info">配对审批</span></td><td><span class="badge badge-success">在线</span></td></tr>
+                  <tr><td>🌐 WebChat</td><td>default</td><td>channel</td><td><span class="badge badge-gray">开放</span></td><td><span class="badge badge-success">在线</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <h3 style="font-size:15px; font-weight:600; margin:24px 0 12px;">Pairing 待审批</h3>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>渠道</th><th>发送者</th><th>配对码</th><th>过期时间</th><th>操作</th></tr></thead>
+                <tbody>
+                  <tr><td>💬 WhatsApp</td><td>+86 138****5678</td><td><code style="font-size:12px; font-weight:600;">ABXK7M2N</code></td><td>47 分钟后</td><td><a href="#" style="color:var(--success); font-weight:500;">批准</a> · <a href="#" style="color:var(--danger);">拒绝</a></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Tab: 会话 -->
+          <div id="dt-sessions" class="detail-tab-content" style="padding:24px; display:none;">
+            <div class="page-title-bar" style="margin-bottom:16px;">
+              <div>
+                <h3 style="font-size:15px; font-weight:600;">会话记录</h3>
+                <p class="page-subtitle">该智能体的活跃会话与子代理运行记录</p>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>会话 ID</th><th>类型</th><th>来源</th><th>消息数</th><th>最后活跃</th><th>状态</th></tr></thead>
+                <tbody>
+                  <tr><td><code style="font-size:11px;">agent:main:main</code></td><td>主会话</td><td>WebChat</td><td>156</td><td>刚刚</td><td><span class="badge badge-success">活跃</span></td></tr>
+                  <tr><td><code style="font-size:11px;">agent:main:wa:+86138…</code></td><td>DM</td><td>WhatsApp</td><td>89</td><td>2小时前</td><td><span class="badge badge-gray">空闲</span></td></tr>
+                  <tr><td><code style="font-size:11px;">agent:main:tg:12345</code></td><td>DM</td><td>Telegram</td><td>45</td><td>昨天</td><td><span class="badge badge-gray">空闲</span></td></tr>
+                  <tr><td><code style="font-size:11px;">agent:main:subagent:ab4a…</code></td><td>子代理</td><td>内部</td><td>12</td><td>10:09</td><td><span class="badge badge-success">已完成</span></td></tr>
+                  <tr><td><code style="font-size:11px;">agent:main:subagent:029a…</code></td><td>子代理</td><td>内部</td><td>18</td><td>10:17</td><td><span class="badge badge-success">已完成</span></td></tr>
+                  <tr><td><code style="font-size:11px;">agent:main:subagent:7572…</code></td><td>子代理</td><td>内部</td><td>24</td><td>10:32</td><td><span class="badge badge-success">已完成</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="../js/app.js"></script>
+  <script>
+    function switchDetailTab(el, tabId) {
+      document.querySelectorAll('#detail .tools-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.detail-tab-content').forEach(p => p.style.display = 'none');
+      el.classList.add('active');
+      document.getElementById(tabId).style.display = 'block';
+    }
+  </script>
+  <script>
+    function goWorkflow(e) {
+      e.preventDefault();
+      // 直接跳转到工作流列表页面
+      window.location.href = '../index.html';
+    }
+  </script>
+  <script>
+    // 加载保存的智能体
+    function loadSavedAgents() {
+      const agents = JSON.parse(localStorage.getItem('dify_agents') || '[]');
+      const grid = document.querySelector('.cards-grid');
+
+      // 移除之前添加的动态卡片（保留静态卡片）
+      const existingDynamicCards = grid.querySelectorAll('[data-dynamic-agent]');
+      existingDynamicCards.forEach(card => card.remove());
+
+      if (agents.length === 0) {
+        return;
+      }
+
+      // 将动态卡片HTML转换为DOM元素并添加到grid
+      const cardsHtml = agents.map(agent => {
+        const statusBadge = agent.status === 'active' ? 'badge-success' : 'badge-gray';
+        const statusText = agent.status === 'active' ? '活跃' : '草稿';
+        const kbCount = agent.knowledgeBases ? agent.knowledgeBases.length : 0;
+        const skillCount = agent.skills ? (agent.skills.fromCenter.length + agent.skills.uploaded.length) : 0;
+        const pluginCount = agent.plugins ? agent.plugins.length : 0;
+
+        const modelLabel = agent.model ? agent.model.split('/').pop() : 'gpt-4';
+        const createdDate = agent.createdAt ? new Date(agent.createdAt).toLocaleDateString('zh-CN') : '';
+
+        return `
+          <div class="card" style="min-height:180px; cursor:pointer;" onclick="window.location.href='create_agent.html?edit=${agent.id}'">
+            <div class="card-header">
+              <div class="card-icon agent" style="font-size:24px; width:48px; height:48px; border-radius:12px;">${agent.icon || '🤖'}</div>
+              <div class="card-info">
+                <div class="card-name">${agent.name}</div>
+                <div class="card-type">${modelLabel}</div>
+              </div>
+              <span class="badge ${statusBadge}">${statusText}</span>
+            </div>
+            <div class="card-desc" data-full-text="${agent.description || '自定义智能体'}">${agent.description || '自定义智能体'}</div>
+            <div class="card-meta" style="flex-wrap:wrap; gap:12px;">
+              <span>📚 ${kbCount} 知识库</span>
+              <span>🛠️ ${skillCount} 技能</span>
+              <span>🧩 ${pluginCount} 插件</span>
+              ${createdDate ? `<span>📅 ${createdDate}</span>` : ''}
+            </div>
+            <div style="margin-top:8px; display:flex; gap:8px; align-items:center;" onclick="event.stopPropagation()">
+              <button onclick="showAgentDetail('${agent.id}')" style="font-size:11px; padding:4px 10px; background:#F3F4F6; color:#374151; border:1px solid #E5E7EB; border-radius:6px; cursor:pointer;">详情</button>
+              <a href="create_agent.html?edit=${agent.id}" class="btn btn-sm btn-primary" style="font-size:11px; padding:4px 12px; text-decoration:none; display:inline-block; color:white;">编辑</a>
+              <button onclick="deleteAgent('${agent.id}')" style="font-size:11px; padding:4px 10px; background:#FEF2F2; color:#DC2626; border:1px solid #FECACA; border-radius:6px; cursor:pointer;">删除</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // 将HTML字符串转换为DOM元素并添加到grid
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = cardsHtml;
+      const cardElements = tempDiv.children;
+
+      // 将每个卡片添加到grid中
+      Array.from(cardElements).forEach(card => {
+        card.setAttribute('data-dynamic-agent', 'true');
+        grid.appendChild(card);
+      });
+    }
+
+    // 删除智能体
+    function deleteAgent(agentId) {
+      if (!confirm('确定要删除这个智能体吗？')) return;
+
+      let agents = JSON.parse(localStorage.getItem('dify_agents') || '[]');
+      agents = agents.filter(a => a.id !== agentId);
+      localStorage.setItem('dify_agents', JSON.stringify(agents));
+      loadSavedAgents();
+    }
+
+    // 显示智能体详情
+    function showAgentDetail(agentId) {
+      const agents = JSON.parse(localStorage.getItem('dify_agents') || '[]');
+      const agent = agents.find(a => a.id === agentId);
+      if (!agent) return;
+
+      // 克隆现有的详情面板
+      const detailPanel = document.getElementById('detail');
+      const clonedDetail = detailPanel.cloneNode(true);
+
+      // 更新克隆面板中的数据
+      updateDetailPanelData(clonedDetail, agent);
+
+      // 创建弹窗容器
+      const modalHtml = `
+        <div id="agent-detail-modal" style="position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:100; display:flex; align-items:center; justify-content:center; padding:20px;">
+          <div style="background:white; border-radius:16px; width:90%; max-width:1000px; max-height:90vh; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 20px 25px -5px rgba(0,0,0,0.1);">
+            <div style="display:flex; justify-content:flex-end; padding:12px;">
+              <button onclick="closeAgentDetail()" style="background:none; border:none; font-size:24px; cursor:pointer; color:#9CA3AF; padding:4px;">✕</button>
+            </div>
+            <div style="flex:1; overflow-y:auto; padding:0;"></div>
+          </div>
+        </div>
+      `;
+
+      document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+      // 将克隆的详情面板放入弹窗
+      const modalContent = document.querySelector('#agent-detail-modal > div > div:last-child');
+      clonedDetail.style.display = 'block';
+      clonedDetail.removeAttribute('id');
+      modalContent.appendChild(clonedDetail);
+
+      // 更新tab的onclick事件，让它们在模态框内工作
+      const tabs = clonedDetail.querySelectorAll('.tools-tab');
+      tabs.forEach((tab, index) => {
+        const originalOnclick = tab.getAttribute('onclick');
+        const tabIds = ['dt-overview', 'dt-knowledge', 'dt-files', 'dt-tools', 'dt-skills', 'dt-sessions'];
+        tab.onclick = function() {
+          clonedDetail.querySelectorAll('.tools-tab').forEach(t => t.classList.remove('active'));
+          clonedDetail.querySelectorAll('.detail-tab-content').forEach(c => c.style.display = 'none');
+          tab.classList.add('active');
+          const tabContent = clonedDetail.querySelector('#' + tabIds[index]);
+          if (tabContent) tabContent.style.display = 'block';
+        };
+      });
+    }
+
+    // 更新详情面板数据
+    function updateDetailPanelData(panel, agent) {
+      const kbList = agent.knowledgeBases || [];
+      const skillFromCenter = agent.skills?.fromCenter || [];
+      const skillUploaded = agent.skills?.uploaded || [];
+      const pluginList = agent.plugins || [];
+
+      // 更新头部信息
+      const iconSpan = panel.querySelector('.fa-robot, span[style*="font-size:32px"]');
+      if (iconSpan) iconSpan.textContent = agent.icon || '🤖';
+
+      const nameDiv = panel.querySelector('div[style*="font-size:18px; font-weight:700;"]');
+      if (nameDiv) nameDiv.textContent = agent.name;
+
+      const idDiv = panel.querySelector('div[style*="font-family:monospace;"]');
+      if (idDiv) idDiv.textContent = `${agent.id} · ${agent.model || 'gpt-4'}`;
+
+      const badge = panel.querySelector('.badge-success, .badge-gray');
+      if (badge) {
+        badge.className = 'badge badge-' + (agent.status === 'active' ? 'success' : 'gray');
+        badge.textContent = agent.status === 'active' ? '活跃' : '草稿';
+      }
+
+      // 更新概览标签页
+      const overviewTab = panel.querySelector('#dt-overview');
+      if (overviewTab) {
+        const inputs = overviewTab.querySelectorAll('input');
+        if (inputs.length >= 3) {
+          inputs[0].value = agent.name;
+          inputs[1].value = agent.description || '';
+          inputs[2].value = agent.icon || '🤖';
+        }
+        const select = overviewTab.querySelector('select');
+        if (select) select.value = agent.model || 'gpt-4';
+      }
+
+      // 更新知识库表格
+      const kbTbody = panel.querySelector('#dt-knowledge tbody');
+      if (kbTbody) {
+        if (kbList.length > 0) {
+          kbTbody.innerHTML = kbList.map(kb => `
+            <tr>
+              <td><span style="display:flex; align-items:center; gap:8px;">${kb.emoji || '📚'} ${kb.name}</span></td>
+              <td>${kb.docs || '-'}</td>
+              <td>${kb.words || '-'}</td>
+              <td><span class="badge badge-info">读取</span></td>
+              <td><span class="badge badge-success">运行中</span></td>
+              <td><a href="#" style="color:var(--danger); font-size:12px;">解绑</a></td>
+            </tr>
+          `).join('');
+        } else {
+          kbTbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px; color:#9CA3AF;">暂无绑定的知识库</td></tr>';
+        }
+      }
+
+      // 更新技能标签页
+      const skillsTab = panel.querySelector('#dt-skills');
+      if (skillsTab) {
+        // 更新从技能中心选择的技能
+        const skillsFromCenterDiv = skillsTab.querySelectorAll('div')[1];
+        if (skillsFromCenterDiv) {
+          skillsFromCenterDiv.innerHTML = skillFromCenter.length > 0
+            ? skillFromCenter.map(skill => `<span class="badge badge-info">${skill}</span>`).join(' ')
+            : '<p style="color:#9CA3AF; font-size:12px;">未选择</p>';
+        }
+      }
+
+      // 更新编辑按钮
+      const editBtn = panel.querySelector('.btn');
+      if (editBtn) {
+        editBtn.onclick = function() { window.location.href = 'create_agent.html?edit=' + agent.id; };
+      }
+    }
+
+    // 关闭详情弹窗
+    function closeAgentDetail() {
+      const modal = document.getElementById('agent-detail-modal');
+      if (modal) {
+        modal.remove();
+      }
+    }
+
+    // 点击模态框外部关闭
+    document.addEventListener('click', function(e) {
+      if (e.target && e.target.id === 'agent-detail-modal') {
+        closeAgentDetail();
+      }
+    });
+
+    // 静态智能体数据
+    const staticAgentsData = {
+      xiaoxia: {
+        id: 'xiaoxia',
+        name: '小虾',
+        icon: '🦐',
+        description: '全栈技术专家 — 架构设计、程序设计、代码编写',
+        model: 'anthropic/claude-opus-4',
+        status: 'active',
+        knowledgeBases: [
+          { id: 'product-docs', name: '产品文档库', emoji: '📚', docs: 12, words: '85,000' },
+          { id: 'tech-manual', name: '技术手册', emoji: '📖', docs: 8, words: '120,000' }
+        ],
+        skills: { fromCenter: ['天气查询', '安全检查'], uploaded: [] },
+        plugins: ['OA审批系统', '企业微信']
+      },
+      coder: {
+        id: 'coder',
+        name: '代码工匠',
+        icon: '💻',
+        description: '专注代码审查、重构和技术文档编写',
+        model: 'openai/gpt-4o',
+        status: 'active',
+        knowledgeBases: [
+          { id: 'api-docs', name: 'API 文档', emoji: '🔌', docs: 89, words: '32,000' }
+        ],
+        skills: { fromCenter: [], uploaded: [] },
+        plugins: []
+      },
+      family: {
+        id: 'family',
+        name: '家庭助手',
+        icon: '👨‍👩‍👧‍👦',
+        description: '家庭群聊机器人，受限工具，安全隔离',
+        model: 'anthropic/claude-sonnet-4.5',
+        status: 'idle',
+        knowledgeBases: [
+          { id: 'faq', name: '常见问题集', emoji: '❓', docs: 156, words: '45,000' }
+        ],
+        skills: { fromCenter: ['天气查询'], uploaded: [] },
+        plugins: ['企业微信']
+      },
+      analyst: {
+        id: 'analyst',
+        name: '数据分析师',
+        icon: '📊',
+        description: '数据清洗、可视化和报告生成',
+        model: 'openai/gpt-4o',
+        status: 'draft',
+        knowledgeBases: [],
+        skills: { fromCenter: [], uploaded: [] },
+        plugins: []
+      }
+    };
+
+    // 显示静态智能体详情
+    function showStaticAgentDetail(agentId) {
+      const agent = staticAgentsData[agentId];
+      if (!agent) return;
+
+      // 克隆现有的详情面板
+      const detailPanel = document.getElementById('detail');
+      const clonedDetail = detailPanel.cloneNode(true);
+
+      // 更新克隆面板中的数据
+      updateDetailPanelData(clonedDetail, agent);
+
+      // 创建弹窗容器
+      const modalHtml = `
+        <div id="agent-detail-modal" style="position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:100; display:flex; align-items:center; justify-content:center; padding:20px;">
+          <div style="background:white; border-radius:16px; width:90%; max-width:1000px; max-height:90vh; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 20px 25px -5px rgba(0,0,0,0.1);">
+            <div style="display:flex; justify-content:flex-end; padding:12px;">
+              <button onclick="closeAgentDetail()" style="background:none; border:none; font-size:24px; cursor:pointer; color:#9CA3AF; padding:4px;">✕</button>
+            </div>
+            <div style="flex:1; overflow-y:auto; padding:0;"></div>
+          </div>
+        </div>
+      `;
+
+      document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+      // 将克隆的详情面板放入弹窗
+      const modalContent = document.querySelector('#agent-detail-modal > div > div:last-child');
+      clonedDetail.style.display = 'block';
+      clonedDetail.removeAttribute('id');
+      modalContent.appendChild(clonedDetail);
+
+      // 更新tab的onclick事件，让它们在模态框内工作
+      const tabs = clonedDetail.querySelectorAll('.tools-tab');
+      tabs.forEach((tab, index) => {
+        const tabIds = ['dt-overview', 'dt-knowledge', 'dt-files', 'dt-tools', 'dt-skills', 'dt-sessions'];
+        tab.onclick = function() {
+          clonedDetail.querySelectorAll('.tools-tab').forEach(t => t.classList.remove('active'));
+          clonedDetail.querySelectorAll('.detail-tab-content').forEach(c => c.style.display = 'none');
+          tab.classList.add('active');
+          const tabContent = clonedDetail.querySelector('#' + tabIds[index]);
+          if (tabContent) tabContent.style.display = 'block';
+        };
+      });
+    }
+
+    // 删除静态智能体（隐藏）
+    function deleteStaticAgent(agentId) {
+      if (!confirm('确定要移除这个智能体卡片吗？')) return;
+      // 静态智能体是硬编码的，这里只做演示
+      alert('静态智能体不能删除，此功能仅用于演示');
+    }
+
+    // 页面加载时执行
+    document.addEventListener('DOMContentLoaded', loadSavedAgents);
+  </script>
+</body>
+</html>

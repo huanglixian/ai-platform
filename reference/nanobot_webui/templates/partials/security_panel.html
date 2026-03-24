@@ -1,0 +1,46 @@
+<aside class="workspace-sidepanel">
+  <section class="panel security-panel">
+    <header class="panel-toolbar">
+      <div>
+        <h2 class="panel-title">名单配置</h2>
+      </div>
+      <button class="btn btn-primary" type="submit" form="security-form" id="security-save-button">保存名单</button>
+    </header>
+
+    <form class="security-form" id="security-form" method="post" action="/api/security-list">
+      <section class="form-section">
+        <div class="section-head">
+          <h3 class="section-title">白名单</h3>
+          <p class="section-description">写入允许，每行一个路径</p>
+        </div>
+        <div class="form-field">
+          <textarea
+            id="write-allow"
+            name="write_allow_text"
+            rows="10"
+            placeholder="/tmp&#10;/Users/you/Documents/project"
+          >{{ security_list.write_allow_text }}</textarea>
+        </div>
+      </section>
+
+      <section class="form-section">
+        <div class="section-head">
+          <h3 class="section-title">黑名单</h3>
+          <p class="section-description">读取禁止，每行一个路径</p>
+        </div>
+        <div class="form-field">
+          <textarea
+            id="read-deny"
+            name="read_deny_text"
+            rows="10"
+            placeholder="~/.ssh&#10;~/.aws"
+          >{{ security_list.read_deny_text }}</textarea>
+        </div>
+      </section>
+
+      <div class="security-footer">
+        <div class="field-hint" id="security-status"></div>
+      </div>
+    </form>
+  </section>
+</aside>
