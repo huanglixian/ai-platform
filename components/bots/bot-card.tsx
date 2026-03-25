@@ -15,79 +15,61 @@ const statusMap = {
 export function BotCard({ bot }: BotCardProps) {
   return (
     <button type="button" className="w-full text-left">
-      <Card className="overflow-hidden rounded-[10px] border border-border bg-white transition-all hover:-translate-y-0.5 hover:border-[#7fa8d3] hover:shadow-[0_12px_24px_rgba(26,77,135,0.08)]">
+      <Card className="overflow-hidden rounded-[10px] border border-[#e6ebf2] ring-0 bg-[rgba(255,255,255,0.96)] transition-all hover:-translate-y-0.5 hover:border-[#b2c5db] hover:shadow-[0_10px_24px_rgba(15,23,42,0.06)]">
         <CardContent className="p-0">
-          <div className="grid min-h-[232px] gap-0 grid-rows-[72px_minmax(0,1fr)_78px]">
-            <div className="flex items-center gap-3 border-b border-border bg-[linear-gradient(180deg,#f5f9ff_0%,#eef5fd_100%)] px-5">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[8px] border border-[#d7e3ef] bg-white text-xl shadow-[0_6px_14px_rgba(15,23,42,0.04)]">
+          <div className="grid min-h-[176px] gap-0 grid-rows-[64px_minmax(0,1fr)_56px]">
+            <div className="flex items-center gap-3 border-b border-[#f1f4f8] px-4">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[8px] bg-[#f4f8fd] text-lg">
                 {bot.emoji}
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between gap-2">
-                  <div className="truncate text-title text-[20px] font-semibold tracking-[-0.02em]">
+                  <div className="truncate text-title text-[18px] font-semibold tracking-[-0.02em]">
                     {bot.name}
                   </div>
                   <Badge
-                    className={`shrink-0 rounded-[999px] border px-2.5 py-1 text-[11px] font-semibold shadow-none ${statusMap[bot.status]}`}
+                    className={`shrink-0 rounded-[999px] border px-2.5 py-1 text-[10px] font-semibold shadow-none ${statusMap[bot.status]}`}
                   >
                     {bot.status}
                   </Badge>
                 </div>
-                <div className="mt-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-tertiary">
+                <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#98a2b3]">
                   {bot.code}
                 </div>
               </div>
             </div>
 
-            <div className="min-w-0 border-b border-border p-5">
-              <p className="line-clamp-2 text-[14px] leading-6 text-[#3f4956]">
+            <div className="min-w-0 border-b border-[#f1f4f8] p-4">
+              <p className="line-clamp-2 text-[13px] leading-6 text-[#667085]">
                 {bot.description}
               </p>
-              <div className="mt-4 flex flex-wrap gap-2">
+              <div className="mt-3 flex flex-wrap gap-2">
                 {bot.tags.map((tag) => (
                   <span
                     key={tag}
-                    className="rounded-[999px] border border-[#d9e5f2] bg-[#f6f9fc] px-2.5 py-1 text-[11px] font-medium text-[#1a4d87]"
+                    className="rounded-[999px] border border-[#e5ebf2] bg-[#f8fafc] px-2.5 py-1 text-[10px] font-medium text-[#5d7898]"
                   >
                     {tag}
                   </span>
                 ))}
               </div>
-              <div className="mt-4 flex flex-wrap gap-2">
-                {bot.channels.length > 0 ? (
-                  bot.channels.map((channel) => (
-                    <span
-                      key={channel.id}
-                      className="rounded-[999px] border border-border bg-white px-2.5 py-1 text-[11px] font-medium text-secondary"
-                    >
-                      {channel.label}
-                    </span>
-                  ))
-                ) : (
-                  <span className="text-xs text-tertiary">未绑定渠道</span>
-                )}
-              </div>
             </div>
 
-            <div className="grid gap-0 grid-cols-3">
+            <div className="grid gap-0 grid-cols-4">
               {bot.metrics.map((metric) => (
                 <div
                   key={metric.label}
-                  className="flex flex-col justify-center border-r border-border bg-[#fbfcfe] px-4 py-3 last:border-r-0"
+                  className="flex flex-col items-center justify-center border-r border-[#f1f4f8] px-3 py-2 text-center last:border-r-0"
                 >
-                  <div className="text-title text-[26px] font-semibold leading-none">
+                  <div className="truncate leading-none text-title text-[16px] font-semibold">
                     {metric.value}
                   </div>
-                  <div className="mt-2 text-[11px] font-medium uppercase tracking-[0.08em] text-tertiary">
+                  <div className="mt-1 text-[10px] font-medium uppercase tracking-[0.05em] text-[#98a2b3]">
                     {metric.label}
                   </div>
                 </div>
               ))}
             </div>
-          </div>
-          <div className="flex items-center justify-between border-t border-border px-5 py-3 text-xs">
-            <div className="font-medium text-[#4d4d4d]">{bot.role}</div>
-            <div className="font-medium text-tertiary">{bot.updatedAt}</div>
           </div>
         </CardContent>
       </Card>

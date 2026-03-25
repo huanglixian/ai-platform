@@ -14,7 +14,7 @@ export function TopNav() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-white/96 backdrop-blur">
-      <div className="mx-auto flex h-15 w-full max-w-[1440px] items-center gap-6 px-5 sm:px-8">
+      <div className="mx-auto flex h-15 w-full max-w-[1440px] items-center gap-6 px-6 sm:px-8">
         <div className="flex min-w-0 items-center gap-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary text-sm font-semibold text-white">
             AI
