@@ -10,10 +10,15 @@
 
 - `portal`：门户
 - `knowledge`：知识库
+- `database`：数据库
 - `bots`：自由体
 - `workflows`：工作流
+- `tools`：工具中心
 - `services`：服务中心
 - `skills`：技能中心
+- `orgs`：组织管理
+- `roles`：角色管理
+- `users`：用户管理
 
 不再使用旧命名：
 
@@ -36,9 +41,9 @@ Ai_Platform/
 │  ├─ (platform)/
 │  │  ├─ layout.tsx
 │  │  ├─ portal/page.tsx
-│  │  ├─ knowledge/page.tsx
 │  │  ├─ bots/page.tsx
 │  │  ├─ workflows/page.tsx
+│  │  ├─ tools/page.tsx
 │  │  ├─ services/page.tsx
 │  │  └─ skills/page.tsx
 │  ├─ globals.css
@@ -88,8 +93,9 @@ Ai_Platform/
 ## 当前页面状态
 
 - `bots` 已有首版卡片列表
-- 其他页面先保留占位页
-- `knowledge` 未来可能演进为独立子系统，当前先不提前拆分
+- `portal`、`tools`、`services`、`skills`、`workflows` 先保留占位页
+- 顶部导航当前按一级/二级结构组织
+- `knowledge`、`database`、`orgs`、`roles`、`users` 暂不在当前平台内占位，后续再独立展开
 
 ## 开发规则
 
