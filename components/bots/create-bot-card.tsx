@@ -1,12 +1,16 @@
 import type { ReactNode } from "react";
 
-type CreateCardProps = {
+type CreateBotCardProps = {
   icon: ReactNode;
   title: string;
   description: string;
 };
 
-export function CreateCard({ icon, title, description }: CreateCardProps) {
+export function CreateBotCard({
+  icon,
+  title,
+  description,
+}: CreateBotCardProps) {
   return (
     <button
       type="button"

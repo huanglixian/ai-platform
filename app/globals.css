@@ -65,6 +65,7 @@
   --brand-muted: #6f9ac9;
   --brand-subtle: #dfe8f3;
   --surface-muted: #f6f8fb;
+  --surface-card: rgba(255, 255, 255, 0.96);
   --text-title: #0d0d0d;
   --text-secondary: #4d4d4d;
   --text-tertiary: #808080;
@@ -72,6 +73,10 @@
   --success: #1f8a57;
   --warning: #d08a33;
   --info: #2e7dd2;
+  --card-border: #d6e0eb;
+  --card-border-hover: #6f96c4;
+  --card-shadow: 0 4px 10px rgba(15, 23, 42, 0.05);
+  --card-shadow-hover: 0 12px 24px rgba(15, 23, 42, 0.08);
 }
 
 @layer base {
@@ -106,4 +111,23 @@
 
 @utility border-strong {
   border-color: color-mix(in srgb, var(--primary) 38%, white);
+}
+
+@layer components {
+  .app-card {
+    border: 1px solid var(--card-border);
+    border-radius: 10px;
+    background-color: var(--surface-card);
+    box-shadow: var(--card-shadow);
+    transition:
+      transform 180ms ease,
+      border-color 180ms ease,
+      box-shadow 180ms ease;
+  }
+
+  .app-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--card-border-hover);
+    box-shadow: var(--card-shadow-hover);
+  }
 }
