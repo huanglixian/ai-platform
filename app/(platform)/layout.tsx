@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-import { AppShell } from "@/components/shell/app-shell";
+import { AppShell } from "@/components/shared/app-shell";
 
 export default function StudioLayout({
   children,

@@ -1,5 +1,5 @@
 import { SectionHeader } from "@/components/shared/section-header";
-import { PagePlaceholder } from "@/components/shell/page-placeholder";
+import { PagePlaceholder } from "@/components/shared/page-placeholder";
 
 export default function PortalPage() {
   return (
