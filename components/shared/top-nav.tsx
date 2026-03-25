@@ -43,14 +43,14 @@ export function TopNav() {
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-white/96 backdrop-blur">
       <div className="w-full px-6 sm:px-8">
-        <div className="relative flex h-15 items-center gap-6">
+        <div className="relative flex h-[64px] items-center gap-6">
           <div className="flex min-w-0 items-center gap-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-md bg-white shadow-[0_2px_8px_rgba(15,23,42,0.06)]">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-md bg-white shadow-[0_2px_8px_rgba(15,23,42,0.06)]">
               <Image
                 src="/logo.png"
                 alt="Ai Platform"
-                width={36}
-                height={36}
+                width={40}
+                height={40}
                 className="h-full w-full object-cover"
                 priority
               />
@@ -75,7 +75,7 @@ export function TopNav() {
                     href={group.href}
                     onMouseEnter={() => setOpenGroupKey(null)}
                     className={[
-                      "border-b-2 px-3 py-4 text-[14px] font-semibold tracking-[-0.01em] transition-colors",
+                      "border-b-2 px-3 py-[22px] text-[14px] font-semibold tracking-[-0.01em] transition-colors",
                       active
                         ? "border-[#0368b3] text-title"
                         : "border-transparent text-[#4d4d4d] hover:text-title",
@@ -102,7 +102,7 @@ export function TopNav() {
                       )
                     }
                     className={[
-                      "border-b-2 px-3 py-4 text-[14px] font-semibold tracking-[-0.01em] transition-colors",
+                      "border-b-2 px-3 py-[22px] text-[14px] font-semibold tracking-[-0.01em] transition-colors",
                       active
                         ? "border-[#0368b3] text-title"
                         : "border-transparent text-[#4d4d4d] hover:text-title",
@@ -186,7 +186,7 @@ export function TopNav() {
           </nav>
 
           <div className="ml-auto hidden items-center gap-3 sm:flex">
-            <div className="flex h-9 w-9 items-center justify-center rounded-md border border-[#0d0d0d] bg-[#0d0d0d] text-sm font-semibold text-white">
+            <div className="flex h-10 w-10 items-center justify-center rounded-md border border-[#0d0d0d] bg-[#0d0d0d] text-sm font-semibold text-white">
               U
             </div>
           </div>
