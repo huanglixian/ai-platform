@@ -61,7 +61,14 @@ export function BotCard({ bot }: BotCardProps) {
               key={metric.label}
               className="flex flex-col items-center justify-center border-r border-[#eef2f6] px-3 py-2.5 text-center last:border-r-0"
             >
-              <div className="truncate leading-none text-title text-[16px] font-semibold">
+              <div
+                className={[
+                  "truncate leading-none text-title",
+                  metric.label === "沙箱"
+                    ? "text-[14px] font-medium"
+                    : "text-[15px] font-semibold",
+                ].join(" ")}
+              >
                 {metric.value}
               </div>
               <div className="mt-1 text-[10px] font-medium uppercase tracking-[0.05em] text-[#98a2b3]">

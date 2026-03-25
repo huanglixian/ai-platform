@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useRef, useState } from "react";
@@ -9,19 +10,6 @@ import { getActiveNavGroup, platformNavGroups } from "@/lib/nav";
 function isActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
-
-const navItemHints: Record<string, string> = {
-  知识库: "知识内容与检索配置",
-  数据库: "结构化数据与表管理",
-  自由体: "独立智能体与角色管理",
-  工作流: "流程编排与节点配置",
-  工具中心: "工具接入与调度能力",
-  服务中心: "外部服务与连接配置",
-  技能中心: "技能封装与能力分发",
-  组织管理: "组织结构与协作边界",
-  角色管理: "角色权限与职责控制",
-  用户管理: "用户账号与成员维护",
-};
 
 export function TopNav() {
   const pathname = usePathname();
@@ -54,21 +42,28 @@ export function TopNav() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-white/96 backdrop-blur">
-      <div className="mx-auto w-full max-w-[1440px] px-6 sm:px-8">
-        <div className="grid h-15 grid-cols-[auto_1fr_auto] items-center gap-6">
+      <div className="w-full px-6 sm:px-8">
+        <div className="relative flex h-15 items-center gap-6">
           <div className="flex min-w-0 items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary text-sm font-semibold text-white">
-              AI
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-md bg-white shadow-[0_2px_8px_rgba(15,23,42,0.06)]">
+              <Image
+                src="/logo.png"
+                alt="Ai Platform"
+                width={36}
+                height={36}
+                className="h-full w-full object-cover"
+                priority
+              />
             </div>
             <div className="min-w-0">
               <div className="text-title text-sm font-semibold tracking-tight">
-                Ai Platform
+                数智输电智能体平台
               </div>
-              <div className="text-tertiary text-xs">我的工作区</div>
+              <div className="text-tertiary text-xs">智能化Agent-Platform</div>
             </div>
           </div>
 
-          <nav className="hidden items-center justify-self-center gap-2 lg:flex">
+          <nav className="absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 items-center gap-2 lg:flex">
             {platformNavGroups.map((group) => {
               const active =
                 routeGroupKey === group.key || openGroupKey === group.key;
@@ -124,7 +119,7 @@ export function TopNav() {
                     >
                       <div className="grid gap-1">
                         {group.items.map((item) => {
-                          const hint = navItemHints[item.label] ?? "";
+                          const hint = item.hint ?? "";
 
                           if (!item.href || item.disabled) {
                             return (
@@ -190,7 +185,7 @@ export function TopNav() {
             })}
           </nav>
 
-          <div className="hidden items-center justify-self-end gap-3 sm:flex">
+          <div className="ml-auto hidden items-center gap-3 sm:flex">
             <div className="flex h-9 w-9 items-center justify-center rounded-md border border-[#0d0d0d] bg-[#0d0d0d] text-sm font-semibold text-white">
               U
             </div>

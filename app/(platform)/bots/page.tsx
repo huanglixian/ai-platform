@@ -7,7 +7,7 @@ export default function BotsPage() {
   return (
     <div className="flex w-full flex-col gap-3">
       <SectionHeader title="Bot 列表" count={bots.length} />
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,320px),332px))] justify-start gap-4">
         <CreateBotCard
           icon="＋"
           title="创建自由体"
