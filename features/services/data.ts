@@ -10,6 +10,7 @@ export const serviceRecords: ServiceRecord[] = [
     calls: "486",
     featured: true,
     emoji: "🗼",
+    category: "服务",
   },
   {
     id: "ampacity-calculation",
@@ -20,6 +21,7 @@ export const serviceRecords: ServiceRecord[] = [
     calls: "352",
     featured: true,
     emoji: "⚡",
+    category: "服务",
   },
   {
     id: "tower-weight-estimation",
@@ -30,6 +32,7 @@ export const serviceRecords: ServiceRecord[] = [
     calls: "318",
     featured: true,
     emoji: "🏗️",
+    category: "服务",
   },
   {
     id: "thermal-stability",
@@ -40,6 +43,7 @@ export const serviceRecords: ServiceRecord[] = [
     calls: "174",
     featured: false,
     emoji: "🔥",
+    category: "服务",
   },
   {
     id: "intelligent-pricing",
@@ -50,6 +54,7 @@ export const serviceRecords: ServiceRecord[] = [
     calls: "268",
     featured: true,
     emoji: "💹",
+    category: "服务",
   },
   {
     id: "intelligent-routing",
@@ -60,6 +65,7 @@ export const serviceRecords: ServiceRecord[] = [
     calls: "421",
     featured: true,
     emoji: "🧭",
+    category: "服务",
   },
   {
     id: "route-comparison",
@@ -70,6 +76,7 @@ export const serviceRecords: ServiceRecord[] = [
     calls: "203",
     featured: false,
     emoji: "📐",
+    category: "服务",
   },
   {
     id: "equipment-selection",
@@ -80,6 +87,7 @@ export const serviceRecords: ServiceRecord[] = [
     calls: "129",
     featured: false,
     emoji: "🧰",
+    category: "服务",
   },
   {
     id: "agreement-generation",
@@ -90,6 +98,7 @@ export const serviceRecords: ServiceRecord[] = [
     calls: "96",
     featured: false,
     emoji: "📝",
+    category: "服务",
   },
   {
     id: "agreement-management",
@@ -100,6 +109,7 @@ export const serviceRecords: ServiceRecord[] = [
     calls: "88",
     featured: false,
     emoji: "📂",
+    category: "服务",
   },
   {
     id: "conductor-groundwire-properties",
@@ -110,6 +120,7 @@ export const serviceRecords: ServiceRecord[] = [
     calls: "231",
     featured: false,
     emoji: "📏",
+    category: "服务",
   },
   {
     id: "profile-ranking-service",
@@ -120,6 +131,7 @@ export const serviceRecords: ServiceRecord[] = [
     calls: "157",
     featured: false,
     emoji: "📊",
+    category: "服务",
   },
   {
     id: "electrical-parameter-calculation",
@@ -130,6 +142,7 @@ export const serviceRecords: ServiceRecord[] = [
     calls: "244",
     featured: true,
     emoji: "🔌",
+    category: "服务",
   },
   {
     id: "external-load-calculation",
@@ -140,6 +153,7 @@ export const serviceRecords: ServiceRecord[] = [
     calls: "287",
     featured: false,
     emoji: "🌬️",
+    category: "服务",
   },
   {
     id: "clip-adjustment-calculation",
@@ -150,6 +164,7 @@ export const serviceRecords: ServiceRecord[] = [
     calls: "64",
     featured: false,
     emoji: "⛰️",
+    category: "服务",
   },
   {
     id: "uneven-icing-calculation",
@@ -160,6 +175,7 @@ export const serviceRecords: ServiceRecord[] = [
     calls: "72",
     featured: false,
     emoji: "❄️",
+    category: "服务",
   },
   {
     id: "electrical-unbalance-calculation",
@@ -170,6 +186,7 @@ export const serviceRecords: ServiceRecord[] = [
     calls: "58",
     featured: false,
     emoji: "⚖️",
+    category: "服务",
   },
   {
     id: "jumper-calculation",
@@ -180,6 +197,7 @@ export const serviceRecords: ServiceRecord[] = [
     calls: "141",
     featured: false,
     emoji: "🪢",
+    category: "服务",
   },
   {
     id: "electromagnetic-environment",
@@ -190,6 +208,7 @@ export const serviceRecords: ServiceRecord[] = [
     calls: "103",
     featured: false,
     emoji: "📡",
+    category: "服务",
   },
   {
     id: "construction-road-planning",
@@ -200,6 +219,7 @@ export const serviceRecords: ServiceRecord[] = [
     calls: "196",
     featured: false,
     emoji: "🛣️",
+    category: "服务",
   },
   {
     id: "engineering-report-generation",
@@ -210,6 +230,7 @@ export const serviceRecords: ServiceRecord[] = [
     calls: "276",
     featured: true,
     emoji: "📘",
+    category: "服务",
   },
   {
     id: "3d-stringing",
@@ -220,6 +241,7 @@ export const serviceRecords: ServiceRecord[] = [
     calls: "118",
     featured: false,
     emoji: "🧱",
+    category: "服务",
   },
   {
     id: "digital-handover-package",
@@ -230,6 +252,7 @@ export const serviceRecords: ServiceRecord[] = [
     calls: "214",
     featured: true,
     emoji: "📦",
+    category: "服务",
   },
   {
     id: "quick-3d-scene-build",
@@ -240,5 +263,6 @@ export const serviceRecords: ServiceRecord[] = [
     calls: "183",
     featured: true,
     emoji: "🌐",
+    category: "服务",
   },
 ];

@@ -1,3 +1,3 @@
 import type { CapabilityRecord } from "@/features/capabilities/types";
 
-export type ServiceRecord = CapabilityRecord;
+export type ToolRecord = CapabilityRecord;

@@ -1,7 +1,7 @@
-import type { ServiceRecord } from "@/features/services/types";
+import type { CapabilityRecord } from "@/features/capabilities/types";
 
 type CapabilityCardProps = {
-  item: ServiceRecord;
+  item: CapabilityRecord;
 };
 
 export function CapabilityCard({ item }: CapabilityCardProps) {
