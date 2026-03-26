@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 import { CapabilityCard } from "@/components/shared/capability-card";
-import { CardPageSection } from "@/components/shared/card-page-section";
+import { CardPageFrame } from "@/components/shared/card-page-frame";
 import { serviceRecords } from "@/features/services/data";
 
 const ITEM_WIDTH = 296;
@@ -28,7 +28,7 @@ export default function ServicesPage() {
       : filteredServices;
 
   return (
-    <CardPageSection
+    <CardPageFrame
       title="服务中心"
       count={visibleServices.length}
       itemWidth={ITEM_WIDTH}
@@ -42,6 +42,6 @@ export default function ServicesPage() {
       {visibleServices.map((item) => (
         <CapabilityCard key={item.id} item={item} />
       ))}
-    </CardPageSection>
+    </CardPageFrame>
   );
 }

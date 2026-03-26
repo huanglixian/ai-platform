@@ -55,15 +55,19 @@ Ai_Platform/
 │  │  └─ create-bot-card.tsx
 │  ├─ shared/
 │  │  ├─ app-shell.tsx
+│  │  ├─ capability-card.tsx
+│  │  ├─ card-page-frame.tsx
 │  │  ├─ page-placeholder.tsx
-│  │  ├─ section-header.tsx
 │  │  └─ top-nav.tsx
 │  └─ ui/
 │     ├─ badge.tsx
 │     ├─ button.tsx
 │     └─ input.tsx
 ├─ features/
-│  └─ bots/
+│  ├─ bots/
+│  │  ├─ data.ts
+│  │  └─ types.ts
+│  └─ services/
 │     ├─ data.ts
 │     └─ types.ts
 ├─ lib/
@@ -83,17 +87,22 @@ Ai_Platform/
 - `components/bots`
   放 `bots` 页面专属组件
 
+- `features/services`
+  放服务中心的 mock 数据和类型定义
+
 ## 样式规则
 
 - 全局设计变量统一放在 `app/globals.css`
 - 基础 card 外壳统一使用 `.app-card`
 - 业务卡片只负责自己的内容结构，不负责定义新的基础外壳规则
-- 页面标题统一使用 `SectionHeader`
+- 卡片页公共骨架统一使用 `CardPageFrame`
+- 能力中心卡片骨架统一使用 `CapabilityCard`
 
 ## 当前页面状态
 
 - `bots` 已有首版卡片列表
-- `portal`、`tools`、`services`、`skills`、`workflows` 先保留占位页
+- `services` 已有首版能力卡片列表
+- `portal`、`tools`、`skills`、`workflows` 先保留占位页
 - 顶部导航当前按一级/二级结构组织
 - `knowledge`、`database`、`orgs`、`roles`、`users` 暂不在当前平台内占位，后续再独立展开
 

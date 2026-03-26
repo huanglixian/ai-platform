@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import { BotCard } from "@/components/bots/bot-card";
 import { CreateBotCard } from "@/components/bots/create-bot-card";
-import { CardPageSection } from "@/components/shared/card-page-section";
+import { CardPageFrame } from "@/components/shared/card-page-frame";
 import { bots } from "@/features/bots/data";
 
 export default function BotsPage() {
@@ -22,7 +22,7 @@ export default function BotsPage() {
   });
 
   return (
-    <CardPageSection
+    <CardPageFrame
       title="Bot 列表"
       count={filteredBots.length}
       itemWidth={332}
@@ -40,6 +40,6 @@ export default function BotsPage() {
       {filteredBots.map((bot) => (
         <BotCard key={bot.id} bot={bot} />
       ))}
-    </CardPageSection>
+    </CardPageFrame>
   );
 }

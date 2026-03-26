@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-type CardPageSectionProps = {
+type CardPageFrameProps = {
   title: string;
   count: number;
   itemWidth: number;
@@ -13,7 +13,7 @@ type CardPageSectionProps = {
   onSearchChange?: (value: string) => void;
 };
 
-export function CardPageSection({
+export function CardPageFrame({
   title,
   count,
   itemWidth,
@@ -24,7 +24,7 @@ export function CardPageSection({
   searchValue,
   searchPlaceholder,
   onSearchChange,
-}: CardPageSectionProps) {
+}: CardPageFrameProps) {
   const gridStyle = {
     gridTemplateColumns: `repeat(auto-fit, minmax(${itemWidth}px, ${itemWidth}px))`,
   };
