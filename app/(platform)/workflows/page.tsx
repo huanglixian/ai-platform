@@ -1,19 +1,24 @@
-import { PagePlaceholder } from "@/components/shared/page-placeholder";
+import { CreateWorkflowCard } from "@/components/workflows/create-workflow-card";
+import { WorkflowCard } from "@/components/workflows/workflow-card";
+import { CardPageFrame } from "@/components/shared/card-page-frame";
+import { workflowRecords } from "@/features/workflows/data";
 
 export default function WorkflowsPage() {
   return (
-    <div className="flex w-full flex-col gap-3">
-      <section className="space-y-3 pl-1.5">
-        <div className="flex items-end gap-2.5">
-          <div className="text-title text-[18px] font-semibold tracking-[-0.02em]">
-            工作流
-          </div>
-          <div className="text-[12px] font-medium uppercase tracking-[0.08em] text-[#98a2b3]">
-            · 0 Items
-          </div>
-        </div>
-      </section>
-      <PagePlaceholder text="工作流页暂未开始实现。" />
-    </div>
+    <CardPageFrame
+      title="工作流列表"
+      count={workflowRecords.length}
+      itemWidth={332}
+      tabs={["全部"]}
+      activeTab="全部"
+    >
+      <CreateWorkflowCard
+        title="创建工作流"
+        description="建立新的流程编排，串联技能、工具和服务节点。"
+      />
+      {workflowRecords.map((workflow) => (
+        <WorkflowCard key={workflow.id} workflow={workflow} />
+      ))}
+    </CardPageFrame>
   );
 }
