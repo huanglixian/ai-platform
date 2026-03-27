@@ -7,10 +7,12 @@ import { CardPageFrame } from "@/components/shared/card-page-frame";
 import { serviceRecords } from "@/features/services/data";
 
 const ITEM_WIDTH = 296;
+const SERVICE_TABS = ["全部", "精选"] as const;
 
 export default function ServicesPage() {
   const [keyword, setKeyword] = useState("");
-  const [activeTab, setActiveTab] = useState("全部");
+  const [activeTab, setActiveTab] =
+    useState<(typeof SERVICE_TABS)[number]>("全部");
   const normalizedKeyword = keyword.trim().toLowerCase();
   const filteredServices = serviceRecords.filter((item) => {
     if (!normalizedKeyword) {
@@ -32,9 +34,9 @@ export default function ServicesPage() {
       title="服务中心"
       count={visibleServices.length}
       itemWidth={ITEM_WIDTH}
-      tabs={["全部", "精选"]}
+      tabs={[...SERVICE_TABS]}
       activeTab={activeTab}
-      onTabChange={setActiveTab}
+      onTabChange={(tab) => setActiveTab(tab as (typeof SERVICE_TABS)[number])}
       searchValue={keyword}
       searchPlaceholder="搜索服务名称或描述"
       onSearchChange={setKeyword}

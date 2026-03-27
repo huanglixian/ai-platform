@@ -1,10 +1,17 @@
 import type { ReactNode } from "react";
 
+type CardPageGroup = {
+  key: string;
+  title: string;
+  children: ReactNode;
+};
+
 type CardPageFrameProps = {
   title: string;
   count: number;
   itemWidth: number;
   children: ReactNode;
+  groupedSections?: CardPageGroup[];
   tabs?: string[];
   activeTab?: string;
   onTabChange?: (tab: string) => void;
@@ -18,6 +25,7 @@ export function CardPageFrame({
   count,
   itemWidth,
   children,
+  groupedSections,
   tabs,
   activeTab,
   onTabChange,
@@ -78,7 +86,18 @@ export function CardPageFrame({
               })}
             </div>
           ) : null}
-          {children}
+          {activeTab === "全部" && groupedSections?.length
+            ? groupedSections.flatMap((section) => [
+                <div
+                  key={`${section.key}-title`}
+                  className="text-[12px] font-semibold tracking-[0.02em] text-[#667085]"
+                  style={{ gridColumn: "1 / -1" }}
+                >
+                  {section.title}
+                </div>,
+                section.children,
+              ])
+            : children}
         </div>
       </section>
     </div>

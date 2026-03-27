@@ -16,6 +16,9 @@ const TOOL_TABS = [
   "通用工具",
   "内容辅助",
 ] as const;
+const TOOL_GROUP_TABS = TOOL_TABS.filter(
+  (tab) => tab !== "全部" && tab !== "精选",
+);
 
 export default function ToolsPage() {
   const [keyword, setKeyword] = useState("");
@@ -42,6 +45,13 @@ export default function ToolsPage() {
 
     return item.category === activeTab;
   });
+  const groupedTools = TOOL_GROUP_TABS.map((tab) => ({
+    key: tab,
+    title: tab,
+    children: searchedTools
+      .filter((item) => item.category === tab)
+      .map((item) => <CapabilityCard key={item.id} item={item} />),
+  })).filter((section) => section.children.length > 0);
 
   return (
     <CardPageFrame
@@ -51,6 +61,7 @@ export default function ToolsPage() {
       tabs={[...TOOL_TABS]}
       activeTab={activeTab}
       onTabChange={(tab) => setActiveTab(tab as (typeof TOOL_TABS)[number])}
+      groupedSections={groupedTools}
       searchValue={keyword}
       searchPlaceholder="搜索工具名称或描述"
       onSearchChange={setKeyword}

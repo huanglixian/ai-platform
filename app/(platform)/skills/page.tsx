@@ -16,6 +16,9 @@ const SKILL_TABS = [
   "报告校审",
   "报告生成",
 ] as const;
+const SKILL_GROUP_TABS = SKILL_TABS.filter(
+  (tab) => tab !== "全部" && tab !== "精选",
+);
 
 export default function SkillsPage() {
   const [keyword, setKeyword] = useState("");
@@ -42,6 +45,13 @@ export default function SkillsPage() {
 
     return item.category === activeTab;
   });
+  const groupedSkills = SKILL_GROUP_TABS.map((tab) => ({
+    key: tab,
+    title: tab,
+    children: searchedSkills
+      .filter((item) => item.category === tab)
+      .map((item) => <CapabilityCard key={item.id} item={item} />),
+  })).filter((section) => section.children.length > 0);
 
   return (
     <CardPageFrame
@@ -51,6 +61,7 @@ export default function SkillsPage() {
       tabs={[...SKILL_TABS]}
       activeTab={activeTab}
       onTabChange={(tab) => setActiveTab(tab as (typeof SKILL_TABS)[number])}
+      groupedSections={groupedSkills}
       searchValue={keyword}
       searchPlaceholder="搜索技能名称或描述"
       onSearchChange={setKeyword}
