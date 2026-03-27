@@ -11,6 +11,8 @@ type CardPageFrameProps = {
   count: number;
   itemWidth: number;
   children: ReactNode;
+  actionLabel?: string;
+  onActionClick?: () => void;
   groupedSections?: CardPageGroup[];
   tabs?: string[];
   activeTab?: string;
@@ -25,6 +27,8 @@ export function CardPageFrame({
   count,
   itemWidth,
   children,
+  actionLabel,
+  onActionClick,
   groupedSections,
   tabs,
   activeTab,
@@ -41,11 +45,13 @@ export function CardPageFrame({
     <div className="flex w-full flex-col gap-4">
       <section className="space-y-3 pl-1.5">
         <div className="flex items-end gap-2.5">
-          <div className="text-title text-[18px] font-semibold tracking-[-0.02em]">
-            {title}
-          </div>
-          <div className="text-[12px] font-medium uppercase tracking-[0.08em] text-[#98a2b3]">
-            · {count} Items
+          <div className="flex items-end gap-2.5">
+            <div className="text-title text-[18px] font-semibold tracking-[-0.02em]">
+              {title}
+            </div>
+            <div className="text-[12px] font-medium uppercase tracking-[0.08em] text-[#98a2b3]">
+              · {count} Items
+            </div>
           </div>
         </div>
       </section>
@@ -64,26 +70,40 @@ export function CardPageFrame({
       <section className="flex flex-col gap-3">
         <div className="grid justify-center gap-4" style={gridStyle}>
           {tabs?.length ? (
-            <div className="flex flex-wrap gap-2" style={{ gridColumn: "1 / -1" }}>
-              {tabs.map((tab) => {
-                const selected = tab === activeTab;
+            <div
+              className="flex items-center justify-between gap-4 border-b border-[#d4e0ec] pb-2"
+              style={{ gridColumn: "1 / -1" }}
+            >
+              <div className="flex flex-wrap gap-2">
+                {tabs.map((tab) => {
+                  const selected = tab === activeTab;
 
-                return (
-                  <button
-                    key={tab}
-                    type="button"
-                    onClick={() => onTabChange?.(tab)}
-                    className={[
-                      "h-[27px] rounded-full border px-3 text-[11px] font-medium transition-colors",
-                      selected
-                        ? "border-[#bfd7f2] bg-[#eef5fd] text-[#1a4d87]"
-                        : "border-[#e5ebf2] bg-white text-[#667085] hover:border-[#d8e4f0] hover:text-title",
-                    ].join(" ")}
-                  >
-                    {tab}
-                  </button>
-                );
-              })}
+                  return (
+                    <button
+                      key={tab}
+                      type="button"
+                      onClick={() => onTabChange?.(tab)}
+                      className={[
+                        "h-[27px] rounded-full border px-3 text-[11px] font-medium transition-colors",
+                        selected
+                          ? "border-[#bfd7f2] bg-[#eef5fd] text-[#1a4d87]"
+                          : "border-[#e5ebf2] bg-white text-[#667085] hover:border-[#d8e4f0] hover:text-title",
+                      ].join(" ")}
+                    >
+                      {tab}
+                    </button>
+                  );
+                })}
+              </div>
+              {actionLabel ? (
+                <button
+                  type="button"
+                  onClick={onActionClick}
+                  className="h-[32px] shrink-0 rounded-[8px] bg-[#0368b3] px-4 text-[13px] font-medium text-white transition-colors hover:bg-[#1a4d87]"
+                >
+                  {actionLabel}
+                </button>
+              ) : null}
             </div>
           ) : null}
           {activeTab === "全部" && groupedSections?.length

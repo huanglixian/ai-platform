@@ -34,6 +34,7 @@ export default function ServicesPage() {
       title="服务中心"
       count={visibleServices.length}
       itemWidth={ITEM_WIDTH}
+      actionLabel="新建"
       tabs={[...SERVICE_TABS]}
       activeTab={activeTab}
       onTabChange={(tab) => setActiveTab(tab as (typeof SERVICE_TABS)[number])}

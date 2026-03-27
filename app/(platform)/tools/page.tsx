@@ -58,6 +58,7 @@ export default function ToolsPage() {
       title="工具中心"
       count={visibleTools.length}
       itemWidth={ITEM_WIDTH}
+      actionLabel="新建"
       tabs={[...TOOL_TABS]}
       activeTab={activeTab}
       onTabChange={(tab) => setActiveTab(tab as (typeof TOOL_TABS)[number])}

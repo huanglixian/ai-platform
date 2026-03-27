@@ -70,6 +70,7 @@ export default function SkillsPage() {
       title="技能中心"
       count={visibleSkills.length}
       itemWidth={ITEM_WIDTH}
+      actionLabel="新建"
       tabs={[...SKILL_TABS]}
       activeTab={activeTab}
       onTabChange={(tab) => setActiveTab(tab as (typeof SKILL_TABS)[number])}
