@@ -1,0 +1,235 @@
+import type { SkillRecord } from "./types";
+
+export const skillRecords: SkillRecord[] = [
+  {
+    id: "public-data-crawl",
+    name: "公共数据爬取",
+    description:
+      "自动抓取高程、影像、路网、水系、居民地、行政区划、土地利用等数据，并完成标准化处理入库。",
+    invokeType: "API / SDK",
+    calls: "428",
+    featured: true,
+    emoji: "🛰️",
+    category: "数据获取",
+  },
+  {
+    id: "special-topic-data-crawl",
+    name: "专题数据爬取",
+    description:
+      "自动获取风区、冰区、雷区、污区、地震区、气象分区等专题数据，完成清洗、统一和入库。",
+    invokeType: "API",
+    calls: "286",
+    featured: false,
+    emoji: "🌩️",
+    category: "数据获取",
+  },
+  {
+    id: "standard-sync",
+    name: "标准规范数据同步",
+    description:
+      "自动采集并更新国标、行标、企标、典型设计和审查要点，形成可检索、可引用的标准知识库。",
+    invokeType: "API",
+    calls: "314",
+    featured: false,
+    emoji: "📚",
+    category: "数据获取",
+  },
+  {
+    id: "engineering-data-extract",
+    name: "工程数据提取",
+    description:
+      "从 Excel、Word、PDF 等工程资料中提取项目名称、电压等级、线路长度、回路数等结构化工程信息。",
+    invokeType: "API",
+    calls: "391",
+    featured: true,
+    emoji: "📄",
+    category: "数据提取",
+  },
+  {
+    id: "sensitive-layer-ingest",
+    name: "敏感点数据入库",
+    description:
+      "识别并清洗居民点、学校、厂矿、保护地、铁路、公路等敏感点数据，完成标准化入库。",
+    invokeType: "API / SDK",
+    calls: "203",
+    featured: false,
+    emoji: "🧭",
+    category: "数据提取",
+  },
+  {
+    id: "material-code-transform",
+    name: "南网物资编码转化",
+    description:
+      "提取设备材料型号规格，完成物资编码映射、主数据匹配和清册生成。",
+    invokeType: "API",
+    calls: "168",
+    featured: false,
+    emoji: "🏷️",
+    category: "数据提取",
+  },
+  {
+    id: "drawing-title-extract",
+    name: "图纸与图签信息提取",
+    description:
+      "从 CAD、PDF 图纸中提取图号、图名、阶段、专业、版本、设计校审人员和日期等信息。",
+    invokeType: "API",
+    calls: "147",
+    featured: false,
+    emoji: "📐",
+    category: "数据提取",
+  },
+  {
+    id: "route-scheme-comparison",
+    name: "路径方案比选",
+    description:
+      "对多路径方案的长度、跨越、地形、敏感点冲突、施工难度和造价指标进行综合比选。",
+    invokeType: "API / SDK",
+    calls: "336",
+    featured: true,
+    emoji: "🛣️",
+    category: "业务辅助",
+  },
+  {
+    id: "route-compliance-analysis",
+    name: "路径合规性分析",
+    description:
+      "自动识别生态红线、保护地、矿权、林地、农田及控制区冲突，输出风险等级与规避建议。",
+    invokeType: "API",
+    calls: "279",
+    featured: false,
+    emoji: "✅",
+    category: "业务辅助",
+  },
+  {
+    id: "reply-interpretation",
+    name: "意见回复解读",
+    description:
+      "批量解析部门与权属单位回复意见，提取限制条件、整改要求和关键结论。",
+    invokeType: "API",
+    calls: "154",
+    featured: false,
+    emoji: "💬",
+    category: "业务辅助",
+  },
+  {
+    id: "similar-project-recommend",
+    name: "历史相似工程推荐",
+    description:
+      "基于电压等级、地形、气象区和区域特征推荐相似历史工程，辅助复用既有经验。",
+    invokeType: "API / SDK",
+    calls: "126",
+    featured: false,
+    emoji: "🗂️",
+    category: "业务辅助",
+  },
+  {
+    id: "construction-analysis",
+    name: "施工组织辅助分析",
+    description:
+      "结合地形、道路、跨越点与知识库经验，对便道、运输、牵张场与特殊施工难点进行分析。",
+    invokeType: "API",
+    calls: "188",
+    featured: false,
+    emoji: "🚧",
+    category: "业务辅助",
+  },
+  {
+    id: "general-review",
+    name: "通用校审",
+    description:
+      "对报告错别字、术语、编号、图表引用、前后文和数据一致性进行全面检查。",
+    invokeType: "API / SDK",
+    calls: "442",
+    featured: true,
+    emoji: "🧪",
+    category: "报告校审",
+  },
+  {
+    id: "standard-citation-review",
+    name: "标准引用校审",
+    description:
+      "自动识别报告中的标准引用，并校验是否存在旧标准、废止标准、错引漏引等问题。",
+    invokeType: "API",
+    calls: "231",
+    featured: false,
+    emoji: "📑",
+    category: "报告校审",
+  },
+  {
+    id: "table-consistency-review",
+    name: "图表一致性校审",
+    description:
+      "自动比对正文、附表、清册、图纸说明中的关键指标，识别前后不一致问题。",
+    invokeType: "API",
+    calls: "216",
+    featured: false,
+    emoji: "📊",
+    category: "报告校审",
+  },
+  {
+    id: "feasibility-review",
+    name: "可研报告校审",
+    description:
+      "针对可研报告，对路径、建设必要性、通道条件、结构、电气和投资章节进行专项校审。",
+    invokeType: "API",
+    calls: "173",
+    featured: false,
+    emoji: "🔍",
+    category: "报告校审",
+  },
+  {
+    id: "preliminary-design-review",
+    name: "初设说明书校审",
+    description:
+      "针对初设说明书，对路径、结构、电气、设备选型、气象条件和图表附件进行专项校审。",
+    invokeType: "API",
+    calls: "257",
+    featured: false,
+    emoji: "📘",
+    category: "报告校审",
+  },
+  {
+    id: "construction-drawing-review",
+    name: "施工图说明书校审",
+    description:
+      "针对施工图说明书，对设计说明、施工要求、材料配置、跨越处理和图文一致性进行校审。",
+    invokeType: "API",
+    calls: "142",
+    featured: false,
+    emoji: "🏗️",
+    category: "报告校审",
+  },
+  {
+    id: "agreement-material-generate",
+    name: "协议报审材料生成",
+    description:
+      "根据线路路径、区域和敏感点情况，自动生成报审函、征求意见表和附图说明等材料。",
+    invokeType: "API / SDK",
+    calls: "225",
+    featured: false,
+    emoji: "📝",
+    category: "报告生成",
+  },
+  {
+    id: "preliminary-design-generate",
+    name: "初设说明书生成",
+    description:
+      "基于路径规划、比选、合规和敏感点成果，自动生成初设说明书路径相关章节。",
+    invokeType: "API / SDK",
+    calls: "367",
+    featured: true,
+    emoji: "🪄",
+    category: "报告生成",
+  },
+  {
+    id: "handover-package-generate",
+    name: "移交成果生成",
+    description:
+      "根据院内或业主移交规范，自动汇总结构化数据、图纸清单和校验结果，生成数字化移交成果包。",
+    invokeType: "API",
+    calls: "196",
+    featured: false,
+    emoji: "📦",
+    category: "报告生成",
+  },
+];
