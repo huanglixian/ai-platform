@@ -1,10 +1,25 @@
 import type { CapabilityRecord } from "@/features/capabilities/types";
 
-type CapabilityCardProps = {
-  item: CapabilityRecord;
+type CapabilityCardFooter = {
+  leftLabel: string;
+  leftValue: string;
+  rightLabel: string;
+  rightValue: string;
 };
 
-export function CapabilityCard({ item }: CapabilityCardProps) {
+type CapabilityCardProps = {
+  item: CapabilityRecord;
+  footer?: CapabilityCardFooter;
+};
+
+export function CapabilityCard({ item, footer }: CapabilityCardProps) {
+  const resolvedFooter = footer ?? {
+    leftLabel: "调用方式",
+    leftValue: item.invokeType,
+    rightLabel: "调用次数",
+    rightValue: item.calls,
+  };
+
   return (
     <button
       type="button"
@@ -39,18 +54,18 @@ export function CapabilityCard({ item }: CapabilityCardProps) {
         <div className="grid grid-cols-2 bg-white">
           <div className="flex items-center justify-center gap-2 border-r border-[#eef2f6] px-4 py-3 text-center">
             <div className="text-[10px] font-medium tracking-[0.04em] text-[#98a2b3]">
-              调用方式
+              {resolvedFooter.leftLabel}
             </div>
-            <div className="text-title text-[13px] font-medium leading-none">
-              {item.invokeType}
+            <div className="text-title text-[12px] font-medium leading-none">
+              {resolvedFooter.leftValue}
             </div>
           </div>
           <div className="flex items-center justify-center gap-2 px-4 py-3 text-center">
             <div className="text-[10px] font-medium tracking-[0.04em] text-[#98a2b3]">
-              调用次数
+              {resolvedFooter.rightLabel}
             </div>
-            <div className="text-title text-[13px] font-medium leading-none">
-              {item.calls}
+            <div className="text-title text-[12px] font-medium leading-none">
+              {resolvedFooter.rightValue}
             </div>
           </div>
         </div>

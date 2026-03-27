@@ -11,6 +11,7 @@ export const skillRecords: SkillRecord[] = [
     featured: true,
     emoji: "🛰️",
     category: "数据获取",
+    owner: "数字院",
   },
   {
     id: "special-topic-data-crawl",
@@ -22,6 +23,7 @@ export const skillRecords: SkillRecord[] = [
     featured: false,
     emoji: "🌩️",
     category: "数据获取",
+    owner: "数字院",
   },
   {
     id: "standard-sync",
@@ -33,6 +35,7 @@ export const skillRecords: SkillRecord[] = [
     featured: false,
     emoji: "📚",
     category: "数据获取",
+    owner: "数字院",
   },
   {
     id: "engineering-data-extract",
@@ -44,6 +47,7 @@ export const skillRecords: SkillRecord[] = [
     featured: true,
     emoji: "📄",
     category: "数据提取",
+    owner: "数字院",
   },
   {
     id: "sensitive-layer-ingest",
@@ -55,6 +59,7 @@ export const skillRecords: SkillRecord[] = [
     featured: false,
     emoji: "🧭",
     category: "数据提取",
+    owner: "数字院",
   },
   {
     id: "material-code-transform",
@@ -66,6 +71,7 @@ export const skillRecords: SkillRecord[] = [
     featured: false,
     emoji: "🏷️",
     category: "数据提取",
+    owner: "数字院",
   },
   {
     id: "drawing-title-extract",
@@ -77,6 +83,7 @@ export const skillRecords: SkillRecord[] = [
     featured: false,
     emoji: "📐",
     category: "数据提取",
+    owner: "数字院",
   },
   {
     id: "route-scheme-comparison",
@@ -88,6 +95,7 @@ export const skillRecords: SkillRecord[] = [
     featured: true,
     emoji: "🛣️",
     category: "业务辅助",
+    owner: "数字院",
   },
   {
     id: "route-compliance-analysis",
@@ -99,6 +107,7 @@ export const skillRecords: SkillRecord[] = [
     featured: false,
     emoji: "✅",
     category: "业务辅助",
+    owner: "数字院",
   },
   {
     id: "reply-interpretation",
@@ -110,6 +119,7 @@ export const skillRecords: SkillRecord[] = [
     featured: false,
     emoji: "💬",
     category: "业务辅助",
+    owner: "数字院",
   },
   {
     id: "similar-project-recommend",
@@ -121,6 +131,7 @@ export const skillRecords: SkillRecord[] = [
     featured: false,
     emoji: "🗂️",
     category: "业务辅助",
+    owner: "数字院",
   },
   {
     id: "construction-analysis",
@@ -132,6 +143,7 @@ export const skillRecords: SkillRecord[] = [
     featured: false,
     emoji: "🚧",
     category: "业务辅助",
+    owner: "数字院",
   },
   {
     id: "general-review",
@@ -143,6 +155,7 @@ export const skillRecords: SkillRecord[] = [
     featured: true,
     emoji: "🧪",
     category: "报告校审",
+    owner: "数字院",
   },
   {
     id: "standard-citation-review",
@@ -154,6 +167,7 @@ export const skillRecords: SkillRecord[] = [
     featured: false,
     emoji: "📑",
     category: "报告校审",
+    owner: "数字院",
   },
   {
     id: "table-consistency-review",
@@ -165,6 +179,7 @@ export const skillRecords: SkillRecord[] = [
     featured: false,
     emoji: "📊",
     category: "报告校审",
+    owner: "数字院",
   },
   {
     id: "feasibility-review",
@@ -176,6 +191,7 @@ export const skillRecords: SkillRecord[] = [
     featured: false,
     emoji: "🔍",
     category: "报告校审",
+    owner: "数字院",
   },
   {
     id: "preliminary-design-review",
@@ -187,6 +203,7 @@ export const skillRecords: SkillRecord[] = [
     featured: false,
     emoji: "📘",
     category: "报告校审",
+    owner: "数字院",
   },
   {
     id: "construction-drawing-review",
@@ -198,6 +215,7 @@ export const skillRecords: SkillRecord[] = [
     featured: false,
     emoji: "🏗️",
     category: "报告校审",
+    owner: "数字院",
   },
   {
     id: "agreement-material-generate",
@@ -209,6 +227,7 @@ export const skillRecords: SkillRecord[] = [
     featured: false,
     emoji: "📝",
     category: "报告生成",
+    owner: "数字院",
   },
   {
     id: "preliminary-design-generate",
@@ -220,6 +239,7 @@ export const skillRecords: SkillRecord[] = [
     featured: true,
     emoji: "🪄",
     category: "报告生成",
+    owner: "数字院",
   },
   {
     id: "handover-package-generate",
@@ -231,5 +251,6 @@ export const skillRecords: SkillRecord[] = [
     featured: false,
     emoji: "📦",
     category: "报告生成",
+    owner: "数字院",
   },
 ];

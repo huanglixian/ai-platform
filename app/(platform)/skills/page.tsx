@@ -23,6 +23,18 @@ const SKILL_GROUP_TABS = SKILL_TABS.filter(
 export default function SkillsPage() {
   const [keyword, setKeyword] = useState("");
   const [activeTab, setActiveTab] = useState<(typeof SKILL_TABS)[number]>("全部");
+  const renderSkillCard = (item: (typeof skillRecords)[number]) => (
+    <CapabilityCard
+      key={item.id}
+      item={item}
+      footer={{
+        leftLabel: "维护方",
+        leftValue: item.owner,
+        rightLabel: "调用次数",
+        rightValue: item.calls,
+      }}
+    />
+  );
   const normalizedKeyword = keyword.trim().toLowerCase();
   const searchedSkills = skillRecords.filter((item) => {
     if (!normalizedKeyword) {
@@ -50,7 +62,7 @@ export default function SkillsPage() {
     title: tab,
     children: searchedSkills
       .filter((item) => item.category === tab)
-      .map((item) => <CapabilityCard key={item.id} item={item} />),
+      .map(renderSkillCard),
   })).filter((section) => section.children.length > 0);
 
   return (
@@ -66,9 +78,7 @@ export default function SkillsPage() {
       searchPlaceholder="搜索技能名称或描述"
       onSearchChange={setKeyword}
     >
-      {visibleSkills.map((item) => (
-        <CapabilityCard key={item.id} item={item} />
-      ))}
+      {visibleSkills.map(renderSkillCard)}
     </CardPageFrame>
   );
 }
