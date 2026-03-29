@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
@@ -19,6 +18,20 @@ import type {
 type BotWorkbenchProps = {
   agentId: string;
 };
+
+function buildTurnNavTitle(
+  turn: { index: number; anchor: string; title: string },
+  detailTurn?: NanobotTurnView,
+) {
+  const content = detailTurn?.user_message?.content || turn.title || "";
+  const text = content.replace(/\s+/g, " ").trim();
+
+  if (!text) {
+    return `第 ${turn.index} 轮`;
+  }
+
+  return text.length > 30 ? `${text.slice(0, 30)}...` : text;
+}
 
 function PendingTurn({ content }: { content: string }) {
   return (
@@ -52,7 +65,7 @@ function MessageCard({ message }: { message: NanobotMessageView }) {
   return (
     <article
       className={[
-        "rounded-[10px] border p-3",
+        "rounded-[10px] border px-3 py-2.5",
         isUser
           ? "border-[#e4edf6] bg-white"
           : isAssistant
@@ -63,7 +76,7 @@ function MessageCard({ message }: { message: NanobotMessageView }) {
       <div className="flex items-center justify-between gap-3">
         <span
           className={[
-            "rounded-full px-2.5 py-1 text-[10px] font-semibold",
+            "rounded-full px-2 py-0.5 text-[10px] font-semibold",
             isUser
               ? "bg-[#f3f6fa] text-[#51657d]"
               : isAssistant
@@ -76,11 +89,11 @@ function MessageCard({ message }: { message: NanobotMessageView }) {
         <span className="text-[11px] text-[#98a2b3]">{message.timestamp || "-"}</span>
       </div>
       {message.tool_summary ? (
-        <div className="mt-2 rounded-[8px] bg-white/80 px-2.5 py-2 text-[12px] text-[#51657d]">
+        <div className="mt-1.5 rounded-[8px] bg-white/80 px-2.5 py-1.5 text-[12px] text-[#51657d]">
           {message.tool_summary}
         </div>
       ) : null}
-      <pre className="mt-2 whitespace-pre-wrap break-words text-[13px] leading-6 text-title">
+      <pre className="mt-1.5 whitespace-pre-wrap break-words text-[13px] leading-5.5 text-title">
         {message.content || "(empty)"}
       </pre>
     </article>
@@ -89,24 +102,18 @@ function MessageCard({ message }: { message: NanobotMessageView }) {
 
 function TurnCard({ turn }: { turn: NanobotTurnView }) {
   return (
-    <section className="rounded-[12px] border border-[#e4edf6] bg-white p-4">
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <div className="text-[13px] font-semibold text-title">
-            第 {turn.index} 轮
-          </div>
-          <div className="mt-1 text-[12px] text-[#7f8ea3]">{turn.title}</div>
-        </div>
-        <div className="text-[12px] text-[#98a2b3]">{turn.timestamp || "-"}</div>
+    <section className="rounded-[12px] border border-[#e4edf6] bg-white px-3.5 py-2.5">
+      <div className="text-[11px] font-semibold text-[#7f8ea3]">
+        第 {turn.index} 轮
       </div>
-      <div className="mt-4 grid gap-3">
+      <div className="mt-2.5 grid gap-2">
         {turn.user_message ? <MessageCard message={turn.user_message} /> : null}
         {turn.process_messages.length ? (
           <details className="rounded-[10px] border border-[#edf2f7] bg-[#fafbfd]">
-            <summary className="cursor-pointer px-3 py-2.5 text-[12px] font-medium text-[#51657d]">
+            <summary className="cursor-pointer px-3 py-2 text-[12px] font-medium text-[#51657d]">
               思考过程（{turn.process_messages.length} 条）
             </summary>
-            <div className="grid gap-3 border-t border-[#edf2f7] p-3">
+            <div className="grid gap-2 border-t border-[#edf2f7] p-2.5">
               {turn.process_messages.map((message, index) => (
                 <MessageCard
                   key={`${turn.anchor}-process-${index}`}
@@ -315,187 +322,164 @@ export function BotWorkbench({ agentId }: BotWorkbenchProps) {
   }
 
   return (
-    <div className="flex w-full flex-col gap-4">
-      <section className="app-card overflow-hidden">
-        <div className="flex flex-col gap-4 border-b border-[#e7eef6] bg-[linear-gradient(180deg,#f2f7fd_0%,#eef4fb_100%)] px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <div className="flex items-center gap-3">
-              <Link
-                href="/bots"
-                className="rounded-[8px] border border-[#dbe5f0] bg-white px-3 py-1.5 text-[12px] font-medium text-[#51657d] transition-colors hover:border-[#bfd7f2] hover:text-title"
-              >
-                返回列表
-              </Link>
-              <div className="text-[11px] font-medium uppercase tracking-[0.08em] text-[#7f8ea3]">
-                自由体工作台
-              </div>
-            </div>
-            <div className="mt-3 text-title text-[22px] font-semibold tracking-[-0.02em]">
-              {bootstrap.agent.name || bootstrap.agent.id}
-            </div>
-            <div className="mt-1 text-[12px] text-[#7f8ea3]">
-              {bootstrap.agent.id}
-            </div>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-3">
-            <div className="rounded-[10px] bg-white px-4 py-3 shadow-[0_4px_10px_rgba(15,23,42,0.04)]">
-              <div className="text-[10px] font-medium uppercase tracking-[0.08em] text-[#98a2b3]">
-                模型
-              </div>
-              <div className="mt-1 text-[13px] font-semibold text-title">
-                {bootstrap.model_name || "-"}
-              </div>
-            </div>
-            <div className="rounded-[10px] bg-white px-4 py-3 shadow-[0_4px_10px_rgba(15,23,42,0.04)]">
-              <div className="text-[10px] font-medium uppercase tracking-[0.08em] text-[#98a2b3]">
-                版本
-              </div>
-              <div className="mt-1 text-[13px] font-semibold text-title">
-                {bootstrap.app_version ? `v${bootstrap.app_version}` : "-"}
-              </div>
-            </div>
-            <div className="rounded-[10px] bg-white px-4 py-3 shadow-[0_4px_10px_rgba(15,23,42,0.04)]">
-              <div className="text-[10px] font-medium uppercase tracking-[0.08em] text-[#98a2b3]">
-                会话
-              </div>
-              <div className="mt-1 text-[13px] font-semibold text-title">
-                {bootstrap.sessions.length} 个
-              </div>
-            </div>
+    <section className="grid h-[calc(100vh-104px)] min-h-0 w-full gap-4 xl:grid-cols-[280px_minmax(0,1fr)_340px]">
+      <aside className="app-card flex min-h-0 flex-col overflow-hidden">
+        <div className="flex items-center justify-between border-b border-[#eef2f6] px-4 py-3">
+          <div className="text-[15px] font-semibold text-title">会话列表</div>
+          <div className="text-[12px] text-[#7f8ea3]">
+            共 {bootstrap.sessions.length} 个
           </div>
         </div>
-        <div className="grid gap-3 px-5 py-4 text-[12px] text-[#51657d] lg:grid-cols-2">
-          <div className="rounded-[10px] bg-[#f8fbfe] px-4 py-3">
-            <div className="text-[10px] font-medium uppercase tracking-[0.08em] text-[#98a2b3]">
-              workspace
-            </div>
-            <div className="mt-1 break-all">{bootstrap.workspace_path || "-"}</div>
-          </div>
-          <div className="rounded-[10px] bg-[#f8fbfe] px-4 py-3">
-            <div className="text-[10px] font-medium uppercase tracking-[0.08em] text-[#98a2b3]">
-              config
-            </div>
-            <div className="mt-1 break-all">{bootstrap.agent.config_path || "-"}</div>
-          </div>
+        <div className="border-b border-[#f0f4f8] px-4 py-3">
+          <button
+            type="button"
+            onClick={() => {
+              setBootstrap({
+                ...bootstrap,
+                current_key: null,
+                current_detail: null,
+              });
+              setComposerStatus("");
+              syncUrl();
+            }}
+            className="h-[32px] w-full rounded-[8px] border border-[#dbe5f0] px-3 text-[12px] font-medium text-[#356da8] transition-colors hover:border-[#bfd7f2] hover:bg-[#eef5fd]"
+          >
+            新会话
+          </button>
         </div>
-      </section>
+        <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
+          {bootstrap.sessions.length ? (
+            bootstrap.sessions.map((session) => {
+              const active = session.key === bootstrap.current_key;
+              const detailTurns =
+                active && bootstrap.current_detail?.key === session.key
+                  ? bootstrap.current_detail.turns
+                  : [];
 
-      <section className="grid gap-4 xl:grid-cols-[280px_minmax(0,1fr)_340px]">
-        <aside className="app-card flex min-h-[680px] flex-col overflow-hidden">
-          <div className="flex items-center justify-between border-b border-[#eef2f6] px-4 py-3">
-            <div>
-              <div className="text-[15px] font-semibold text-title">会话列表</div>
-              <div className="mt-1 text-[12px] text-[#7f8ea3]">
-                共 {bootstrap.sessions.length} 个
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => {
-                setBootstrap({
-                  ...bootstrap,
-                  current_key: null,
-                  current_detail: null,
-                });
-                setComposerStatus("");
-                syncUrl();
-              }}
-              className="h-[32px] rounded-[8px] border border-[#dbe5f0] px-3 text-[12px] font-medium text-[#356da8] transition-colors hover:border-[#bfd7f2] hover:bg-[#eef5fd]"
-            >
-              新会话
-            </button>
-          </div>
-          <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
-            {bootstrap.sessions.length ? (
-              bootstrap.sessions.map((session) => {
-                const active = session.key === bootstrap.current_key;
-                return (
-                  <div
-                    key={session.key}
-                    className={[
-                      "rounded-[10px] border transition-colors",
-                      active
-                        ? "border-[#bfd7f2] bg-[#f8fbfe]"
-                        : "border-[#e8eef5] bg-white",
-                    ].join(" ")}
+              return (
+                <div
+                  key={session.key}
+                  className={[
+                    "rounded-[10px] border transition-colors",
+                    active
+                      ? "border-[#bfd7f2] bg-[#f8fbfe]"
+                      : "border-[#e8eef5] bg-white",
+                  ].join(" ")}
+                >
+                  <button
+                    type="button"
+                    onClick={() => void handleOpenSession(session.key)}
+                    className="flex w-full items-start justify-between gap-3 px-3 py-3 text-left"
                   >
-                    <button
-                      type="button"
-                      onClick={() => void handleOpenSession(session.key)}
-                      className="flex w-full items-start justify-between gap-3 px-3 py-3 text-left"
-                    >
-                      <div className="min-w-0">
-                        <div className="line-clamp-2 text-[13px] font-semibold text-title">
-                          {session.title || session.key}
-                        </div>
-                        <div className="mt-1 truncate text-[11px] text-[#98a2b3]">
-                          {session.key}
-                        </div>
+                    <div className="min-w-0">
+                      <div className="line-clamp-1 text-[13px] font-semibold text-title">
+                        {session.title || session.key}
                       </div>
-                      <div className="shrink-0 text-right text-[11px] text-[#7f8ea3]">
-                        <div>{session.turn_count} 轮</div>
-                        <div className="mt-1">{session.updated_label || "-"}</div>
+                      <div className="mt-1 truncate text-[11px] text-[#98a2b3]">
+                        {session.updated_label || "未使用"}
                       </div>
-                    </button>
-                    {active ? (
-                      <div className="border-t border-[#eef2f6] px-3 py-3">
-                        <div className="line-clamp-2 text-[12px] leading-5 text-[#667085]">
-                          {session.preview || "当前没有预览"}
-                        </div>
-                        <div className="mt-3 grid gap-2">
-                          {session.turns.length ? (
-                            session.turns.map((turn) => (
+                    </div>
+                    <div className="shrink-0 text-right text-[11px] text-[#7f8ea3]">
+                      <div>{session.turn_count} 轮</div>
+                    </div>
+                  </button>
+                  {active ? (
+                    <div className="border-t border-[#eef2f6] px-3 py-3">
+                      <div className="grid gap-2">
+                        {session.turns.length ? (
+                          session.turns.map((turn) => {
+                            const detailTurn = detailTurns.find(
+                              (item) => item.anchor === turn.anchor,
+                            );
+                            return (
                               <button
                                 key={`${session.key}-${turn.anchor}`}
                                 type="button"
                                 onClick={() =>
                                   void handleOpenSession(session.key, turn.anchor)
                                 }
-                                className="flex items-center justify-between gap-3 rounded-[8px] border border-[#edf2f7] bg-white px-2.5 py-2 text-left transition-colors hover:border-[#d8e8fa] hover:bg-[#eef5fd]"
+                                className="flex min-w-0 items-center gap-3 rounded-[8px] border border-[#edf2f7] bg-white px-2.5 py-2 text-left transition-colors hover:border-[#d8e8fa] hover:bg-[#eef5fd]"
                               >
-                                <span className="min-w-0 truncate text-[12px] text-title">
-                                  {turn.title}
-                                </span>
-                                <span className="text-[11px] text-[#98a2b3]">
+                                <span className="shrink-0 text-[11px] text-[#98a2b3]">
                                   #{turn.index}
                                 </span>
+                                <span className="min-w-0 flex-1 truncate text-[12px] text-title">
+                                  {buildTurnNavTitle(turn, detailTurn)}
+                                </span>
                               </button>
-                            ))
-                          ) : (
-                            <div className="text-[12px] text-[#98a2b3]">
-                              当前没有轮次
-                            </div>
-                          )}
-                        </div>
+                            );
+                          })
+                        ) : (
+                          <div className="text-[12px] text-[#98a2b3]">
+                            当前没有轮次
+                          </div>
+                        )}
                       </div>
-                    ) : null}
-                  </div>
-                );
-              })
-            ) : (
-              <div className="rounded-[10px] border border-dashed border-[#d6e0eb] bg-[#fafbfd] px-4 py-6 text-[12px] leading-6 text-[#7f8ea3]">
-                还没有会话。发送第一条消息后，这里会自动生成会话列表。
-              </div>
-            )}
-          </div>
-        </aside>
-
-        <div className="grid min-w-0 gap-4">
-          <section className="app-card min-h-[520px] overflow-hidden">
-            <div className="flex items-center justify-between border-b border-[#eef2f6] px-4 py-3">
-              <div>
-                <div className="text-[15px] font-semibold text-title">对话记录</div>
-                <div className="mt-1 text-[12px] text-[#7f8ea3]">
-                  {bootstrap.current_detail
-                    ? `${bootstrap.current_detail.turn_count} 轮 · ${bootstrap.current_detail.message_count} 条消息`
-                    : "等待第一条输入"}
+                    </div>
+                  ) : null}
                 </div>
-              </div>
-              <div className="text-[12px] text-[#98a2b3]">
-                {bootstrap.current_key || "新会话"}
-              </div>
+              );
+            })
+          ) : (
+            <div className="rounded-[10px] border border-dashed border-[#d6e0eb] bg-[#fafbfd] px-4 py-6 text-[12px] leading-6 text-[#7f8ea3]">
+              还没有会话。发送第一条消息后，这里会自动生成会话列表。
             </div>
-            <div className="space-y-4 px-4 py-4">
+          )}
+        </div>
+      </aside>
+
+      <div className="grid min-h-0 min-w-0 grid-rows-[auto_minmax(0,1fr)] gap-4">
+        <section className="app-card overflow-hidden">
+          <div className="flex items-center justify-between border-b border-[#eef2f6] px-4 py-3">
+            <div className="text-[15px] font-semibold text-title">发送消息</div>
+            <div className="text-[12px] text-[#7f8ea3]">&nbsp;</div>
+          </div>
+          <div className="grid gap-3 px-4 py-4">
+            <textarea
+              value={composerValue}
+              onChange={(event) => setComposerValue(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" && !event.shiftKey) {
+                  event.preventDefault();
+                  if (!sending) {
+                    void handleSendMessage();
+                  }
+                }
+              }}
+              placeholder="输入你的问题，在当前自由体下直接和 nanobot 对话"
+              className="min-h-[120px] resize-none rounded-[12px] border border-[#dbe5f0] bg-white px-4 py-3 text-[13px] leading-6 text-title outline-none transition-colors placeholder:text-[#98a2b3] focus:border-[#6f96c4]"
+            />
+            <div className="flex items-center justify-between gap-3">
+              <div className="truncate text-[12px] text-[#7f8ea3]">
+                {composerStatus
+                  ? composerStatus
+                  : sending
+                    ? "nanobot 正在处理这条消息..."
+                    : `模型：${bootstrap.model_name || "-"}`}
+              </div>
+              <button
+                type="button"
+                disabled={sending}
+                onClick={() => void handleSendMessage()}
+                className="h-[36px] rounded-[8px] bg-[#0368b3] px-4 text-[13px] font-medium text-white transition-colors hover:bg-[#1a4d87] disabled:cursor-not-allowed disabled:bg-[#7eaed6]"
+              >
+                {sending ? "处理中..." : "发送"}
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <section className="app-card flex min-h-0 flex-col overflow-hidden">
+          <div className="flex items-center justify-between border-b border-[#eef2f6] px-4 py-3">
+            <div className="text-[15px] font-semibold text-title">对话记录</div>
+            <div className="text-[12px] text-[#98a2b3]">
+              {bootstrap.current_detail
+                ? `${bootstrap.current_detail.turn_count} 轮 · ${bootstrap.current_detail.message_count} 条消息`
+                : "等待第一条输入"}
+            </div>
+          </div>
+          <div className="flex-1 overflow-y-auto px-4 py-4">
+            <div className="space-y-4">
               {pendingContent ? <PendingTurn content={pendingContent} /> : null}
               {bootstrap.current_detail?.turns.length ? (
                 bootstrap.current_detail.turns.map((turn) => (
@@ -509,58 +493,19 @@ export function BotWorkbench({ agentId }: BotWorkbenchProps) {
                 </div>
               )}
             </div>
-          </section>
-
-          <section className="app-card overflow-hidden">
-            <div className="border-b border-[#eef2f6] px-4 py-3">
-              <div className="text-[15px] font-semibold text-title">消息输入</div>
-              <div className="mt-1 text-[12px] text-[#7f8ea3]">
-                直接调用 nanobot 后端聊天接口，结果会写入当前工作区会话。
-              </div>
-            </div>
-            <div className="grid gap-3 px-4 py-4">
-              <textarea
-                value={composerValue}
-                onChange={(event) => setComposerValue(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" && !event.shiftKey) {
-                    event.preventDefault();
-                    if (!sending) {
-                      void handleSendMessage();
-                    }
-                  }
-                }}
-                placeholder="输入消息，回车发送，Shift + Enter 换行"
-                className="min-h-[140px] resize-y rounded-[12px] border border-[#dbe5f0] bg-white px-4 py-3 text-[13px] leading-6 text-title outline-none transition-colors placeholder:text-[#98a2b3] focus:border-[#6f96c4]"
-              />
-              <div className="flex items-center justify-between gap-3">
-                <div className="text-[12px] text-[#7f8ea3]">
-                  Workspace：{bootstrap.workspace_path || "-"}
-                </div>
-                <button
-                  type="button"
-                  disabled={sending}
-                  onClick={() => void handleSendMessage()}
-                  className="h-[36px] rounded-[8px] bg-[#0368b3] px-4 text-[13px] font-medium text-white transition-colors hover:bg-[#1a4d87] disabled:cursor-not-allowed disabled:bg-[#7eaed6]"
-                >
-                  {sending ? "处理中..." : "发送"}
-                </button>
-              </div>
-              {composerStatus ? (
-                <div className="text-[12px] text-[#7f8ea3]">{composerStatus}</div>
-              ) : null}
-            </div>
-          </section>
-        </div>
-
-        <aside className="app-card flex min-h-[680px] flex-col overflow-hidden">
-          <div className="border-b border-[#eef2f6] px-4 py-3">
-            <div className="text-[15px] font-semibold text-title">名单配置</div>
-            <div className="mt-1 text-[12px] text-[#7f8ea3]">
-              对应后端 `security_list.json` 的可编辑内容。
-            </div>
           </div>
-          <div className="grid flex-1 gap-4 px-4 py-4">
+        </section>
+      </div>
+
+      <aside className="app-card flex min-h-0 flex-col overflow-hidden">
+        <div className="border-b border-[#eef2f6] px-4 py-3">
+          <div className="flex items-center justify-between gap-3">
+            <div className="text-[15px] font-semibold text-title">名单配置</div>
+            <div className="text-[12px] text-[#7f8ea3]">security_list.json</div>
+          </div>
+        </div>
+        <div className="flex-1 overflow-y-auto px-4 py-4">
+          <div className="grid gap-4">
             <label className="grid gap-1.5">
               <span className="text-[11px] font-medium text-[#7f8ea3]">
                 允许写入
@@ -568,7 +513,7 @@ export function BotWorkbench({ agentId }: BotWorkbenchProps) {
               <textarea
                 value={writeAllowText}
                 onChange={(event) => setWriteAllowText(event.target.value)}
-                className="min-h-[180px] resize-y rounded-[12px] border border-[#dbe5f0] bg-white px-4 py-3 font-mono text-[12px] leading-6 text-title outline-none transition-colors focus:border-[#6f96c4]"
+                className="h-[200px] resize-none rounded-[12px] border border-[#dbe5f0] bg-white px-4 py-3 font-mono text-[12px] leading-6 text-title outline-none transition-colors focus:border-[#6f96c4]"
               />
             </label>
             <label className="grid gap-1.5">
@@ -578,10 +523,10 @@ export function BotWorkbench({ agentId }: BotWorkbenchProps) {
               <textarea
                 value={readDenyText}
                 onChange={(event) => setReadDenyText(event.target.value)}
-                className="min-h-[180px] resize-y rounded-[12px] border border-[#dbe5f0] bg-white px-4 py-3 font-mono text-[12px] leading-6 text-title outline-none transition-colors focus:border-[#6f96c4]"
+                className="h-[200px] resize-none rounded-[12px] border border-[#dbe5f0] bg-white px-4 py-3 font-mono text-[12px] leading-6 text-title outline-none transition-colors focus:border-[#6f96c4]"
               />
             </label>
-            <div className="mt-auto flex items-center justify-between gap-3">
+            <div className="flex items-center justify-between gap-3">
               <div className="text-[12px] text-[#7f8ea3]">
                 {savingSecurity ? "正在保存名单配置..." : securityStatus || " "}
               </div>
@@ -595,8 +540,8 @@ export function BotWorkbench({ agentId }: BotWorkbenchProps) {
               </button>
             </div>
           </div>
-        </aside>
-      </section>
-    </div>
+        </div>
+      </aside>
+    </section>
   );
 }
