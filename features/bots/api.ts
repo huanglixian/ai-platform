@@ -5,6 +5,7 @@ import type {
   NanobotConfigFile,
   NanobotSecurityList,
   NanobotSessionDetail,
+  NanobotSessionSummary,
 } from "./types";
 
 type NanobotResponse<T> = T & {
@@ -87,6 +88,15 @@ export async function getNanobotSessionDetail(agentId: string, sessionKey: strin
     detail: NanobotSessionDetail;
   }>(`/agents/${encodeURIComponent(agentId)}/sessions/${encodeURIComponent(sessionKey)}`);
   return data.detail;
+}
+
+export async function deleteNanobotSession(agentId: string, sessionKey: string) {
+  return fetchNanobot<{
+    deleted_key: string;
+    sessions: NanobotSessionSummary[];
+  }>(`/agents/${encodeURIComponent(agentId)}/sessions/${encodeURIComponent(sessionKey)}`, {
+    method: "DELETE",
+  });
 }
 
 export async function sendNanobotMessage(agentId: string, payload: SendMessagePayload) {

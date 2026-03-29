@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
 import {
+  deleteNanobotSession,
   getNanobotBootstrap,
   getNanobotConfigFile,
   getNanobotSessionDetail,
@@ -129,6 +130,7 @@ export function BotWorkbench({ agentId }: BotWorkbenchProps) {
   const [editorLoading, setEditorLoading] = useState(false);
   const [editorSaving, setEditorSaving] = useState(false);
   const [editorStatus, setEditorStatus] = useState("");
+  const [sessionMenuKey, setSessionMenuKey] = useState("");
 
   function syncUrl(options?: {
     sessionKey?: string;
@@ -226,6 +228,54 @@ export function BotWorkbench({ agentId }: BotWorkbenchProps) {
       );
     } finally {
       setSending(false);
+    }
+  }
+
+  async function handleDeleteSession(sessionKey: string) {
+    if (!bootstrap || !sessionKey) {
+      return;
+    }
+    if (!window.confirm("确认删除这个会话吗？删除后不可恢复。")) {
+      return;
+    }
+
+    setSessionMenuKey("");
+    setComposerStatus("");
+
+    try {
+      const data = await deleteNanobotSession(agentId, sessionKey);
+      const deletedCurrent = bootstrap.current_key === sessionKey;
+      const nextCurrentKey = deletedCurrent ? (data.sessions[0]?.key ?? null) : bootstrap.current_key;
+      let nextDetail = deletedCurrent ? null : bootstrap.current_detail;
+
+      if (deletedCurrent && nextCurrentKey) {
+        try {
+          nextDetail = await getNanobotSessionDetail(agentId, nextCurrentKey);
+        } catch {
+          nextDetail = null;
+        }
+      }
+
+      setBootstrap({
+        ...bootstrap,
+        sessions: data.sessions || [],
+        current_key: nextCurrentKey,
+        current_detail: nextDetail,
+      });
+      setExpandedSessionKey((current) => {
+        if (current !== sessionKey) {
+          return current;
+        }
+        return nextCurrentKey || "";
+      });
+      syncUrl({
+        sessionKey: nextCurrentKey || undefined,
+        newSession: !nextCurrentKey,
+      });
+    } catch (deleteError) {
+      setComposerStatus(
+        deleteError instanceof Error ? deleteError.message : "删除会话失败",
+      );
     }
   }
 
@@ -377,6 +427,21 @@ export function BotWorkbench({ agentId }: BotWorkbenchProps) {
     };
   }, [agentId, reloadTick, searchParamsKey]);
 
+  useEffect(() => {
+    if (!sessionMenuKey) {
+      return;
+    }
+
+    function handleDocumentClick() {
+      setSessionMenuKey("");
+    }
+
+    document.addEventListener("click", handleDocumentClick);
+    return () => {
+      document.removeEventListener("click", handleDocumentClick);
+    };
+  }, [sessionMenuKey]);
+
   if (loading) {
     return (
       <div className="app-card flex min-h-[240px] items-center justify-center px-6 text-[14px] text-[#667085]">
@@ -445,17 +510,63 @@ export function BotWorkbench({ agentId }: BotWorkbenchProps) {
                       : "border-[#e8eef5] bg-white",
                   ].join(" ")}
                 >
-                  <button
-                    type="button"
-                    onClick={() => void handleOpenSession(session.key)}
-                    className="flex w-full items-start justify-between gap-3 px-3 py-3 text-left"
-                  >
-                    <div className="min-w-0">
+                  <div className="flex items-start justify-between gap-3 px-3 py-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSessionMenuKey("");
+                        void handleOpenSession(session.key);
+                      }}
+                      className="min-w-0 flex-1 text-left"
+                    >
                       <div className="line-clamp-1 text-[13px] font-semibold text-title">
                         {session.title || session.key}
                       </div>
                       <div className="mt-1 truncate text-[11px] text-[#98a2b3]">
                         {session.updated_label || "未使用"}
+                      </div>
+                    </button>
+                    <div className="relative shrink-0">
+                      <button
+                        type="button"
+                        aria-label="会话操作"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          setSessionMenuKey((current) =>
+                            current === session.key ? "" : session.key,
+                          );
+                        }}
+                        className="flex h-[24px] min-w-[24px] items-center justify-center rounded-[6px] border border-[#e4edf6] bg-white px-2 text-[12px] text-[#7f8ea3] transition-colors hover:border-[#bfd7f2] hover:text-[#356da8]"
+                      >
+                        ...
+                      </button>
+                      {sessionMenuKey === session.key ? (
+                        <div
+                          className="absolute right-0 top-[28px] z-10 w-[96px] rounded-[8px] border border-[#dbe5f0] bg-white p-1 shadow-[0_12px_24px_rgba(15,23,42,0.08)]"
+                          onClick={(event) => event.stopPropagation()}
+                        >
+                          <button
+                            type="button"
+                            onClick={() => void handleDeleteSession(session.key)}
+                            className="flex w-full rounded-[6px] px-2.5 py-2 text-left text-[12px] text-[#c2410c] transition-colors hover:bg-[#fff4ed]"
+                          >
+                            删除会话
+                          </button>
+                        </div>
+                      ) : null}
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSessionMenuKey("");
+                      void handleOpenSession(session.key);
+                    }}
+                    className="flex w-full items-start justify-between gap-3 px-3 pb-3 text-left"
+                  >
+                    <div className="min-w-0">
+                      <div className="truncate text-[11px] text-[#98a2b3]">
+                        {session.key}
                       </div>
                     </div>
                     <div className="shrink-0 text-right text-[11px] text-[#7f8ea3]">
