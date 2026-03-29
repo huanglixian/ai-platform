@@ -57,6 +57,8 @@ Ai_Platform/
 ├─ components/
 │  ├─ bots/
 │  │  ├─ bot-card.tsx
+│  │  ├─ bot-config-edit.tsx
+│  │  ├─ bot-config-panel.tsx
 │  │  ├─ bot-workbench.tsx
 │  │  ├─ bots-page-client.tsx
 │  │  └─ create-bot-card.tsx
@@ -100,7 +102,7 @@ Ai_Platform/
 - `Ai_Platform` 只负责平台前端和 Next 路由代理
 - `bots` 不直接请求 Python 服务地址
 - 自由体相关请求统一走 `app/api/nanobot/[...path]/route.ts`
-- 外部 `nanobot_web_server` 负责自由体注册、session、聊天、名单配置等运行时能力
+- 外部 `nanobot_web_server` 负责自由体注册、session、聊天、流式过程、配置区接口等运行时能力
 - `Ai_Platform` 内只消费 HTTP API，不承载 `nanobot` 运行时实现
 
 ## 组件分层
@@ -113,12 +115,13 @@ Ai_Platform/
 
 - `components/bots`
   放自由体列表页和工作台专属组件
+  当前已拆出配置区摘要面板和编辑弹层
 
 - `components/workflows`
   放工作流页面专属组件
 
 - `features/bots`
-  放自由体 API 封装和类型定义
+  放自由体 API 封装、流式解析和类型定义
 
 - `features/workflows`
   放工作流页面数据和类型定义
@@ -132,7 +135,7 @@ Ai_Platform/
   自由体列表页，展示摘要信息和创建入口
 
 - `bots/[agentId]/page.tsx`
-  单自由体工作台，负责聊天、session、名单配置
+  单自由体工作台，负责聊天、session、配置区编辑
 
 - `workflows/page.tsx`
   工作流列表页，沿用平台卡片式版式
@@ -148,13 +151,16 @@ Ai_Platform/
 - 卡片页公共骨架统一使用 `CardPageFrame`
 - 能力中心卡片骨架统一使用 `CapabilityCard`
 - `CardPageFrame` 现在是 `Client Component`
+- `bots` 工作台优先固定在视口内，滚动条放在各自 panel 内部
 
 ## 当前页面状态
 
 - `bots`
   已接真实 `nanobot` 后端
 - `bots` 列表页负责摘要展示
-- `bots` 工作台负责聊天与 session 操作
+- `bots` 工作台负责聊天、session 和配置区编辑
+- `bots` 工作台聊天已改成工具过程流式显示
+- `bots` 工作台右侧已从名单配置改成配置区
 - `workflows`
   已有首版卡片列表
 - `tools`、`services`、`skills`
@@ -172,3 +178,15 @@ Ai_Platform/
 - 先确认方案，再做批量改动
 - 不保留无用旧实现
 - 文档只记录当前有效规则，不记录变更过程
+
+## bots 工作台说明
+
+- 发送消息区只负责输入和状态提示
+- 工具调用过程通过流式状态显示在发送区底部
+- 最终答案只在对话记录区统一显示
+- 左侧会话列表支持切换当前会话和查看轮次导航
+- 右侧配置区当前包含：
+  - 配置文件
+  - 写入白名单
+  - 读取黑名单
+- 配置项默认显示摘要，点击后通过弹层编辑

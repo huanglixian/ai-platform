@@ -5,7 +5,9 @@ import { useSearchParams } from "next/navigation";
 
 import {
   getNanobotBootstrap,
+  getNanobotConfigFile,
   getNanobotSessionDetail,
+  saveNanobotConfigFile,
   saveNanobotSecurityList,
   streamNanobotMessage,
 } from "@/features/bots/api";
@@ -14,6 +16,11 @@ import type {
   NanobotMessageView,
   NanobotTurnView,
 } from "@/features/bots/types";
+import {
+  BotConfigPanel,
+  type ConfigEditorKind,
+} from "./bot-config-panel";
+import { BotConfigEdit } from "./bot-config-edit";
 
 type BotWorkbenchProps = {
   agentId: string;
@@ -114,10 +121,12 @@ export function BotWorkbench({ agentId }: BotWorkbenchProps) {
   const [composerValue, setComposerValue] = useState("");
   const [sending, setSending] = useState(false);
   const [composerStatus, setComposerStatus] = useState("");
-  const [writeAllowText, setWriteAllowText] = useState("");
-  const [readDenyText, setReadDenyText] = useState("");
-  const [savingSecurity, setSavingSecurity] = useState(false);
-  const [securityStatus, setSecurityStatus] = useState("");
+  const [editorKind, setEditorKind] = useState<ConfigEditorKind | null>(null);
+  const [editorValue, setEditorValue] = useState("");
+  const [editorPath, setEditorPath] = useState("");
+  const [editorLoading, setEditorLoading] = useState(false);
+  const [editorSaving, setEditorSaving] = useState(false);
+  const [editorStatus, setEditorStatus] = useState("");
 
   function syncUrl(nextSessionKey = "", anchor = "") {
     const url = new URL(window.location.href);
@@ -204,33 +213,110 @@ export function BotWorkbench({ agentId }: BotWorkbenchProps) {
     }
   }
 
-  async function handleSaveSecurity() {
+  function closeEditor() {
+    setEditorKind(null);
+    setEditorValue("");
+    setEditorPath("");
+    setEditorStatus("");
+    setEditorLoading(false);
+  }
+
+  async function handleOpenEditor(kind: ConfigEditorKind) {
     if (!bootstrap) {
       return;
     }
 
-    setSavingSecurity(true);
-    setSecurityStatus("");
+    setEditorKind(kind);
+    setEditorStatus("");
+
+    if (kind === "config-file") {
+      setEditorLoading(true);
+      setEditorValue("");
+      setEditorPath(bootstrap.agent.config_path || "config.json");
+
+      try {
+        const data = await getNanobotConfigFile(agentId);
+        setEditorValue(data.content || "");
+        setEditorPath(data.path || bootstrap.agent.config_path || "config.json");
+      } catch (loadError) {
+        setEditorStatus(
+          loadError instanceof Error ? loadError.message : "配置文件加载失败",
+        );
+      } finally {
+        setEditorLoading(false);
+      }
+      return;
+    }
+
+    const securityPath = bootstrap.security_list.path || "security_list.json";
+    setEditorLoading(false);
+    setEditorPath(securityPath);
+    setEditorValue(
+      kind === "write-allow"
+        ? bootstrap.security_list.write_allow_text || ""
+        : bootstrap.security_list.read_deny_text || "",
+    );
+  }
+
+  async function handleSaveEditor() {
+    if (!bootstrap || !editorKind) {
+      return;
+    }
+
+    setEditorSaving(true);
+    setEditorStatus("");
 
     try {
+      if (editorKind === "config-file") {
+        await saveNanobotConfigFile(agentId, {
+          content: editorValue,
+        });
+        closeEditor();
+        setReloadTick((current) => current + 1);
+        return;
+      }
+
       const data = await saveNanobotSecurityList(agentId, {
-        write_allow_text: writeAllowText,
-        read_deny_text: readDenyText,
+        write_allow_text:
+          editorKind === "write-allow"
+            ? editorValue
+            : bootstrap.security_list.write_allow_text,
+        read_deny_text:
+          editorKind === "read-deny"
+            ? editorValue
+            : bootstrap.security_list.read_deny_text,
       });
-      setBootstrap({
-        ...bootstrap,
-        security_list: {
-          ...bootstrap.security_list,
-          ...data,
-        },
-      });
-      setSecurityStatus("已保存");
+      setBootstrap((current) =>
+        current
+          ? {
+              ...current,
+              security_list: {
+                ...current.security_list,
+                ...data,
+              },
+            }
+          : current,
+      );
+      closeEditor();
     } catch (saveError) {
-      setSecurityStatus(
+      setEditorStatus(
         saveError instanceof Error ? saveError.message : "保存失败，请检查后端日志",
       );
     } finally {
-      setSavingSecurity(false);
+      setEditorSaving(false);
+    }
+  }
+
+  function getEditorTitle(kind: ConfigEditorKind | null) {
+    switch (kind) {
+      case "config-file":
+        return "编辑配置文件";
+      case "write-allow":
+        return "编辑写入白名单";
+      case "read-deny":
+        return "编辑读取黑名单";
+      default:
+        return "";
     }
   }
 
@@ -254,8 +340,6 @@ export function BotWorkbench({ agentId }: BotWorkbenchProps) {
         }
 
         setBootstrap(data);
-        setWriteAllowText(data.security_list.write_allow_text || "");
-        setReadDenyText(data.security_list.read_deny_text || "");
         setComposerStatus("");
       } catch (loadError) {
         if (!active) {
@@ -477,51 +561,27 @@ export function BotWorkbench({ agentId }: BotWorkbenchProps) {
         </section>
       </div>
 
-      <aside className="app-card flex min-h-0 flex-col overflow-hidden">
-        <div className="border-b border-[#eef2f6] px-4 py-3">
-          <div className="flex items-center justify-between gap-3">
-            <div className="text-[15px] font-semibold text-title">名单配置</div>
-            <div className="text-[12px] text-[#7f8ea3]">security_list.json</div>
-          </div>
-        </div>
-        <div className="flex-1 overflow-y-auto px-4 py-4">
-          <div className="grid gap-4">
-            <label className="grid gap-1.5">
-              <span className="text-[11px] font-medium text-[#7f8ea3]">
-                允许写入
-              </span>
-              <textarea
-                value={writeAllowText}
-                onChange={(event) => setWriteAllowText(event.target.value)}
-                className="h-[200px] resize-none rounded-[12px] border border-[#dbe5f0] bg-white px-4 py-3 font-mono text-[12px] leading-6 text-title outline-none transition-colors focus:border-[#6f96c4]"
-              />
-            </label>
-            <label className="grid gap-1.5">
-              <span className="text-[11px] font-medium text-[#7f8ea3]">
-                禁止读取
-              </span>
-              <textarea
-                value={readDenyText}
-                onChange={(event) => setReadDenyText(event.target.value)}
-                className="h-[200px] resize-none rounded-[12px] border border-[#dbe5f0] bg-white px-4 py-3 font-mono text-[12px] leading-6 text-title outline-none transition-colors focus:border-[#6f96c4]"
-              />
-            </label>
-            <div className="flex items-center justify-between gap-3">
-              <div className="text-[12px] text-[#7f8ea3]">
-                {savingSecurity ? "正在保存名单配置..." : securityStatus || " "}
-              </div>
-              <button
-                type="button"
-                disabled={savingSecurity}
-                onClick={() => void handleSaveSecurity()}
-                className="h-[36px] rounded-[8px] bg-[#0368b3] px-4 text-[13px] font-medium text-white transition-colors hover:bg-[#1a4d87] disabled:cursor-not-allowed disabled:bg-[#7eaed6]"
-              >
-                {savingSecurity ? "保存中..." : "保存配置"}
-              </button>
-            </div>
-          </div>
-        </div>
-      </aside>
+      <BotConfigPanel
+        workspacePath={bootstrap.workspace_path}
+        configPath={bootstrap.agent.config_path || ""}
+        securityListPath={bootstrap.security_list.path || "security_list.json"}
+        writeAllowText={bootstrap.security_list.write_allow_text || ""}
+        readDenyText={bootstrap.security_list.read_deny_text || ""}
+        onEdit={(kind) => void handleOpenEditor(kind)}
+      />
+
+      <BotConfigEdit
+        open={!!editorKind}
+        title={getEditorTitle(editorKind)}
+        pathLabel={editorPath}
+        value={editorValue}
+        loading={editorLoading}
+        saving={editorSaving}
+        status={editorStatus}
+        onChange={setEditorValue}
+        onClose={closeEditor}
+        onSave={() => void handleSaveEditor()}
+      />
     </section>
   );
 }

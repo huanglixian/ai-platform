@@ -2,6 +2,7 @@ import type {
   NanobotAgentSummary,
   NanobotBootstrap,
   NanobotChatResult,
+  NanobotConfigFile,
   NanobotSecurityList,
   NanobotSessionDetail,
 } from "./types";
@@ -219,6 +220,28 @@ export async function streamNanobotMessage(
   }
 
   return result;
+}
+
+export async function getNanobotConfigFile(agentId: string) {
+  return fetchNanobot<NanobotConfigFile>(
+    `/agents/${encodeURIComponent(agentId)}/config-file`,
+  );
+}
+
+export async function saveNanobotConfigFile(
+  agentId: string,
+  payload: { content: string },
+) {
+  return fetchNanobot<NanobotConfigFile>(
+    `/agents/${encodeURIComponent(agentId)}/config-file`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    },
+  );
 }
 
 export async function saveNanobotSecurityList(

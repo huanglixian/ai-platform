@@ -72,6 +72,11 @@ export type NanobotSecurityList = {
   read_deny_text: string;
 };
 
+export type NanobotConfigFile = {
+  path: string;
+  content: string;
+};
+
 export type NanobotChatResult = {
   session_key: string;
   user_content: string;
