@@ -2,9 +2,10 @@
 
 ## 项目定位
 
-- 使用 `Next.js + React` 构建前端原型
-- 当前以页面骨架、导航、卡片体系和基础视觉规范为主
-- 后续可接 `FastAPI`
+- 使用 `Next.js + React` 构建平台前端
+- 当前重点是平台壳子、卡片列表、工作台页面和统一视觉规范
+- `bots` 已通过 Next 代理接入外部 `nanobot_web_server`
+- 后续业务数据逐步向数据库和正式后端收敛
 
 ## 业务命名
 
@@ -41,18 +42,27 @@ Ai_Platform/
 │  ├─ (platform)/
 │  │  ├─ layout.tsx
 │  │  ├─ portal/page.tsx
-│  │  ├─ bots/page.tsx
+│  │  ├─ bots/
+│  │  │  ├─ page.tsx
+│  │  │  └─ [agentId]/page.tsx
 │  │  ├─ workflows/page.tsx
 │  │  ├─ tools/page.tsx
 │  │  ├─ services/page.tsx
 │  │  └─ skills/page.tsx
+│  ├─ api/
+│  │  └─ nanobot/[...path]/route.ts
 │  ├─ globals.css
 │  ├─ layout.tsx
 │  └─ page.tsx
 ├─ components/
 │  ├─ bots/
 │  │  ├─ bot-card.tsx
+│  │  ├─ bot-workbench.tsx
+│  │  ├─ bots-page-client.tsx
 │  │  └─ create-bot-card.tsx
+│  ├─ workflows/
+│  │  ├─ create-workflow-card.tsx
+│  │  └─ workflow-card.tsx
 │  ├─ shared/
 │  │  ├─ app-shell.tsx
 │  │  ├─ capability-card.tsx
@@ -65,9 +75,18 @@ Ai_Platform/
 │     └─ input.tsx
 ├─ features/
 │  ├─ bots/
+│  │  ├─ api.ts
+│  │  └─ types.ts
+│  ├─ workflows/
 │  │  ├─ data.ts
 │  │  └─ types.ts
-│  └─ services/
+│  ├─ tools/
+│  │  ├─ data.ts
+│  │  └─ types.ts
+│  ├─ services/
+│  │  ├─ data.ts
+│  │  └─ types.ts
+│  └─ skills/
 │     ├─ data.ts
 │     └─ types.ts
 ├─ lib/
@@ -76,35 +95,75 @@ Ai_Platform/
 └─ dev_guide.md
 ```
 
+## 前后端边界
+
+- `Ai_Platform` 只负责平台前端和 Next 路由代理
+- `bots` 不直接请求 Python 服务地址
+- 自由体相关请求统一走 `app/api/nanobot/[...path]/route.ts`
+- 外部 `nanobot_web_server` 负责自由体注册、session、聊天、名单配置等运行时能力
+- `Ai_Platform` 内只消费 HTTP API，不承载 `nanobot` 运行时实现
+
 ## 组件分层
 
 - `components/ui`
   放无业务语义的基础 UI
 
 - `components/shared`
-  放多个页面明确复用的中层组件和站点共享结构
+  放多个页面共用的中层组件和平台共享结构
 
 - `components/bots`
-  放 `bots` 页面专属组件
+  放自由体列表页和工作台专属组件
 
-- `features/services`
-  放服务中心的 mock 数据和类型定义
+- `components/workflows`
+  放工作流页面专属组件
+
+- `features/bots`
+  放自由体 API 封装和类型定义
+
+- `features/workflows`
+  放工作流页面数据和类型定义
+
+- `features/tools`、`features/services`、`features/skills`
+  放能力中心页面数据和类型定义
+
+## 页面职责
+
+- `bots/page.tsx`
+  自由体列表页，展示摘要信息和创建入口
+
+- `bots/[agentId]/page.tsx`
+  单自由体工作台，负责聊天、session、名单配置
+
+- `workflows/page.tsx`
+  工作流列表页，沿用平台卡片式版式
+
+- `tools`、`services`、`skills`
+  能力中心卡片列表页
 
 ## 样式规则
 
 - 全局设计变量统一放在 `app/globals.css`
 - 基础 card 外壳统一使用 `.app-card`
-- 业务卡片只负责自己的内容结构，不负责定义新的基础外壳规则
+- 业务卡片只负责内容结构，不重复定义基础 card 外壳
 - 卡片页公共骨架统一使用 `CardPageFrame`
 - 能力中心卡片骨架统一使用 `CapabilityCard`
+- `CardPageFrame` 现在是 `Client Component`
 
 ## 当前页面状态
 
-- `bots` 已有首版卡片列表
-- `services` 已有首版能力卡片列表
-- `portal`、`tools`、`skills`、`workflows` 先保留占位页
-- 顶部导航当前按一级/二级结构组织
-- `knowledge`、`database`、`orgs`、`roles`、`users` 暂不在当前平台内占位，后续再独立展开
+- `bots`
+  已接真实 `nanobot` 后端
+- `bots` 列表页负责摘要展示
+- `bots` 工作台负责聊天与 session 操作
+- `workflows`
+  已有首版卡片列表
+- `tools`、`services`、`skills`
+  已有首版能力卡片列表
+- `portal`
+  保持当前页面结构
+- 顶部导航按一级/二级结构组织
+- `knowledge`、`database`、`orgs`、`roles`、`users`
+  暂不在当前平台内展开
 
 ## 开发规则
 
