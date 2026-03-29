@@ -55,8 +55,11 @@ Ai_Platform/
 ├─ components/
 │  ├─ bots/
 │  │  ├─ bot-card.tsx
+│  │  ├─ bot-composer-pane.tsx
 │  │  ├─ bot-config-edit.tsx
 │  │  ├─ bot-config-panel.tsx
+│  │  ├─ bot-session-pane.tsx
+│  │  ├─ bot-transcript-pane.tsx
 │  │  ├─ bot-workbench.tsx
 │  │  ├─ bots-page-client.tsx
 │  │  └─ create-bot-card.tsx
@@ -113,7 +116,7 @@ Ai_Platform/
 
 - `components/bots`
   放自由体列表页和工作台专属组件
-  当前已拆出配置区摘要面板和编辑弹层
+  当前已拆出会话栏、发送区、对话记录、配置区摘要面板和编辑弹层
 
 - `components/workflows`
   放工作流页面专属组件
@@ -186,6 +189,8 @@ Ai_Platform/
 - 工具调用过程通过流式状态显示在发送区底部
 - 最终答案只在对话记录区统一显示
 - 左侧会话列表支持切换当前会话和查看轮次导航
+- `bot-workbench.tsx` 负责工作台级状态、数据加载和各面板编排
+- 会话栏、发送区、对话记录已拆成独立 pane 组件
 - 右侧配置区当前包含：
   - 配置文件
   - 写入白名单
