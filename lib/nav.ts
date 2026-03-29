@@ -16,7 +16,7 @@ export const platformNavGroups: PlatformNavGroup[] = [
   {
     key: "home",
     label: "首页",
-    href: "/portal",
+    href: "/bots/main",
   },
   {
     key: "bots",
@@ -63,7 +63,7 @@ export const platformNavGroups: PlatformNavGroup[] = [
 ];
 
 export function getActiveNavGroup(pathname: string) {
-  if (pathname === "/portal") {
+  if (pathname === "/" || pathname === "/bots/main") {
     return "home";
   }
 

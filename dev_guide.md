@@ -3,13 +3,12 @@
 ## 项目定位
 
 - 使用 `Next.js + React` 构建平台前端
-- 当前重点是平台壳子、卡片列表、工作台页面和统一视觉规范
+- 当前重点是首页工作台、卡片列表、工作台页面和统一视觉规范
 - `bots` 已通过 Next 代理接入外部 `nanobot_web_server`
 - 后续业务数据逐步向数据库和正式后端收敛
 
 ## 业务命名
 
-- `portal`：门户
 - `knowledge`：知识库
 - `database`：数据库
 - `bots`：自由体
@@ -41,7 +40,6 @@ Ai_Platform/
 ├─ app/
 │  ├─ (platform)/
 │  │  ├─ layout.tsx
-│  │  ├─ portal/page.tsx
 │  │  ├─ bots/
 │  │  │  ├─ page.tsx
 │  │  │  └─ [agentId]/page.tsx
@@ -131,6 +129,9 @@ Ai_Platform/
 
 ## 页面职责
 
+- `/`
+  平台首页，默认进入 `main` 自由体工作台
+
 - `bots/page.tsx`
   自由体列表页，展示摘要信息和创建入口
 
@@ -155,6 +156,8 @@ Ai_Platform/
 
 ## 当前页面状态
 
+- 首页
+  已默认进入 `main` 自由体工作台
 - `bots`
   已接真实 `nanobot` 后端
 - `bots` 列表页负责摘要展示
@@ -165,8 +168,6 @@ Ai_Platform/
   已有首版卡片列表
 - `tools`、`services`、`skills`
   已有首版能力卡片列表
-- `portal`
-  保持当前页面结构
 - 顶部导航按一级/二级结构组织
 - `knowledge`、`database`、`orgs`、`roles`、`users`
   暂不在当前平台内展开
