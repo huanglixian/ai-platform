@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 
 import {
@@ -114,10 +114,12 @@ function TurnCard({ turn }: { turn: NanobotTurnView }) {
 export function BotWorkbench({ agentId }: BotWorkbenchProps) {
   const searchParams = useSearchParams();
   const searchParamsKey = searchParams.toString();
+  const transcriptRef = useRef<HTMLDivElement | null>(null);
   const [bootstrap, setBootstrap] = useState<NanobotBootstrap | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [reloadTick, setReloadTick] = useState(0);
+  const [expandedSessionKey, setExpandedSessionKey] = useState("");
   const [composerValue, setComposerValue] = useState("");
   const [sending, setSending] = useState(false);
   const [composerStatus, setComposerStatus] = useState("");
@@ -128,15 +130,23 @@ export function BotWorkbench({ agentId }: BotWorkbenchProps) {
   const [editorSaving, setEditorSaving] = useState(false);
   const [editorStatus, setEditorStatus] = useState("");
 
-  function syncUrl(nextSessionKey = "", anchor = "") {
+  function syncUrl(options?: {
+    sessionKey?: string;
+    anchor?: string;
+    newSession?: boolean;
+  }) {
     const url = new URL(window.location.href);
-    if (nextSessionKey) {
-      url.searchParams.set("session_key", nextSessionKey);
+    if (options?.sessionKey) {
+      url.searchParams.set("session_key", options.sessionKey);
     } else {
       url.searchParams.delete("session_key");
     }
-    url.searchParams.delete("new");
-    url.hash = anchor ? `#${anchor}` : "";
+    if (options?.newSession) {
+      url.searchParams.set("new", "1");
+    } else {
+      url.searchParams.delete("new");
+    }
+    url.hash = options?.anchor ? `#${options.anchor}` : "";
     window.history.replaceState({}, "", url);
   }
 
@@ -153,10 +163,15 @@ export function BotWorkbench({ agentId }: BotWorkbenchProps) {
           current_key: sessionKey,
           current_detail: detail,
         });
+        setExpandedSessionKey(sessionKey);
+      } else if (!anchor) {
+        setExpandedSessionKey((current) =>
+          current === sessionKey ? "" : sessionKey,
+        );
       }
 
       setComposerStatus("");
-      syncUrl(sessionKey, anchor);
+      syncUrl({ sessionKey, anchor });
       if (anchor) {
         window.requestAnimationFrame(() => {
           document.getElementById(anchor)?.scrollIntoView({ block: "start" });
@@ -201,9 +216,10 @@ export function BotWorkbench({ agentId }: BotWorkbenchProps) {
             }
           : current,
       );
+      setExpandedSessionKey(data.session_key);
       setComposerValue("");
       setComposerStatus("");
-      syncUrl(data.session_key);
+      syncUrl({ sessionKey: data.session_key });
     } catch (sendError) {
       setComposerStatus(
         sendError instanceof Error ? sendError.message : "发送失败，请重试",
@@ -340,6 +356,7 @@ export function BotWorkbench({ agentId }: BotWorkbenchProps) {
         }
 
         setBootstrap(data);
+        setExpandedSessionKey(data.current_key || "");
         setComposerStatus("");
       } catch (loadError) {
         if (!active) {
@@ -399,13 +416,9 @@ export function BotWorkbench({ agentId }: BotWorkbenchProps) {
           <button
             type="button"
             onClick={() => {
-              setBootstrap({
-                ...bootstrap,
-                current_key: null,
-                current_detail: null,
-              });
+              setExpandedSessionKey("");
               setComposerStatus("");
-              syncUrl();
+              syncUrl({ newSession: true });
             }}
             className="h-[32px] w-full rounded-[8px] border border-[#dbe5f0] px-3 text-[12px] font-medium text-[#356da8] transition-colors hover:border-[#bfd7f2] hover:bg-[#eef5fd]"
           >
@@ -416,6 +429,7 @@ export function BotWorkbench({ agentId }: BotWorkbenchProps) {
           {bootstrap.sessions.length ? (
             bootstrap.sessions.map((session) => {
               const active = session.key === bootstrap.current_key;
+              const expanded = session.key === expandedSessionKey;
               const detailTurns =
                 active && bootstrap.current_detail?.key === session.key
                   ? bootstrap.current_detail.turns
@@ -448,7 +462,7 @@ export function BotWorkbench({ agentId }: BotWorkbenchProps) {
                       <div>{session.turn_count} 轮</div>
                     </div>
                   </button>
-                  {active ? (
+                  {expanded ? (
                     <div className="border-t border-[#eef2f6] px-3 py-3">
                       <div className="grid gap-2">
                         {session.turns.length ? (
@@ -537,13 +551,24 @@ export function BotWorkbench({ agentId }: BotWorkbenchProps) {
         <section className="app-card flex min-h-0 flex-col overflow-hidden">
           <div className="flex items-center justify-between border-b border-[#eef2f6] px-4 py-3">
             <div className="text-[15px] font-semibold text-title">对话记录</div>
-            <div className="text-[12px] text-[#98a2b3]">
-              {bootstrap.current_detail
-                ? `${bootstrap.current_detail.turn_count} 轮 · ${bootstrap.current_detail.message_count} 条消息`
-                : "等待第一条输入"}
+            <div className="flex items-center gap-3">
+              <div className="text-[12px] text-[#98a2b3]">
+                {bootstrap.current_detail
+                  ? `${bootstrap.current_detail.turn_count} 轮 · ${bootstrap.current_detail.message_count} 条消息`
+                  : "等待第一条输入"}
+              </div>
+              <button
+                type="button"
+                onClick={() =>
+                  transcriptRef.current?.scrollTo({ top: 0, behavior: "smooth" })
+                }
+                className="h-[32px] rounded-[8px] border border-[#dbe5f0] bg-white px-3 text-[12px] font-medium text-[#356da8] transition-colors hover:border-[#bfd7f2] hover:bg-[#eef5fd]"
+              >
+                回到顶部
+              </button>
             </div>
           </div>
-          <div className="flex-1 overflow-y-auto px-4 py-4">
+          <div ref={transcriptRef} className="flex-1 overflow-y-auto px-4 py-4">
             <div className="space-y-4">
               {bootstrap.current_detail?.turns.length ? (
                 bootstrap.current_detail.turns.map((turn) => (
