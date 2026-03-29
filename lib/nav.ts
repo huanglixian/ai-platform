@@ -38,8 +38,16 @@ export const platformNavGroups: PlatformNavGroup[] = [
     key: "data",
     label: "数据中心",
     items: [
-      { label: "知识库", disabled: true, hint: "知识内容与检索配置" },
-      { label: "数据库", disabled: true, hint: "结构化数据与表管理" },
+      {
+        label: "知识库",
+        href: "/knowhub",
+        hint: "知识接入、处理、检索与发布",
+      },
+      {
+        label: "数据库",
+        disabled: true,
+        hint: "结构化数据接入、清洗与管理",
+      },
     ],
   },
   {
@@ -73,6 +81,10 @@ export function getActiveNavGroup(pathname: string) {
 
   if (pathname === "/workflows" || pathname.startsWith("/workflows/")) {
     return "bots";
+  }
+
+  if (pathname === "/knowhub" || pathname.startsWith("/knowhub/")) {
+    return "data";
   }
 
   if (pathname === "/tools" || pathname.startsWith("/tools/")) {

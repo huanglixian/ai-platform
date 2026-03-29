@@ -1,37 +1,65 @@
 # Ai Platform 开发说明
 
-## 项目定位
+## 项目介绍
 
-- 使用 `Next.js + React` 构建平台前端
-- 当前重点是首页工作台、卡片列表、工作台页面和统一视觉规范
-- `bots` 已通过 Next 代理接入外部 `nanobot_web_server`
-- 后续业务数据逐步向数据库和正式后端收敛
+`Ai Platform` 是一个面向企业级场景的智能体平台，围绕智能体工作台、流程编排、知识接入、工具与服务接入等能力，提供统一的业务入口与交互界面。当前平台主体聚焦智能体平台本身，`KnowHub` 作为平台内接入的知识业务域演进，后续可按独立子系统逐步解耦。
 
-## 业务命名
+## 模块边界
 
-- `knowledge`：知识库
-- `database`：数据库
-- `bots`：自由体
-- `workflows`：工作流
-- `tools`：工具中心
-- `services`：服务中心
-- `skills`：技能中心
-- `orgs`：组织管理
-- `roles`：角色管理
-- `users`：用户管理
+- `app`
+  平台主体路由层，是智能体平台的主要部分
+
+- `app/(platform)`
+  当前统一平台壳下的业务页面入口
+
+- `app/(platform)/knowhub`
+  KnowHub 路由入口层，只放知识业务相关页面的薄入口
+
+- `knowhub`
+  KnowHub 业务域实现目录
+  后续页面组装、专属组件和业务逻辑都收口在这里，便于后续独立解耦
+
+- `components/ui`
+  平台共享的基础 UI 组件
+
+- `components/shared`
+  平台共享壳层和公共结构
+  不承载 KnowHub 私有业务组件
+
+- `features`
+  当前平台主体业务的数据定义、页面数据和接口封装
+  现阶段继续服务 `bots`、`workflows`、`tools`、`services`、`skills`
+
+- `lib`
+  平台级工具函数和导航配置
+
+## 导航分组与业务命名
+
+- 首页
+  平台首页，当前默认进入 `main` 自由体工作台
+
+- 智能体
+  - `bots`：自由体
+  - `workflows`：工作流
+
+- 数据中心
+  - `知识库`：KnowHub，知识接入、处理、检索与发布
+  - `数据库`：DataHub，结构化数据接入、清洗与管理，暂未展开
+
+- 能力中心
+  - `tools`：工具中心
+  - `services`：服务中心
+  - `skills`：技能中心
+
+- 配置管理
+  - `orgs`：组织管理
+  - `roles`：角色管理
+  - `users`：用户管理
 
 不再使用旧命名：
 
 - `agents`
 - `explore`
-
-## 技术栈
-
-- `Next.js`
-- `React`
-- `TypeScript`
-- `Tailwind CSS`
-- `shadcn/ui`
 
 ## 当前目录
 
@@ -43,6 +71,13 @@ Ai_Platform/
 │  │  ├─ bots/
 │  │  │  ├─ page.tsx
 │  │  │  └─ [agentId]/page.tsx
+│  │  ├─ knowhub/
+│  │  │  ├─ page.tsx
+│  │  │  ├─ documents/page.tsx
+│  │  │  ├─ strategies/page.tsx
+│  │  │  ├─ pipelines/page.tsx
+│  │  │  ├─ knowledge/page.tsx
+│  │  │  └─ retrieval/page.tsx
 │  │  ├─ workflows/page.tsx
 │  │  ├─ tools/page.tsx
 │  │  ├─ services/page.tsx
@@ -54,126 +89,101 @@ Ai_Platform/
 │  └─ page.tsx
 ├─ components/
 │  ├─ bots/
-│  │  ├─ bot-card.tsx
-│  │  ├─ bot-composer-pane.tsx
-│  │  ├─ bot-config-edit.tsx
-│  │  ├─ bot-config-panel.tsx
-│  │  ├─ bot-session-pane.tsx
-│  │  ├─ bot-transcript-pane.tsx
-│  │  ├─ bot-workbench.tsx
-│  │  ├─ bots-page-client.tsx
-│  │  └─ create-bot-card.tsx
 │  ├─ workflows/
-│  │  ├─ create-workflow-card.tsx
-│  │  └─ workflow-card.tsx
 │  ├─ shared/
-│  │  ├─ app-shell.tsx
-│  │  ├─ capability-card.tsx
-│  │  ├─ card-page-frame.tsx
-│  │  ├─ page-placeholder.tsx
-│  │  └─ top-nav.tsx
 │  └─ ui/
-│     ├─ badge.tsx
-│     ├─ button.tsx
-│     └─ input.tsx
+├─ knowhub/
+│  ├─ pages/
+│  ├─ components/
+│  ├─ lib/
+│  ├─ data/
+│  └─ types/
 ├─ features/
 │  ├─ bots/
-│  │  ├─ api.ts
-│  │  └─ types.ts
 │  ├─ workflows/
-│  │  ├─ data.ts
-│  │  └─ types.ts
 │  ├─ tools/
-│  │  ├─ data.ts
-│  │  └─ types.ts
 │  ├─ services/
-│  │  ├─ data.ts
-│  │  └─ types.ts
 │  └─ skills/
-│     ├─ data.ts
-│     └─ types.ts
 ├─ lib/
 │  ├─ nav.ts
 │  └─ utils.ts
 └─ dev_guide.md
 ```
 
-## 前后端边界
-
-- `Ai_Platform` 只负责平台前端和 Next 路由代理
-- `bots` 不直接请求 Python 服务地址
-- 自由体相关请求统一走 `app/api/nanobot/[...path]/route.ts`
-- 外部 `nanobot_web_server` 负责自由体注册、session、聊天、流式过程、配置区接口等运行时能力
-- `Ai_Platform` 内只消费 HTTP API，不承载 `nanobot` 运行时实现
-
-## 组件分层
-
-- `components/ui`
-  放无业务语义的基础 UI
-
-- `components/shared`
-  放多个页面共用的中层组件和平台共享结构
-
-- `components/bots`
-  放自由体列表页和工作台专属组件
-  当前已拆出会话栏、发送区、对话记录、配置区摘要面板和编辑弹层
-
-- `components/workflows`
-  放工作流页面专属组件
-
-- `features/bots`
-  放自由体 API 封装、流式解析和类型定义
-
-- `features/workflows`
-  放工作流页面数据和类型定义
-
-- `features/tools`、`features/services`、`features/skills`
-  放能力中心页面数据和类型定义
-
 ## 页面职责
 
 - `/`
-  平台首页，默认进入 `main` 自由体工作台
+  平台首页，默认重定向到 `main` 自由体工作台
 
 - `bots/page.tsx`
   自由体列表页，展示摘要信息和创建入口
 
 - `bots/[agentId]/page.tsx`
-  单自由体工作台，负责聊天、session、配置区编辑
+  单自由体工作台，负责聊天、会话和配置区编辑
 
 - `workflows/page.tsx`
-  工作流列表页，沿用平台卡片式版式
+  工作流列表页
+
+- `knowhub/page.tsx`
+  KnowHub 概览页入口
+
+- `knowhub/documents`
+  文档中心入口
+
+- `knowhub/strategies`
+  策略中心入口
+
+- `knowhub/pipelines`
+  处理中心入口
+
+- `knowhub/knowledge`
+  知识内容页入口
+
+- `knowhub/retrieval`
+  检索测试入口
 
 - `tools`、`services`、`skills`
   能力中心卡片列表页
 
-## 样式规则
+## 组件与实现约定
 
-- 全局设计变量统一放在 `app/globals.css`
-- 基础 card 外壳统一使用 `.app-card`
-- 业务卡片只负责内容结构，不重复定义基础 card 外壳
-- 卡片页公共骨架统一使用 `CardPageFrame`
-- 能力中心卡片骨架统一使用 `CapabilityCard`
-- `CardPageFrame` 现在是 `Client Component`
-- `bots` 工作台优先固定在视口内，滚动条放在各自 panel 内部
+- `app/(platform)/*`
+  只放页面入口和路由层代码
 
-## 当前页面状态
+- `knowhub/pages`
+  放 KnowHub 页面级组装
 
-- 首页
-  已默认进入 `main` 自由体工作台
-- `bots`
-  已接真实 `nanobot` 后端
+- `knowhub/components`
+  放 KnowHub 专属组件
+
+- `knowhub/lib`、`knowhub/data`、`knowhub/types`
+  放 KnowHub 非页面实现
+
+- `components/ui`
+  只放无业务语义的基础 UI
+
+- `components/shared`
+  只放平台共享壳层和公共结构
+
+## 前后端边界
+
+- `Ai_Platform` 只负责平台前端和 Next 路由代理
+- `bots` 不直接请求 Python 服务地址
+- 自由体相关请求统一走 `app/api/nanobot/[...path]/route.ts`
+- 外部 `nanobot_web_server` 负责自由体注册、会话、聊天、流式过程和配置区接口等运行时能力
+- `Ai_Platform` 内只消费 HTTP API，不承载 `nanobot` 运行时实现
+
+## 当前状态
+
+- 首页已默认进入 `main` 自由体工作台
+- `bots` 已接真实 `nanobot` 后端
 - `bots` 列表页负责摘要展示
-- `bots` 工作台负责聊天、session 和配置区编辑
+- `bots` 工作台负责聊天、会话和配置区编辑
 - `bots` 工作台聊天已改成工具过程流式显示
-- `bots` 工作台右侧已从名单配置改成配置区
-- `workflows`
-  已有首版卡片列表
-- `tools`、`services`、`skills`
-  已有首版能力卡片列表
-- 顶部导航按一级/二级结构组织
-- `knowledge`、`database`、`orgs`、`roles`、`users`
-  暂不在当前平台内展开
+- `workflows` 已有首版卡片列表
+- `tools`、`services`、`skills` 已有首版能力卡片列表
+- `knowhub` 已建立路由骨架和业务目录骨架，后续在该业务域内重构知识相关页面
+- `datahub`、`orgs`、`roles`、`users` 暂未在当前平台内展开
 
 ## 开发规则
 
@@ -182,17 +192,3 @@ Ai_Platform/
 - 先确认方案，再做批量改动
 - 不保留无用旧实现
 - 文档只记录当前有效规则，不记录变更过程
-
-## bots 工作台说明
-
-- 发送消息区只负责输入和状态提示
-- 工具调用过程通过流式状态显示在发送区底部
-- 最终答案只在对话记录区统一显示
-- 左侧会话列表支持切换当前会话和查看轮次导航
-- `bot-workbench.tsx` 负责工作台级状态、数据加载和各面板编排
-- 会话栏、发送区、对话记录已拆成独立 pane 组件
-- 右侧配置区当前包含：
-  - 配置文件
-  - 写入白名单
-  - 读取黑名单
-- 配置项默认显示摘要，点击后通过弹层编辑
