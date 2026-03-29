@@ -15,7 +15,7 @@ export type PlatformNavGroup = {
 export const platformNavGroups: PlatformNavGroup[] = [
   {
     key: "home",
-    label: "首页",
+    label: "工作台",
     href: "/bots/main",
   },
   {
