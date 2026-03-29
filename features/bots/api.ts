@@ -6,6 +6,7 @@ import type {
   NanobotSecurityList,
   NanobotSessionDetail,
   NanobotSessionSummary,
+  NanobotWorkspaceFileKind,
 } from "./types";
 
 type NanobotResponse<T> = T & {
@@ -244,6 +245,32 @@ export async function saveNanobotConfigFile(
 ) {
   return fetchNanobot<NanobotConfigFile>(
     `/agents/${encodeURIComponent(agentId)}/config-file`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    },
+  );
+}
+
+export async function getNanobotWorkspaceFile(
+  agentId: string,
+  kind: NanobotWorkspaceFileKind,
+) {
+  return fetchNanobot<NanobotConfigFile>(
+    `/agents/${encodeURIComponent(agentId)}/workspace-file/${encodeURIComponent(kind)}`,
+  );
+}
+
+export async function saveNanobotWorkspaceFile(
+  agentId: string,
+  kind: NanobotWorkspaceFileKind,
+  payload: { content: string },
+) {
+  return fetchNanobot<NanobotConfigFile>(
+    `/agents/${encodeURIComponent(agentId)}/workspace-file/${encodeURIComponent(kind)}`,
     {
       method: "POST",
       headers: {

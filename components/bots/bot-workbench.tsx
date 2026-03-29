@@ -8,11 +8,16 @@ import {
   getNanobotBootstrap,
   getNanobotConfigFile,
   getNanobotSessionDetail,
+  getNanobotWorkspaceFile,
   saveNanobotConfigFile,
   saveNanobotSecurityList,
+  saveNanobotWorkspaceFile,
   streamNanobotMessage,
 } from "@/features/bots/api";
-import type { NanobotBootstrap } from "@/features/bots/types";
+import type {
+  NanobotBootstrap,
+  NanobotWorkspaceFileKind,
+} from "@/features/bots/types";
 import {
   BotConfigPanel,
   type ConfigEditorKind,
@@ -225,6 +230,35 @@ export function BotWorkbench({ agentId }: BotWorkbenchProps) {
       return;
     }
 
+    if (
+      kind === "soul" ||
+      kind === "agents" ||
+      kind === "user" ||
+      kind === "memory" ||
+      kind === "tools" ||
+      kind === "heartbeat"
+    ) {
+      setEditorLoading(true);
+      setEditorValue("");
+      setEditorPath("");
+
+      try {
+        const data = await getNanobotWorkspaceFile(
+          agentId,
+          kind as NanobotWorkspaceFileKind,
+        );
+        setEditorValue(data.content || "");
+        setEditorPath(data.path || "");
+      } catch (loadError) {
+        setEditorStatus(
+          loadError instanceof Error ? loadError.message : "配置文件加载失败",
+        );
+      } finally {
+        setEditorLoading(false);
+      }
+      return;
+    }
+
     const securityPath = bootstrap.security_list.path || "security_list.json";
     setEditorLoading(false);
     setEditorPath(securityPath);
@@ -250,6 +284,25 @@ export function BotWorkbench({ agentId }: BotWorkbenchProps) {
         });
         closeEditor();
         setReloadTick((current) => current + 1);
+        return;
+      }
+
+      if (
+        editorKind === "soul" ||
+        editorKind === "agents" ||
+        editorKind === "user" ||
+        editorKind === "memory" ||
+        editorKind === "tools" ||
+        editorKind === "heartbeat"
+      ) {
+        await saveNanobotWorkspaceFile(
+          agentId,
+          editorKind as NanobotWorkspaceFileKind,
+          {
+            content: editorValue,
+          },
+        );
+        closeEditor();
         return;
       }
 
@@ -292,6 +345,18 @@ export function BotWorkbench({ agentId }: BotWorkbenchProps) {
         return "编辑写入白名单";
       case "read-deny":
         return "编辑读取黑名单";
+      case "soul":
+        return "编辑 SOUL.md";
+      case "agents":
+        return "编辑 AGENTS.md";
+      case "user":
+        return "编辑 USER.md";
+      case "memory":
+        return "编辑 MEMORY.md";
+      case "tools":
+        return "编辑 TOOLS.md";
+      case "heartbeat":
+        return "编辑 HEARTBEAT.md";
       default:
         return "";
     }

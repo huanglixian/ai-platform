@@ -77,6 +77,14 @@ export type NanobotConfigFile = {
   content: string;
 };
 
+export type NanobotWorkspaceFileKind =
+  | "soul"
+  | "agents"
+  | "user"
+  | "memory"
+  | "tools"
+  | "heartbeat";
+
 export type NanobotChatResult = {
   session_key: string;
   user_content: string;
