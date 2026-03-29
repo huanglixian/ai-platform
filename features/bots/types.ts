@@ -72,6 +72,14 @@ export type NanobotSecurityList = {
   read_deny_text: string;
 };
 
+export type NanobotChatResult = {
+  session_key: string;
+  user_content: string;
+  assistant_content: string;
+  sessions: NanobotSessionSummary[];
+  detail: NanobotSessionDetail | null;
+};
+
 export type NanobotBootstrap = {
   agent: NanobotAgent;
   app_version: string;

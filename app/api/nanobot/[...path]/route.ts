@@ -29,19 +29,33 @@ async function proxyRequest(
   }
 
   try {
+    const requestBody =
+      request.method === "GET" || request.method === "HEAD"
+        ? undefined
+        : await request.text();
     const response = await fetch(targetUrl, {
       method: request.method,
       headers,
-      body: request.method === "GET" ? undefined : await request.text(),
+      body: requestBody,
       cache: "no-store",
     });
-    const text = await response.text();
+    const responseHeaders = new Headers();
+    const responseContentType = response.headers.get("content-type");
+    const responseCacheControl = response.headers.get("cache-control");
 
-    return new NextResponse(text, {
+    if (responseContentType) {
+      responseHeaders.set("content-type", responseContentType);
+    }
+    if (responseCacheControl) {
+      responseHeaders.set("cache-control", responseCacheControl);
+    }
+    if (responseContentType?.includes("text/event-stream")) {
+      responseHeaders.set("x-accel-buffering", "no");
+    }
+
+    return new NextResponse(response.body, {
       status: response.status,
-      headers: {
-        "content-type": response.headers.get("content-type") || "application/json; charset=utf-8",
-      },
+      headers: responseHeaders,
     });
   } catch {
     return NextResponse.json(

@@ -7,7 +7,7 @@ import {
   getNanobotBootstrap,
   getNanobotSessionDetail,
   saveNanobotSecurityList,
-  sendNanobotMessage,
+  streamNanobotMessage,
 } from "@/features/bots/api";
 import type {
   NanobotBootstrap,
@@ -31,31 +31,6 @@ function buildTurnNavTitle(
   }
 
   return text.length > 30 ? `${text.slice(0, 30)}...` : text;
-}
-
-function PendingTurn({ content }: { content: string }) {
-  return (
-    <section className="rounded-[12px] border border-[#d8e8fa] bg-[#f8fbfe] p-4">
-      <div className="flex items-center justify-between gap-3">
-        <div className="text-[13px] font-semibold text-title">正在处理</div>
-        <div className="text-[12px] text-[#7f8ea3]">等待后端返回结果</div>
-      </div>
-      <div className="mt-3 grid gap-3">
-        <article className="rounded-[10px] border border-[#e4edf6] bg-white p-3">
-          <div className="text-[11px] font-medium text-[#7f8ea3]">用户</div>
-          <pre className="mt-2 whitespace-pre-wrap break-words text-[13px] leading-6 text-title">
-            {content}
-          </pre>
-        </article>
-        <article className="rounded-[10px] border border-[#d8e8fa] bg-[#eef5fd] p-3">
-          <div className="text-[11px] font-medium text-[#356da8]">助手</div>
-          <pre className="mt-2 whitespace-pre-wrap break-words text-[13px] leading-6 text-[#1a4d87]">
-            nanobot 正在思考，请稍候...
-          </pre>
-        </article>
-      </div>
-    </section>
-  );
 }
 
 function MessageCard({ message }: { message: NanobotMessageView }) {
@@ -138,7 +113,6 @@ export function BotWorkbench({ agentId }: BotWorkbenchProps) {
   const [reloadTick, setReloadTick] = useState(0);
   const [composerValue, setComposerValue] = useState("");
   const [sending, setSending] = useState(false);
-  const [pendingContent, setPendingContent] = useState("");
   const [composerStatus, setComposerStatus] = useState("");
   const [writeAllowText, setWriteAllowText] = useState("");
   const [readDenyText, setReadDenyText] = useState("");
@@ -197,21 +171,29 @@ export function BotWorkbench({ agentId }: BotWorkbenchProps) {
     }
 
     setSending(true);
-    setPendingContent(content);
     setComposerStatus("");
 
     try {
-      const data = await sendNanobotMessage(agentId, {
+      const data = await streamNanobotMessage(agentId, {
         content,
         session_key: bootstrap.current_key || "",
+      }, {
+        onProgress: (message) => {
+          setComposerStatus(message);
+        },
       });
-      setBootstrap({
-        ...bootstrap,
-        sessions: data.sessions || [],
-        current_key: data.session_key,
-        current_detail: data.detail,
-      });
+      setBootstrap((current) =>
+        current
+          ? {
+              ...current,
+              sessions: data.sessions || [],
+              current_key: data.session_key,
+              current_detail: data.detail,
+            }
+          : current,
+      );
       setComposerValue("");
+      setComposerStatus("");
       syncUrl(data.session_key);
     } catch (sendError) {
       setComposerStatus(
@@ -219,7 +201,6 @@ export function BotWorkbench({ agentId }: BotWorkbenchProps) {
       );
     } finally {
       setSending(false);
-      setPendingContent("");
     }
   }
 
@@ -452,7 +433,7 @@ export function BotWorkbench({ agentId }: BotWorkbenchProps) {
             <div className="flex items-center justify-between gap-3">
               <div className="truncate text-[12px] text-[#7f8ea3]">
                 {composerStatus
-                  ? composerStatus
+                  ? `处理中：${composerStatus}`
                   : sending
                     ? "nanobot 正在处理这条消息..."
                     : `模型：${bootstrap.model_name || "-"}`}
@@ -480,7 +461,6 @@ export function BotWorkbench({ agentId }: BotWorkbenchProps) {
           </div>
           <div className="flex-1 overflow-y-auto px-4 py-4">
             <div className="space-y-4">
-              {pendingContent ? <PendingTurn content={pendingContent} /> : null}
               {bootstrap.current_detail?.turns.length ? (
                 bootstrap.current_detail.turns.map((turn) => (
                   <div key={turn.anchor} id={turn.anchor}>
