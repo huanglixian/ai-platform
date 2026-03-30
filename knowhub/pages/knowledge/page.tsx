@@ -1,0 +1,16 @@
+import { ComingSoonPanel } from "@/knowhub/components/common/coming-soon-panel";
+import { KnowHubPageShell } from "@/knowhub/components/layout/knowhub-page-shell";
+
+export function KnowHubKnowledgePage() {
+  return (
+    <KnowHubPageShell
+      title="知识中心"
+      description="这里后续承接知识内容组织、发布状态和业务复用入口。"
+    >
+      <ComingSoonPanel
+        title="知识中心暂未展开"
+        description="这一栏后续会承接知识内容编目、知识库管理和对外发布状态。当前先保留统一入口。"
+      />
+    </KnowHubPageShell>
+  );
+}

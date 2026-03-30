@@ -12,8 +12,9 @@
 - `app/(platform)`
   当前统一平台壳下的业务页面入口
 
-- `app/(platform)/knowhub`
-  KnowHub 路由入口层，只放知识业务相关页面的薄入口
+- `app/knowhub`
+  KnowHub 独立路由入口层
+  不再挂在平台 `AppShell` 下，使用自己的导航和页面布局
 
 - `knowhub`
   KnowHub 业务域实现目录
@@ -71,17 +72,20 @@ Ai_Platform/
 │  │  ├─ bots/
 │  │  │  ├─ page.tsx
 │  │  │  └─ [agentId]/page.tsx
-│  │  ├─ knowhub/
-│  │  │  ├─ page.tsx
-│  │  │  ├─ documents/page.tsx
-│  │  │  ├─ strategies/page.tsx
-│  │  │  ├─ pipelines/page.tsx
-│  │  │  ├─ knowledge/page.tsx
-│  │  │  └─ retrieval/page.tsx
 │  │  ├─ workflows/page.tsx
 │  │  ├─ tools/page.tsx
 │  │  ├─ services/page.tsx
 │  │  └─ skills/page.tsx
+│  ├─ knowhub/
+│  │  ├─ layout.tsx
+│  │  ├─ page.tsx
+│  │  ├─ documents/page.tsx
+│  │  ├─ clean/page.tsx
+│  │  ├─ slices/page.tsx
+│  │  ├─ strategies/page.tsx
+│  │  ├─ pipelines/page.tsx
+│  │  ├─ knowledge/page.tsx
+│  │  └─ retrieval/page.tsx
 │  ├─ api/
 │  │  └─ nanobot/[...path]/route.ts
 │  ├─ globals.css
@@ -130,8 +134,15 @@ Ai_Platform/
 - `knowhub/documents`
   文档中心入口
 
+- `knowhub/clean`
+  预处理策略库入口
+
+- `knowhub/slices`
+  切片策略库入口
+
 - `knowhub/strategies`
-  策略中心入口
+  策略中心逻辑入口
+  当前重定向到 `knowhub/clean`
 
 - `knowhub/pipelines`
   处理中心入口
