@@ -56,10 +56,7 @@ const flowAccentMap = {
 
 export function KnowHubOverviewPage() {
   return (
-    <KnowHubPageShell
-      title="概览"
-      description="从空间管理、处理策略和知识沉淀三个层面查看 KnowHub 当前状态。"
-    >
+    <KnowHubPageShell>
       <IntroPanel
         title={knowHubOverviewIntro.title}
         description={knowHubOverviewIntro.description}

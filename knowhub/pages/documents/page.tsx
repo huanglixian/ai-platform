@@ -41,10 +41,7 @@ export function KnowHubDocumentsPage() {
     null;
 
   return (
-    <KnowHubPageShell
-      title="文档中心"
-      description="围绕 DocSpace 管理知识来源。先建立空间，再接入 FTP、OSS 或手工整理的文档内容。"
-    >
+    <KnowHubPageShell>
       <section className="grid gap-4 lg:grid-cols-3">
         <DocspaceCreateCard
           title="直接新建"

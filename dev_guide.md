@@ -82,7 +82,6 @@ Ai_Platform/
 │  │  ├─ documents/page.tsx
 │  │  ├─ clean/page.tsx
 │  │  ├─ slices/page.tsx
-│  │  ├─ strategies/page.tsx
 │  │  ├─ pipelines/page.tsx
 │  │  ├─ knowledge/page.tsx
 │  │  └─ retrieval/page.tsx
@@ -139,10 +138,6 @@ Ai_Platform/
 
 - `knowhub/slices`
   切片策略库入口
-
-- `knowhub/strategies`
-  策略中心逻辑入口
-  当前重定向到 `knowhub/clean`
 
 - `knowhub/pipelines`
   处理中心入口
