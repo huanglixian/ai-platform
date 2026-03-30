@@ -60,10 +60,9 @@ export function KnowHubOverviewPage() {
       <IntroPanel
         title={knowHubOverviewIntro.title}
         description={knowHubOverviewIntro.description}
-        bullets={knowHubOverviewIntro.bullets}
       />
 
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+      <section className="grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
         {knowHubOverviewStats.map((item) => {
           const Icon = statIconMap[item.key as keyof typeof statIconMap];
           const accent = statAccentMap[item.key as keyof typeof statAccentMap];
@@ -81,18 +80,18 @@ export function KnowHubOverviewPage() {
         })}
       </section>
 
-      <section className="rounded-[16px] border border-[#dbe5f0] bg-white px-5 py-5 shadow-[0_10px_28px_rgba(15,23,42,0.04)]">
-        <div className="mb-4 flex items-end justify-between gap-4">
+      <section className="rounded-[16px] border border-[#dbe5f0] bg-white px-4.5 py-4.5 shadow-[0_10px_28px_rgba(15,23,42,0.04)]">
+        <div className="mb-2 flex items-end justify-between gap-4">
           <div>
             <div className="text-title text-[18px] font-semibold tracking-[-0.02em]">
               知识处理流程
             </div>
-            <div className="mt-1 text-[12px] leading-5 text-[#667085]">
+            <div className="mt-0.5 text-[12px] leading-5 text-[#667085]">
               从 DocSpace 建立到知识内容沉淀，围绕统一流程组织知识资产。
             </div>
           </div>
         </div>
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-1.5 md:grid-cols-2 xl:grid-cols-3">
           {knowHubFlowStages.map((item, index) => {
             const Icon = flowIconMap[item.key as keyof typeof flowIconMap];
             const accent = flowAccentMap[item.key as keyof typeof flowAccentMap];

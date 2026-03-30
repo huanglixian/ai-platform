@@ -67,8 +67,8 @@ export function KnowHubTopNav() {
   }
 
   return (
-    <section className="rounded-[14px] border border-[#d8e1eb] bg-white/94 px-5 py-4 shadow-[0_8px_24px_rgba(15,23,42,0.04)]">
-      <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+    <section className="rounded-[14px] border border-[#d8e1eb] bg-white/94 px-5 py-3.5 shadow-[0_8px_24px_rgba(15,23,42,0.04)]">
+      <div className="flex flex-col gap-2 xl:flex-row xl:items-center xl:justify-between">
         <div className="min-w-0">
           <div className="text-title text-[18px] font-semibold tracking-[-0.02em]">
             KnowHub
@@ -78,7 +78,7 @@ export function KnowHubTopNav() {
           </div>
         </div>
 
-        <nav className="flex flex-wrap items-center gap-2 xl:justify-center">
+        <nav className="flex flex-wrap items-center gap-1 xl:justify-center">
           {primaryItems.slice(0, 2).map((item) => {
             const active = isActive(pathname, item.href);
 
@@ -87,7 +87,7 @@ export function KnowHubTopNav() {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "border-b-2 px-2 py-2 text-[14px] font-semibold tracking-[-0.01em] transition-colors",
+                  "border-b-2 px-2 py-1.5 text-[14px] font-semibold tracking-[-0.01em] transition-colors",
                   active
                     ? "border-[#0368b3] text-title"
                     : "border-transparent text-[#4d4d4d] hover:text-title"
@@ -108,7 +108,7 @@ export function KnowHubTopNav() {
               onFocus={openStrategyPanel}
               onClick={() => setStrategyOpen((current) => !current)}
               className={cn(
-                "border-b-2 px-2 py-2 text-[14px] font-semibold tracking-[-0.01em] transition-colors",
+                "border-b-2 px-2 py-1.5 text-[14px] font-semibold tracking-[-0.01em] transition-colors",
                 strategyActive || strategyOpen
                   ? "border-[#0368b3] text-title"
                   : "border-transparent text-[#4d4d4d] hover:text-title"
@@ -171,7 +171,7 @@ export function KnowHubTopNav() {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "border-b-2 px-2 py-2 text-[14px] font-semibold tracking-[-0.01em] transition-colors",
+                  "border-b-2 px-2 py-1.5 text-[14px] font-semibold tracking-[-0.01em] transition-colors",
                   active
                     ? "border-[#0368b3] text-title"
                     : "border-transparent text-[#4d4d4d] hover:text-title"

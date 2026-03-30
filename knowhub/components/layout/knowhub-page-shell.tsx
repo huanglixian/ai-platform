@@ -5,5 +5,5 @@ type KnowHubPageShellProps = {
 };
 
 export function KnowHubPageShell({ children }: KnowHubPageShellProps) {
-  return <div className="flex w-full flex-col gap-5">{children}</div>;
+  return <div className="flex w-full flex-col gap-3">{children}</div>;
 }

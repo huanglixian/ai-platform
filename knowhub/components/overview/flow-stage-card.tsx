@@ -18,10 +18,10 @@ export function FlowStageCard({
   index,
 }: FlowStageCardProps) {
   return (
-    <div className="min-w-0 rounded-[14px] border border-[#dce6f0] bg-white px-4 py-4 shadow-[0_8px_24px_rgba(15,23,42,0.04)]">
+    <div className="min-w-0 rounded-[14px] border border-[#dce6f0] bg-white px-4 py-3.5 shadow-[0_8px_24px_rgba(15,23,42,0.04)]">
       <div className="flex items-start justify-between gap-3">
         <div
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px]"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[12px]"
           style={{ backgroundColor: `${accent}14`, color: accent }}
         >
           <Icon className="h-4.5 w-4.5" />
@@ -33,7 +33,7 @@ export function FlowStageCard({
           {String(index).padStart(2, "0")}
         </div>
       </div>
-      <div className="mt-3 space-y-1.5">
+      <div className="mt-2.5 space-y-1">
         <div className="text-title text-[14px] font-semibold tracking-[-0.01em]">
           {title}
         </div>

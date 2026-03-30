@@ -11,11 +11,6 @@ export const knowHubOverviewIntro = {
   title: "KnowHub 知识业务域",
   description:
     "围绕企业知识接入、处理、组织和复用构建统一入口，以 DocSpace 作为文档载体，以策略库作为处理标准，以知识内容沉淀可检索的业务资产。",
-  bullets: [
-    "先管理知识空间，再管理文档来源和同步状态。",
-    "预处理策略库与切片策略库分开维护，便于标准化复用。",
-    "后续可从平台中独立解耦，形成单独的知识子系统。",
-  ],
 };
 
 export const knowHubOverviewStats: KnowHubOverviewStat[] = [
@@ -53,16 +48,16 @@ export const knowHubOverviewStats: KnowHubOverviewStat[] = [
 
 export const knowHubFlowStages: KnowHubFlowStage[] = [
   {
-    key: "docspace",
-    title: "新建 DocSpace",
-    summary: "为知识主题建立独立空间，明确归属、范围和维护方。",
-    metric: `${docSpaceRecords.length} 个空间`,
-  },
-  {
     key: "source",
     title: "接入文档源",
     summary: "通过手工、FTP 或 OSS 接入现有资料，形成可追踪的来源快照。",
     metric: "FTP / OSS / 手工",
+  },
+  {
+    key: "docspace",
+    title: "文档管理",
+    summary: "按 DocSpace 组织文档归属、范围和维护方，统一管理知识空间。",
+    metric: `${docSpaceRecords.length} 个空间`,
   },
   {
     key: "preprocess",

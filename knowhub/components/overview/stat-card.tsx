@@ -16,19 +16,19 @@ export function StatCard({
   accent,
 }: StatCardProps) {
   return (
-    <div className="app-card rounded-[14px] px-4 py-4">
+    <div className="app-card rounded-[14px] px-4 py-3.5">
       <div className="flex items-start justify-between gap-3">
         <div className="space-y-1.5">
           <div className="text-[11px] font-medium tracking-[0.05em] text-[#98a2b3]">
             {label}
           </div>
-          <div className="text-title text-[28px] font-semibold tracking-[-0.03em]">
+          <div className="text-title text-[24px] font-semibold tracking-[-0.03em]">
             {value}
           </div>
           <div className="text-[12px] text-[#667085]">{hint}</div>
         </div>
         <div
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px]"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px]"
           style={{
             backgroundColor: `${accent}16`,
             color: accent,
