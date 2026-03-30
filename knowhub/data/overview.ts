@@ -8,7 +8,7 @@ const totalDocuments = docSpaceRecords.reduce(
 );
 
 export const knowHubOverviewIntro = {
-  title: "KnowHub 知识业务域",
+  title: "KnowHub 知识中心",
   description:
     "围绕企业知识接入、处理、组织和复用构建统一入口，以 DocSpace 作为文档载体，以策略库作为处理标准，以知识内容沉淀可检索的业务资产。",
 };
@@ -56,7 +56,7 @@ export const knowHubFlowStages: KnowHubFlowStage[] = [
   {
     key: "docspace",
     title: "文档管理",
-    summary: "按 DocSpace 组织文档归属、范围和维护方，统一管理知识空间。",
+    summary: "按 DocSpace 组织文档归属、范围和维护方，统一管理文档空间。",
     metric: `${docSpaceRecords.length} 个空间`,
   },
   {

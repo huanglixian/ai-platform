@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useRef, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 
-import { buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button-variants";
 import { cn } from "@/lib/utils";
 
 const strategyChildren = [
