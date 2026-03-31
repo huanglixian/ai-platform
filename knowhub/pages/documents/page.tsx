@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import { KnowHubPageShell } from "@/knowhub/components/layout/knowhub-page-shell";
 import { DocspaceCard } from "@/knowhub/components/documents/docspace-card";
-import { DocspaceCreateCard } from "@/knowhub/components/documents/docspace-create-card";
+import { DocspaceCreateDialog } from "@/knowhub/components/documents/docspace-create-dialog";
 import { KnowHubPageToolbar } from "@/knowhub/components/shared/page-toolbar";
 import { docSpaceRecords } from "@/knowhub/data/docspaces";
 
@@ -19,6 +19,7 @@ export function KnowHubDocumentsPage() {
   const [keyword, setKeyword] = useState("");
   const [sourceFilter, setSourceFilter] =
     useState<(typeof sourceTabs)[number]["key"]>("all");
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
   const normalizedKeyword = keyword.trim().toLowerCase();
   const filteredDocSpaces = docSpaceRecords.filter((item) => {
@@ -41,12 +42,12 @@ export function KnowHubDocumentsPage() {
         tabs={sourceTabs}
         activeTab={sourceFilter}
         onTabChange={setSourceFilter}
+        actionLabel="新建空间"
+        onAction={() => setCreateDialogOpen(true)}
       />
 
       <section className="rounded-[20px] border border-[#dde6f0] bg-[linear-gradient(180deg,rgba(236,241,247,0.92)_0%,rgba(244,247,251,0.96)_100%)] px-3 py-3 sm:px-4 sm:py-4">
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          <DocspaceCreateCard />
-
           {filteredDocSpaces.map((item) => (
             <DocspaceCard
               key={item.id}
@@ -55,6 +56,11 @@ export function KnowHubDocumentsPage() {
           ))}
         </div>
       </section>
+
+      <DocspaceCreateDialog
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+      />
     </KnowHubPageShell>
   );
 }

@@ -10,18 +10,18 @@ type PageToolbarTab = {
   label: string;
 };
 
-type KnowHubPageToolbarProps = {
+type KnowHubPageToolbarProps<T extends string> = {
   searchValue: string;
   onSearchChange: (value: string) => void;
   searchPlaceholder: string;
-  tabs: readonly PageToolbarTab[];
-  activeTab: string;
-  onTabChange: (key: string) => void;
+  tabs: readonly (Omit<PageToolbarTab, "key"> & { key: T })[];
+  activeTab: T;
+  onTabChange: (key: T) => void;
   actionLabel?: string;
   onAction?: () => void;
 };
 
-export function KnowHubPageToolbar({
+export function KnowHubPageToolbar<T extends string>({
   searchValue,
   onSearchChange,
   searchPlaceholder,
@@ -30,22 +30,22 @@ export function KnowHubPageToolbar({
   onTabChange,
   actionLabel,
   onAction,
-}: KnowHubPageToolbarProps) {
+}: KnowHubPageToolbarProps<T>) {
   return (
     <section className="rounded-[18px] border border-[#d8e1eb] bg-[linear-gradient(180deg,rgba(237,242,248,0.96)_0%,rgba(246,249,253,0.98)_100%)] px-4 py-3 shadow-[0_10px_28px_rgba(15,23,42,0.04)]">
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div className="flex items-center gap-2 rounded-[12px] border border-[#dce5ee] bg-[rgba(255,255,255,0.82)] px-3 md:w-[360px]">
-          <Search className="h-4 w-4 text-[#98a2b3]" />
-          <Input
-            value={searchValue}
-            onChange={(event) => onSearchChange(event.target.value)}
-            placeholder={searchPlaceholder}
-            className="border-0 bg-transparent px-0 shadow-none focus-visible:ring-0"
-          />
-        </div>
+        <div className="flex flex-col gap-3 md:flex-row md:items-center">
+          <div className="flex items-center gap-2 rounded-[12px] border border-[#dce5ee] bg-[rgba(255,255,255,0.82)] px-3 md:w-[360px]">
+            <Search className="h-4 w-4 text-[#98a2b3]" />
+            <Input
+              value={searchValue}
+              onChange={(event) => onSearchChange(event.target.value)}
+              placeholder={searchPlaceholder}
+              className="border-0 bg-transparent px-0 shadow-none focus-visible:ring-0"
+            />
+          </div>
 
-        <div className="flex flex-col gap-3 md:flex-1 md:flex-row md:items-center md:justify-end">
-          <div className="flex flex-wrap gap-2 md:justify-end">
+          <div className="flex flex-wrap gap-2">
             {tabs.map((tab) => {
               const active = tab.key === activeTab;
 
@@ -66,18 +66,18 @@ export function KnowHubPageToolbar({
               );
             })}
           </div>
-
-          {actionLabel && onAction ? (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onAction}
-              className="w-full md:w-auto md:shrink-0"
-            >
-              {actionLabel}
-            </Button>
-          ) : null}
         </div>
+
+        {actionLabel && onAction ? (
+          <Button
+            variant="default"
+            size="default"
+            onClick={onAction}
+            className="w-full md:w-auto md:shrink-0"
+          >
+            {actionLabel}
+          </Button>
+        ) : null}
       </div>
     </section>
   );
