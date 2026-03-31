@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { KnowHubPageShell } from "@/knowhub/components/layout/knowhub-page-shell";
+import { KnowHubCardGrid } from "@/knowhub/components/shared/card-grid";
 import { KnowHubPageToolbar } from "@/knowhub/components/shared/page-toolbar";
 import { StrategyBar } from "@/knowhub/components/strategies/strategy-bar";
 import { StrategyCard } from "@/knowhub/components/strategies/strategy-card";
@@ -121,11 +122,11 @@ export function KnowHubStrategiesPage({
 
       {visibleStrategies.length ? (
         <section className="rounded-[20px] border border-[#dde6f0] bg-[linear-gradient(180deg,rgba(236,241,247,0.92)_0%,rgba(244,247,251,0.96)_100%)] px-3 py-3 sm:px-4 sm:py-4">
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <KnowHubCardGrid itemWidth={360}>
             {visibleStrategies.map((item) => (
               <StrategyCard key={item.id} item={item} />
             ))}
-          </div>
+          </KnowHubCardGrid>
         </section>
       ) : (
         <section className="rounded-[16px] border border-[#d8e1eb] bg-white px-5 py-8 shadow-[0_8px_24px_rgba(15,23,42,0.04)]">

@@ -70,7 +70,7 @@ export function CardPageFrame({
         </div>
       ) : null}
       <section className="flex flex-col gap-3">
-        <div className="grid justify-center gap-4" style={gridStyle}>
+        <div className="grid justify-start gap-4" style={gridStyle}>
           {tabs?.length ? (
             <div
               className="flex items-center justify-between gap-4 border-b border-[#d4e0ec] pb-2"

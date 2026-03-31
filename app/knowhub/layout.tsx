@@ -9,7 +9,7 @@ export default function KnowHubLayout({
 }) {
   return (
     <main className="min-h-screen w-full bg-background px-6 py-4 sm:px-8">
-      <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-3">
+      <div className="flex w-full flex-col gap-3">
         <KnowHubTopNav />
         {children}
       </div>

@@ -5,6 +5,7 @@ import { useState } from "react";
 import { KnowHubPageShell } from "@/knowhub/components/layout/knowhub-page-shell";
 import { DocspaceCard } from "@/knowhub/components/documents/docspace-card";
 import { DocspaceCreateDialog } from "@/knowhub/components/documents/docspace-create-dialog";
+import { KnowHubCardGrid } from "@/knowhub/components/shared/card-grid";
 import { KnowHubPageToolbar } from "@/knowhub/components/shared/page-toolbar";
 import { docSpaceRecords } from "@/knowhub/data/docspaces";
 
@@ -47,14 +48,14 @@ export function KnowHubDocumentsPage() {
       />
 
       <section className="rounded-[20px] border border-[#dde6f0] bg-[linear-gradient(180deg,rgba(236,241,247,0.92)_0%,rgba(244,247,251,0.96)_100%)] px-3 py-3 sm:px-4 sm:py-4">
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <KnowHubCardGrid itemWidth={340}>
           {filteredDocSpaces.map((item) => (
             <DocspaceCard
               key={item.id}
               item={item}
             />
           ))}
-        </div>
+        </KnowHubCardGrid>
       </section>
 
       <DocspaceCreateDialog
