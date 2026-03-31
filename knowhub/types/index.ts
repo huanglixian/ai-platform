@@ -32,7 +32,7 @@ export interface DocSpaceRecord {
   files: DocSpaceFileSnapshot[];
 }
 
-export type StrategyCategory = "preprocess" | "chunking";
+export type StrategyCategory = "preprocess" | "chunking" | "extract";
 
 export type StrategyStatus = "active" | "draft";
 

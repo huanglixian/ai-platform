@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-import { KnowHubTopNav } from "@/knowhub/components/top-nav";
+import { KnowHubTopNav } from "@/knowhub/components/shared/knowhub-top-nav";
 
 export default function KnowHubLayout({
   children,

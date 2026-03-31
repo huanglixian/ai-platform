@@ -8,11 +8,13 @@ type StrategyCardProps = {
 const accentMap = {
   preprocess: "#d08a33",
   chunking: "#1f8a57",
+  extract: "#4a83c5",
 } as const;
 
 const categoryLabelMap = {
   preprocess: "预处理策略库",
   chunking: "切片策略库",
+  extract: "提取策略库",
 } as const;
 
 const statusLabelMap = {
