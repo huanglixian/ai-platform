@@ -14,9 +14,9 @@ const sourceLabelMap = {
 } as const;
 
 const sourceAccentMap = {
-  manual: "#0368b3",
-  ftp: "#2e7dd2",
-  oss: "#1f8a57",
+  manual: "#7a8fad",
+  ftp: "#5c8f72",
+  oss: "#4a83c5",
 } as const;
 
 const statusLabelMap = {
@@ -31,7 +31,7 @@ export function DocspaceCard({
   return (
     <Link
       href={`/knowhub/documents/${item.id}`}
-      className="block h-full min-h-[192px] overflow-hidden rounded-[14px] border border-[#dbe5f0] bg-[linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(250,252,255,0.98)_100%)] text-left transition-all hover:-translate-y-0.5 hover:border-[#bfd7f2] hover:shadow-[0_10px_24px_rgba(15,23,42,0.06)]"
+      className="block h-full min-h-[192px] overflow-hidden rounded-[14px] border border-[#d8e1eb] bg-[linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(246,249,253,0.98)_100%)] text-left transition-all hover:-translate-y-0.5 hover:border-[#bfd0e2] hover:shadow-[0_10px_24px_rgba(15,23,42,0.06)]"
     >
       <div
         className="h-1 w-full"

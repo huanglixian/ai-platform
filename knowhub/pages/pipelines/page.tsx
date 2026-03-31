@@ -1,4 +1,4 @@
-import { ComingSoonPanel } from "@/knowhub/components/common/coming-soon-panel";
+import { ComingSoonPanel } from "@/knowhub/components/shared/coming-soon-panel";
 import { KnowHubPageShell } from "@/knowhub/components/layout/knowhub-page-shell";
 
 export function KnowHubPipelinesPage() {

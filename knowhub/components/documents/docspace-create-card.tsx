@@ -12,7 +12,7 @@ const sourceOptions = [
     description: "先建立一个空白 DocSpace，再逐步整理知识内容。",
     actionLabel: "新建空空间",
     icon: FolderPlus,
-    accent: "#0368b3",
+    accent: "#7a8fad",
   },
   {
     key: "ftp",
@@ -20,7 +20,7 @@ const sourceOptions = [
     description: "绑定 FTP 文件夹，读取目录快照并纳入统一管理。",
     actionLabel: "连接 FTP",
     icon: HardDriveDownload,
-    accent: "#2e7dd2",
+    accent: "#5c8f72",
   },
   {
     key: "oss",
@@ -28,7 +28,7 @@ const sourceOptions = [
     description: "绑定对象存储桶，按桶路径组织知识来源和同步范围。",
     actionLabel: "连接 OSS",
     icon: Cloud,
-    accent: "#1f8a57",
+    accent: "#4a83c5",
   },
 ] as const;
 
@@ -45,17 +45,17 @@ export function DocspaceCreateCard() {
       <button
         type="button"
         onClick={() => setDialogOpen(true)}
-        className="group flex min-h-[192px] h-full w-full flex-col rounded-[14px] border border-dashed border-[#b8cde3] bg-[linear-gradient(180deg,rgba(238,245,253,0.96)_0%,rgba(255,255,255,0.98)_42%,rgba(248,251,255,0.98)_100%)] px-4 py-4 text-left transition-all hover:-translate-y-0.5 hover:border-[#7fa8d3] hover:shadow-[0_10px_24px_rgba(15,23,42,0.06)]"
+        className="group flex min-h-[192px] h-full w-full flex-col rounded-[14px] border border-dashed border-[#bfd0e2] bg-[linear-gradient(180deg,rgba(232,239,248,0.96)_0%,rgba(248,251,255,0.98)_42%,rgba(255,255,255,0.98)_100%)] px-4 py-4 text-left transition-all hover:-translate-y-0.5 hover:border-[#6f96c4] hover:shadow-[0_10px_24px_rgba(15,23,42,0.06)]"
       >
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] bg-[#0368b3] text-white shadow-[0_8px_18px_rgba(3,104,179,0.14)]">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] bg-[linear-gradient(180deg,#0368b3_0%,#2e7dd2_100%)] text-white shadow-[0_8px_18px_rgba(3,104,179,0.14)]">
             <FolderPlus className="h-5 w-5" />
           </div>
           <div className="min-w-0">
             <h3 className="text-title text-[18px] font-semibold tracking-[-0.02em]">
               创建 DocSpace
             </h3>
-            <div className="mt-1 text-[12px] text-[#5d7ea5]">
+            <div className="mt-1 text-[12px] text-[#567799]">
               选择接入方式
             </div>
           </div>
@@ -64,7 +64,7 @@ export function DocspaceCreateCard() {
           <p className="text-[13px] leading-6 text-[#667085]">
             建立新的知识空间，统一接入文档来源、同步状态和后续知识沉淀。
           </p>
-          <div className="w-fit rounded-[999px] border border-[#d8e5f2] bg-white/88 px-3 py-1 text-[11px] font-medium text-[#356da8]">
+          <div className="w-fit rounded-[999px] border border-[#cfdaea] bg-[rgba(255,255,255,0.88)] px-3 py-1 text-[11px] font-medium text-[#356da8]">
             点击后选择新建方式
           </div>
         </div>
@@ -72,8 +72,8 @@ export function DocspaceCreateCard() {
 
       {dialogOpen ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-[rgba(15,23,42,0.28)] px-4 py-6 backdrop-blur-[2px]">
-          <div className="w-full max-w-[560px] rounded-[18px] border border-[#dbe5f0] bg-white shadow-[0_24px_64px_rgba(15,23,42,0.18)]">
-            <div className="flex items-start justify-between gap-3 border-b border-[#edf2f7] px-5 py-4">
+          <div className="w-full max-w-[560px] rounded-[18px] border border-[#d6e0eb] bg-[linear-gradient(180deg,rgba(248,250,253,0.98)_0%,rgba(255,255,255,0.98)_100%)] shadow-[0_24px_64px_rgba(15,23,42,0.18)]">
+            <div className="flex items-start justify-between gap-3 border-b border-[#e7edf4] px-5 py-4">
               <div>
                 <div className="text-title text-[18px] font-semibold tracking-[-0.02em]">
                   选择创建方式
