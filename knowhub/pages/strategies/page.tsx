@@ -8,19 +8,11 @@ import { KnowHubPageToolbar } from "@/knowhub/components/shared/page-toolbar";
 import { StrategyBar } from "@/knowhub/components/strategies/strategy-bar";
 import { StrategyCard } from "@/knowhub/components/strategies/strategy-card";
 import { strategyRecords } from "@/knowhub/data/strategies";
-import type { StrategyCategory, StrategyRecord, StrategyStatus } from "@/knowhub/types";
-
-type StrategyToolbarTab = "all" | StrategyStatus;
+import type { StrategyCategory, StrategyRecord } from "@/knowhub/types";
 
 type KnowHubStrategiesPageProps = {
   activeCategory: StrategyCategory;
 };
-
-const statusTabs = [
-  { key: "all", label: "全部" },
-  { key: "active", label: "已启用" },
-  { key: "draft", label: "草稿" },
-] as const;
 
 const categoryMeta = {
   preprocess: {
@@ -66,7 +58,20 @@ export function KnowHubStrategiesPage({
   activeCategory,
 }: KnowHubStrategiesPageProps) {
   const [keyword, setKeyword] = useState("");
-  const [statusFilter, setStatusFilter] = useState<StrategyToolbarTab>("all");
+  const activeCategoryRecords = strategyRecords.filter(
+    (item) => item.category === activeCategory,
+  );
+  const groupTabs = [
+    { key: "all", label: "全部" },
+    ...Array.from(new Set(activeCategoryRecords.map((item) => item.group))).map((group) => ({
+      key: group,
+      label: group,
+    })),
+  ] as const;
+  const [groupFilter, setGroupFilter] = useState<(typeof groupTabs)[number]["key"]>("all");
+  const resolvedGroupFilter = groupTabs.some((tab) => tab.key === groupFilter)
+    ? groupFilter
+    : "all";
 
   const categoryCounts = {
     preprocess: strategyRecords.filter((item) => item.category === "preprocess").length,
@@ -79,7 +84,7 @@ export function KnowHubStrategiesPage({
       return false;
     }
 
-    if (statusFilter !== "all" && item.status !== statusFilter) {
+    if (resolvedGroupFilter !== "all" && item.group !== resolvedGroupFilter) {
       return false;
     }
 
@@ -114,15 +119,15 @@ export function KnowHubStrategiesPage({
         searchValue={keyword}
         onSearchChange={setKeyword}
         searchPlaceholder={categoryMeta[activeCategory].searchPlaceholder}
-        tabs={statusTabs}
-        activeTab={statusFilter}
-        onTabChange={setStatusFilter}
+        tabs={groupTabs}
+        activeTab={resolvedGroupFilter}
+        onTabChange={setGroupFilter}
         actionLabel="新建策略"
       />
 
       {visibleStrategies.length ? (
         <section className="rounded-[20px] border border-[#dde6f0] bg-[linear-gradient(180deg,rgba(236,241,247,0.92)_0%,rgba(244,247,251,0.96)_100%)] px-3 py-3 sm:px-4 sm:py-4">
-          <KnowHubCardGrid itemWidth={360}>
+          <KnowHubCardGrid itemWidth={320}>
             {visibleStrategies.map((item) => (
               <StrategyCard key={item.id} item={item} />
             ))}

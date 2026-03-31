@@ -34,19 +34,16 @@ export interface DocSpaceRecord {
 
 export type StrategyCategory = "preprocess" | "chunking" | "extract";
 
-export type StrategyStatus = "active" | "draft";
-
 export interface StrategyRecord {
   id: string;
   name: string;
   category: StrategyCategory;
+  group: string;
   summary: string;
-  scope: string;
+  metaLabel: string;
+  metaValue: string;
   owner: string;
-  version: string;
   usageCount: number;
-  status: StrategyStatus;
-  updatedAt: string;
 }
 
 export interface KnowHubOverviewStat {
