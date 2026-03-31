@@ -50,7 +50,7 @@ export function KnowHubDocumentDetailPage({
           <Link
             href="/knowhub/documents"
             className={cn(
-              buttonVariants({ variant: "outline", size: "sm" }),
+              buttonVariants({ variant: "secondary", size: "sm" }),
               "h-8 shrink-0 px-3 text-[12px]"
             )}
           >

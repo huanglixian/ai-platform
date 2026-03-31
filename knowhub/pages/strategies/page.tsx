@@ -50,7 +50,8 @@ function matchesKeyword(item: StrategyRecord, keyword: string) {
   return (
     item.name.toLowerCase().includes(normalizedKeyword) ||
     item.summary.toLowerCase().includes(normalizedKeyword) ||
-    item.scope.toLowerCase().includes(normalizedKeyword)
+    item.group.toLowerCase().includes(normalizedKeyword) ||
+    item.metaValue.toLowerCase().includes(normalizedKeyword)
   );
 }
 
