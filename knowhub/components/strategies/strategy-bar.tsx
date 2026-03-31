@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { cn } from "@/lib/utils";
 import type { StrategyCategory } from "@/knowhub/types";
+import { strategyAccentMap } from "./strategy-colors";
 
 type StrategyBarItem = {
   key: StrategyCategory;
@@ -14,33 +15,6 @@ type StrategyBarProps = {
   items: readonly StrategyBarItem[];
 };
 
-const accentMap = {
-  preprocess: {
-    dot: "#c9934c",
-    textMuted: "#8a6a44",
-    countMuted: "#a08461",
-    border: "#b8742a",
-    text: "#7f4d1d",
-    count: "#9b6630",
-  },
-  chunking: {
-    dot: "#5c90a8",
-    textMuted: "#4e7083",
-    countMuted: "#6b8ca0",
-    border: "#2e7da4",
-    text: "#205b79",
-    count: "#2f6f92",
-  },
-  extract: {
-    dot: "#5a89bf",
-    textMuted: "#4f6f95",
-    countMuted: "#6e88a9",
-    border: "#0368b3",
-    text: "#1a4d87",
-    count: "#2c6097",
-  },
-} as const;
-
 export function StrategyBar({
   activeCategory,
   items,
@@ -50,7 +24,7 @@ export function StrategyBar({
       <div className="grid grid-cols-3 gap-3">
         {items.map((item) => {
           const active = item.key === activeCategory;
-          const accent = accentMap[item.key];
+          const accent = strategyAccentMap[item.key];
 
           return (
             <Link

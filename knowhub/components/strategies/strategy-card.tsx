@@ -1,17 +1,12 @@
 import type { StrategyRecord } from "@/knowhub/types";
+import { strategyAccentMap } from "./strategy-colors";
 
 type StrategyCardProps = {
   item: StrategyRecord;
 };
 
-const accentMap = {
-  preprocess: "#d08a33",
-  chunking: "#1f8a57",
-  extract: "#4a83c5",
-} as const;
-
 export function StrategyCard({ item }: StrategyCardProps) {
-  const accent = accentMap[item.category];
+  const accent = strategyAccentMap[item.category].solid;
 
   return (
     <div className="overflow-hidden rounded-[14px] border border-[#d8e1eb] bg-white shadow-[0_8px_22px_rgba(15,23,42,0.04)] transition-all hover:-translate-y-[2px] hover:border-[#b8d0ea] hover:shadow-[0_12px_26px_rgba(15,23,42,0.07)]">

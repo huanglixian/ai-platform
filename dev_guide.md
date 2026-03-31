@@ -256,6 +256,12 @@ KnowHub 当前也走全宽内容区，不再做页面级居中限宽。不要再
 - `/knowhub/clean`
 - `/knowhub/slices`
 
+当前策略页约定：
+
+- 第一层切换 `预处理策略 / 切片策略 / 提取策略`
+- toolbar 第二排标签按当前策略类型下的分类筛选
+- 不再使用 `已启用 / 草稿` 这类状态筛选
+
 不要再把策略中心拆回多个一级路由，除非明确要求。
 
 ## 需求落地时优先改哪里
@@ -316,6 +322,7 @@ KnowHub 当前也走全宽内容区，不再做页面级居中限宽。不要再
 
 - [app/knowhub/strategies/page.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/app/knowhub/strategies/page.tsx)
 - [knowhub/pages/strategies/page.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/pages/strategies/page.tsx)
+- [knowhub/components/strategies/strategy-colors.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/strategies/strategy-colors.ts)
 - [knowhub/components/strategies/strategy-bar.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/strategies/strategy-bar.tsx)
 - [knowhub/components/strategies/strategy-card.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/strategies/strategy-card.tsx)
 - [knowhub/data/strategies.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/data/strategies.ts)
@@ -379,6 +386,7 @@ KnowHub 当前也走全宽内容区，不再做页面级居中限宽。不要再
 
 - [knowhub/types/index.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/types/index.ts)
   KnowHub 当前共用类型
+  其中策略数据当前使用 `group / metaLabel / metaValue`
 
 ## 不要做的事
 
