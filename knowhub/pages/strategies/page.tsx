@@ -91,6 +91,14 @@ export function KnowHubStrategiesPage({
 
     return matchesKeyword(item, keyword);
   });
+  const groupedStrategies = groupTabs
+    .filter((tab) => tab.key !== "all")
+    .map((tab) => ({
+      key: tab.key,
+      title: tab.label,
+      items: visibleStrategies.filter((item) => item.group === tab.key),
+    }))
+    .filter((section) => section.items.length > 0);
 
   return (
     <KnowHubPageShell>
@@ -128,11 +136,28 @@ export function KnowHubStrategiesPage({
 
       {visibleStrategies.length ? (
         <section className="rounded-[20px] border border-[#dde6f0] bg-[linear-gradient(180deg,rgba(236,241,247,0.92)_0%,rgba(244,247,251,0.96)_100%)] px-3 py-3 sm:px-4 sm:py-4">
-          <KnowHubCardGrid itemWidth={320}>
-            {visibleStrategies.map((item) => (
-              <StrategyCard key={item.id} item={item} />
-            ))}
-          </KnowHubCardGrid>
+          {resolvedGroupFilter === "all" ? (
+            <div className="flex flex-col gap-4">
+              {groupedStrategies.map((section) => (
+                <section key={section.key} className="flex flex-col gap-3">
+                  <div className="px-1 text-[12px] font-semibold tracking-[0.02em] text-[#5f6f82]">
+                    {section.title}
+                  </div>
+                  <KnowHubCardGrid itemWidth={320}>
+                    {section.items.map((item) => (
+                      <StrategyCard key={item.id} item={item} />
+                    ))}
+                  </KnowHubCardGrid>
+                </section>
+              ))}
+            </div>
+          ) : (
+            <KnowHubCardGrid itemWidth={320}>
+              {visibleStrategies.map((item) => (
+                <StrategyCard key={item.id} item={item} />
+              ))}
+            </KnowHubCardGrid>
+          )}
         </section>
       ) : (
         <section className="rounded-[16px] border border-[#d8e1eb] bg-white px-5 py-8 shadow-[0_8px_24px_rgba(15,23,42,0.04)]">
