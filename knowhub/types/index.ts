@@ -25,7 +25,8 @@ export interface DocSpaceRecord {
   sourceType: DocSpaceSourceType;
   status: DocSpaceStatus;
   documentCount: number;
-  knowledgeCount: number;
+  folderCount: number;
+  totalSizeLabel: string;
   connectedTarget: string;
   owner: string;
   lastSyncAt: string;

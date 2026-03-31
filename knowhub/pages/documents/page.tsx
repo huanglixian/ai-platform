@@ -48,7 +48,7 @@ export function KnowHubDocumentsPage() {
       />
 
       <section className="rounded-[20px] border border-[#dde6f0] bg-[linear-gradient(180deg,rgba(236,241,247,0.92)_0%,rgba(244,247,251,0.96)_100%)] px-3 py-3 sm:px-4 sm:py-4">
-        <KnowHubCardGrid itemWidth={340}>
+        <KnowHubCardGrid itemWidth={325}>
           {filteredDocSpaces.map((item) => (
             <DocspaceCard
               key={item.id}
