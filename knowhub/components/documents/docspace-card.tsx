@@ -27,18 +27,16 @@ export function DocspaceCard({
       href={`/knowhub/documents/${item.id}`}
       className="block h-full min-h-[192px] overflow-hidden rounded-[14px] border border-[#d8e1eb] bg-[linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(246,249,253,0.98)_100%)] text-left transition-all hover:-translate-y-0.5 hover:border-[#bfd0e2] hover:shadow-[0_10px_24px_rgba(15,23,42,0.06)]"
     >
-      <div className="flex h-full flex-col px-4 py-4">
+      <div
+        className="h-1 w-full"
+        style={{
+          background: `linear-gradient(90deg, ${sourceAccentMap[item.sourceType]} 0%, color-mix(in srgb, ${sourceAccentMap[item.sourceType]} 58%, white) 100%)`,
+        }}
+      />
+      <div className="flex h-[calc(100%-4px)] flex-col px-4 py-4">
         <div className="flex items-start justify-between gap-3">
           <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <span
-                className="h-2 w-5 shrink-0 rounded-full"
-                style={{
-                  backgroundColor: sourceAccentMap[item.sourceType],
-                }}
-              />
-              <div className="text-title text-[15px] font-semibold">{item.name}</div>
-            </div>
+            <div className="text-title text-[15px] font-semibold">{item.name}</div>
             <div className="text-[12px] leading-5 text-[#667085]">{item.summary}</div>
           </div>
           <Badge variant="outline">{sourceLabelMap[item.sourceType]}</Badge>
