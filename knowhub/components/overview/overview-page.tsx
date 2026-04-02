@@ -15,10 +15,11 @@ import { FlowStageCard } from "@/knowhub/components/overview/flow-stage-card";
 import { IntroPanel } from "@/knowhub/components/overview/intro-panel";
 import { StatCard } from "@/knowhub/components/overview/stat-card";
 import {
-  knowHubFlowStages,
+  buildKnowHubFlowStages,
   knowHubOverviewIntro,
-  knowHubOverviewStats,
+  buildKnowHubOverviewStats,
 } from "@/knowhub/features/overview/data";
+import type { DocSpaceRecord } from "@/knowhub/features/docspaces/types";
 
 const statIconMap = {
   docspaces: FolderKanban,
@@ -54,7 +55,16 @@ const flowAccentMap = {
   retrieval: "#8a5ac2",
 } as const;
 
-export function KnowHubOverviewPage() {
+type KnowHubOverviewPageProps = {
+  docspaces: DocSpaceRecord[];
+};
+
+export function KnowHubOverviewPage({
+  docspaces,
+}: KnowHubOverviewPageProps) {
+  const knowHubOverviewStats = buildKnowHubOverviewStats(docspaces);
+  const knowHubFlowStages = buildKnowHubFlowStages(docspaces.length);
+
   return (
     <KnowHubPageShell>
       <IntroPanel

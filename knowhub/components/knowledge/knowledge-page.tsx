@@ -6,8 +6,8 @@ import { KnowledgeCard } from "@/knowhub/components/knowledge/knowledge-card";
 import { KnowHubPageShell } from "@/knowhub/components/layout/knowhub-page-shell";
 import { KnowHubCardGrid } from "@/knowhub/components/shared/card-grid";
 import { KnowHubPageToolbar } from "@/knowhub/components/shared/page-toolbar";
-import { docSpaceRecords } from "@/knowhub/features/docspaces/data";
 import { pipelineRecords } from "@/knowhub/features/knowledge/data";
+import type { DocSpaceRecord } from "@/knowhub/features/docspaces/types";
 
 const statusTabs = [
   { key: "all", label: "全部" },
@@ -16,7 +16,13 @@ const statusTabs = [
   { key: "running", label: "运行中" },
 ] as const;
 
-export function KnowHubKnowledgePage() {
+type KnowHubKnowledgePageProps = {
+  docspaces: DocSpaceRecord[];
+};
+
+export function KnowHubKnowledgePage({
+  docspaces,
+}: KnowHubKnowledgePageProps) {
   const [keyword, setKeyword] = useState("");
   const [statusFilter, setStatusFilter] =
     useState<(typeof statusTabs)[number]["key"]>("all");
@@ -50,7 +56,7 @@ export function KnowHubKnowledgePage() {
       <section className="rounded-[20px] border border-[#dde6f0] bg-[linear-gradient(180deg,rgba(236,241,247,0.92)_0%,rgba(244,247,251,0.96)_100%)] px-3 py-3 sm:px-4 sm:py-4">
         <KnowHubCardGrid itemWidth={325}>
           {visiblePipelines.map((item) => {
-            const docspaceNames = docSpaceRecords
+            const docspaceNames = docspaces
               .filter((record) => item.docspaceIds.includes(record.id))
               .map((record) => record.name);
 

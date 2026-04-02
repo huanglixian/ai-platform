@@ -8,14 +8,14 @@ type DocspaceCardProps = {
 };
 
 const sourceLabelMap = {
-  manual: "直接新建",
-  ftp: "FTP",
+  hosted: "新建空间",
+  smb: "SMB",
   oss: "OSS",
 } as const;
 
 const sourceAccentMap = {
-  manual: "#7a8fad",
-  ftp: "#5c8f72",
+  hosted: "#7a8fad",
+  smb: "#5c8f72",
   oss: "#4a83c5",
 } as const;
 

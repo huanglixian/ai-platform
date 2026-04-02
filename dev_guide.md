@@ -239,7 +239,8 @@ KnowHub 按和平台主体一致的思路分层：
 - `knowhub/features/*`
   业务数据、类型、接口封装
   例如：
-  - `knowhub/features/docspaces/data.ts`
+  - `knowhub/features/docspaces/api.ts`
+  - `knowhub/features/docspaces/service.ts`
   - `knowhub/features/docspaces/types.ts`
   - `knowhub/features/strategies/data.ts`
   - `knowhub/features/knowledge/data.ts`
@@ -319,7 +320,10 @@ KnowHub 也走全宽内容区，不做页面级居中限宽。
 - [knowhub/components/documents/documents-page.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/documents/documents-page.tsx)
 - [knowhub/components/documents/docspace-card.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/documents/docspace-card.tsx)
 - [knowhub/components/documents/docspace-create-dialog.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/documents/docspace-create-dialog.tsx)
-- [knowhub/features/docspaces/data.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/features/docspaces/data.ts)
+- [knowhub/features/docspaces/api.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/features/docspaces/api.ts)
+- [knowhub/features/docspaces/service.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/features/docspaces/service.ts)
+- [knowhub/features/docspaces/repository.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/features/docspaces/repository.ts)
+- [knowhub/features/docspaces/storage.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/features/docspaces/storage.ts)
 - [knowhub/features/docspaces/types.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/features/docspaces/types.ts)
 
 ### 改文档中心详情页
@@ -393,8 +397,17 @@ KnowHub 也走全宽内容区，不做页面级居中限宽。
 
 ### KnowHub 数据组织
 
-- [knowhub/features/docspaces/data.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/features/docspaces/data.ts)
-  文档中心的 DocSpace 数据
+- [knowhub/features/docspaces/api.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/features/docspaces/api.ts)
+  文档中心前端请求封装
+
+- [knowhub/features/docspaces/service.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/features/docspaces/service.ts)
+  文档中心服务端业务逻辑
+
+- [knowhub/features/docspaces/repository.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/features/docspaces/repository.ts)
+  文档空间元数据读写
+
+- [knowhub/features/docspaces/storage.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/features/docspaces/storage.ts)
+  本地持久化与托管目录操作
 
 - [knowhub/features/docspaces/types.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/features/docspaces/types.ts)
   文档中心类型定义
@@ -416,6 +429,19 @@ KnowHub 也走全宽内容区，不做页面级居中限宽。
 
 - [knowhub/features/overview/types.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/features/overview/types.ts)
   概览页类型定义
+
+## 开发现状
+
+- 平台主体页面已接入：`bots / workflows / tools / services / skills`
+- `bots` 已接真实 `nanobot` 后端
+- `KnowHub` 文档中心已接真实后端：
+  - 文档空间列表与详情走 `/api/knowhub/docspaces/*`
+  - 文档空间数据持久化到本地 `storage/knowhub/docspaces`
+  - 来源类型支持 `hosted / oss / smb`
+  - 支持创建空间、测试连接、同步和文件列表读取
+- `KnowHub` 概览页与知识中心中的 `DocSpace` 信息读取真实文档空间数据
+- `KnowHub` 策略中心、知识任务数据、概览中的非 `DocSpace` 统计仍使用静态数据
+- `retrieval` 当前为占位页
 
 ## 不要做的事
 

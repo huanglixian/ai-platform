@@ -7,9 +7,9 @@ import { buttonVariants } from "@/components/ui/button-variants";
 import { KnowledgeFlowBar } from "@/knowhub/components/knowledge/knowledge-flow-bar";
 import { KnowledgeStepCard } from "@/knowhub/components/knowledge/knowledge-step-card";
 import { KnowHubPageShell } from "@/knowhub/components/layout/knowhub-page-shell";
-import { docSpaceRecords } from "@/knowhub/features/docspaces/data";
 import { pipelineRecords } from "@/knowhub/features/knowledge/data";
 import { strategyRecords } from "@/knowhub/features/strategies/data";
+import type { DocSpaceRecord } from "@/knowhub/features/docspaces/types";
 import { cn } from "@/lib/utils";
 
 const statusMap = {
@@ -29,6 +29,7 @@ const statusMap = {
 
 type KnowHubKnowledgeDetailPageProps = {
   id: string;
+  docspaces: DocSpaceRecord[];
 };
 
 function renderStrategyList(ids: string[]) {
@@ -57,6 +58,7 @@ function renderStrategyList(ids: string[]) {
 
 export function KnowHubKnowledgeDetailPage({
   id,
+  docspaces,
 }: KnowHubKnowledgeDetailPageProps) {
   const item = pipelineRecords.find((record) => record.id === id);
 
@@ -64,7 +66,9 @@ export function KnowHubKnowledgeDetailPage({
     notFound();
   }
 
-  const docspaces = docSpaceRecords.filter((record) => item.docspaceIds.includes(record.id));
+  const matchedDocspaces = docspaces.filter((record) =>
+    item.docspaceIds.includes(record.id),
+  );
   const status = statusMap[item.status];
 
   return (
@@ -100,7 +104,7 @@ export function KnowHubKnowledgeDetailPage({
           <div className="rounded-[12px] border border-[#dde6f0] bg-[linear-gradient(180deg,rgba(236,242,248,0.78)_0%,rgba(247,250,253,0.92)_100%)] px-3 py-2">
             <div className="text-[11px] text-[#98a2b3]">关联 DocSpace</div>
             <div className="mt-1 text-[12px] leading-5 text-title">
-              {docspaces.map((record) => record.name).join("、")}
+              {matchedDocspaces.map((record) => record.name).join("、")}
             </div>
           </div>
           <div className="rounded-[12px] border border-[#dde6f0] bg-[linear-gradient(180deg,rgba(236,242,248,0.78)_0%,rgba(247,250,253,0.92)_100%)] px-3 py-2">
@@ -120,7 +124,7 @@ export function KnowHubKnowledgeDetailPage({
 
       <KnowledgeFlowBar
         items={[
-          { key: "target", label: "目标对象", value: `${docspaces.length} 个空间` },
+          { key: "target", label: "目标对象", value: `${matchedDocspaces.length} 个空间` },
           {
             key: "preprocess",
             label: "预处理",
@@ -147,7 +151,7 @@ export function KnowHubKnowledgeDetailPage({
           description="先确定当前处理任务作用在哪些空间、文件夹或文件类型上。"
         >
           <div className="space-y-2">
-            {docspaces.map((record) => (
+            {matchedDocspaces.map((record) => (
               <div
                 key={record.id}
                 className="rounded-[12px] border border-[#e7edf4] bg-[#f8fbfe] px-3 py-2.5"

@@ -1,17 +1,16 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { notFound } from "next/navigation";
 
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { DocspaceFilePreview } from "@/knowhub/components/documents/docspace-file-preview";
 import { KnowHubPageShell } from "@/knowhub/components/layout/knowhub-page-shell";
-import { docSpaceRecords } from "@/knowhub/features/docspaces/data";
+import type { DocSpaceRecord } from "@/knowhub/features/docspaces/types";
 import { cn } from "@/lib/utils";
 
 const sourceLabelMap = {
-  manual: "直接新建",
-  ftp: "FTP 接入",
+  hosted: "新建空间",
+  smb: "SMB 接入",
   oss: "OSS 接入",
 } as const;
 
@@ -19,21 +18,16 @@ const statusLabelMap = {
   empty: "空空间",
   ready: "已接入",
   syncing: "同步中",
+  failed: "同步失败",
 } as const;
 
 type KnowHubDocumentDetailPageProps = {
-  id: string;
+  item: DocSpaceRecord;
 };
 
 export function KnowHubDocumentDetailPage({
-  id,
+  item,
 }: KnowHubDocumentDetailPageProps) {
-  const item = docSpaceRecords.find((record) => record.id === id);
-
-  if (!item) {
-    notFound();
-  }
-
   return (
     <KnowHubPageShell>
       <section className="rounded-[16px] border border-[#d8e1eb] bg-[linear-gradient(180deg,rgba(244,247,251,0.98)_0%,rgba(255,255,255,0.98)_100%)] px-4.5 py-3.5 shadow-[0_8px_24px_rgba(15,23,42,0.04)]">
