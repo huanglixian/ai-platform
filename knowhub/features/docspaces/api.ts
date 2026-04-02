@@ -56,6 +56,17 @@ export async function getDocSpaceApi(id: string) {
   return data.item;
 }
 
+export async function deleteDocSpaceApi(id: string) {
+  const data = await fetchDocSpaceApi<{ item: DocSpaceRecord }>(
+    `/${encodeURIComponent(id)}`,
+    {
+      method: "DELETE",
+    },
+  );
+
+  return data.item;
+}
+
 export async function listDocSpaceFilesApi(id: string) {
   const data = await fetchDocSpaceApi<{ items: DocSpaceFileSnapshot[] }>(
     `/${encodeURIComponent(id)}/files`,

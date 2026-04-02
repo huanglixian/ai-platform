@@ -12,7 +12,7 @@ import type { DocSpaceRecord } from "@/knowhub/features/docspaces/types";
 
 const sourceTabs = [
   { key: "all", label: "全部" },
-  { key: "hosted", label: "新建空间" },
+  { key: "hosted", label: "本地空间" },
   { key: "smb", label: "SMB" },
   { key: "oss", label: "OSS" },
 ] as const;

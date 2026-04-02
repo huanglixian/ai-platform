@@ -65,6 +65,11 @@ export async function ensureHostedDocSpacePath(docspaceId: string) {
   return hostedPath;
 }
 
+export async function removeHostedDocSpacePath(docspaceId: string) {
+  const hostedPath = path.join(hostedRoot, docspaceId);
+  await fs.rm(hostedPath, { recursive: true, force: true });
+}
+
 export async function readDocSpaceStore() {
   await ensureStorageDirs();
 

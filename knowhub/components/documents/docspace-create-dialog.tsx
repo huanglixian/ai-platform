@@ -14,7 +14,7 @@ import type { DocSpaceRecord } from "@/knowhub/features/docspaces/types";
 const sourceOptions = [
   {
     key: "hosted",
-    title: "新建空间",
+    title: "本地空间",
     description: "在当前服务器环境中创建平台托管空间。",
     actionLabel: "创建空间",
     icon: FolderPlus,
@@ -279,29 +279,32 @@ export function DocspaceCreateDialog({
 
             {source === "oss" ? (
               <div className="grid gap-3 sm:grid-cols-2">
+                <label className="grid gap-1">
+                  <span className="text-[12px] font-medium text-[#5f6f82]">访问密钥 ID</span>
+                  <Input value={accessKeyId} onChange={(event) => setAccessKeyId(event.target.value)} placeholder="请输入访问密钥 ID" />
+                </label>
+                <label className="grid gap-1">
+                  <span className="text-[12px] font-medium text-[#5f6f82]">访问密钥 Secret</span>
+                  <Input type="password" value={accessKeySecret} onChange={(event) => setAccessKeySecret(event.target.value)} placeholder="请输入访问密钥 Secret" />
+                </label>
+                <label className="grid gap-1">
+                  <span className="text-[12px] font-medium text-[#5f6f82]">存储桶</span>
+                  <Input value={bucket} onChange={(event) => setBucket(event.target.value)} placeholder="例如：power-design" />
+                </label>
+                <label className="grid gap-1">
+                  <span className="text-[12px] font-medium text-[#5f6f82]">地域</span>
+                  <Input value={region} onChange={(event) => setRegion(event.target.value)} placeholder="例如：oss-cn-hangzhou" />
+                </label>
                 <label className="grid gap-1 sm:col-span-2">
-                  <span className="text-[12px] font-medium text-[#5f6f82]">Endpoint</span>
-                  <Input value={endpoint} onChange={(event) => setEndpoint(event.target.value)} placeholder="https://oss-cn-hangzhou.aliyuncs.com" />
-                </label>
-                <label className="grid gap-1">
-                  <span className="text-[12px] font-medium text-[#5f6f82]">Bucket</span>
-                  <Input value={bucket} onChange={(event) => setBucket(event.target.value)} placeholder="power-design" />
-                </label>
-                <label className="grid gap-1">
-                  <span className="text-[12px] font-medium text-[#5f6f82]">Region</span>
-                  <Input value={region} onChange={(event) => setRegion(event.target.value)} placeholder="oss-cn-hangzhou" />
+                  <span className="text-[12px] font-medium text-[#5f6f82]">接入地址</span>
+                  <Input value={endpoint} onChange={(event) => setEndpoint(event.target.value)} placeholder="例如：oss-cn-hangzhou.aliyuncs.com" />
                 </label>
                 <label className="grid gap-1 sm:col-span-2">
-                  <span className="text-[12px] font-medium text-[#5f6f82]">Prefix</span>
-                  <Input value={prefix} onChange={(event) => setPrefix(event.target.value)} placeholder="agreements/2026" />
-                </label>
-                <label className="grid gap-1">
-                  <span className="text-[12px] font-medium text-[#5f6f82]">Access Key ID</span>
-                  <Input value={accessKeyId} onChange={(event) => setAccessKeyId(event.target.value)} placeholder="请输入 Access Key ID" />
-                </label>
-                <label className="grid gap-1">
-                  <span className="text-[12px] font-medium text-[#5f6f82]">Access Key Secret</span>
-                  <Input type="password" value={accessKeySecret} onChange={(event) => setAccessKeySecret(event.target.value)} placeholder="请输入 Access Key Secret" />
+                  <span className="text-[12px] font-medium text-[#5f6f82]">
+                    路径前缀
+                    <span className="ml-1 text-[#98a2b3]">选填</span>
+                  </span>
+                  <Input value={prefix} onChange={(event) => setPrefix(event.target.value)} placeholder="例如：agreements/2026" />
                 </label>
               </div>
             ) : null}

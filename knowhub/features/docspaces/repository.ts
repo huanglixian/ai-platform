@@ -67,3 +67,18 @@ export async function updateStoredDocSpace(
 
   return nextDocspace;
 }
+
+export async function removeStoredDocSpace(id: string) {
+  const store = await getStore();
+  const target = store.docspaces.find((item) => item.id === id) ?? null;
+
+  if (!target) {
+    return null;
+  }
+
+  await writeDocSpaceStore({
+    docspaces: store.docspaces.filter((item) => item.id !== id),
+  });
+
+  return target;
+}

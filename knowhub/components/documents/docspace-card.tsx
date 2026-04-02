@@ -8,7 +8,7 @@ type DocspaceCardProps = {
 };
 
 const sourceLabelMap = {
-  hosted: "新建空间",
+  hosted: "本地空间",
   smb: "SMB",
   oss: "OSS",
 } as const;

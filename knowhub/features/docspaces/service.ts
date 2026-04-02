@@ -3,6 +3,7 @@ import "server-only";
 import {
   getStoredDocSpace,
   listStoredDocSpaces,
+  removeStoredDocSpace,
   saveStoredDocSpace,
   updateStoredDocSpace,
 } from "@/knowhub/features/docspaces/repository";
@@ -10,6 +11,7 @@ import {
   createFileSnapshot,
   ensureHostedDocSpacePath,
   listHostedDocSpaceFiles,
+  removeHostedDocSpacePath,
 } from "@/knowhub/features/docspaces/storage";
 import {
   buildOssTarget,
@@ -135,28 +137,6 @@ function toDocSpaceRecord(docspace: StoredDocSpace): DocSpaceRecord {
   };
 }
 
-function slugify(value: string) {
-  return value
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9\u4e00-\u9fa5]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
-
-async function ensureUniqueDocSpaceId(name: string) {
-  const existing = await listStoredDocSpaces();
-  const baseId = slugify(name) || "docspace";
-  let nextId = baseId;
-  let index = 2;
-
-  while (existing.some((item) => item.id === nextId)) {
-    nextId = `${baseId}-${index}`;
-    index += 1;
-  }
-
-  return nextId;
-}
-
 async function testRemoteConnection(source: TestDocSpaceConnectionInput["source"]) {
   if (source.type === "oss") {
     return testOssConnection(source);
@@ -181,6 +161,19 @@ async function collectDocSpaceFiles(docspace: StoredDocSpace) {
 export async function listDocSpaces() {
   const docspaces = await listStoredDocSpaces();
   return docspaces.map(toDocSpaceRecord);
+}
+
+async function createDocSpaceId() {
+  const existing = await listStoredDocSpaces();
+  let nextId = `docspace_${Date.now().toString(36)}`;
+  let index = 2;
+
+  while (existing.some((item) => item.id === nextId)) {
+    nextId = `docspace_${Date.now().toString(36)}_${index}`;
+    index += 1;
+  }
+
+  return nextId;
 }
 
 export async function getDocSpaceById(id: string) {
@@ -219,7 +212,7 @@ export async function createDocSpace(input: CreateDocSpaceInput) {
     await testRemoteConnection(input.source);
   }
 
-  const id = await ensureUniqueDocSpaceId(name);
+  const id = await createDocSpaceId();
   const now = new Date().toISOString();
   const source =
     input.source.type === "hosted"
@@ -295,4 +288,18 @@ export async function syncDocSpace(id: string) {
 
     throw new Error(message);
   }
+}
+
+export async function deleteDocSpace(id: string) {
+  const docspace = await removeStoredDocSpace(id);
+
+  if (!docspace) {
+    return null;
+  }
+
+  if (docspace.source.type === "hosted") {
+    await removeHostedDocSpacePath(id);
+  }
+
+  return toDocSpaceRecord(docspace);
 }

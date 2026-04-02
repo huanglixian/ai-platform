@@ -12,8 +12,15 @@ type RemoteFileEntry = {
 };
 
 function createOssClient(source: OssDocSpaceSource) {
+  const normalizedEndpoint = source.endpoint.trim();
+
   return new OSS({
-    endpoint: source.endpoint || undefined,
+    endpoint: normalizedEndpoint
+      ? normalizedEndpoint.startsWith("http://") ||
+        normalizedEndpoint.startsWith("https://")
+        ? normalizedEndpoint
+        : `https://${normalizedEndpoint}`
+      : undefined,
     region: source.region || undefined,
     bucket: source.bucket,
     accessKeyId: source.accessKeyId,

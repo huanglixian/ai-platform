@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { KnowHubDocumentDetailPage } from "@/knowhub/components/documents/document-detail-page";
 import { getDocSpaceById } from "@/knowhub/features/docspaces/service";
 
+export const dynamic = "force-dynamic";
+
 type KnowHubDocumentDetailRoutePageProps = {
   params: Promise<{
     id: string;
