@@ -2,7 +2,6 @@ export type KnowHubNavKey =
   | "overview"
   | "documents"
   | "strategies"
-  | "pipelines"
   | "knowledge";
 
 export type DocSpaceSourceType = "manual" | "ftp" | "oss";
@@ -45,6 +44,24 @@ export interface StrategyRecord {
   metaValue: string;
   owner: string;
   usageCount: number;
+}
+
+export type PipelineStatus = "draft" | "published" | "running";
+
+export interface PipelineRecord {
+  id: string;
+  name: string;
+  summary: string;
+  status: PipelineStatus;
+  docspaceIds: string[];
+  targetLabel: string;
+  preprocessStrategyIds: string[];
+  chunkingStrategyIds: string[];
+  extractStrategyIds: string[];
+  embeddingModel: string;
+  knowledgeTarget: string;
+  lastRunAt: string;
+  runCount: number;
 }
 
 export interface KnowHubOverviewStat {

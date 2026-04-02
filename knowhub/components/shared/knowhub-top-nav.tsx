@@ -11,7 +11,6 @@ const primaryItems = [
   { label: "概览", href: "/knowhub" },
   { label: "文档中心", href: "/knowhub/documents" },
   { label: "策略中心", href: "/knowhub/strategies" },
-  { label: "处理中心", href: "/knowhub/pipelines" },
   { label: "知识中心", href: "/knowhub/knowledge" },
 ] as const;
 

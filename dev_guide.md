@@ -14,7 +14,7 @@
 当前代码里有两条主线：
 
 - 平台主体（platform）：`bots / workflows / tools / services / skills`
-- `KnowHub`：作为平台内接入的知识业务域，已经独立出自己的路由和布局，后续可以继续解耦
+- `KnowHub`：平台内的知识业务域，使用独立路由和布局
 
 ## 先理解这几个边界
 
@@ -29,7 +29,7 @@
 
 - `knowhub`
   KnowHub 的业务实现目录
-  这里收口页面组装、KnowHub 私有组件、数据、类型
+  这里承载页面组装、KnowHub 私有组件、数据、类型
 
 - `components/ui`
   平台主体通用基础 UI，允许被平台主体和 KnowHub 共同复用
@@ -69,8 +69,9 @@ Ai_Platform/
 │  │  │  ├─ page.tsx
 │  │  │  └─ [id]/page.tsx
 │  │  ├─ strategies/page.tsx
-│  │  ├─ pipelines/page.tsx
-│  │  ├─ knowledge/page.tsx
+│  │  ├─ knowledge/
+│  │  │  ├─ page.tsx
+│  │  │  └─ [id]/page.tsx
 │  │  └─ retrieval/page.tsx
 │  ├─ api/
 │  │  └─ nanobot/[...path]/route.ts
@@ -86,6 +87,7 @@ Ai_Platform/
 │  │  ├─ documents/
 │  │  ├─ layout/
 │  │  ├─ overview/
+│  │  ├─ knowledge/
 │  │  ├─ shared/
 │  │  └─ strategies/
 │  ├─ data/
@@ -93,7 +95,6 @@ Ai_Platform/
 │  │  ├─ documents/
 │  │  ├─ knowledge/
 │  │  ├─ overview/
-│  │  ├─ pipelines/
 │  │  ├─ retrieval/
 │  │  └─ strategies/
 │  └─ types/
@@ -130,13 +131,10 @@ Ai_Platform/
 
 - `/knowhub/strategies`
   策略中心统一入口
-  当前通过 `?tab=preprocess | chunking | extract` 切换策略类型
-
-- `/knowhub/pipelines`
-  处理中心，占位页
+  通过 `?tab=preprocess | chunking | extract` 切换策略类型
 
 - `/knowhub/knowledge`
-  知识中心，占位页
+  知识中心入口，承载任务编排与已发布知识成果
 
 - `/knowhub/retrieval`
   检索页，占位页
@@ -234,7 +232,7 @@ Ai_Platform/
 - [knowhub/components/shared/page-toolbar.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/shared/page-toolbar.tsx)
 - [knowhub/components/shared/coming-soon-panel.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/shared/coming-soon-panel.tsx)
 
-不要把它们挪到平台 `components/shared`，除非它们真的已经跨业务域复用。
+不要把它们挪到平台 `components/shared`，除非它们已经成为跨业务域共享组件。
 
 ### 3. `KnowHub` 不再依赖平台 `TopNav`
 
@@ -245,16 +243,11 @@ KnowHub 使用自己的布局和顶部导航：
 
 KnowHub 当前也走全宽内容区，不再做页面级居中限宽。不要再把 KnowHub 页面挂回平台 `AppShell`。
 
-### 4. 策略中心已经收口
+### 4. 策略中心入口与筛选
 
-现在只有一个真实入口：
+策略中心只有一个入口：
 
 - `/knowhub/strategies`
-
-已经删除旧路由：
-
-- `/knowhub/clean`
-- `/knowhub/slices`
 
 当前策略页约定：
 
@@ -327,12 +320,13 @@ KnowHub 当前也走全宽内容区，不再做页面级居中限宽。不要再
 - [knowhub/components/strategies/strategy-card.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/strategies/strategy-card.tsx)
 - [knowhub/data/strategies.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/data/strategies.ts)
 
-### 改占位页
+### 改知识中心与检索页
 
 优先看：
 
-- [knowhub/pages/pipelines/page.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/pages/pipelines/page.tsx)
 - [knowhub/pages/knowledge/page.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/pages/knowledge/page.tsx)
+- [knowhub/pages/knowledge/detail-page.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/pages/knowledge/detail-page.tsx)
+- [knowhub/components/knowledge/knowledge-card.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/knowledge/knowledge-card.tsx)
 - [knowhub/pages/retrieval/page.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/pages/retrieval/page.tsx)
 - [knowhub/components/shared/coming-soon-panel.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/shared/coming-soon-panel.tsx)
 
@@ -381,6 +375,9 @@ KnowHub 当前也走全宽内容区，不再做页面级居中限宽。不要再
 - [knowhub/data/strategies.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/data/strategies.ts)
   策略中心 mock 数据
 
+- [knowhub/data/pipelines.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/data/pipelines.ts)
+  知识中心任务与已发布成果的 mock 数据
+
 - [knowhub/data/overview.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/data/overview.ts)
   概览页 mock 数据
 
@@ -401,13 +398,14 @@ KnowHub 当前也走全宽内容区，不再做页面级居中限宽。不要再
 
 - 平台主体页面已接入：`bots / workflows / tools / services / skills`
 - `bots` 已接真实 `nanobot` 后端
-- `KnowHub` 已经不是空骨架
 - `KnowHub` 当前已有真实页面：
   - 概览
   - 文档中心列表页
   - 文档详情页
   - 策略中心统一页
-- `KnowHub` 当前仍处于前端原型重构阶段，`pipelines / knowledge / retrieval` 仍未展开真实业务实现
+  - 知识中心任务列表页
+  - 知识中心任务详情页
+- `retrieval` 当前是占位页
 
 ## 开发规则
 
