@@ -18,7 +18,7 @@ import {
   knowHubFlowStages,
   knowHubOverviewIntro,
   knowHubOverviewStats,
-} from "@/knowhub/data/overview";
+} from "@/knowhub/features/overview/data";
 
 const statIconMap = {
   docspaces: FolderKanban,

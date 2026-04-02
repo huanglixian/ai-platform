@@ -1,4 +1,4 @@
-import type { StrategyCategory } from "@/knowhub/types";
+import type { StrategyCategory } from "@/knowhub/features/strategies/types";
 
 export const strategyAccentMap: Record<
   StrategyCategory,

@@ -1,4 +1,4 @@
-import type { PipelineRecord } from "@/knowhub/types";
+import type { PipelineRecord } from "@/knowhub/features/knowledge/types";
 
 export const pipelineRecords: PipelineRecord[] = [
   {

@@ -1,4 +1,4 @@
-import type { StrategyRecord } from "@/knowhub/types";
+import type { StrategyRecord } from "@/knowhub/features/strategies/types";
 
 export const strategyRecords: StrategyRecord[] = [
   {

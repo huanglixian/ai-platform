@@ -5,7 +5,7 @@
 - 这是什么项目
 - 目录怎么分层
 - 遇到需求时应该优先改哪一层
-- 哪些结构是当前有效约定，不要随手改回旧形态
+- 哪些结构是有效约定
 
 ## 项目是什么
 
@@ -25,11 +25,11 @@
   平台主体业务页面，走统一平台壳
 
 - `app/knowhub`
-  KnowHub 独立路由层，不再挂在平台 `AppShell` 下，使用自己的布局和导航
+  KnowHub 独立路由层，使用自己的布局和导航
 
 - `knowhub`
   KnowHub 的业务实现目录
-  这里承载页面组装、KnowHub 私有组件、数据、类型
+  这里承载页面实现、KnowHub 私有组件、业务数据、类型与接口封装
 
 - `components/ui`
   平台主体通用基础 UI，允许被平台主体和 KnowHub 共同复用
@@ -43,7 +43,7 @@
   这层只服务 KnowHub，例如顶部导航、工具栏、占位面板
 
 - `features`
-  当前平台主体业务，例如 `bots`
+  平台主体业务，例如 `bots`
 
 - `lib`
   平台级工具函数、导航配置等
@@ -86,18 +86,16 @@ Ai_Platform/
 │  ├─ components/
 │  │  ├─ documents/
 │  │  ├─ layout/
-│  │  ├─ overview/
-│  │  ├─ knowledge/
-│  │  ├─ shared/
-│  │  └─ strategies/
-│  ├─ data/
-│  ├─ pages/
-│  │  ├─ documents/
 │  │  ├─ knowledge/
 │  │  ├─ overview/
 │  │  ├─ retrieval/
+│  │  ├─ shared/
 │  │  └─ strategies/
-│  └─ types/
+│  └─ features/
+│     ├─ docspaces/
+│     ├─ knowledge/
+│     ├─ overview/
+│     └─ strategies/
 ├─ features/
 ├─ lib/
 └─ dev_guide.md
@@ -207,12 +205,12 @@ Ai_Platform/
 - 如果需求属于自由体、工作流、工具、服务、技能等平台能力，优先从 `app/(platform)`、`components/*`、`features/*` 里找入口
 - 平台主体共享壳优先放 `components/shared`
 - 平台基础控件优先放 `components/ui`
-- 平台主体当前走全宽内容区，不做页面级居中限宽
+- 平台主体走全宽内容区，不做页面级居中限宽
 - 卡片列表默认使用固定卡片宽度、自动增列、左对齐的网格方式
 - 不要把平台主体需求直接落到 `knowhub/*`
 - 除非明确需要跨域复用，否则不要把 KnowHub 私有实现抽回平台 `components/shared`
 
-## KnowHub 当前约定
+## KnowHub 约定
 
 ### 1. 路由层要薄
 
@@ -220,11 +218,33 @@ Ai_Platform/
 
 - 接住路由
 - 做参数归一化
-- 调用 `knowhub/pages/*`
+- 调用 `knowhub/components/*`
 
 不要把 KnowHub 的页面实现直接堆在 `app/knowhub/*` 里。
 
-### 2. KnowHub 有自己的一套共享层
+### 2. KnowHub 页面实现对齐平台主体
+
+KnowHub 按和平台主体一致的思路分层：
+
+- `app/knowhub/*`
+  路由入口层
+
+- `knowhub/components/*`
+  页面实现层
+  例如：
+  - `knowhub/components/documents/documents-page.tsx`
+  - `knowhub/components/knowledge/knowledge-page.tsx`
+  - `knowhub/components/overview/overview-page.tsx`
+
+- `knowhub/features/*`
+  业务数据、类型、接口封装
+  例如：
+  - `knowhub/features/docspaces/data.ts`
+  - `knowhub/features/docspaces/types.ts`
+  - `knowhub/features/strategies/data.ts`
+  - `knowhub/features/knowledge/data.ts`
+
+### 3. KnowHub 有自己的一套共享层
 
 当前这些都属于 KnowHub 内部共享组件：
 
@@ -234,16 +254,16 @@ Ai_Platform/
 
 不要把它们挪到平台 `components/shared`，除非它们已经成为跨业务域共享组件。
 
-### 3. `KnowHub` 不再依赖平台 `TopNav`
+### 4. `KnowHub` 使用独立导航
 
 KnowHub 使用自己的布局和顶部导航：
 
 - [app/knowhub/layout.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/app/knowhub/layout.tsx)
 - [knowhub/components/shared/knowhub-top-nav.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/shared/knowhub-top-nav.tsx)
 
-KnowHub 当前也走全宽内容区，不再做页面级居中限宽。不要再把 KnowHub 页面挂回平台 `AppShell`。
+KnowHub 也走全宽内容区，不做页面级居中限宽。
 
-### 4. 策略中心入口与筛选
+### 5. 策略中心入口与筛选
 
 策略中心只有一个入口：
 
@@ -253,9 +273,9 @@ KnowHub 当前也走全宽内容区，不再做页面级居中限宽。不要再
 
 - 第一层切换 `预处理策略 / 切片策略 / 提取策略`
 - toolbar 第二排标签按当前策略类型下的分类筛选
-- 不再使用 `已启用 / 草稿` 这类状态筛选
+- 不使用 `已启用 / 草稿` 这类状态筛选
 
-不要再把策略中心拆回多个一级路由，除非明确要求。
+策略中心使用单一路由入口，除非明确要求，不拆分多个一级路由。
 
 ## 需求落地时优先改哪里
 
@@ -273,40 +293,41 @@ KnowHub 当前也走全宽内容区，不再做页面级居中限宽。不要再
 - [knowhub/components/shared/page-toolbar.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/shared/page-toolbar.tsx)
 - [knowhub/components/shared/card-grid.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/shared/card-grid.tsx)
 
-这个组件当前负责：
+这个组件负责：
 
 - 搜索
 - 标签筛选
 - 可选主按钮
 - 可选顶部插槽 `topSlot`
 
-`card-grid.tsx` 当前负责 KnowHub 卡片列表的固定卡片宽度、自动增列和左对齐。
+`card-grid.tsx` 负责 KnowHub 卡片列表的固定卡片宽度、自动增列和左对齐。
 
 ### 改概览页
 
 优先看：
 
 - [app/knowhub/page.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/app/knowhub/page.tsx)
-- [knowhub/pages/overview/page.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/pages/overview/page.tsx)
+- [knowhub/components/overview/overview-page.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/overview/overview-page.tsx)
 - [knowhub/components/overview/*](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/overview)
-- [knowhub/data/overview.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/data/overview.ts)
+- [knowhub/features/overview/data.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/features/overview/data.ts)
 
 ### 改文档中心列表页
 
 优先看：
 
 - [app/knowhub/documents/page.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/app/knowhub/documents/page.tsx)
-- [knowhub/pages/documents/page.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/pages/documents/page.tsx)
+- [knowhub/components/documents/documents-page.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/documents/documents-page.tsx)
 - [knowhub/components/documents/docspace-card.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/documents/docspace-card.tsx)
 - [knowhub/components/documents/docspace-create-dialog.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/documents/docspace-create-dialog.tsx)
-- [knowhub/data/docspaces.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/data/docspaces.ts)
+- [knowhub/features/docspaces/data.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/features/docspaces/data.ts)
+- [knowhub/features/docspaces/types.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/features/docspaces/types.ts)
 
 ### 改文档中心详情页
 
 优先看：
 
 - [app/knowhub/documents/[id]/page.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/app/knowhub/documents/[id]/page.tsx)
-- [knowhub/pages/documents/detail-page.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/pages/documents/detail-page.tsx)
+- [knowhub/components/documents/document-detail-page.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/documents/document-detail-page.tsx)
 - [knowhub/components/documents/docspace-file-preview.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/documents/docspace-file-preview.tsx)
 
 ### 改策略中心
@@ -314,23 +335,26 @@ KnowHub 当前也走全宽内容区，不再做页面级居中限宽。不要再
 优先看：
 
 - [app/knowhub/strategies/page.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/app/knowhub/strategies/page.tsx)
-- [knowhub/pages/strategies/page.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/pages/strategies/page.tsx)
+- [knowhub/components/strategies/strategies-page.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/strategies/strategies-page.tsx)
 - [knowhub/components/strategies/strategy-colors.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/strategies/strategy-colors.ts)
 - [knowhub/components/strategies/strategy-bar.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/strategies/strategy-bar.tsx)
 - [knowhub/components/strategies/strategy-card.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/strategies/strategy-card.tsx)
-- [knowhub/data/strategies.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/data/strategies.ts)
+- [knowhub/features/strategies/data.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/features/strategies/data.ts)
+- [knowhub/features/strategies/types.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/features/strategies/types.ts)
 
 ### 改知识中心与检索页
 
 优先看：
 
-- [knowhub/pages/knowledge/page.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/pages/knowledge/page.tsx)
-- [knowhub/pages/knowledge/detail-page.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/pages/knowledge/detail-page.tsx)
+- [knowhub/components/knowledge/knowledge-page.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/knowledge/knowledge-page.tsx)
+- [knowhub/components/knowledge/knowledge-detail-page.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/knowledge/knowledge-detail-page.tsx)
 - [knowhub/components/knowledge/knowledge-card.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/knowledge/knowledge-card.tsx)
-- [knowhub/pages/retrieval/page.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/pages/retrieval/page.tsx)
+- [knowhub/components/retrieval/retrieval-page.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/retrieval/retrieval-page.tsx)
 - [knowhub/components/shared/coming-soon-panel.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/shared/coming-soon-panel.tsx)
+- [knowhub/features/knowledge/data.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/features/knowledge/data.ts)
+- [knowhub/features/knowledge/types.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/features/knowledge/types.ts)
 
-## 当前数据组织
+## 数据组织
 
 ### 平台主体数据组织
 
@@ -369,43 +393,37 @@ KnowHub 当前也走全宽内容区，不再做页面级居中限宽。不要再
 
 ### KnowHub 数据组织
 
-- [knowhub/data/docspaces.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/data/docspaces.ts)
-  文档中心的 DocSpace mock 数据
+- [knowhub/features/docspaces/data.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/features/docspaces/data.ts)
+  文档中心的 DocSpace 数据
 
-- [knowhub/data/strategies.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/data/strategies.ts)
-  策略中心 mock 数据
+- [knowhub/features/docspaces/types.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/features/docspaces/types.ts)
+  文档中心类型定义
 
-- [knowhub/data/pipelines.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/data/pipelines.ts)
-  知识中心任务与已发布成果的 mock 数据
+- [knowhub/features/strategies/data.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/features/strategies/data.ts)
+  策略中心数据
 
-- [knowhub/data/overview.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/data/overview.ts)
-  概览页 mock 数据
+- [knowhub/features/strategies/types.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/features/strategies/types.ts)
+  策略中心类型定义
 
-- [knowhub/types/index.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/types/index.ts)
-  KnowHub 当前共用类型
-  其中策略数据当前使用 `group / metaLabel / metaValue`
+- [knowhub/features/knowledge/data.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/features/knowledge/data.ts)
+  知识中心任务与已发布成果数据
+
+- [knowhub/features/knowledge/types.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/features/knowledge/types.ts)
+  知识中心类型定义
+
+- [knowhub/features/overview/data.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/features/overview/data.ts)
+  概览页数据
+
+- [knowhub/features/overview/types.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/features/overview/types.ts)
+  概览页类型定义
 
 ## 不要做的事
 
 - 不要打破当前目录边界：平台主体优先走 `app/(platform) + components + features`，KnowHub 优先走 `app/knowhub + knowhub/*`
 - 不要把路由层写成实现层，`app/*` 只放页面入口、布局和参数归一化
 - 不要把业务私有组件塞进错误的共享层：平台私有不进 `knowhub/components/shared`，KnowHub 私有不进 `components/shared`
-- 不要恢复已经废弃的旧路由、旧目录或旧实现，除非明确要求兼容
 - 不要为了“将来可能会用”预留无用抽象、兼容代码或多余目录层
 - 不要在文档里记录“从什么改成什么”，只保留当前有效结构
-
-## 当前状态
-
-- 平台主体页面已接入：`bots / workflows / tools / services / skills`
-- `bots` 已接真实 `nanobot` 后端
-- `KnowHub` 当前已有真实页面：
-  - 概览
-  - 文档中心列表页
-  - 文档详情页
-  - 策略中心统一页
-  - 知识中心任务列表页
-  - 知识中心任务详情页
-- `retrieval` 当前是占位页
 
 ## 开发规则
 

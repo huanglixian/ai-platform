@@ -7,9 +7,9 @@ import { buttonVariants } from "@/components/ui/button-variants";
 import { KnowledgeFlowBar } from "@/knowhub/components/knowledge/knowledge-flow-bar";
 import { KnowledgeStepCard } from "@/knowhub/components/knowledge/knowledge-step-card";
 import { KnowHubPageShell } from "@/knowhub/components/layout/knowhub-page-shell";
-import { docSpaceRecords } from "@/knowhub/data/docspaces";
-import { pipelineRecords } from "@/knowhub/data/pipelines";
-import { strategyRecords } from "@/knowhub/data/strategies";
+import { docSpaceRecords } from "@/knowhub/features/docspaces/data";
+import { pipelineRecords } from "@/knowhub/features/knowledge/data";
+import { strategyRecords } from "@/knowhub/features/strategies/data";
 import { cn } from "@/lib/utils";
 
 const statusMap = {

@@ -1,4 +1,4 @@
-import { KnowHubKnowledgeDetailPage } from "@/knowhub/pages/knowledge/detail-page";
+import { KnowHubKnowledgeDetailPage } from "@/knowhub/components/knowledge/knowledge-detail-page";
 
 type KnowHubKnowledgeDetailRoutePageProps = {
   params: Promise<{

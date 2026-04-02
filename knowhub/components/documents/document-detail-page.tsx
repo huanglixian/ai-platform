@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { DocspaceFilePreview } from "@/knowhub/components/documents/docspace-file-preview";
 import { KnowHubPageShell } from "@/knowhub/components/layout/knowhub-page-shell";
-import { docSpaceRecords } from "@/knowhub/data/docspaces";
+import { docSpaceRecords } from "@/knowhub/features/docspaces/data";
 import { cn } from "@/lib/utils";
 
 const sourceLabelMap = {
@@ -34,7 +34,7 @@ export function KnowHubDocumentDetailPage({
     notFound();
   }
 
-    return (
+  return (
     <KnowHubPageShell>
       <section className="rounded-[16px] border border-[#d8e1eb] bg-[linear-gradient(180deg,rgba(244,247,251,0.98)_0%,rgba(255,255,255,0.98)_100%)] px-4.5 py-3.5 shadow-[0_8px_24px_rgba(15,23,42,0.04)]">
         <div className="mb-3 flex flex-col gap-2 lg:flex-row lg:items-start lg:justify-between">

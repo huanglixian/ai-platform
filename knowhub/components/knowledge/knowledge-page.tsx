@@ -1,4 +1,4 @@
- "use client";
+"use client";
 
 import { useState } from "react";
 
@@ -6,8 +6,8 @@ import { KnowledgeCard } from "@/knowhub/components/knowledge/knowledge-card";
 import { KnowHubPageShell } from "@/knowhub/components/layout/knowhub-page-shell";
 import { KnowHubCardGrid } from "@/knowhub/components/shared/card-grid";
 import { KnowHubPageToolbar } from "@/knowhub/components/shared/page-toolbar";
-import { pipelineRecords } from "@/knowhub/data/pipelines";
-import { docSpaceRecords } from "@/knowhub/data/docspaces";
+import { docSpaceRecords } from "@/knowhub/features/docspaces/data";
+import { pipelineRecords } from "@/knowhub/features/knowledge/data";
 
 const statusTabs = [
   { key: "all", label: "全部" },

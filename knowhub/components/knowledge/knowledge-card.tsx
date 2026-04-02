@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
-import type { PipelineRecord } from "@/knowhub/types";
+import type { PipelineRecord } from "@/knowhub/features/knowledge/types";
 
 type KnowledgeCardProps = {
   item: PipelineRecord;

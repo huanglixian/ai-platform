@@ -7,7 +7,7 @@ import { DocspaceCard } from "@/knowhub/components/documents/docspace-card";
 import { DocspaceCreateDialog } from "@/knowhub/components/documents/docspace-create-dialog";
 import { KnowHubCardGrid } from "@/knowhub/components/shared/card-grid";
 import { KnowHubPageToolbar } from "@/knowhub/components/shared/page-toolbar";
-import { docSpaceRecords } from "@/knowhub/data/docspaces";
+import { docSpaceRecords } from "@/knowhub/features/docspaces/data";
 
 const sourceTabs = [
   { key: "all", label: "全部" },

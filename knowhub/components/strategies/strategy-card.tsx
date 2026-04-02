@@ -1,4 +1,4 @@
-import type { StrategyRecord } from "@/knowhub/types";
+import type { StrategyRecord } from "@/knowhub/features/strategies/types";
 import { strategyAccentMap } from "./strategy-colors";
 
 type StrategyCardProps = {

@@ -7,8 +7,11 @@ import { KnowHubCardGrid } from "@/knowhub/components/shared/card-grid";
 import { KnowHubPageToolbar } from "@/knowhub/components/shared/page-toolbar";
 import { StrategyBar } from "@/knowhub/components/strategies/strategy-bar";
 import { StrategyCard } from "@/knowhub/components/strategies/strategy-card";
-import { strategyRecords } from "@/knowhub/data/strategies";
-import type { StrategyCategory, StrategyRecord } from "@/knowhub/types";
+import { strategyRecords } from "@/knowhub/features/strategies/data";
+import type {
+  StrategyCategory,
+  StrategyRecord,
+} from "@/knowhub/features/strategies/types";
 
 type KnowHubStrategiesPageProps = {
   activeCategory: StrategyCategory;
@@ -33,12 +36,15 @@ const categoryMeta = {
     emptyTitle: "提取策略待建立",
     emptyDescription: "提取策略将用于结构化字段、表格要点和目标信息抽取，当前可先保留为空。",
   },
-} as const satisfies Record<StrategyCategory, {
-  label: string;
-  searchPlaceholder: string;
-  emptyTitle: string;
-  emptyDescription: string;
-}>;
+} as const satisfies Record<
+  StrategyCategory,
+  {
+    label: string;
+    searchPlaceholder: string;
+    emptyTitle: string;
+    emptyDescription: string;
+  }
+>;
 
 function matchesKeyword(item: StrategyRecord, keyword: string) {
   if (!keyword) {

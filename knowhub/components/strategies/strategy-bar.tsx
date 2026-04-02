@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { cn } from "@/lib/utils";
-import type { StrategyCategory } from "@/knowhub/types";
+import type { StrategyCategory } from "@/knowhub/features/strategies/types";
 import { strategyAccentMap } from "./strategy-colors";
 
 type StrategyBarItem = {

@@ -1,5 +1,4 @@
-import { DocspaceEmptyState } from "@/knowhub/components/documents/docspace-empty-state";
-import type { DocSpaceRecord } from "@/knowhub/types";
+import type { DocSpaceRecord } from "@/knowhub/features/docspaces/types";
 
 type DocspaceFilePreviewProps = {
   item: DocSpaceRecord | null;
@@ -7,21 +6,11 @@ type DocspaceFilePreviewProps = {
 
 export function DocspaceFilePreview({ item }: DocspaceFilePreviewProps) {
   if (!item) {
-    return (
-      <DocspaceEmptyState
-        title="暂无可展示的 DocSpace"
-        description="当前筛选条件下没有匹配的空间，请调整关键词或切换来源类型。"
-      />
-    );
+    return null;
   }
 
-  if (item.sourceType === "manual" && item.files.length === 0) {
-    return (
-      <DocspaceEmptyState
-        title={`${item.name} 还是空空间`}
-        description="这个 DocSpace 已创建完成，但还没有接入文档来源。后续可以手工整理内容，或再补接 FTP / OSS。"
-      />
-    );
+  if (!item.files.length) {
+    return null;
   }
 
   return (

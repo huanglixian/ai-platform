@@ -1,4 +1,4 @@
-import type { DocSpaceRecord } from "@/knowhub/types";
+import type { DocSpaceRecord } from "@/knowhub/features/docspaces/types";
 
 export const docSpaceRecords: DocSpaceRecord[] = [
   {

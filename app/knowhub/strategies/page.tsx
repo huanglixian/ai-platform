@@ -1,5 +1,5 @@
-import { KnowHubStrategiesPage } from "@/knowhub/pages/strategies/page";
-import type { StrategyCategory } from "@/knowhub/types";
+import { KnowHubStrategiesPage } from "@/knowhub/components/strategies/strategies-page";
+import type { StrategyCategory } from "@/knowhub/features/strategies/types";
 
 type KnowHubStrategiesRoutePageProps = {
   searchParams: Promise<{

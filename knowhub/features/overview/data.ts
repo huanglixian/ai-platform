@@ -1,6 +1,9 @@
-import { docSpaceRecords } from "@/knowhub/data/docspaces";
-import { strategyRecords } from "@/knowhub/data/strategies";
-import type { KnowHubFlowStage, KnowHubOverviewStat } from "@/knowhub/types";
+import { docSpaceRecords } from "@/knowhub/features/docspaces/data";
+import { strategyRecords } from "@/knowhub/features/strategies/data";
+import type {
+  KnowHubFlowStage,
+  KnowHubOverviewStat,
+} from "@/knowhub/features/overview/types";
 
 const totalDocuments = docSpaceRecords.reduce(
   (sum, item) => sum + item.documentCount,
