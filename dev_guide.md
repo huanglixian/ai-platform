@@ -4,7 +4,6 @@
 
 - 这是什么项目
 - 目录怎么分层
-- 遇到需求时应该优先改哪一层
 - 哪些结构是有效约定
 
 ## 项目是什么
@@ -278,86 +277,6 @@ KnowHub 也走全宽内容区，不做页面级居中限宽。
 
 策略中心使用单一路由入口，除非明确要求，不拆分多个一级路由。
 
-## 需求落地时优先改哪里
-
-### 改 KnowHub 顶部导航
-
-优先看：
-
-- [app/knowhub/layout.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/app/knowhub/layout.tsx)
-- [knowhub/components/shared/knowhub-top-nav.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/shared/knowhub-top-nav.tsx)
-
-### 改 KnowHub 通用工具栏
-
-优先看：
-
-- [knowhub/components/shared/page-toolbar.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/shared/page-toolbar.tsx)
-- [knowhub/components/shared/card-grid.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/shared/card-grid.tsx)
-
-这个组件负责：
-
-- 搜索
-- 标签筛选
-- 可选主按钮
-- 可选顶部插槽 `topSlot`
-
-`card-grid.tsx` 负责 KnowHub 卡片列表的固定卡片宽度、自动增列和左对齐。
-
-### 改概览页
-
-优先看：
-
-- [app/knowhub/page.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/app/knowhub/page.tsx)
-- [knowhub/components/overview/overview-page.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/overview/overview-page.tsx)
-- [knowhub/components/overview/*](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/overview)
-- [knowhub/features/overview/data.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/features/overview/data.ts)
-
-### 改文档中心列表页
-
-优先看：
-
-- [app/knowhub/documents/page.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/app/knowhub/documents/page.tsx)
-- [knowhub/components/documents/documents-page.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/documents/documents-page.tsx)
-- [knowhub/components/documents/docspace-card.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/documents/docspace-card.tsx)
-- [knowhub/components/documents/docspace-create-dialog.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/documents/docspace-create-dialog.tsx)
-- [knowhub/features/docspaces/api.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/features/docspaces/api.ts)
-- [knowhub/features/docspaces/service.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/features/docspaces/service.ts)
-- [knowhub/features/docspaces/repository.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/features/docspaces/repository.ts)
-- [knowhub/features/docspaces/storage.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/features/docspaces/storage.ts)
-- [knowhub/features/docspaces/types.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/features/docspaces/types.ts)
-
-### 改文档中心详情页
-
-优先看：
-
-- [app/knowhub/documents/[id]/page.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/app/knowhub/documents/[id]/page.tsx)
-- [knowhub/components/documents/document-detail-page.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/documents/document-detail-page.tsx)
-- [knowhub/components/documents/docspace-file-preview.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/documents/docspace-file-preview.tsx)
-
-### 改策略中心
-
-优先看：
-
-- [app/knowhub/strategies/page.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/app/knowhub/strategies/page.tsx)
-- [knowhub/components/strategies/strategies-page.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/strategies/strategies-page.tsx)
-- [knowhub/components/strategies/strategy-colors.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/strategies/strategy-colors.ts)
-- [knowhub/components/strategies/strategy-bar.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/strategies/strategy-bar.tsx)
-- [knowhub/components/strategies/strategy-card.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/strategies/strategy-card.tsx)
-- [knowhub/features/strategies/data.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/features/strategies/data.ts)
-- [knowhub/features/strategies/types.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/features/strategies/types.ts)
-
-### 改知识中心与检索页
-
-优先看：
-
-- [knowhub/components/knowledge/knowledge-page.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/knowledge/knowledge-page.tsx)
-- [knowhub/components/knowledge/knowledge-detail-page.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/knowledge/knowledge-detail-page.tsx)
-- [knowhub/components/knowledge/knowledge-card.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/knowledge/knowledge-card.tsx)
-- [knowhub/components/retrieval/retrieval-page.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/retrieval/retrieval-page.tsx)
-- [knowhub/components/shared/coming-soon-panel.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/shared/coming-soon-panel.tsx)
-- [knowhub/features/knowledge/data.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/features/knowledge/data.ts)
-- [knowhub/features/knowledge/types.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/features/knowledge/types.ts)
-
 ## 数据组织
 
 ### 平台主体数据组织
@@ -397,6 +316,72 @@ KnowHub 也走全宽内容区，不做页面级居中限宽。
 
 ### KnowHub 数据组织
 
+- [app/knowhub/layout.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/app/knowhub/layout.tsx)
+  KnowHub 独立布局入口，承载导航与页面壳
+
+- [app/knowhub/page.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/app/knowhub/page.tsx)
+  KnowHub 概览页路由入口
+
+- [app/knowhub/documents/page.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/app/knowhub/documents/page.tsx)
+  文档中心列表页路由入口
+
+- [app/knowhub/documents/[id]/page.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/app/knowhub/documents/[id]/page.tsx)
+  单个 DocSpace 详情页路由入口
+
+- [app/api/knowhub/docspaces/route.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/app/api/knowhub/docspaces/route.ts)
+  文档空间列表读取与创建接口
+
+- [app/api/knowhub/docspaces/[id]/route.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/app/api/knowhub/docspaces/[id]/route.ts)
+  单个文档空间详情读取与删除接口
+
+- [app/api/knowhub/docspaces/[id]/files/route.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/app/api/knowhub/docspaces/[id]/files/route.ts)
+  文档空间文件列表接口
+
+- [app/api/knowhub/docspaces/[id]/sync/route.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/app/api/knowhub/docspaces/[id]/sync/route.ts)
+  文档空间手动同步接口
+
+- [app/api/knowhub/docspaces/[id]/upload/route.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/app/api/knowhub/docspaces/[id]/upload/route.ts)
+  本地空间文件上传接口
+
+- [app/api/knowhub/docspaces/test-connection/route.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/app/api/knowhub/docspaces/test-connection/route.ts)
+  OSS / SMB 测试连接接口
+
+- [knowhub/components/shared/knowhub-top-nav.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/shared/knowhub-top-nav.tsx)
+  KnowHub 顶部导航
+
+- [knowhub/components/shared/page-toolbar.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/shared/page-toolbar.tsx)
+  KnowHub 列表页通用工具栏，承载搜索、标签和主按钮
+
+- [knowhub/components/shared/card-grid.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/shared/card-grid.tsx)
+  KnowHub 卡片网格布局
+
+- [knowhub/components/overview/overview-page.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/overview/overview-page.tsx)
+  概览页页面实现
+
+- [knowhub/components/documents/documents-page.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/documents/documents-page.tsx)
+  文档中心列表页页面实现
+
+- [knowhub/components/documents/docspace-card.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/documents/docspace-card.tsx)
+  文档空间卡片
+
+- [knowhub/components/documents/docspace-create-dialog.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/documents/docspace-create-dialog.tsx)
+  文档空间创建弹窗，支持本地空间、OSS 和 SMB
+
+- [knowhub/components/documents/document-detail-page.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/documents/document-detail-page.tsx)
+  文档空间详情页页面实现
+
+- [knowhub/components/documents/docspace-file-preview.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/documents/docspace-file-preview.tsx)
+  文档空间文件浏览区，支持目录层级切换与空空间上传区
+
+- [knowhub/components/documents/docspace-upload-control.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/documents/docspace-upload-control.tsx)
+  本地空间上传控件，支持点击上传与拖拽上传
+
+- [knowhub/components/documents/docspace-sync-control.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/documents/docspace-sync-control.tsx)
+  远程来源同步控件
+
+- [knowhub/components/documents/docspace-delete-button.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/documents/docspace-delete-button.tsx)
+  文档空间删除控件
+
 - [knowhub/features/docspaces/api.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/features/docspaces/api.ts)
   文档中心前端请求封装
 
@@ -411,6 +396,12 @@ KnowHub 也走全宽内容区，不做页面级居中限宽。
 
 - [knowhub/features/docspaces/types.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/features/docspaces/types.ts)
   文档中心类型定义
+
+- [knowhub/features/docspaces/oss-connector.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/features/docspaces/oss-connector.ts)
+  OSS 连接测试与对象列表读取
+
+- [knowhub/features/docspaces/smb-connector.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/features/docspaces/smb-connector.ts)
+  SMB 连接测试与共享目录读取
 
 - [knowhub/features/strategies/data.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/features/strategies/data.ts)
   策略中心数据
@@ -437,8 +428,11 @@ KnowHub 也走全宽内容区，不做页面级居中限宽。
 - `KnowHub` 文档中心已接真实后端：
   - 文档空间列表与详情走 `/api/knowhub/docspaces/*`
   - 文档空间数据持久化到本地 `storage/knowhub/docspaces`
-  - 来源类型支持 `hosted / oss / smb`
-  - 支持创建空间、测试连接、同步和文件列表读取
+  - 来源类型支持 `本地空间 / OSS / SMB`
+  - 本地空间支持多文件上传与拖拽上传
+  - OSS / SMB 支持测试连接与手动同步
+  - 文档空间支持删除
+  - 详情页支持文件浏览与目录层级切换
 - `KnowHub` 概览页与知识中心中的 `DocSpace` 信息读取真实文档空间数据
 - `KnowHub` 策略中心、知识任务数据、概览中的非 `DocSpace` 统计仍使用静态数据
 - `retrieval` 当前为占位页

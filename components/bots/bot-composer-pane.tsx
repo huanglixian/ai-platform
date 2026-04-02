@@ -1,12 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 
 type BotComposerPaneProps = {
   value: string;
   sending: boolean;
   status: string;
   modelName: string;
+  title?: string;
+  placeholder?: string;
+  footerActions?: ReactNode;
+  noHover?: boolean;
   onChange: (value: string) => void;
   onSend: () => void | Promise<void>;
 };
@@ -16,15 +20,24 @@ export function BotComposerPane({
   sending,
   status,
   modelName,
+  title = "发送消息",
+  placeholder = "输入你的问题，在当前自由体下直接和 nanobot 对话",
+  footerActions,
+  noHover = false,
   onChange,
   onSend,
 }: BotComposerPaneProps) {
   const [isComposing, setIsComposing] = useState(false);
 
   return (
-    <section className="app-card overflow-hidden">
+    <section
+      className={[
+        noHover ? "app-card-no-hover" : "app-card",
+        "overflow-hidden",
+      ].join(" ")}
+    >
       <div className="flex items-center justify-between border-b border-[#eef2f6] px-4 py-3">
-        <div className="text-[15px] font-semibold text-title">发送消息</div>
+        <div className="text-[15px] font-semibold text-title">{title}</div>
         <div className="text-[12px] text-[#7f8ea3]">&nbsp;</div>
       </div>
       <div className="grid gap-3 px-4 py-4">
@@ -46,7 +59,7 @@ export function BotComposerPane({
               }
             }
           }}
-          placeholder="输入你的问题，在当前自由体下直接和 nanobot 对话"
+          placeholder={placeholder}
           className="min-h-[120px] resize-none rounded-[12px] border border-[#dbe5f0] bg-white px-4 py-3 text-[13px] leading-6 text-title outline-none transition-colors placeholder:text-[#98a2b3] focus:border-[#6f96c4]"
         />
         <div className="flex items-center justify-between gap-3">
@@ -57,14 +70,17 @@ export function BotComposerPane({
                 ? "nanobot 正在处理这条消息..."
                 : `模型：${modelName || "-"}`}
           </div>
-          <button
-            type="button"
-            disabled={sending}
-            onClick={() => void onSend()}
-            className="h-[36px] rounded-[8px] bg-[#0368b3] px-4 text-[13px] font-medium text-white transition-colors hover:bg-[#1a4d87] disabled:cursor-not-allowed disabled:bg-[#7eaed6]"
-          >
-            {sending ? "处理中..." : "发送"}
-          </button>
+          <div className="flex items-center gap-2">
+            {footerActions}
+            <button
+              type="button"
+              disabled={sending}
+              onClick={() => void onSend()}
+              className="h-[36px] rounded-[8px] bg-[#0368b3] px-4 text-[13px] font-medium text-white transition-colors hover:bg-[#1a4d87] disabled:cursor-not-allowed disabled:bg-[#7eaed6]"
+            >
+              {sending ? "处理中..." : "发送"}
+            </button>
+          </div>
         </div>
       </div>
     </section>

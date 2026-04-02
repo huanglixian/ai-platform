@@ -128,4 +128,15 @@
     border-color: var(--card-border-hover);
     box-shadow: var(--card-shadow-hover);
   }
+
+  .app-card-no-hover {
+    border: 1px solid var(--card-border);
+    border-radius: 10px;
+    background-color: var(--surface-card);
+    box-shadow: var(--card-shadow);
+    transition:
+      transform 180ms ease,
+      border-color 180ms ease,
+      box-shadow 180ms ease;
+  }
 }

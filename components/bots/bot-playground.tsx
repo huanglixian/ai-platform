@@ -27,11 +27,11 @@ import { BotComposerPane } from "./bot-composer-pane";
 import { BotSessionPane } from "./bot-session-pane";
 import { BotTranscriptPane } from "./bot-transcript-pane";
 
-type BotWorkbenchProps = {
+type BotPlaygroundProps = {
   agentId: string;
 };
 
-export function BotWorkbench({ agentId }: BotWorkbenchProps) {
+export function BotPlayground({ agentId }: BotPlaygroundProps) {
   const searchParams = useSearchParams();
   const searchParamsKey = searchParams.toString();
   const [bootstrap, setBootstrap] = useState<NanobotBootstrap | null>(null);
@@ -436,6 +436,7 @@ export function BotWorkbench({ agentId }: BotWorkbenchProps) {
         currentKey={bootstrap.current_key}
         currentDetail={bootstrap.current_detail}
         expandedSessionKey={expandedSessionKey}
+        noHover
         onOpenSession={(sessionKey, anchor) => handleOpenSession(sessionKey, anchor)}
         onDeleteSession={(sessionKey) => handleDeleteSession(sessionKey)}
         onStartNewSession={() => {
@@ -451,11 +452,12 @@ export function BotWorkbench({ agentId }: BotWorkbenchProps) {
           sending={sending}
           status={composerStatus}
           modelName={bootstrap.model_name || ""}
+          noHover
           onChange={setComposerValue}
           onSend={() => handleSendMessage()}
         />
 
-        <BotTranscriptPane detail={bootstrap.current_detail} />
+        <BotTranscriptPane detail={bootstrap.current_detail} noHover />
       </div>
 
       <BotConfigPanel
@@ -464,6 +466,7 @@ export function BotWorkbench({ agentId }: BotWorkbenchProps) {
         securityListPath={bootstrap.security_list.path || "security_list.json"}
         writeAllowText={bootstrap.security_list.write_allow_text || ""}
         readDenyText={bootstrap.security_list.read_deny_text || ""}
+        noHover
         onEdit={(kind) => void handleOpenEditor(kind)}
       />
 

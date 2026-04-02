@@ -1,15 +1,15 @@
-import { BotWorkbench } from "@/components/bots/bot-workbench";
+import { BotPlayground } from "@/components/bots/bot-playground";
 
-type BotWorkbenchPageProps = {
+type BotPlaygroundPageProps = {
   params: Promise<{
     agentId: string;
   }>;
 };
 
-export default async function BotWorkbenchPage({
+export default async function BotPlaygroundPage({
   params,
-}: BotWorkbenchPageProps) {
+}: BotPlaygroundPageProps) {
   const { agentId } = await params;
 
-  return <BotWorkbench agentId={decodeURIComponent(agentId)} />;
+  return <BotPlayground agentId={decodeURIComponent(agentId)} />;
 }

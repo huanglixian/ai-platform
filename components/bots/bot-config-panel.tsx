@@ -17,6 +17,7 @@ type BotConfigPanelProps = {
   securityListPath: string;
   writeAllowText: string;
   readDenyText: string;
+  noHover?: boolean;
   onEdit: (kind: ConfigEditorKind) => void;
 };
 
@@ -85,13 +86,19 @@ export function BotConfigPanel({
   securityListPath,
   writeAllowText,
   readDenyText,
+  noHover = false,
   onEdit,
 }: BotConfigPanelProps) {
   const writeCount = countRules(writeAllowText);
   const readCount = countRules(readDenyText);
 
   return (
-    <aside className="app-card flex min-h-0 min-w-0 flex-col overflow-hidden">
+    <aside
+      className={[
+        noHover ? "app-card-no-hover" : "app-card",
+        "flex min-h-0 min-w-0 flex-col overflow-hidden",
+      ].join(" ")}
+    >
       <div className="border-b border-[#eef2f6] px-4 py-3">
         <div className="text-[15px] font-semibold text-title">配置区</div>
       </div>

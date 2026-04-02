@@ -13,6 +13,7 @@ type BotSessionPaneProps = {
   currentKey: string | null;
   currentDetail: NanobotSessionDetail | null;
   expandedSessionKey: string;
+  noHover?: boolean;
   onOpenSession: (sessionKey: string, anchor?: string) => void | Promise<void>;
   onDeleteSession: (sessionKey: string) => void | Promise<void>;
   onStartNewSession: () => void;
@@ -37,6 +38,7 @@ export function BotSessionPane({
   currentKey,
   currentDetail,
   expandedSessionKey,
+  noHover = false,
   onOpenSession,
   onDeleteSession,
   onStartNewSession,
@@ -59,7 +61,12 @@ export function BotSessionPane({
   }, [menuSessionKey]);
 
   return (
-    <aside className="app-card flex min-h-0 flex-col overflow-hidden">
+    <aside
+      className={[
+        "flex min-h-0 flex-col overflow-hidden",
+        noHover ? "app-card-no-hover" : "app-card",
+      ].join(" ")}
+    >
       <div className="flex items-center justify-between border-b border-[#eef2f6] px-4 py-3">
         <div className="text-[15px] font-semibold text-title">会话列表</div>
         <div className="text-[12px] text-[#7f8ea3]">共 {sessions.length} 个</div>

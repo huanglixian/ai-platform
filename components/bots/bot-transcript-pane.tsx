@@ -81,13 +81,22 @@ function TurnCard({ turn }: { turn: NanobotTurnView }) {
 
 type BotTranscriptPaneProps = {
   detail: NanobotSessionDetail | null;
+  noHover?: boolean;
 };
 
-export function BotTranscriptPane({ detail }: BotTranscriptPaneProps) {
+export function BotTranscriptPane({
+  detail,
+  noHover = false,
+}: BotTranscriptPaneProps) {
   const transcriptRef = useRef<HTMLDivElement | null>(null);
 
   return (
-    <section className="app-card flex min-h-0 flex-col overflow-hidden">
+    <section
+      className={[
+        noHover ? "app-card-no-hover" : "app-card",
+        "flex min-h-0 flex-col overflow-hidden",
+      ].join(" ")}
+    >
       <div className="flex items-center justify-between border-b border-[#eef2f6] px-4 py-3">
         <div className="text-[15px] font-semibold text-title">对话记录</div>
         <div className="flex items-center gap-3">
