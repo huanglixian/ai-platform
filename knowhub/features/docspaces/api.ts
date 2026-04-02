@@ -67,6 +67,24 @@ export async function deleteDocSpaceApi(id: string) {
   return data.item;
 }
 
+export async function uploadDocSpaceFilesApi(id: string, files: File[]) {
+  const formData = new FormData();
+
+  files.forEach((file) => {
+    formData.append("files", file);
+  });
+
+  const data = await fetchDocSpaceApi<{ item: DocSpaceRecord }>(
+    `/${encodeURIComponent(id)}/upload`,
+    {
+      method: "POST",
+      body: formData,
+    },
+  );
+
+  return data.item;
+}
+
 export async function listDocSpaceFilesApi(id: string) {
   const data = await fetchDocSpaceApi<{ items: DocSpaceFileSnapshot[] }>(
     `/${encodeURIComponent(id)}/files`,

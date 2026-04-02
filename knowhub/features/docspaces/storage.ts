@@ -2,6 +2,7 @@ import "server-only";
 
 import { promises as fs } from "fs";
 import path from "path";
+import { Buffer } from "buffer";
 
 import type { DocSpaceStore, DocSpaceFileSnapshot } from "@/knowhub/features/docspaces/types";
 
@@ -70,6 +71,10 @@ export async function removeHostedDocSpacePath(docspaceId: string) {
   await fs.rm(hostedPath, { recursive: true, force: true });
 }
 
+function normalizeUploadFileName(name: string) {
+  return path.basename(name).replace(/[\\/:*?"<>|]/g, "_") || "未命名文件";
+}
+
 export async function readDocSpaceStore() {
   await ensureStorageDirs();
 
@@ -94,6 +99,24 @@ export async function readDocSpaceStore() {
 export async function writeDocSpaceStore(store: DocSpaceStore) {
   await ensureStorageDirs();
   await fs.writeFile(storePath, `${JSON.stringify(store, null, 2)}\n`, "utf8");
+}
+
+export async function writeHostedDocSpaceFiles(
+  docspaceId: string,
+  files: Array<{
+    name: string;
+    content: Buffer;
+  }>,
+) {
+  const hostedPath = await ensureHostedDocSpacePath(docspaceId);
+
+  await Promise.all(
+    files.map(async (file) => {
+      const filename = normalizeUploadFileName(file.name);
+      const filePath = path.join(hostedPath, filename);
+      await fs.writeFile(filePath, file.content);
+    }),
+  );
 }
 
 export async function listHostedDocSpaceFiles(docspaceId: string) {

@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { ChevronRight, FileText, Folder } from "lucide-react";
 
+import { DocspaceUploadControl } from "@/knowhub/components/documents/docspace-upload-control";
 import type { DocSpaceRecord } from "@/knowhub/features/docspaces/types";
 
 type DocspaceFilePreviewProps = {
@@ -128,8 +129,26 @@ export function DocspaceFilePreview({ item }: DocspaceFilePreviewProps) {
   );
   const [currentPath, setCurrentPath] = useState("/");
 
-  if (!item || !item.files.length) {
+  if (!item) {
     return null;
+  }
+
+  if (!item.files.length) {
+    if (item.sourceType !== "hosted") {
+      return null;
+    }
+
+    return (
+      <section className="rounded-[14px] border border-[#d8e1eb] bg-[linear-gradient(180deg,rgba(249,251,253,0.98)_0%,rgba(255,255,255,0.98)_100%)] px-5 py-5 shadow-[0_8px_24px_rgba(15,23,42,0.04)]">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <div className="text-title text-[15px] font-semibold">文件列表</div>
+        </div>
+        <DocspaceUploadControl
+          id={item.id}
+          variant="empty"
+        />
+      </section>
+    );
   }
 
   const resolvedPath = directoryMap.has(currentPath) ? currentPath : "/";

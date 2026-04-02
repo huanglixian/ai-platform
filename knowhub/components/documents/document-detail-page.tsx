@@ -4,6 +4,8 @@ import { ArrowLeft } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { DocspaceDeleteButton } from "@/knowhub/components/documents/docspace-delete-button";
 import { DocspaceFilePreview } from "@/knowhub/components/documents/docspace-file-preview";
+import { DocspaceSyncControl } from "@/knowhub/components/documents/docspace-sync-control";
+import { DocspaceUploadControl } from "@/knowhub/components/documents/docspace-upload-control";
 import { KnowHubPageShell } from "@/knowhub/components/layout/knowhub-page-shell";
 import type { DocSpaceRecord } from "@/knowhub/features/docspaces/types";
 import { cn } from "@/lib/utils";
@@ -44,9 +46,16 @@ export function KnowHubDocumentDetailPage({
             返回文档中心
           </Link>
         </div>
-        <div className="grid gap-2.5 md:grid-cols-[minmax(0,1.4fr)_140px_150px]">
+        <div
+          className={cn(
+            "grid gap-2.5",
+            item.sourceType === "hosted"
+              ? "md:grid-cols-[minmax(0,1.8fr)_140px_220px_auto]"
+              : "md:grid-cols-[minmax(0,1.95fr)_140px_220px_auto]",
+          )}
+        >
           <div className="rounded-[12px] border border-[#dde6f0] bg-[linear-gradient(180deg,rgba(236,242,248,0.78)_0%,rgba(247,250,253,0.92)_100%)] px-3 py-2">
-            <div className="truncate text-[12px] text-title">
+            <div className="truncate whitespace-nowrap text-[12px] text-title">
               <span className="text-[#98a2b3]">
                 接入信息（{sourceLabelMap[item.sourceType]}）：
               </span>
@@ -54,16 +63,26 @@ export function KnowHubDocumentDetailPage({
             </div>
           </div>
           <div className="rounded-[12px] border border-[#dde6f0] bg-[linear-gradient(180deg,rgba(236,242,248,0.78)_0%,rgba(247,250,253,0.92)_100%)] px-3 py-2">
-            <div className="text-[12px] text-title">
+            <div className="whitespace-nowrap text-[12px] text-title">
               <span className="text-[#98a2b3]">文档数量：</span>
-              <span className="text-[15px] font-semibold">{item.documentCount}</span>
+              {item.documentCount}
             </div>
           </div>
           <div className="rounded-[12px] border border-[#dde6f0] bg-[linear-gradient(180deg,rgba(236,242,248,0.78)_0%,rgba(247,250,253,0.92)_100%)] px-3 py-2">
-            <div className="text-[12px] text-title">
+            <div className="whitespace-nowrap text-[12px] text-title">
               <span className="text-[#98a2b3]">最近同步：</span>
               {item.lastSyncAt}
             </div>
+          </div>
+          <div className="flex items-center justify-end">
+            {item.sourceType === "hosted" ? (
+              <DocspaceUploadControl
+                id={item.id}
+                variant="button"
+              />
+            ) : (
+              <DocspaceSyncControl id={item.id} />
+            )}
           </div>
         </div>
       </section>

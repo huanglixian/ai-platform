@@ -1,5 +1,7 @@
 import "server-only";
 
+import { Buffer } from "buffer";
+
 import {
   getStoredDocSpace,
   listStoredDocSpaces,
@@ -12,6 +14,7 @@ import {
   ensureHostedDocSpacePath,
   listHostedDocSpaceFiles,
   removeHostedDocSpacePath,
+  writeHostedDocSpaceFiles,
 } from "@/knowhub/features/docspaces/storage";
 import {
   buildOssTarget,
@@ -302,4 +305,29 @@ export async function deleteDocSpace(id: string) {
   }
 
   return toDocSpaceRecord(docspace);
+}
+
+export async function uploadDocSpaceFiles(
+  id: string,
+  files: Array<{
+    name: string;
+    content: Buffer;
+  }>,
+) {
+  if (!files.length) {
+    throw new Error("请选择要上传的文件");
+  }
+
+  const docspace = await getStoredDocSpace(id);
+
+  if (!docspace) {
+    return null;
+  }
+
+  if (docspace.source.type !== "hosted") {
+    throw new Error("只有本地空间支持上传文件");
+  }
+
+  await writeHostedDocSpaceFiles(id, files);
+  return syncDocSpace(id);
 }
