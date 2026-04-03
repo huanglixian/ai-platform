@@ -19,19 +19,12 @@ export const platformNavGroups: PlatformNavGroup[] = [
     href: "/workbench",
   },
   {
-    key: "bots",
-    label: "智能体",
+    key: "capabilities",
+    label: "能力中心",
     items: [
-      {
-        label: "自由体",
-        href: "/bots",
-        hint: "独立智能体与角色管理",
-      },
-      {
-        label: "工作流",
-        href: "/workflows",
-        hint: "流程编排与节点配置",
-      },
+      { label: "工具中心", href: "/tools", hint: "工具接入与调度能力" },
+      { label: "服务中心", href: "/services", hint: "外部服务与连接配置" },
+      { label: "技能中心", href: "/skills", hint: "技能封装与能力分发" },
     ],
   },
   {
@@ -51,18 +44,15 @@ export const platformNavGroups: PlatformNavGroup[] = [
     ],
   },
   {
-    key: "capabilities",
-    label: "能力中心",
-    items: [
-      { label: "工具中心", href: "/tools", hint: "工具接入与调度能力" },
-      { label: "服务中心", href: "/services", hint: "外部服务与连接配置" },
-      { label: "技能中心", href: "/skills", hint: "技能封装与能力分发" },
-    ],
+    key: "workflows",
+    label: "工作流",
+    href: "/workflows",
   },
   {
     key: "settings",
     label: "配置管理",
     items: [
+      { label: "自由体设置", href: "/bots", hint: "自由体配置与 Playground" },
       { label: "组织管理", disabled: true, hint: "组织结构与协作边界" },
       { label: "角色管理", disabled: true, hint: "角色权限与职责控制" },
       { label: "用户管理", disabled: true, hint: "用户账号与成员维护" },
@@ -80,11 +70,11 @@ export function getActiveNavGroup(pathname: string) {
   }
 
   if (pathname === "/bots" || pathname.startsWith("/bots/")) {
-    return "bots";
+    return "settings";
   }
 
   if (pathname === "/workflows" || pathname.startsWith("/workflows/")) {
-    return "bots";
+    return "workflows";
   }
 
   if (pathname === "/knowhub" || pathname.startsWith("/knowhub/")) {

@@ -57,6 +57,9 @@ Ai_Platform/
 │  │  ├─ bots/
 │  │  │  ├─ page.tsx
 │  │  │  └─ [agentId]/page.tsx
+│  │  ├─ workbench/
+│  │  │  ├─ page.tsx
+│  │  │  └─ [agentId]/page.tsx
 │  │  ├─ workflows/page.tsx
 │  │  ├─ tools/page.tsx
 │  │  ├─ services/page.tsx
@@ -79,6 +82,7 @@ Ai_Platform/
 │  └─ page.tsx
 ├─ components/
 │  ├─ bots/
+│  ├─ workbench/
 │  ├─ shared/
 │  └─ ui/
 ├─ knowhub/
@@ -109,7 +113,13 @@ Ai_Platform/
   自由体列表页
 
 - `/bots/[agentId]`
-  单自由体工作台
+  单自由体 Playground
+
+- `/workbench`
+  默认用户工作台入口，当前默认进入 `main`
+
+- `/workbench/[agentId]`
+  面向用户的工作台页面
 
 - `/workflows`
   工作流列表页
@@ -145,6 +155,7 @@ Ai_Platform/
 平台主体当前页面都在：
 
 - `app/(platform)/bots`
+- `app/(platform)/workbench`
 - `app/(platform)/workflows`
 - `app/(platform)/tools`
 - `app/(platform)/services`
@@ -184,6 +195,7 @@ Ai_Platform/
   页面组件层
   例如：
   - `components/bots/*`
+  - `components/workbench/*`
   - `components/workflows/*`
   - `components/shared/*`
 
@@ -208,6 +220,32 @@ Ai_Platform/
 - 卡片列表默认使用固定卡片宽度、自动增列、左对齐的网格方式
 - 不要把平台主体需求直接落到 `knowhub/*`
 - 除非明确需要跨域复用，否则不要把 KnowHub 私有实现抽回平台 `components/shared`
+
+### 5. `bots` 和 `workbench` 的职责已经分开
+
+- [app/(platform)/bots/[agentId]/page.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/app/(platform)/bots/[agentId]/page.tsx)
+  对应单自由体 Playground 路由入口
+
+- [components/bots/bot-playground.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/components/bots/bot-playground.tsx)
+  自由体 Playground 主页面，包含会话列表、发送区、对话记录、配置区
+
+- [app/(platform)/workbench/page.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/app/(platform)/workbench/page.tsx)
+  默认工作台入口，当前默认使用 `main`
+
+- [app/(platform)/workbench/[agentId]/page.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/app/(platform)/workbench/[agentId]/page.tsx)
+  工作台动态路由入口
+
+- [components/workbench/workbench-page.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/components/workbench/workbench-page.tsx)
+  工作台主容器，负责空态、会话态、左侧会话栏和配置抽屉
+
+- [components/workbench/workbench-empty-state.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/components/workbench/workbench-empty-state.tsx)
+  工作台空态页，中部启动输入区
+
+- [components/workbench/workbench-session-sidebar.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/components/workbench/workbench-session-sidebar.tsx)
+  工作台左侧可折叠会话侧栏
+
+- [components/workbench/workbench-config-drawer.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/components/workbench/workbench-config-drawer.tsx)
+  工作台右侧配置抽屉容器
 
 ## KnowHub 约定
 

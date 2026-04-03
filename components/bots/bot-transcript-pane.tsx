@@ -7,6 +7,7 @@ import type {
   NanobotSessionDetail,
   NanobotTurnView,
 } from "@/features/bots/types";
+import { BotMessageMarkdown } from "./bot-message-markdown";
 
 function MessageCard({ message }: { message: NanobotMessageView }) {
   const isAssistant = message.role === "assistant";
@@ -43,9 +44,7 @@ function MessageCard({ message }: { message: NanobotMessageView }) {
           {message.tool_summary}
         </div>
       ) : null}
-      <pre className="mt-1.5 whitespace-pre-wrap break-words text-[13px] leading-5.5 text-title">
-        {message.content || "(empty)"}
-      </pre>
+      <BotMessageMarkdown content={message.content || "(empty)"} />
     </article>
   );
 }
