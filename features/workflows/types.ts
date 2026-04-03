@@ -5,6 +5,34 @@ export type WorkflowMetric = {
   value: string;
 };
 
+export type WorkflowNodeKind =
+  | "start"
+  | "llm"
+  | "tool"
+  | "condition"
+  | "template"
+  | "end";
+
+export type WorkflowNode = {
+  id: string;
+  kind: WorkflowNodeKind;
+  title: string;
+  subtitle: string;
+  detail: string;
+  output?: string;
+};
+
+export type WorkflowEdge = {
+  from: string;
+  to: string;
+  label?: string;
+};
+
+export type WorkflowRunLog = {
+  label: string;
+  value: string;
+};
+
 export type WorkflowRecord = {
   id: string;
   name: string;
@@ -14,4 +42,12 @@ export type WorkflowRecord = {
   status: WorkflowStatus;
   metrics: WorkflowMetric[];
   tags: string[];
+  summary: {
+    scenario: string;
+    input: string;
+    output: string;
+  };
+  nodes: WorkflowNode[];
+  edges: WorkflowEdge[];
+  runLogs: WorkflowRunLog[];
 };

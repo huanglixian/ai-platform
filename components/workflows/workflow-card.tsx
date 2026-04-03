@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import type { WorkflowRecord } from "@/features/workflows/types";
 
 type WorkflowCardProps = {
@@ -12,9 +14,9 @@ const statusMap = {
 
 export function WorkflowCard({ workflow }: WorkflowCardProps) {
   return (
-    <button
-      type="button"
-      className="w-full appearance-none border-0 bg-transparent p-0 text-left"
+    <Link
+      href={`/workflows/${workflow.id}`}
+      className="block w-full text-left"
     >
       <div className="app-card overflow-hidden">
         <div className="flex min-h-[72px] items-center gap-3 border-b border-[#e7eef6] bg-[linear-gradient(180deg,#f2f7fd_0%,#eef4fb_100%)] px-4 py-3">
@@ -70,6 +72,6 @@ export function WorkflowCard({ workflow }: WorkflowCardProps) {
           ))}
         </div>
       </div>
-    </button>
+    </Link>
   );
 }
