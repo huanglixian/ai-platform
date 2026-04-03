@@ -177,6 +177,31 @@ Ai_Platform/
 - [components/shared/top-nav.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/components/shared/top-nav.tsx)
 - [lib/nav.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/lib/nav.ts)
 
+当前一级导航结构是：
+
+- 工作台
+- 能力中心
+- 数据中心
+- 工作流
+- 配置管理
+
+当前二级归属是：
+
+- 工作台
+  对应 `/workbench`
+
+- 能力中心
+  包含 `工具中心 / 服务中心 / 技能中心`
+
+- 数据中心
+  包含 `知识库`
+
+- 工作流
+  对应 `/workflows`
+
+- 配置管理
+  第一项是 `自由体设置`，对应 `/bots`
+
 如果需求涉及：
 
 - 平台一级导航分组
@@ -246,6 +271,24 @@ Ai_Platform/
 
 - [components/workbench/workbench-config-drawer.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/components/workbench/workbench-config-drawer.tsx)
   工作台右侧配置抽屉容器
+
+- [components/bots/bot-message-markdown.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/components/bots/bot-message-markdown.tsx)
+  对话消息 Markdown 渲染组件，负责链接跳转和基础 Markdown 显示
+
+- [components/bots/bot-session-pane.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/components/bots/bot-session-pane.tsx)
+  会话列表主组件，同时服务 Playground 和 Workbench；当前支持 `noHover` 模式
+
+- [components/bots/bot-composer-pane.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/components/bots/bot-composer-pane.tsx)
+  发送区主组件，同时服务 Playground 和 Workbench；当前支持 `title / placeholder / footerActions / noHover`
+
+- [components/bots/bot-transcript-pane.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/components/bots/bot-transcript-pane.tsx)
+  对话记录主组件，当前消息内容走 Markdown 渲染
+
+- [components/bots/bot-config-panel.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/components/bots/bot-config-panel.tsx)
+  配置区主组件，同时服务 Playground 和 Workbench 配置抽屉；当前支持 `noHover`
+
+- [app/globals.css](/Users/huanglixian-m2/Documents/LienCode/ai_platform/app/globals.css)
+  平台全局样式入口，当前包含 `app-card / app-card-no-hover / bot-markdown`
 
 ## KnowHub 约定
 

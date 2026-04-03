@@ -39,7 +39,7 @@ export function BotPlayground({ agentId }: BotPlaygroundProps) {
   const [error, setError] = useState("");
   const [reloadTick, setReloadTick] = useState(0);
   const [expandedSessionKey, setExpandedSessionKey] = useState("");
-  const [composerValue, setComposerValue] = useState("");
+  const [composerResetTick, setComposerResetTick] = useState(0);
   const [sending, setSending] = useState(false);
   const [composerStatus, setComposerStatus] = useState("");
   const [editorKind, setEditorKind] = useState<ConfigEditorKind | null>(null);
@@ -90,6 +90,7 @@ export function BotPlayground({ agentId }: BotPlaygroundProps) {
       }
 
       setComposerStatus("");
+      setComposerResetTick((current) => current + 1);
       syncUrl({ sessionKey, anchor });
       if (anchor) {
         window.requestAnimationFrame(() => {
@@ -103,13 +104,8 @@ export function BotPlayground({ agentId }: BotPlaygroundProps) {
     }
   }
 
-  async function handleSendMessage() {
+  async function handleSendMessage(content: string) {
     if (!bootstrap) {
-      return;
-    }
-
-    const content = composerValue.trim();
-    if (!content) {
       return;
     }
 
@@ -136,7 +132,7 @@ export function BotPlayground({ agentId }: BotPlaygroundProps) {
           : current,
       );
       setExpandedSessionKey(data.session_key);
-      setComposerValue("");
+      setComposerResetTick((current) => current + 1);
       setComposerStatus("");
       syncUrl({ sessionKey: data.session_key });
     } catch (sendError) {
@@ -184,6 +180,7 @@ export function BotPlayground({ agentId }: BotPlaygroundProps) {
         }
         return nextCurrentKey || "";
       });
+      setComposerResetTick((current) => current + 1);
       syncUrl({
         sessionKey: nextCurrentKey || undefined,
         newSession: !nextCurrentKey,
@@ -442,19 +439,19 @@ export function BotPlayground({ agentId }: BotPlaygroundProps) {
         onStartNewSession={() => {
           setExpandedSessionKey("");
           setComposerStatus("");
+          setComposerResetTick((current) => current + 1);
           syncUrl({ newSession: true });
         }}
       />
 
       <div className="grid min-h-0 min-w-0 grid-rows-[auto_minmax(0,1fr)] gap-4">
         <BotComposerPane
-          value={composerValue}
           sending={sending}
           status={composerStatus}
           modelName={bootstrap.model_name || ""}
           noHover
-          onChange={setComposerValue}
-          onSend={() => handleSendMessage()}
+          resetKey={`${bootstrap.current_key || "new"}:${composerResetTick}`}
+          onSend={handleSendMessage}
         />
 
         <BotTranscriptPane detail={bootstrap.current_detail} noHover />

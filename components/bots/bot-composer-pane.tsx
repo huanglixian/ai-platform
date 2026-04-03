@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 type BotComposerPaneProps = {
-  value: string;
   sending: boolean;
   status: string;
   modelName: string;
@@ -11,12 +10,12 @@ type BotComposerPaneProps = {
   placeholder?: string;
   footerActions?: ReactNode;
   noHover?: boolean;
-  onChange: (value: string) => void;
-  onSend: () => void | Promise<void>;
+  initialValue?: string;
+  resetKey?: string;
+  onSend: (value: string) => void | Promise<void>;
 };
 
 export function BotComposerPane({
-  value,
   sending,
   status,
   modelName,
@@ -24,10 +23,25 @@ export function BotComposerPane({
   placeholder = "输入你的问题，在当前自由体下直接和 nanobot 对话",
   footerActions,
   noHover = false,
-  onChange,
+  initialValue = "",
+  resetKey = "",
   onSend,
 }: BotComposerPaneProps) {
+  const [value, setValue] = useState(initialValue);
   const [isComposing, setIsComposing] = useState(false);
+
+  useEffect(() => {
+    setValue(initialValue);
+  }, [initialValue, resetKey]);
+
+  async function handleSend() {
+    const content = value.trim();
+    if (!content || sending) {
+      return;
+    }
+    await onSend(content);
+    setValue("");
+  }
 
   return (
     <section
@@ -43,7 +57,7 @@ export function BotComposerPane({
       <div className="grid gap-3 px-4 py-4">
         <textarea
           value={value}
-          onChange={(event) => onChange(event.target.value)}
+          onChange={(event) => setValue(event.target.value)}
           onCompositionStart={() => setIsComposing(true)}
           onCompositionEnd={() => setIsComposing(false)}
           onKeyDown={(event) => {
@@ -54,9 +68,7 @@ export function BotComposerPane({
               !event.nativeEvent.isComposing
             ) {
               event.preventDefault();
-              if (!sending) {
-                void onSend();
-              }
+              void handleSend();
             }
           }}
           placeholder={placeholder}
@@ -75,7 +87,7 @@ export function BotComposerPane({
             <button
               type="button"
               disabled={sending}
-              onClick={() => void onSend()}
+              onClick={() => void handleSend()}
               className="h-[36px] rounded-[8px] bg-[#0368b3] px-4 text-[13px] font-medium text-white transition-colors hover:bg-[#1a4d87] disabled:cursor-not-allowed disabled:bg-[#7eaed6]"
             >
               {sending ? "处理中..." : "发送"}

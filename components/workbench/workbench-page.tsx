@@ -42,7 +42,7 @@ export function WorkbenchPage({ agentId }: WorkbenchPageProps) {
   const [error, setError] = useState("");
   const [reloadTick, setReloadTick] = useState(0);
   const [expandedSessionKey, setExpandedSessionKey] = useState("");
-  const [composerValue, setComposerValue] = useState("");
+  const [composerResetTick, setComposerResetTick] = useState(0);
   const [sending, setSending] = useState(false);
   const [composerStatus, setComposerStatus] = useState("");
   const [editorKind, setEditorKind] = useState<ConfigEditorKind | null>(null);
@@ -262,6 +262,7 @@ export function WorkbenchPage({ agentId }: WorkbenchPageProps) {
       }
 
       setComposerStatus("");
+      setComposerResetTick((current) => current + 1);
       syncUrl({ sessionKey, anchor });
       if (anchor) {
         window.requestAnimationFrame(() => {
@@ -311,6 +312,7 @@ export function WorkbenchPage({ agentId }: WorkbenchPageProps) {
         }
         return nextCurrentKey || "";
       });
+      setComposerResetTick((current) => current + 1);
       syncUrl({
         sessionKey: nextCurrentKey || undefined,
         newSession: !nextCurrentKey,
@@ -322,13 +324,8 @@ export function WorkbenchPage({ agentId }: WorkbenchPageProps) {
     }
   }
 
-  async function handleSendMessage() {
+  async function handleSendMessage(content: string) {
     if (!bootstrap) {
-      return;
-    }
-
-    const content = composerValue.trim();
-    if (!content) {
       return;
     }
 
@@ -360,7 +357,7 @@ export function WorkbenchPage({ agentId }: WorkbenchPageProps) {
           : current,
       );
       setExpandedSessionKey(data.session_key);
-      setComposerValue("");
+      setComposerResetTick((current) => current + 1);
       setComposerStatus("");
       syncUrl({ sessionKey: data.session_key });
     } catch (sendError) {
@@ -452,6 +449,7 @@ export function WorkbenchPage({ agentId }: WorkbenchPageProps) {
           onStartNewSession={() => {
             setExpandedSessionKey("");
             setComposerStatus("");
+            setComposerResetTick((current) => current + 1);
             syncUrl({ newSession: true });
             setReloadTick((current) => current + 1);
           }}
@@ -477,13 +475,13 @@ export function WorkbenchPage({ agentId }: WorkbenchPageProps) {
           <section className="min-h-0 min-w-0 overflow-hidden rounded-[18px] bg-white px-5 py-4">
             <div className="grid h-full min-h-0 min-w-0 grid-rows-[auto_minmax(0,1fr)] gap-4">
               <BotComposerPane
-                value={composerValue}
                 sending={sending}
                 status={composerStatus}
                 modelName={bootstrap.model_name || ""}
                 title="继续对话"
                 placeholder="输入问题或任务，继续对话"
                 noHover
+                resetKey={`${bootstrap.current_key || "new"}:${composerResetTick}`}
                 footerActions={
                   <button
                     type="button"
@@ -493,8 +491,7 @@ export function WorkbenchPage({ agentId }: WorkbenchPageProps) {
                     配置
                   </button>
                 }
-                onChange={setComposerValue}
-                onSend={() => handleSendMessage()}
+                onSend={handleSendMessage}
               />
               <BotTranscriptPane detail={bootstrap.current_detail} noHover />
             </div>
@@ -503,11 +500,10 @@ export function WorkbenchPage({ agentId }: WorkbenchPageProps) {
           <div className="min-h-0 min-w-0 overflow-hidden rounded-[18px] bg-white px-5 py-4">
             <WorkbenchEmptyState
               modelName={bootstrap.model_name || ""}
-              value={composerValue}
               sending={sending}
               status={composerStatus}
-              onChange={setComposerValue}
-              onSend={() => handleSendMessage()}
+              resetKey={`${bootstrap.current_key || "new"}:${composerResetTick}`}
+              onSend={handleSendMessage}
             />
           </div>
         )}

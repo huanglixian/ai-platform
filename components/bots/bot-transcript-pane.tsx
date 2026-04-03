@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { memo, useRef } from "react";
 
 import type {
   NanobotMessageView,
@@ -83,7 +83,7 @@ type BotTranscriptPaneProps = {
   noHover?: boolean;
 };
 
-export function BotTranscriptPane({
+export const BotTranscriptPane = memo(function BotTranscriptPane({
   detail,
   noHover = false,
 }: BotTranscriptPaneProps) {
@@ -132,4 +132,4 @@ export function BotTranscriptPane({
       </div>
     </section>
   );
-}
+});

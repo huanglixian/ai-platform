@@ -1,25 +1,39 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 type WorkbenchEmptyStateProps = {
   modelName: string;
-  value: string;
   sending: boolean;
   status: string;
-  onChange: (value: string) => void;
-  onSend: () => void | Promise<void>;
+  initialValue?: string;
+  resetKey?: string;
+  onSend: (value: string) => void | Promise<void>;
 };
 
 export function WorkbenchEmptyState({
   modelName,
-  value,
   sending,
   status,
-  onChange,
+  initialValue = "",
+  resetKey = "",
   onSend,
 }: WorkbenchEmptyStateProps) {
+  const [value, setValue] = useState(initialValue);
   const [isComposing, setIsComposing] = useState(false);
+
+  useEffect(() => {
+    setValue(initialValue);
+  }, [initialValue, resetKey]);
+
+  async function handleSend() {
+    const content = value.trim();
+    if (!content || sending) {
+      return;
+    }
+    await onSend(content);
+    setValue("");
+  }
 
   return (
     <section className="flex h-full min-h-0 w-full justify-center px-6 pt-14 pb-10">
@@ -33,7 +47,7 @@ export function WorkbenchEmptyState({
         <div className="w-full rounded-[24px] border border-[#dbe5f0] bg-white p-5 shadow-[0_20px_48px_rgba(15,23,42,0.06)]">
           <textarea
             value={value}
-            onChange={(event) => onChange(event.target.value)}
+            onChange={(event) => setValue(event.target.value)}
             onCompositionStart={() => setIsComposing(true)}
             onCompositionEnd={() => setIsComposing(false)}
             onKeyDown={(event) => {
@@ -44,9 +58,7 @@ export function WorkbenchEmptyState({
                 !event.nativeEvent.isComposing
               ) {
                 event.preventDefault();
-                if (!sending) {
-                  void onSend();
-                }
+                void handleSend();
               }
             }}
             placeholder="输入问题或任务，开始对话"
@@ -63,7 +75,7 @@ export function WorkbenchEmptyState({
             <button
               type="button"
               disabled={sending}
-              onClick={() => void onSend()}
+              onClick={() => void handleSend()}
               className="h-[42px] rounded-[12px] bg-[#0368b3] px-5 text-[14px] font-medium text-white transition-colors hover:bg-[#1a4d87] disabled:cursor-not-allowed disabled:bg-[#7eaed6]"
             >
               {sending ? "处理中..." : "发送"}
