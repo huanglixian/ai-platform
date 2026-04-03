@@ -44,6 +44,17 @@ export function BotSessionPane({
   onStartNewSession,
 }: BotSessionPaneProps) {
   const [menuSessionKey, setMenuSessionKey] = useState("");
+  const activeDetailTurns =
+    currentDetail?.key === currentKey ? currentDetail.turns : [];
+
+  function closeMenu() {
+    setMenuSessionKey("");
+  }
+
+  function openSession(sessionKey: string, anchor?: string) {
+    closeMenu();
+    void onOpenSession(sessionKey, anchor);
+  }
 
   useEffect(() => {
     if (!menuSessionKey) {
@@ -63,7 +74,7 @@ export function BotSessionPane({
   return (
     <aside
       className={[
-        "flex min-h-0 flex-col overflow-hidden",
+        "flex h-full min-h-0 flex-col overflow-hidden",
         noHover ? "app-card-no-hover" : "app-card",
       ].join(" ")}
     >
@@ -75,7 +86,7 @@ export function BotSessionPane({
         <button
           type="button"
           onClick={() => {
-            setMenuSessionKey("");
+            closeMenu();
             onStartNewSession();
           }}
           className="h-[32px] w-full rounded-[8px] border border-[#dbe5f0] px-3 text-[12px] font-medium text-[#356da8] transition-colors hover:border-[#bfd7f2] hover:bg-[#eef5fd]"
@@ -88,10 +99,7 @@ export function BotSessionPane({
           sessions.map((session) => {
             const active = session.key === currentKey;
             const expanded = session.key === expandedSessionKey;
-            const detailTurns =
-              active && currentDetail?.key === session.key
-                ? currentDetail.turns
-                : [];
+            const detailTurns = active ? activeDetailTurns : [];
 
             return (
               <div
@@ -106,10 +114,7 @@ export function BotSessionPane({
                 <div className="flex items-start justify-between gap-3 px-3 py-3">
                   <button
                     type="button"
-                    onClick={() => {
-                      setMenuSessionKey("");
-                      void onOpenSession(session.key);
-                    }}
+                    onClick={() => openSession(session.key)}
                     className="min-w-0 flex-1 text-left"
                   >
                     <div className="line-clamp-1 text-[13px] font-semibold text-title">
@@ -141,7 +146,7 @@ export function BotSessionPane({
                         <button
                           type="button"
                           onClick={() => {
-                            setMenuSessionKey("");
+                            closeMenu();
                             void onDeleteSession(session.key);
                           }}
                           className="flex w-full rounded-[6px] px-2.5 py-2 text-left text-[12px] text-[#c2410c] transition-colors hover:bg-[#fff4ed]"
@@ -154,10 +159,7 @@ export function BotSessionPane({
                 </div>
                 <button
                   type="button"
-                  onClick={() => {
-                    setMenuSessionKey("");
-                    void onOpenSession(session.key);
-                  }}
+                  onClick={() => openSession(session.key)}
                   className="flex w-full items-start justify-between gap-3 px-3 pb-3 text-left"
                 >
                   <div className="min-w-0">
@@ -181,9 +183,7 @@ export function BotSessionPane({
                             <button
                               key={`${session.key}-${turn.anchor}`}
                               type="button"
-                              onClick={() =>
-                                void onOpenSession(session.key, turn.anchor)
-                              }
+                              onClick={() => openSession(session.key, turn.anchor)}
                               className="flex min-w-0 items-center gap-3 rounded-[8px] border border-[#edf2f7] bg-white px-2.5 py-2 text-left transition-colors hover:border-[#d8e8fa] hover:bg-[#eef5fd]"
                             >
                               <span className="shrink-0 text-[11px] text-[#98a2b3]">

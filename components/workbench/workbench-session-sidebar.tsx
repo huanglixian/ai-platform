@@ -26,7 +26,7 @@ export function WorkbenchSessionSidebar({
     >
       {expanded ? (
         <div className="flex h-full min-h-0 flex-col pr-4">
-          <div className="min-h-0 flex-1 overflow-hidden rounded-r-[14px] border border-[#dbe5f0] bg-white shadow-[0_4px_10px_rgba(15,23,42,0.05)]">
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-r-[14px] border border-[#dbe5f0] bg-white shadow-[0_4px_10px_rgba(15,23,42,0.05)]">
             <div className="flex items-center justify-between border-b border-[#eef2f6] px-3 py-3">
               <button
                 type="button"
@@ -43,7 +43,7 @@ export function WorkbenchSessionSidebar({
                 新会话
               </button>
             </div>
-            <div className="mt-1 min-h-0 h-[calc(100%-61px)] overflow-hidden">{children}</div>
+            <div className="min-h-0 flex-1 overflow-hidden">{children}</div>
           </div>
         </div>
       ) : (
