@@ -50,8 +50,8 @@ export function KnowHubDocumentDetailPage({
           className={cn(
             "grid gap-2.5",
             item.sourceType === "hosted"
-              ? "md:grid-cols-[minmax(0,1.8fr)_140px_220px_auto]"
-              : "md:grid-cols-[minmax(0,1.95fr)_140px_220px_auto]",
+              ? "md:grid-cols-[minmax(0,1.7fr)_140px_220px_auto]"
+              : "md:grid-cols-[minmax(0,1.85fr)_140px_220px_auto]",
           )}
         >
           <div className="rounded-[12px] border border-[#dde6f0] bg-[linear-gradient(180deg,rgba(236,242,248,0.78)_0%,rgba(247,250,253,0.92)_100%)] px-3 py-2">
@@ -74,7 +74,16 @@ export function KnowHubDocumentDetailPage({
               {item.lastSyncAt}
             </div>
           </div>
-          <div className="flex items-center justify-end">
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <Link
+              href={`/knowhub/knowledge?action=create&docspaceId=${encodeURIComponent(item.id)}`}
+              className={cn(
+                buttonVariants({ variant: "secondary", size: "sm" }),
+                "h-8 px-3 text-[12px]"
+              )}
+            >
+              发起知识建库
+            </Link>
             {item.sourceType === "hosted" ? (
               <DocspaceUploadControl
                 id={item.id}
