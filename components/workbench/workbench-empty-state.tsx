@@ -40,7 +40,7 @@ export function WorkbenchEmptyState({
       <div className="flex w-full max-w-[720px] flex-col items-center">
         <div className="mb-8 w-full text-center">
           <div className="text-[40px] font-semibold tracking-[-0.05em] text-title">
-            今天想处理什么？
+            今天要处理什么？
           </div>
         </div>
 

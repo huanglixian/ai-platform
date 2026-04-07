@@ -19,15 +19,6 @@ export const platformNavGroups: PlatformNavGroup[] = [
     href: "/workbench",
   },
   {
-    key: "capabilities",
-    label: "能力中心",
-    items: [
-      { label: "工具中心", href: "/tools", hint: "工具接入与调度能力" },
-      { label: "服务中心", href: "/services", hint: "外部服务与连接配置" },
-      { label: "技能中心", href: "/skills", hint: "技能封装与能力分发" },
-    ],
-  },
-  {
     key: "data",
     label: "数据中心",
     items: [
@@ -41,6 +32,15 @@ export const platformNavGroups: PlatformNavGroup[] = [
         disabled: true,
         hint: "结构化数据接入、清洗与管理",
       },
+    ],
+  },
+  {
+    key: "capabilities",
+    label: "能力中心",
+    items: [
+      { label: "工具中心", href: "/tools", hint: "工具接入与调度能力" },
+      { label: "服务中心", href: "/services", hint: "外部服务与连接配置" },
+      { label: "技能中心", href: "/skills", hint: "技能封装与能力分发" },
     ],
   },
   {
