@@ -71,6 +71,8 @@ Ai_Platform/
 │  │  │  ├─ page.tsx
 │  │  │  └─ [id]/page.tsx
 │  │  ├─ strategies/page.tsx
+│  │  ├─ settings/
+│  │  │  └─ global-strategies/page.tsx
 │  │  ├─ knowledge/
 │  │  │  ├─ page.tsx
 │  │  │  └─ [id]/page.tsx
@@ -92,6 +94,7 @@ Ai_Platform/
 │  │  ├─ knowledge/
 │  │  ├─ overview/
 │  │  ├─ retrieval/
+│  │  ├─ settings/
 │  │  ├─ shared/
 │  │  └─ strategies/
 │  └─ features/
@@ -100,7 +103,15 @@ Ai_Platform/
 │     ├─ overview/
 │     └─ strategies/
 ├─ features/
+│  ├─ bots/
+│  ├─ capabilities/
+│  ├─ services/
+│  ├─ skills/
+│  ├─ tools/
+│  └─ workflows/
 ├─ lib/
+│  ├─ nav.ts
+│  └─ utils.ts
 └─ dev_guide.md
 ```
 
@@ -141,10 +152,13 @@ Ai_Platform/
   通过 `?tab=preprocess | chunking | extract` 切换策略类型
 
 - `/knowhub/knowledge`
-  知识中心入口，承载任务编排与已发布知识成果
+  知识中心入口，承载知识库列表、知识库详情和新建知识库弹窗
 
 - `/knowhub/retrieval`
   检索页，占位页
+
+- `/knowhub/settings/global-strategies`
+  配置管理下的全局策略页
 
 ## 平台主体当前约定
 
@@ -344,6 +358,18 @@ KnowHub 使用自己的布局和顶部导航：
 
 KnowHub 也走全宽内容区，不做页面级居中限宽。
 
+当前一级导航是：
+
+- 概览
+- 文档中心
+- 策略中心
+- 知识中心
+- 配置管理
+
+`配置管理` 当前只有一个二级入口：
+
+- 全局策略
+
 ### 5. 策略中心入口与筛选
 
 策略中心只有一个入口：
@@ -490,8 +516,32 @@ KnowHub 也走全宽内容区，不做页面级居中限宽。
 - [knowhub/features/strategies/types.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/features/strategies/types.ts)
   策略中心类型定义
 
+- [app/knowhub/settings/global-strategies/page.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/app/knowhub/settings/global-strategies/page.tsx)
+  全局策略页路由入口
+
+- [knowhub/components/settings/global-strategy-page.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/settings/global-strategy-page.tsx)
+  全局策略页页面实现
+
+- [knowhub/components/knowledge/knowledge-builder-dialog.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/knowledge/knowledge-builder-dialog.tsx)
+  新建知识库弹窗，支持从知识中心和 DocSpace 详情页发起
+
+- [knowhub/components/knowledge/file-scope-picker-dialog.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/knowledge/file-scope-picker-dialog.tsx)
+  文件夹域选择弹窗，用于新增文件夹策略
+
+- [knowhub/components/knowledge/folder-strategy-dialog.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/knowledge/folder-strategy-dialog.tsx)
+  文件夹策略弹窗，用于局部覆盖默认策略
+
+- [knowhub/components/knowledge/strategy-stage-editor.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/knowledge/strategy-stage-editor.tsx)
+  策略阶段编辑组件，当前服务全局策略页和新建知识库弹窗
+
+- [knowhub/features/knowledge/builder-data.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/features/knowledge/builder-data.ts)
+  知识库配置弹窗和全局策略页使用的默认策略模板数据
+
+- [knowhub/features/knowledge/builder-types.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/features/knowledge/builder-types.ts)
+  知识库配置与文件夹策略相关类型定义
+
 - [knowhub/features/knowledge/data.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/features/knowledge/data.ts)
-  知识中心任务与已发布成果数据
+  知识中心知识库列表数据
 
 - [knowhub/features/knowledge/types.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/features/knowledge/types.ts)
   知识中心类型定义
@@ -515,7 +565,14 @@ KnowHub 也走全宽内容区，不做页面级居中限宽。
   - 文档空间支持删除
   - 详情页支持文件浏览与目录层级切换
 - `KnowHub` 概览页与知识中心中的 `DocSpace` 信息读取真实文档空间数据
-- `KnowHub` 策略中心、知识任务数据、概览中的非 `DocSpace` 统计仍使用静态数据
+- `KnowHub` 知识中心当前支持：
+  - 知识库列表展示
+  - 从知识中心弹窗新建知识库
+  - 从 DocSpace 详情页发起新建知识库
+  - 知识库详情页展示关联 DocSpace、Embedding、文件数、切片数和三类策略
+- `KnowHub` 配置管理当前支持全局策略配置
+- `KnowHub` 新建知识库与全局策略当前使用静态模板数据
+- `KnowHub` 策略中心、知识中心列表数据、概览中的非 `DocSpace` 统计当前仍使用静态数据
 - `retrieval` 当前为占位页
 
 ## 不要做的事

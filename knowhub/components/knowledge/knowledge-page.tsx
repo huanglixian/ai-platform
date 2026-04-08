@@ -53,7 +53,7 @@ export function KnowHubKnowledgePage({
       <KnowHubPageToolbar
         searchValue={keyword}
         onSearchChange={setKeyword}
-        searchPlaceholder="搜索任务名称、对象或输出知识库"
+        searchPlaceholder="搜索知识库名称或对象"
         tabs={statusTabs}
         activeTab={statusFilter}
         onTabChange={setStatusFilter}

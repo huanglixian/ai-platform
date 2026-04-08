@@ -60,11 +60,7 @@ export function FolderStrategyDialog({
         </div>
 
         <div className="overflow-y-auto px-5 py-4">
-          <div className="rounded-[14px] border border-[#d9ead5] bg-[#f6fff2] px-4 py-3 text-[12px] leading-5 text-[#4d6b3c]">
-            当前文件夹策略默认继承全局策略。你在这里的调整，仅对该文件夹域内的数据生效。
-          </div>
-
-          <div className="mt-4 flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2">
             {draft.fileTypes.map((item) => {
               const active = item.key === activeFileType;
 
@@ -88,9 +84,6 @@ export function FolderStrategyDialog({
 
           {activeConfig ? (
             <div className="mt-4">
-              <div className="mb-3 rounded-[14px] border border-[#e7edf4] bg-[#f8fbfe] px-4 py-3 text-[12px] text-[#667085]">
-                {activeConfig.hint}
-              </div>
               <StrategyStageEditor
                 value={activeConfig}
                 onChange={(nextValue) =>

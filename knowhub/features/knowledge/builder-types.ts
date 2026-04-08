@@ -19,7 +19,6 @@ export interface KnowledgeStageDraft {
 export interface KnowledgeFileTypeDraft {
   key: KnowledgeFileTypeKey;
   label: string;
-  hint: string;
   stages: KnowledgeStageDraft[];
 }
 

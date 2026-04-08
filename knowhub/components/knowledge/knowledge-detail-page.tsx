@@ -4,8 +4,6 @@ import { notFound } from "next/navigation";
 
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button-variants";
-import { KnowledgeFlowBar } from "@/knowhub/components/knowledge/knowledge-flow-bar";
-import { KnowledgeStepCard } from "@/knowhub/components/knowledge/knowledge-step-card";
 import { KnowHubPageShell } from "@/knowhub/components/layout/knowhub-page-shell";
 import { pipelineRecords } from "@/knowhub/features/knowledge/data";
 import { strategyRecords } from "@/knowhub/features/strategies/data";
@@ -70,6 +68,14 @@ export function KnowHubKnowledgeDetailPage({
     item.docspaceIds.includes(record.id),
   );
   const status = statusMap[item.status];
+  const fileCount = matchedDocspaces.reduce(
+    (sum, record) => sum + record.documentCount,
+    0,
+  );
+  const chunkCount = Math.max(
+    fileCount * Math.max(item.chunkingStrategyIds.length, 1) * 8,
+    item.chunkingStrategyIds.length * 24,
+  );
 
   return (
     <KnowHubPageShell>
@@ -108,110 +114,41 @@ export function KnowHubKnowledgeDetailPage({
             </div>
           </div>
           <div className="rounded-[12px] border border-[#dde6f0] bg-[linear-gradient(180deg,rgba(236,242,248,0.78)_0%,rgba(247,250,253,0.92)_100%)] px-3 py-2">
-            <div className="text-[11px] text-[#98a2b3]">处理对象</div>
-            <div className="mt-1 text-[12px] leading-5 text-title">{item.targetLabel}</div>
-          </div>
-          <div className="rounded-[12px] border border-[#dde6f0] bg-[linear-gradient(180deg,rgba(236,242,248,0.78)_0%,rgba(247,250,253,0.92)_100%)] px-3 py-2">
             <div className="text-[11px] text-[#98a2b3]">Embedding</div>
             <div className="mt-1 text-[12px] leading-5 text-title">{item.embeddingModel}</div>
           </div>
           <div className="rounded-[12px] border border-[#dde6f0] bg-[linear-gradient(180deg,rgba(236,242,248,0.78)_0%,rgba(247,250,253,0.92)_100%)] px-3 py-2">
-            <div className="text-[11px] text-[#98a2b3]">输出知识库</div>
-            <div className="mt-1 text-[12px] leading-5 text-title">{item.knowledgeTarget}</div>
+            <div className="text-[11px] text-[#98a2b3]">文件数</div>
+            <div className="mt-1 text-[12px] leading-5 text-title">{fileCount}</div>
+          </div>
+          <div className="rounded-[12px] border border-[#dde6f0] bg-[linear-gradient(180deg,rgba(236,242,248,0.78)_0%,rgba(247,250,253,0.92)_100%)] px-3 py-2">
+            <div className="text-[11px] text-[#98a2b3]">切片数</div>
+            <div className="mt-1 text-[12px] leading-5 text-title">{chunkCount}</div>
           </div>
         </div>
       </section>
 
-      <KnowledgeFlowBar
-        items={[
-          { key: "target", label: "目标对象", value: `${matchedDocspaces.length} 个空间` },
-          {
-            key: "preprocess",
-            label: "预处理",
-            value: `${item.preprocessStrategyIds.length} 个策略`,
-          },
-          {
-            key: "chunking",
-            label: "切片",
-            value: `${item.chunkingStrategyIds.length} 个策略`,
-          },
-          {
-            key: "extract",
-            label: "提取",
-            value: `${item.extractStrategyIds.length} 个策略`,
-          },
-          { key: "embedding", label: "向量化", value: item.embeddingModel },
-          { key: "knowledge", label: "知识库", value: item.knowledgeTarget },
-        ]}
-      />
-
-      <div className="grid gap-4 xl:grid-cols-2">
-        <KnowledgeStepCard
-          title="目标对象"
-          description="先确定当前处理任务作用在哪些空间、文件夹或文件类型上。"
-        >
-          <div className="space-y-2">
-            {matchedDocspaces.map((record) => (
-              <div
-                key={record.id}
-                className="rounded-[12px] border border-[#e7edf4] bg-[#f8fbfe] px-3 py-2.5"
-              >
-                <div className="text-title text-[13px] font-medium">{record.name}</div>
-                <div className="mt-1 text-[12px] leading-5 text-[#667085]">
-                  {record.summary}
-                </div>
-              </div>
-            ))}
-            <div className="rounded-[12px] border border-[#e7edf4] bg-white px-3 py-2.5 text-[12px] text-[#5f6f82]">
-              处理范围：<span className="text-title font-medium">{item.targetLabel}</span>
-            </div>
+      <div className="grid gap-4 xl:grid-cols-3">
+        <section className="rounded-[16px] border border-[#d8e1eb] bg-white px-4 py-4 shadow-[0_8px_24px_rgba(15,23,42,0.04)]">
+          <div className="mb-3 text-title text-[16px] font-semibold tracking-[-0.02em]">
+            预处理策略
           </div>
-        </KnowledgeStepCard>
-
-        <KnowledgeStepCard
-          title="预处理策略"
-          description="针对不同文档格式先做转写、清洗、规整，为后续切片和提取打底。"
-        >
           {renderStrategyList(item.preprocessStrategyIds)}
-        </KnowledgeStepCard>
+        </section>
 
-        <KnowledgeStepCard
-          title="切片策略"
-          description="基于文档结构、表格和正文内容选择合适的切片方式。"
-        >
+        <section className="rounded-[16px] border border-[#d8e1eb] bg-white px-4 py-4 shadow-[0_8px_24px_rgba(15,23,42,0.04)]">
+          <div className="mb-3 text-title text-[16px] font-semibold tracking-[-0.02em]">
+            切片策略
+          </div>
           {renderStrategyList(item.chunkingStrategyIds)}
-        </KnowledgeStepCard>
+        </section>
 
-        <KnowledgeStepCard
-          title="提取策略"
-          description="对表格字段、要点摘要或实体关系做进一步提取，补强知识结构。"
-        >
+        <section className="rounded-[16px] border border-[#d8e1eb] bg-white px-4 py-4 shadow-[0_8px_24px_rgba(15,23,42,0.04)]">
+          <div className="mb-3 text-title text-[16px] font-semibold tracking-[-0.02em]">
+            提取策略
+          </div>
           {renderStrategyList(item.extractStrategyIds)}
-        </KnowledgeStepCard>
-
-        <KnowledgeStepCard
-          title="向量化"
-          description="将切片后的内容送入 embedding 模型，生成可检索的向量索引。"
-        >
-          <div className="rounded-[12px] border border-[#e7edf4] bg-[#f8fbfe] px-3 py-2.5 text-[12px] text-[#5f6f82]">
-            当前模型：<span className="text-title font-medium">{item.embeddingModel}</span>
-          </div>
-        </KnowledgeStepCard>
-
-        <KnowledgeStepCard
-          title="知识库输出"
-          description="处理完成后写入目标知识库，并作为后续检索与问答的数据来源。"
-        >
-          <div className="rounded-[12px] border border-[#e7edf4] bg-[#f8fbfe] px-3 py-2.5 text-[12px] text-[#5f6f82]">
-            输出目标：<span className="text-title font-medium">{item.knowledgeTarget}</span>
-          </div>
-          <div className="mt-2 rounded-[12px] border border-[#e7edf4] bg-white px-3 py-2.5 text-[12px] text-[#5f6f82]">
-            最近运行：<span className="text-title font-medium">{item.lastRunAt}</span>
-            <span className="ml-4">
-              执行次数：<span className="text-title font-medium">{item.runCount}</span>
-            </span>
-          </div>
-        </KnowledgeStepCard>
+        </section>
       </div>
     </KnowHubPageShell>
   );

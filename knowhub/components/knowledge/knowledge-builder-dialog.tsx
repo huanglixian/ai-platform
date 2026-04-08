@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { Settings2, X } from "lucide-react";
+import { ChevronDown, ChevronRight, Settings2, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,13 +39,14 @@ export function KnowledgeBuilderDialog({
   const [keyword, setKeyword] = useState("");
   const [selectedDocspaceIds, setSelectedDocspaceIds] = useState<string[]>([]);
   const [knowledgeName, setKnowledgeName] = useState("");
-  const [knowledgeTarget, setKnowledgeTarget] = useState("");
   const [summary, setSummary] = useState("");
   const [activeFileType, setActiveFileType] = useState<KnowledgeFileTypeKey>("word");
   const [fileTypes, setFileTypes] = useState(createGlobalStrategyTemplate());
   const [folderStrategies, setFolderStrategies] = useState<FolderStrategyDraft[]>([]);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [editingFolderId, setEditingFolderId] = useState<string | null>(null);
+  const [globalExpanded, setGlobalExpanded] = useState(false);
+  const [nameTouched, setNameTouched] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -55,6 +56,25 @@ export function KnowledgeBuilderDialog({
 
     setSelectedDocspaceIds(initialDocspaceId ? [initialDocspaceId] : []);
   }, [initialDocspaceId, open]);
+
+  useEffect(() => {
+    if (nameTouched) {
+      return;
+    }
+
+    if (selectedDocspaceIds.length === 1) {
+      const matchedDocspace = docspaces.find((item) => item.id === selectedDocspaceIds[0]);
+
+      if (matchedDocspace) {
+        setKnowledgeName(matchedDocspace.name);
+        return;
+      }
+    }
+
+    if (!initialDocspaceId) {
+      setKnowledgeName("");
+    }
+  }, [docspaces, initialDocspaceId, nameTouched, selectedDocspaceIds]);
 
   const visibleDocspaces = useMemo(() => {
     const normalizedKeyword = keyword.trim().toLowerCase();
@@ -80,13 +100,14 @@ export function KnowledgeBuilderDialog({
     setKeyword("");
     setSelectedDocspaceIds(initialDocspaceId ? [initialDocspaceId] : []);
     setKnowledgeName("");
-    setKnowledgeTarget("");
     setSummary("");
     setActiveFileType("word");
     setFileTypes(createGlobalStrategyTemplate());
     setFolderStrategies([]);
     setPickerOpen(false);
     setEditingFolderId(null);
+    setGlobalExpanded(false);
+    setNameTouched(false);
     setError("");
   }
 
@@ -106,10 +127,10 @@ export function KnowledgeBuilderDialog({
           <div className="flex items-start justify-between gap-3 border-b border-[#e7edf4] px-5 py-4">
             <div>
               <div className="text-title text-[20px] font-semibold tracking-[-0.03em]">
-                新建知识建库任务
+                新建知识库
               </div>
               <div className="mt-1 text-[13px] leading-6 text-[#667085]">
-                先引用默认全局策略，再结合当前任务范围做局部调整。
+                先引用默认全局策略，再结合当前知识库范围做局部调整。
               </div>
             </div>
             <button
@@ -124,30 +145,25 @@ export function KnowledgeBuilderDialog({
           <div className="grid flex-1 gap-4 overflow-y-auto px-5 py-4 xl:grid-cols-[320px_minmax(0,1fr)]">
             <aside className="flex flex-col gap-4">
               <section className="rounded-[16px] border border-[#d8e1eb] bg-[#f8fbfe] px-4 py-4">
-                <div className="text-title text-[15px] font-semibold">任务信息</div>
+                <div className="text-title text-[15px] font-semibold">基础信息</div>
                 <div className="mt-3 grid gap-3">
                   <div>
-                    <div className="mb-1 text-[12px] text-[#5f6f82]">任务名称</div>
+                    <div className="mb-1 text-[12px] text-[#5f6f82]">知识库名称</div>
                     <Input
                       value={knowledgeName}
-                      onChange={(event) => setKnowledgeName(event.target.value)}
-                      placeholder="例如：校审成果知识建库"
-                    />
-                  </div>
-                  <div>
-                    <div className="mb-1 text-[12px] text-[#5f6f82]">输出知识库</div>
-                    <Input
-                      value={knowledgeTarget}
-                      onChange={(event) => setKnowledgeTarget(event.target.value)}
+                      onChange={(event) => {
+                        setKnowledgeName(event.target.value);
+                        setNameTouched(true);
+                      }}
                       placeholder="例如：校审经验知识库"
                     />
                   </div>
                   <div>
-                    <div className="mb-1 text-[12px] text-[#5f6f82]">任务说明</div>
+                    <div className="mb-1 text-[12px] text-[#5f6f82]">知识库描述</div>
                     <textarea
                       value={summary}
                       onChange={(event) => setSummary(event.target.value)}
-                      placeholder="简要说明本次建库对象、范围和目的"
+                      placeholder="简要说明知识库的内容范围和用途"
                       className="min-h-[96px] w-full rounded-[10px] border border-[#cfd8e3] bg-white px-3 py-2 text-[13px] outline-none transition-colors focus:border-[#2e7dd2]"
                     />
                   </div>
@@ -214,12 +230,23 @@ export function KnowledgeBuilderDialog({
             <section className="flex flex-col gap-4">
               <section className="rounded-[16px] border border-[#d8e1eb] bg-[linear-gradient(180deg,rgba(237,242,248,0.96)_0%,rgba(246,249,253,0.98)_100%)] px-4 py-4">
                 <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-                  <div>
-                    <div className="text-title text-[15px] font-semibold">全局默认策略</div>
+                  <button
+                    type="button"
+                    onClick={() => setGlobalExpanded((current) => !current)}
+                    className="flex flex-1 items-start justify-between gap-3 text-left"
+                  >
+                    <div>
+                      <div className="text-title text-[15px] font-semibold">全局默认策略</div>
                     <div className="mt-1 text-[12px] leading-5 text-[#667085]">
-                      当前任务默认继承系统级全局策略。你可以在本任务中继续调整启用状态和顺序。
+                      当前知识库默认继承系统级全局策略。你可以在本知识库中继续调整启用状态和顺序。
                     </div>
-                  </div>
+                    </div>
+                    {globalExpanded ? (
+                      <ChevronDown className="mt-0.5 h-4 w-4 text-[#667085]" />
+                    ) : (
+                      <ChevronRight className="mt-0.5 h-4 w-4 text-[#667085]" />
+                    )}
+                  </button>
                   <Link
                     href="/knowhub/settings/global-strategies"
                     className="inline-flex items-center gap-1 text-[12px] font-medium text-[#1a4d87]"
@@ -229,43 +256,41 @@ export function KnowledgeBuilderDialog({
                   </Link>
                 </div>
 
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {fileTypes.map((item) => {
-                    const active = item.key === activeFileType;
-
-                    return (
-                      <button
-                        key={item.key}
-                        type="button"
-                        onClick={() => setActiveFileType(item.key)}
-                        className="rounded-full border px-3 py-1 text-[12px] font-medium transition-colors"
-                        style={{
-                          borderColor: active ? "#c7d7ea" : "#d9e3ed",
-                          backgroundColor: active ? "#e9f0f8" : "rgba(255,255,255,0.72)",
-                          color: active ? "#1a4d87" : "#667085",
-                        }}
-                      >
-                        {item.label}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {activeConfig ? (
+                {globalExpanded && activeConfig ? (
                   <div className="mt-4">
-                    <div className="mb-3 rounded-[14px] border border-[#e7edf4] bg-white px-4 py-3 text-[12px] text-[#667085]">
-                      {activeConfig.hint}
+                    <div className="flex flex-wrap gap-2">
+                      {fileTypes.map((item) => {
+                        const active = item.key === activeFileType;
+
+                        return (
+                          <button
+                            key={item.key}
+                            type="button"
+                            onClick={() => setActiveFileType(item.key)}
+                            className="rounded-full border px-3 py-1 text-[12px] font-medium transition-colors"
+                            style={{
+                              borderColor: active ? "#c7d7ea" : "#d9e3ed",
+                              backgroundColor: active ? "#e9f0f8" : "rgba(255,255,255,0.72)",
+                              color: active ? "#1a4d87" : "#667085",
+                            }}
+                          >
+                            {item.label}
+                          </button>
+                        );
+                      })}
                     </div>
-                    <StrategyStageEditor
-                      value={activeConfig}
-                      onChange={(nextValue) =>
-                        setFileTypes((current) =>
-                          current.map((item) =>
-                            item.key === nextValue.key ? nextValue : item,
-                          ),
-                        )
-                      }
-                    />
+                    <div className="mt-4">
+                      <StrategyStageEditor
+                        value={activeConfig}
+                        onChange={(nextValue) =>
+                          setFileTypes((current) =>
+                            current.map((item) =>
+                              item.key === nextValue.key ? nextValue : item,
+                            ),
+                          )
+                        }
+                      />
+                    </div>
                   </div>
                 ) : null}
               </section>
@@ -326,7 +351,7 @@ export function KnowledgeBuilderDialog({
                     </div>
                   ) : (
                     <div className="rounded-[14px] border border-dashed border-[#d6e0eb] bg-[#fafcff] px-4 py-8 text-center text-[13px] text-[#667085]">
-                      暂无文件夹级覆盖，当前任务将完整沿用默认全局策略。
+                      暂无文件夹级覆盖，当前知识库将完整沿用默认全局策略。
                     </div>
                   )}
                 </div>
@@ -351,12 +376,7 @@ export function KnowledgeBuilderDialog({
                 );
 
                 if (!knowledgeName.trim()) {
-                  setError("请输入任务名称");
-                  return;
-                }
-
-                if (!knowledgeTarget.trim()) {
-                  setError("请输入输出知识库名称");
+                  setError("请输入知识库名称");
                   return;
                 }
 
@@ -367,8 +387,7 @@ export function KnowledgeBuilderDialog({
 
                 const nextItem = buildKnowledgeTaskRecord({
                   name: knowledgeName.trim(),
-                  summary: summary.trim() || "基于默认策略创建的知识建库任务。",
-                  knowledgeTarget: knowledgeTarget.trim(),
+                  summary: summary.trim() || "基于默认策略创建的知识库。",
                   docspaces: selectedDocspaces,
                   fileTypes,
                 });

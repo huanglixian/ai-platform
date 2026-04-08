@@ -68,24 +68,22 @@ export function StrategyStageEditor({
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-3">
       {value.stages.map((stage, stageIndex) => (
-        <section
-          key={stage.key}
-          className="rounded-[16px] border border-[#d8e1eb] bg-[#f8fbfe] px-4 py-4"
-        >
-          <div className="flex flex-col gap-1 border-b border-[#e5edf5] pb-3">
-            <div className="text-title text-[14px] font-semibold">{stage.label}</div>
-            <div className="text-[12px] leading-5 text-[#667085]">{stage.description}</div>
+        <section key={stage.key} className="flex flex-col gap-1.5">
+          <div className="flex items-center gap-2 px-1">
+            <div className="text-title text-[12px] font-semibold tracking-[0.02em]">
+              {stage.label}
+            </div>
+            <div className="h-px flex-1 bg-[#e5edf5]" />
           </div>
 
-          <div className="mt-3 flex flex-col gap-2">
+          <div className="flex flex-col gap-1.5">
             {stage.items.map((item, itemIndex) => (
               <div
                 key={item.id}
-                className="flex items-start gap-3 rounded-[14px] border px-3 py-3 transition-colors"
+                className="flex items-center gap-3 rounded-[10px] border border-[#edf2f7] px-2.5 py-2 transition-colors"
                 style={{
-                  borderColor: item.enabled ? "#cfdceb" : "#e6edf4",
                   backgroundColor: item.enabled ? "#ffffff" : "#f7f9fc",
                   opacity: item.enabled ? 1 : 0.68,
                 }}
@@ -101,12 +99,9 @@ export function StrategyStageEditor({
 
                 <div className="min-w-0 flex-1">
                   <div className="text-title text-[13px] font-medium">{item.name}</div>
-                  <div className="mt-1 text-[12px] leading-5 text-[#667085]">
-                    {item.summary}
-                  </div>
                 </div>
 
-                <div className="flex shrink-0 flex-col gap-1">
+                <div className="flex shrink-0 items-center gap-1">
                   <button
                     type="button"
                     onClick={() => moveItem(stageIndex, itemIndex, -1)}
