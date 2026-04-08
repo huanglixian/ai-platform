@@ -1,51 +1,29 @@
 # Ai Platform 开发说明
 
-这份文档是给后续要修改这套代码的 AI / 开发者看的。目标不是记录历史，而是快速说明：
+## 项目简介
 
-- 这是什么项目
-- 目录怎么分层
-- 哪些结构是有效约定
+`Ai Platform` 是一个面向企业级场景的智能体平台前端，负责统一承载智能体工作台、流程编排、数据中心、工具与服务接入等业务入口与交互界面。数据中心里的知识库 `KnowHub` 由于功能复杂度更高，当前作为独立模块组织，方便后续单独演进。
 
-## 项目是什么
+因此，当前代码里有两条主线：
 
-`Ai Platform` 是一个面向企业级场景的智能体平台前端，负责统一承载智能体工作台、流程编排、知识接入、工具与服务接入等业务入口与交互界面。
+- `Platform`：`bots / workflows / tools / services / skills`
+- `KnowHub`：平台内独立的知识业务域，使用独立路由和布局
 
-当前代码里有两条主线：
+## 技术路线
 
-- 平台主体（platform）：`bots / workflows / tools / services / skills`
-- `KnowHub`：平台内的知识业务域，使用独立路由和布局
+- 前端：`Next.js + React + TypeScript`
+- 路由与接口：`Next.js App Router + Route Handlers`
+- 样式与 UI：`Tailwind CSS`，全局样式入口是 `app/globals.css`，UI 体系是 `Base UI + shadcn 风格约定`
+- KnowHub 数据：文档空间支持 `OSS + SMB`，当前未接独立数据库，文档空间数据走本地文件持久化
 
-## 先理解这几个边界
+## 边界说明
 
-- `app`
-  Next.js App Router 路由层，只放页面入口、布局和 API route
-
-- `app/(platform)`
-  平台主体业务页面，走统一平台壳
-
-- `app/knowhub`
-  KnowHub 独立路由层，使用自己的布局和导航
-
-- `knowhub`
-  KnowHub 的业务实现目录
-  这里承载页面实现、KnowHub 私有组件、业务数据、类型与接口封装
-
-- `components/ui`
-  平台主体通用基础 UI，允许被平台主体和 KnowHub 共同复用
-
-- `components/shared`
-  平台级共享壳层和公共结构
-  不要把 KnowHub 私有组件放进这里
-
-- `knowhub/components/shared`
-  KnowHub 内部共享组件
-  这层只服务 KnowHub，例如顶部导航、工具栏、占位面板
-
-- `features`
-  平台主体业务，例如 `bots`
-
-- `lib`
-  平台级工具函数、导航配置等
+- `app`：路由入口、布局和 API route
+- `app/(platform)`：Platform 路由入口层
+- `app/knowhub`：KnowHub 路由入口层
+- `components` 与 `features`：Platform 页面实现、共享组件和业务数据层
+- `knowhub/components` 与 `knowhub/features`：KnowHub 页面实现、共享组件和业务数据层
+- `components/ui` 与 `lib`：跨模块基础控件和平台级工具
 
 ## 当前目录结构
 
@@ -53,43 +31,35 @@
 Ai_Platform/
 ├─ app/
 │  ├─ (platform)/
-│  │  ├─ layout.tsx
 │  │  ├─ bots/
-│  │  │  ├─ page.tsx
-│  │  │  └─ [agentId]/page.tsx
 │  │  ├─ workbench/
-│  │  │  ├─ page.tsx
-│  │  │  └─ [agentId]/page.tsx
-│  │  ├─ workflows/page.tsx
-│  │  ├─ tools/page.tsx
-│  │  ├─ services/page.tsx
-│  │  └─ skills/page.tsx
+│  │  ├─ workflows/
+│  │  ├─ tools/
+│  │  ├─ services/
+│  │  └─ skills/
 │  ├─ knowhub/
-│  │  ├─ layout.tsx
-│  │  ├─ page.tsx
-│  │  ├─ documents/
-│  │  │  ├─ page.tsx
-│  │  │  └─ [id]/page.tsx
-│  │  ├─ strategies/page.tsx
+│  │  ├─ docspaces/
+│  │  ├─ strategies/
 │  │  ├─ settings/
-│  │  │  └─ global-strategies/page.tsx
 │  │  ├─ knowledge/
-│  │  │  ├─ page.tsx
-│  │  │  └─ [id]/page.tsx
-│  │  └─ retrieval/page.tsx
-│  ├─ api/
-│  │  └─ nanobot/[...path]/route.ts
-│  ├─ globals.css
-│  ├─ layout.tsx
-│  └─ page.tsx
+│  │  └─ retrieval/
+│  └─ api/
 ├─ components/
 │  ├─ bots/
-│  ├─ workbench/
 │  ├─ shared/
-│  └─ ui/
+│  ├─ ui/
+│  ├─ workbench/
+│  └─ workflows/
+├─ features/
+│  ├─ bots/
+│  ├─ capabilities/
+│  ├─ services/
+│  ├─ skills/
+│  ├─ tools/
+│  └─ workflows/
 ├─ knowhub/
 │  ├─ components/
-│  │  ├─ documents/
+│  │  ├─ docspaces/
 │  │  ├─ layout/
 │  │  ├─ knowledge/
 │  │  ├─ overview/
@@ -102,491 +72,236 @@ Ai_Platform/
 │     ├─ knowledge/
 │     ├─ overview/
 │     └─ strategies/
-├─ features/
-│  ├─ bots/
-│  ├─ capabilities/
-│  ├─ services/
-│  ├─ skills/
-│  ├─ tools/
-│  └─ workflows/
 ├─ lib/
-│  ├─ nav.ts
-│  └─ utils.ts
 └─ dev_guide.md
 ```
 
-## 当前有效路由
-
-- `/`
-  平台默认入口
-
-- `/bots`
-  自由体列表页
-
-- `/bots/[agentId]`
-  单自由体 Playground
-
-- `/workbench`
-  默认用户工作台入口，当前默认进入 `main`
-
-- `/workbench/[agentId]`
-  面向用户的工作台页面
-
-- `/workflows`
-  工作流列表页
-
-- `/tools` `/services` `/skills`
-  平台能力中心页面
-
-- `/knowhub`
-  KnowHub 概览页
-
-- `/knowhub/documents`
-  文档中心列表页
-
-- `/knowhub/documents/[id]`
-  单个 DocSpace 详情页
-
-- `/knowhub/strategies`
-  策略中心统一入口
-  通过 `?tab=preprocess | chunking | extract` 切换策略类型
-
-- `/knowhub/knowledge`
-  知识中心入口，承载知识库列表、知识库详情和新建知识库弹窗
-
-- `/knowhub/retrieval`
-  检索页，占位页
-
-- `/knowhub/settings/global-strategies`
-  配置管理下的全局策略页
-
-## 平台主体当前约定
-
-平台主体仍然是这个仓库的主干，主要承载智能体平台本身的业务页面。`KnowHub` 是平台内接入的独立知识业务域，但不是平台主体的替代物。
-
-### 1. 平台主体统一走 `app/(platform)`
-
-平台主体当前页面都在：
-
-- `app/(platform)/bots`
-- `app/(platform)/workbench`
-- `app/(platform)/workflows`
-- `app/(platform)/tools`
-- `app/(platform)/services`
-- `app/(platform)/skills`
-
-这些页面统一由：
-
-- [app/(platform)/layout.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/app/(platform)/layout.tsx)
-- [components/shared/app-shell.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/components/shared/app-shell.tsx)
-
-提供平台级外壳。
-
-不要把平台主体页面挪到 `app/knowhub`，也不要把平台页面直接改成 KnowHub 的布局方式。
-
-### 2. 平台主体依赖统一导航壳
-
-平台主体顶部导航来自：
-
-- [components/shared/top-nav.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/components/shared/top-nav.tsx)
-- [lib/nav.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/lib/nav.ts)
-
-当前一级导航结构是：
-
-- 工作台
-- 能力中心
-- 数据中心
-- 工作流
-- 配置管理
-
-当前二级归属是：
-
-- 工作台
-  对应 `/workbench`
-
-- 能力中心
-  包含 `工具中心 / 服务中心 / 技能中心`
-
-- 数据中心
-  包含 `知识库`
-
-- 工作流
-  对应 `/workflows`
-
-- 配置管理
-  第一项是 `自由体设置`，对应 `/bots`
-
-如果需求涉及：
-
-- 平台一级导航分组
-- 数据中心 / 能力中心 / 配置管理菜单
-- 顶部导航展示逻辑
-
-优先改这里，不要去改 KnowHub 自己的导航组件。
-
-### 3. 平台主体的页面实现主要分三层
-
-- `app/(platform)/*`
-  路由入口层
-  应尽量保持薄，只负责接住页面
-
-- `components/*`
-  页面组件层
-  例如：
-  - `components/bots/*`
-  - `components/workbench/*`
-  - `components/workflows/*`
-  - `components/shared/*`
-
-- `features/*`
-  业务数据、类型、接口封装
-  例如：
-  - `features/bots/api.ts`
-  - `features/bots/types.ts`
-  - `features/workflows/data.ts`
-  - `features/tools/data.ts`
-  - `features/services/data.ts`
-  - `features/skills/data.ts`
-
-如果需求属于平台主体，默认优先在这三层里找落点。
-
-### 4. 平台主体改动时的默认原则
-
-- 如果需求属于自由体、工作流、工具、服务、技能等平台能力，优先从 `app/(platform)`、`components/*`、`features/*` 里找入口
-- 平台主体共享壳优先放 `components/shared`
-- 平台基础控件优先放 `components/ui`
-- 平台主体走全宽内容区，不做页面级居中限宽
-- 卡片列表默认使用固定卡片宽度、自动增列、左对齐的网格方式
-- 不要把平台主体需求直接落到 `knowhub/*`
-- 除非明确需要跨域复用，否则不要把 KnowHub 私有实现抽回平台 `components/shared`
-
-### 5. `bots` 和 `workbench` 的职责已经分开
-
-- [app/(platform)/bots/[agentId]/page.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/app/(platform)/bots/[agentId]/page.tsx)
-  对应单自由体 Playground 路由入口
-
-- [components/bots/bot-playground.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/components/bots/bot-playground.tsx)
-  自由体 Playground 主页面，包含会话列表、发送区、对话记录、配置区
-
-- [app/(platform)/workbench/page.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/app/(platform)/workbench/page.tsx)
-  默认工作台入口，当前默认使用 `main`
-
-- [app/(platform)/workbench/[agentId]/page.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/app/(platform)/workbench/[agentId]/page.tsx)
-  工作台动态路由入口
-
-- [components/workbench/workbench-page.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/components/workbench/workbench-page.tsx)
-  工作台主容器，负责空态、会话态、左侧会话栏和配置抽屉
-
-- [components/workbench/workbench-empty-state.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/components/workbench/workbench-empty-state.tsx)
-  工作台空态页，中部启动输入区
-
-- [components/workbench/workbench-session-sidebar.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/components/workbench/workbench-session-sidebar.tsx)
-  工作台左侧可折叠会话侧栏
-
-- [components/workbench/workbench-config-drawer.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/components/workbench/workbench-config-drawer.tsx)
-  工作台右侧配置抽屉容器
-
-- [components/bots/bot-message-markdown.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/components/bots/bot-message-markdown.tsx)
-  对话消息 Markdown 渲染组件，负责链接跳转和基础 Markdown 显示
-
-- [components/bots/bot-session-pane.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/components/bots/bot-session-pane.tsx)
-  会话列表主组件，同时服务 Playground 和 Workbench；当前支持 `noHover` 模式
-
-- [components/bots/bot-composer-pane.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/components/bots/bot-composer-pane.tsx)
-  发送区主组件，同时服务 Playground 和 Workbench；当前支持 `title / placeholder / footerActions / noHover`
-
-- [components/bots/bot-transcript-pane.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/components/bots/bot-transcript-pane.tsx)
-  对话记录主组件，当前消息内容走 Markdown 渲染
-
-- [components/bots/bot-config-panel.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/components/bots/bot-config-panel.tsx)
-  配置区主组件，同时服务 Playground 和 Workbench 配置抽屉；当前支持 `noHover`
-
-- [app/globals.css](/Users/huanglixian-m2/Documents/LienCode/ai_platform/app/globals.css)
-  平台全局样式入口，当前包含 `app-card / app-card-no-hover / bot-markdown`
-
-## KnowHub 约定
-
-### 1. 路由层要薄
-
-`app/knowhub/*` 只负责：
-
-- 接住路由
-- 做参数归一化
-- 调用 `knowhub/components/*`
-
-不要把 KnowHub 的页面实现直接堆在 `app/knowhub/*` 里。
-
-### 2. KnowHub 页面实现对齐平台主体
-
-KnowHub 按和平台主体一致的思路分层：
-
-- `app/knowhub/*`
-  路由入口层
-
-- `knowhub/components/*`
-  页面实现层
-  例如：
-  - `knowhub/components/documents/documents-page.tsx`
-  - `knowhub/components/knowledge/knowledge-page.tsx`
-  - `knowhub/components/overview/overview-page.tsx`
-
-- `knowhub/features/*`
-  业务数据、类型、接口封装
-  例如：
-  - `knowhub/features/docspaces/api.ts`
-  - `knowhub/features/docspaces/service.ts`
-  - `knowhub/features/docspaces/types.ts`
-  - `knowhub/features/strategies/data.ts`
-  - `knowhub/features/knowledge/data.ts`
-
-### 3. KnowHub 有自己的一套共享层
-
-当前这些都属于 KnowHub 内部共享组件：
-
-- [knowhub/components/shared/knowhub-top-nav.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/shared/knowhub-top-nav.tsx)
-- [knowhub/components/shared/page-toolbar.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/shared/page-toolbar.tsx)
-- [knowhub/components/shared/coming-soon-panel.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/shared/coming-soon-panel.tsx)
-
-不要把它们挪到平台 `components/shared`，除非它们已经成为跨业务域共享组件。
-
-### 4. `KnowHub` 使用独立导航
-
-KnowHub 使用自己的布局和顶部导航：
-
-- [app/knowhub/layout.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/app/knowhub/layout.tsx)
-- [knowhub/components/shared/knowhub-top-nav.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/shared/knowhub-top-nav.tsx)
-
-KnowHub 也走全宽内容区，不做页面级居中限宽。
-
-当前一级导航是：
-
-- 概览
-- 文档中心
-- 策略中心
-- 知识中心
-- 配置管理
-
-`配置管理` 当前只有一个二级入口：
-
-- 全局策略
-
-### 5. 策略中心入口与筛选
-
-策略中心只有一个入口：
-
-- `/knowhub/strategies`
-
-当前策略页约定：
-
-- 第一层切换 `预处理策略 / 切片策略 / 提取策略`
-- toolbar 第二排标签按当前策略类型下的分类筛选
-- 不使用 `已启用 / 草稿` 这类状态筛选
-
-策略中心使用单一路由入口，除非明确要求，不拆分多个一级路由。
-
-## 数据组织
-
-### 平台主体数据组织
-
-- [features/bots/api.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/features/bots/api.ts)
-  自由体相关 API 封装
-
-- [features/bots/types.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/features/bots/types.ts)
-  自由体相关类型定义
-
-- [features/workflows/data.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/features/workflows/data.ts)
-  工作流页面 mock 数据
-
-- [features/workflows/types.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/features/workflows/types.ts)
-  工作流类型定义
-
-- [features/tools/data.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/features/tools/data.ts)
-  工具中心页面 mock 数据
-
-- [features/tools/types.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/features/tools/types.ts)
-  工具中心类型定义
-
-- [features/services/data.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/features/services/data.ts)
-  服务中心页面 mock 数据
-
-- [features/services/types.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/features/services/types.ts)
-  服务中心类型定义
-
-- [features/skills/data.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/features/skills/data.ts)
-  技能中心页面 mock 数据
-
-- [features/skills/types.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/features/skills/types.ts)
-  技能中心类型定义
-
-- [features/capabilities/types.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/features/capabilities/types.ts)
-  能力卡片相关共用类型
-
-### KnowHub 数据组织
-
-- [app/knowhub/layout.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/app/knowhub/layout.tsx)
-  KnowHub 独立布局入口，承载导航与页面壳
-
-- [app/knowhub/page.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/app/knowhub/page.tsx)
-  KnowHub 概览页路由入口
-
-- [app/knowhub/documents/page.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/app/knowhub/documents/page.tsx)
-  文档中心列表页路由入口
-
-- [app/knowhub/documents/[id]/page.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/app/knowhub/documents/[id]/page.tsx)
-  单个 DocSpace 详情页路由入口
-
-- [app/api/knowhub/docspaces/route.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/app/api/knowhub/docspaces/route.ts)
-  文档空间列表读取与创建接口
-
-- [app/api/knowhub/docspaces/[id]/route.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/app/api/knowhub/docspaces/[id]/route.ts)
-  单个文档空间详情读取与删除接口
-
-- [app/api/knowhub/docspaces/[id]/files/route.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/app/api/knowhub/docspaces/[id]/files/route.ts)
-  文档空间文件列表接口
-
-- [app/api/knowhub/docspaces/[id]/sync/route.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/app/api/knowhub/docspaces/[id]/sync/route.ts)
-  文档空间手动同步接口
-
-- [app/api/knowhub/docspaces/[id]/upload/route.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/app/api/knowhub/docspaces/[id]/upload/route.ts)
-  本地空间文件上传接口
-
-- [app/api/knowhub/docspaces/test-connection/route.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/app/api/knowhub/docspaces/test-connection/route.ts)
-  OSS / SMB 测试连接接口
-
-- [knowhub/components/shared/knowhub-top-nav.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/shared/knowhub-top-nav.tsx)
-  KnowHub 顶部导航
-
-- [knowhub/components/shared/page-toolbar.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/shared/page-toolbar.tsx)
-  KnowHub 列表页通用工具栏，承载搜索、标签和主按钮
-
-- [knowhub/components/shared/card-grid.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/shared/card-grid.tsx)
-  KnowHub 卡片网格布局
-
-- [knowhub/components/overview/overview-page.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/overview/overview-page.tsx)
-  概览页页面实现
-
-- [knowhub/components/documents/documents-page.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/documents/documents-page.tsx)
-  文档中心列表页页面实现
-
-- [knowhub/components/documents/docspace-card.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/documents/docspace-card.tsx)
-  文档空间卡片
-
-- [knowhub/components/documents/docspace-create-dialog.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/documents/docspace-create-dialog.tsx)
-  文档空间创建弹窗，支持本地空间、OSS 和 SMB
-
-- [knowhub/components/documents/document-detail-page.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/documents/document-detail-page.tsx)
-  文档空间详情页页面实现
-
-- [knowhub/components/documents/docspace-file-preview.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/documents/docspace-file-preview.tsx)
-  文档空间文件浏览区，支持目录层级切换与空空间上传区
-
-- [knowhub/components/documents/docspace-upload-control.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/documents/docspace-upload-control.tsx)
-  本地空间上传控件，支持点击上传与拖拽上传
-
-- [knowhub/components/documents/docspace-sync-control.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/documents/docspace-sync-control.tsx)
-  远程来源同步控件
-
-- [knowhub/components/documents/docspace-delete-button.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/documents/docspace-delete-button.tsx)
-  文档空间删除控件
-
-- [knowhub/features/docspaces/api.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/features/docspaces/api.ts)
-  文档中心前端请求封装
-
-- [knowhub/features/docspaces/service.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/features/docspaces/service.ts)
-  文档中心服务端业务逻辑
-
-- [knowhub/features/docspaces/repository.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/features/docspaces/repository.ts)
-  文档空间元数据读写
-
-- [knowhub/features/docspaces/storage.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/features/docspaces/storage.ts)
-  本地持久化与托管目录操作
-
-- [knowhub/features/docspaces/types.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/features/docspaces/types.ts)
-  文档中心类型定义
-
-- [knowhub/features/docspaces/oss-connector.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/features/docspaces/oss-connector.ts)
-  OSS 连接测试与对象列表读取
-
-- [knowhub/features/docspaces/smb-connector.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/features/docspaces/smb-connector.ts)
-  SMB 连接测试与共享目录读取
-
-- [knowhub/features/strategies/data.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/features/strategies/data.ts)
-  策略中心数据
-
-- [knowhub/features/strategies/types.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/features/strategies/types.ts)
-  策略中心类型定义
-
-- [app/knowhub/settings/global-strategies/page.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/app/knowhub/settings/global-strategies/page.tsx)
-  全局策略页路由入口
-
-- [knowhub/components/settings/global-strategy-page.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/settings/global-strategy-page.tsx)
-  全局策略页页面实现
-
-- [knowhub/components/knowledge/knowledge-builder-dialog.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/knowledge/knowledge-builder-dialog.tsx)
-  新建知识库弹窗，支持从知识中心和 DocSpace 详情页发起
-
-- [knowhub/components/knowledge/file-scope-picker-dialog.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/knowledge/file-scope-picker-dialog.tsx)
-  文件夹域选择弹窗，用于新增文件夹策略
-
-- [knowhub/components/knowledge/folder-strategy-dialog.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/knowledge/folder-strategy-dialog.tsx)
-  文件夹策略弹窗，用于局部覆盖默认策略
-
-- [knowhub/components/knowledge/strategy-stage-editor.tsx](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/components/knowledge/strategy-stage-editor.tsx)
-  策略阶段编辑组件，当前服务全局策略页和新建知识库弹窗
-
-- [knowhub/features/knowledge/builder-data.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/features/knowledge/builder-data.ts)
-  知识库配置弹窗和全局策略页使用的默认策略模板数据
-
-- [knowhub/features/knowledge/builder-types.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/features/knowledge/builder-types.ts)
-  知识库配置与文件夹策略相关类型定义
-
-- [knowhub/features/knowledge/data.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/features/knowledge/data.ts)
-  知识中心知识库列表数据
-
-- [knowhub/features/knowledge/types.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/features/knowledge/types.ts)
-  知识中心类型定义
-
-- [knowhub/features/overview/data.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/features/overview/data.ts)
-  概览页数据
-
-- [knowhub/features/overview/types.ts](/Users/huanglixian-m2/Documents/LienCode/ai_platform/knowhub/features/overview/types.ts)
-  概览页类型定义
+目录树只展示到文件夹级别；具体文件职责见下方 `Platform` 与 `KnowHub` 的“主要文件索引”。
+
+## Platform 说明
+
+### 1. 功能模块说明
+
+- `bots`：自由体配置与 Playground
+- `workbench`：用户工作台与会话入口
+- `workflows`：工作流列表与示例详情
+- `tools`：工具中心
+- `services`：服务中心
+- `skills`：技能中心
+
+### 2. 文件组织方式
+
+- `app/(platform)/*`：Platform 路由入口层，只负责接住页面和动态参数
+- `components/*`：Platform 页面实现层，按 `bots / workbench / workflows / shared / ui` 分组
+- `features/*`：Platform 业务数据、类型、接口封装层
+- `components/shared/*`：Platform 共享壳层、导航和通用页面结构
+- `components/ui/*`：Platform 与 KnowHub 共用的基础控件
+
+### 3. 主要文件索引
+
+Platform 路由入口：
+
+- 平台默认首页入口：`app/page.tsx`
+- 全局布局入口：`app/layout.tsx`
+- 全局样式入口：`app/globals.css`
+- `nanobot` 后端代理接口：`app/api/nanobot/[...path]/route.ts`
+- Platform 布局入口：`app/(platform)/layout.tsx`
+- 自由体列表页路由入口：`app/(platform)/bots/page.tsx`
+- 单自由体 Playground 路由入口：`app/(platform)/bots/[agentId]/page.tsx`
+- 默认工作台路由入口：`app/(platform)/workbench/page.tsx`
+- 工作台动态路由入口：`app/(platform)/workbench/[agentId]/page.tsx`
+- 工作流列表页路由入口：`app/(platform)/workflows/page.tsx`
+- 工作流示例详情路由入口：`app/(platform)/workflows/[id]/page.tsx`
+- 工具中心路由入口：`app/(platform)/tools/page.tsx`
+- 服务中心路由入口：`app/(platform)/services/page.tsx`
+- 技能中心路由入口：`app/(platform)/skills/page.tsx`
+
+Platform 页面组件：
+
+- 自由体卡片：`components/bots/bot-card.tsx`
+- 新建自由体入口卡片：`components/bots/create-bot-card.tsx`
+- 单自由体 Playground 主页面：`components/bots/bot-playground.tsx`
+- 会话列表主组件：`components/bots/bot-session-pane.tsx`
+- 发送区主组件：`components/bots/bot-composer-pane.tsx`
+- 对话记录主组件：`components/bots/bot-transcript-pane.tsx`
+- 对话消息 Markdown 渲染组件：`components/bots/bot-message-markdown.tsx`
+- 自由体配置区主组件：`components/bots/bot-config-panel.tsx`
+- 自由体配置编辑表单：`components/bots/bot-config-edit.tsx`
+- 工作台主容器：`components/workbench/workbench-page.tsx`
+- 工作台空态页：`components/workbench/workbench-empty-state.tsx`
+- 工作台左侧会话侧栏：`components/workbench/workbench-session-sidebar.tsx`
+- 移动端工作台会话抽屉：`components/workbench/workbench-session-drawer.tsx`
+- 工作台右侧配置抽屉：`components/workbench/workbench-config-drawer.tsx`
+- 工作流列表与演示页主组件：`components/workflows/workflow-demo-page.tsx`
+- 工作流卡片：`components/workflows/workflow-card.tsx`
+- 新建工作流入口卡片：`components/workflows/create-workflow-card.tsx`
+
+Platform 共享与基础组件：
+
+- Platform 统一页面壳：`components/shared/app-shell.tsx`
+- Platform 顶部导航：`components/shared/top-nav.tsx`
+- 平台卡片页通用外框：`components/shared/card-page-frame.tsx`
+- 能力中心通用卡片：`components/shared/capability-card.tsx`
+- 页面占位组件：`components/shared/page-placeholder.tsx`
+- 基础按钮组件：`components/ui/button.tsx`
+- 按钮样式变体定义：`components/ui/button-variants.ts`
+- 基础输入框组件：`components/ui/input.tsx`
+- 基础标签组件：`components/ui/badge.tsx`
+
+Platform 业务数据与工具：
+
+- 自由体相关 API 封装：`features/bots/api.ts`
+- 自由体相关类型定义：`features/bots/types.ts`
+- 工作流页面数据：`features/workflows/data.ts`
+- 工作流类型定义：`features/workflows/types.ts`
+- 工具中心数据：`features/tools/data.ts`
+- 工具中心类型定义：`features/tools/types.ts`
+- 服务中心数据：`features/services/data.ts`
+- 服务中心类型定义：`features/services/types.ts`
+- 技能中心数据：`features/skills/data.ts`
+- 技能中心类型定义：`features/skills/types.ts`
+- 能力卡片共用类型：`features/capabilities/types.ts`
+- Platform 导航配置：`lib/nav.ts`
+- 通用工具函数：`lib/utils.ts`
+
+## KnowHub 说明
+
+### 1. 功能模块说明
+
+- `overview`：知识域概览页
+- `docspaces`：DocSpace 空间管理
+- `strategies`：策略中心
+- `knowledge`：知识库列表、详情与新建弹窗
+- `settings/global-strategies`：全局默认策略配置
+- `retrieval`：检索占位页
+
+### 2. 文件组织方式
+
+- `app/knowhub/*`：KnowHub 路由入口层，只做路由承接和参数归一化
+- `knowhub/components/*`：KnowHub 页面实现层，按 `overview / docspaces / strategies / knowledge / settings / shared` 分组
+- `knowhub/features/*`：KnowHub 业务数据、类型、接口封装和服务端逻辑
+- `knowhub/components/shared/*`：KnowHub 内部共享导航、工具栏、卡片网格和占位组件
+- `app/api/knowhub/*`：KnowHub 文档空间相关接口
+
+### 3. 主要文件索引
+
+KnowHub 路由与接口入口：
+
+- KnowHub 独立布局入口：`app/knowhub/layout.tsx`
+- KnowHub 概览页路由入口：`app/knowhub/page.tsx`
+- DocSpace 列表页路由入口：`app/knowhub/docspaces/page.tsx`
+- 单个 DocSpace 详情页路由入口：`app/knowhub/docspaces/[id]/page.tsx`
+- 策略中心路由入口：`app/knowhub/strategies/page.tsx`
+- 知识中心列表页路由入口：`app/knowhub/knowledge/page.tsx`
+- 知识库详情页路由入口：`app/knowhub/knowledge/[id]/page.tsx`
+- 全局策略页路由入口：`app/knowhub/settings/global-strategies/page.tsx`
+- 检索页路由入口：`app/knowhub/retrieval/page.tsx`
+- 文档空间列表读取与创建接口：`app/api/knowhub/docspaces/route.ts`
+- 单个文档空间详情读取与删除接口：`app/api/knowhub/docspaces/[id]/route.ts`
+- 文档空间文件列表接口：`app/api/knowhub/docspaces/[id]/files/route.ts`
+- 文档空间手动同步接口：`app/api/knowhub/docspaces/[id]/sync/route.ts`
+- 本地空间文件上传接口：`app/api/knowhub/docspaces/[id]/upload/route.ts`
+- OSS 与 SMB 测试连接接口：`app/api/knowhub/docspaces/test-connection/route.ts`
+
+KnowHub 共享与概览：
+
+- KnowHub 顶部导航：`knowhub/components/shared/knowhub-top-nav.tsx`
+- KnowHub 列表页通用工具栏：`knowhub/components/shared/page-toolbar.tsx`
+- KnowHub 卡片网格布局：`knowhub/components/shared/card-grid.tsx`
+- KnowHub 占位面板：`knowhub/components/shared/coming-soon-panel.tsx`
+- KnowHub 页面通用外框：`knowhub/components/layout/knowhub-page-shell.tsx`
+- 概览页主组件：`knowhub/components/overview/overview-page.tsx`
+- 概览页介绍面板：`knowhub/components/overview/intro-panel.tsx`
+- 概览统计卡片：`knowhub/components/overview/stat-card.tsx`
+- 概览流程阶段卡片：`knowhub/components/overview/flow-stage-card.tsx`
+- 检索页主组件：`knowhub/components/retrieval/retrieval-page.tsx`
+
+KnowHub 文档中心：
+
+- DocSpace 列表页主组件：`knowhub/components/docspaces/docspaces-page.tsx`
+- DocSpace 卡片：`knowhub/components/docspaces/docspace-card.tsx`
+- DocSpace 创建弹窗：`knowhub/components/docspaces/docspace-create-dialog.tsx`
+- DocSpace 详情页主组件：`knowhub/components/docspaces/docspace-detail-page.tsx`
+- DocSpace 文件浏览区：`knowhub/components/docspaces/docspace-file-preview.tsx`
+- 本地空间上传控件：`knowhub/components/docspaces/docspace-upload-control.tsx`
+- 远程空间同步控件：`knowhub/components/docspaces/docspace-sync-control.tsx`
+- DocSpace 删除控件：`knowhub/components/docspaces/docspace-delete-button.tsx`
+
+KnowHub 策略中心：
+
+- 策略中心主页面：`knowhub/components/strategies/strategies-page.tsx`
+- 策略分类切换条：`knowhub/components/strategies/strategy-bar.tsx`
+- 策略卡片：`knowhub/components/strategies/strategy-card.tsx`
+- 策略分类配色定义：`knowhub/components/strategies/strategy-colors.ts`
+
+KnowHub 知识中心与配置管理：
+
+- 知识中心列表页主组件：`knowhub/components/knowledge/knowledge-page.tsx`
+- 知识库卡片：`knowhub/components/knowledge/knowledge-card.tsx`
+- 知识库详情页主组件：`knowhub/components/knowledge/knowledge-detail-page.tsx`
+- 新建知识库弹窗：`knowhub/components/knowledge/knowledge-builder-dialog.tsx`
+- 文件夹域选择弹窗：`knowhub/components/knowledge/file-scope-picker-dialog.tsx`
+- 文件夹策略弹窗：`knowhub/components/knowledge/folder-strategy-dialog.tsx`
+- 策略阶段编辑组件：`knowhub/components/knowledge/strategy-stage-editor.tsx`
+- 全局策略页主组件：`knowhub/components/settings/global-strategy-page.tsx`
+
+KnowHub 业务数据与服务：
+
+- 文档空间前端请求封装：`knowhub/features/docspaces/api.ts`
+- 文档空间服务端业务逻辑：`knowhub/features/docspaces/service.ts`
+- 文档空间元数据读写：`knowhub/features/docspaces/repository.ts`
+- 本地持久化与托管目录操作：`knowhub/features/docspaces/storage.ts`
+- OSS 连接测试与对象读取：`knowhub/features/docspaces/oss-connector.ts`
+- SMB 连接测试与共享目录读取：`knowhub/features/docspaces/smb-connector.ts`
+- 文档空间类型定义：`knowhub/features/docspaces/types.ts`
+- 策略中心数据：`knowhub/features/strategies/data.ts`
+- 策略中心类型定义：`knowhub/features/strategies/types.ts`
+- 知识中心列表数据：`knowhub/features/knowledge/data.ts`
+- 知识中心类型定义：`knowhub/features/knowledge/types.ts`
+- 知识库配置弹窗与全局策略页使用的默认策略模板数据：`knowhub/features/knowledge/builder-data.ts`
+- 知识库配置与文件夹策略相关类型定义：`knowhub/features/knowledge/builder-types.ts`
+- 概览页数据：`knowhub/features/overview/data.ts`
+- 概览页类型定义：`knowhub/features/overview/types.ts`
 
 ## 开发现状
 
-- 平台主体页面已接入：`bots / workflows / tools / services / skills`
-- `bots` 已接真实 `nanobot` 后端
-- `KnowHub` 文档中心已接真实后端：
-  - 文档空间列表与详情走 `/api/knowhub/docspaces/*`
-  - 文档空间数据持久化到本地 `storage/knowhub/docspaces`
-  - 来源类型支持 `本地空间 / OSS / SMB`
-  - 本地空间支持多文件上传与拖拽上传
-  - OSS / SMB 支持测试连接与手动同步
-  - 文档空间支持删除
-  - 详情页支持文件浏览与目录层级切换
-- `KnowHub` 概览页与知识中心中的 `DocSpace` 信息读取真实文档空间数据
-- `KnowHub` 知识中心当前支持：
-  - 知识库列表展示
-  - 从知识中心弹窗新建知识库
-  - 从 DocSpace 详情页发起新建知识库
-  - 知识库详情页展示关联 DocSpace、Embedding、文件数、切片数和三类策略
-- `KnowHub` 配置管理当前支持全局策略配置
-- `KnowHub` 新建知识库与全局策略当前使用静态模板数据
-- `KnowHub` 策略中心、知识中心列表数据、概览中的非 `DocSpace` 统计当前仍使用静态数据
-- `retrieval` 当前为占位页
+### Platform
 
-## 不要做的事
+- `bots`：真实后端
+- `workbench / workflows / tools / services / skills`：前端原型与静态数据
 
-- 不要打破当前目录边界：平台主体优先走 `app/(platform) + components + features`，KnowHub 优先走 `app/knowhub + knowhub/*`
-- 不要把路由层写成实现层，`app/*` 只放页面入口、布局和参数归一化
-- 不要把业务私有组件塞进错误的共享层：平台私有不进 `knowhub/components/shared`，KnowHub 私有不进 `components/shared`
-- 不要为了“将来可能会用”预留无用抽象、兼容代码或多余目录层
-- 不要在文档里记录“从什么改成什么”，只保留当前有效结构
+### KnowHub
+
+- `docspaces`：真实后端与本地文件持久化
+- `overview`：`DocSpace` 数据真实，其余统计静态
+- `knowledge`：`DocSpace` 数据真实，列表与策略模板静态
+- `strategies`：前端原型与静态数据
+- `settings/global-strategies`：前端原型与静态模板
+- `retrieval`：占位页
 
 ## 开发规则
 
-- 对话、代码、注释统一使用中文
-- 优先简单实现，避免过度抽象
-- 先确认方案，再做批量改动
-- 不保留无用旧实现
-- 文档只记录当前有效规则
+### 通用规则
+
+通用代码风格以“合理、清晰、简洁”为优先。  
+在满足需求、结构清楚和便于维护的前提下，代码尽量精简，不做不必要的抽象、兼容层和铺垫。
+
+- 优先采用直接、稳定、易维护的实现方式。
+- 能简单解决的问题，不额外增加封装层级、状态复杂度或样式负担。
+- 修改后同步删除遗留代码、弃用代码、调试代码和无效样式，不保留无用内容，也不用备注变更过程内容。
+- 新增代码以长期维护为前提，不为了技巧感牺牲可读性。
+
+### 项目规则
+
+- 路由层只接路由和参数，不承载页面实现。
+- Platform 改 `app/(platform)`、`components`、`features`，KnowHub 改 `app/knowhub`、`knowhub/components`、`knowhub/features`。
+- 共享层放对位置：Platform 共享放 `components/shared`，KnowHub 私有共享放 `knowhub/components/shared`，基础控件放 `components/ui`。
+- KnowHub 保持独立导航、全宽布局、策略中心单一路由和全局策略独立配置入口。
+
+## dev_guide 编写原则
+
+- 只写当前有效状态，不写变更过程、历史路径或“原来是 A、现在改成 B”。
+- 目录、文件职责、文件名称、模块边界发生变化时，同步更新本文件，需要检查 `## 当前目录结构` 和对应模块的内容是否要调整。
+- 模块说明、边界说明、文件组织方式、开发现状等列表项，优先采用“一行标签式”写法。
+- 每个文件说明只写当前职责，不写实现细节、重构原因或临时方案。
+- 优先写稳定结构和高频落点，避免记录容易过时的界面细节或临时数据。

@@ -38,17 +38,17 @@ const sourceOptions = [
   },
 ] as const;
 
-type DocspaceCreateDialogProps = {
+type DocSpaceCreateDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onCreated: (item: DocSpaceRecord) => void;
 };
 
-export function DocspaceCreateDialog({
+export function DocSpaceCreateDialog({
   open,
   onOpenChange,
   onCreated,
-}: DocspaceCreateDialogProps) {
+}: DocSpaceCreateDialogProps) {
   const [source, setSource] =
     useState<(typeof sourceOptions)[number]["key"]>("hosted");
   const [name, setName] = useState("");

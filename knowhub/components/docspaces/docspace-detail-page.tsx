@@ -2,10 +2,10 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
 import { buttonVariants } from "@/components/ui/button-variants";
-import { DocspaceDeleteButton } from "@/knowhub/components/documents/docspace-delete-button";
-import { DocspaceFilePreview } from "@/knowhub/components/documents/docspace-file-preview";
-import { DocspaceSyncControl } from "@/knowhub/components/documents/docspace-sync-control";
-import { DocspaceUploadControl } from "@/knowhub/components/documents/docspace-upload-control";
+import { DocSpaceDeleteButton } from "@/knowhub/components/docspaces/docspace-delete-button";
+import { DocSpaceFilePreview } from "@/knowhub/components/docspaces/docspace-file-preview";
+import { DocSpaceSyncControl } from "@/knowhub/components/docspaces/docspace-sync-control";
+import { DocSpaceUploadControl } from "@/knowhub/components/docspaces/docspace-upload-control";
 import { KnowHubPageShell } from "@/knowhub/components/layout/knowhub-page-shell";
 import type { DocSpaceRecord } from "@/knowhub/features/docspaces/types";
 import { cn } from "@/lib/utils";
@@ -16,13 +16,13 @@ const sourceLabelMap = {
   oss: "OSS 接入",
 } as const;
 
-type KnowHubDocumentDetailPageProps = {
+type KnowHubDocSpaceDetailPageProps = {
   item: DocSpaceRecord;
 };
 
-export function KnowHubDocumentDetailPage({
+export function KnowHubDocSpaceDetailPage({
   item,
-}: KnowHubDocumentDetailPageProps) {
+}: KnowHubDocSpaceDetailPageProps) {
   return (
     <KnowHubPageShell>
       <section className="rounded-[16px] border border-[#d8e1eb] bg-[linear-gradient(180deg,rgba(244,247,251,0.98)_0%,rgba(255,255,255,0.98)_100%)] px-4.5 py-3.5 shadow-[0_8px_24px_rgba(15,23,42,0.04)]">
@@ -32,18 +32,18 @@ export function KnowHubDocumentDetailPage({
               <div className="text-title text-[22px] font-semibold tracking-[-0.03em]">
                 {item.name}
               </div>
-              <DocspaceDeleteButton id={item.id} />
+              <DocSpaceDeleteButton id={item.id} />
             </div>
           </div>
           <Link
-            href="/knowhub/documents"
+            href="/knowhub/docspaces"
             className={cn(
               buttonVariants({ variant: "secondary", size: "sm" }),
               "h-8 shrink-0 px-3 text-[12px]"
             )}
           >
             <ArrowLeft className="mr-1 h-3.5 w-3.5" />
-            返回文档中心
+            返回 DocSpace
           </Link>
         </div>
         <div
@@ -85,18 +85,18 @@ export function KnowHubDocumentDetailPage({
               发起知识建库
             </Link>
             {item.sourceType === "hosted" ? (
-              <DocspaceUploadControl
+              <DocSpaceUploadControl
                 id={item.id}
                 variant="button"
               />
             ) : (
-              <DocspaceSyncControl id={item.id} />
+              <DocSpaceSyncControl id={item.id} />
             )}
           </div>
         </div>
       </section>
 
-      <DocspaceFilePreview item={item} />
+      <DocSpaceFilePreview item={item} />
     </KnowHubPageShell>
   );
 }

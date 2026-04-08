@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 
-import { DocspaceCard } from "@/knowhub/components/documents/docspace-card";
-import { DocspaceCreateDialog } from "@/knowhub/components/documents/docspace-create-dialog";
+import { DocSpaceCard } from "@/knowhub/components/docspaces/docspace-card";
+import { DocSpaceCreateDialog } from "@/knowhub/components/docspaces/docspace-create-dialog";
 import { KnowHubPageShell } from "@/knowhub/components/layout/knowhub-page-shell";
 import { KnowHubCardGrid } from "@/knowhub/components/shared/card-grid";
 import { KnowHubPageToolbar } from "@/knowhub/components/shared/page-toolbar";
@@ -17,7 +17,7 @@ const sourceTabs = [
   { key: "oss", label: "OSS" },
 ] as const;
 
-export function KnowHubDocumentsPage() {
+export function KnowHubDocSpacesPage() {
   const [keyword, setKeyword] = useState("");
   const [items, setItems] = useState<DocSpaceRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -72,7 +72,7 @@ export function KnowHubDocumentsPage() {
       <section className="rounded-[20px] border border-[#dde6f0] bg-[linear-gradient(180deg,rgba(236,241,247,0.92)_0%,rgba(244,247,251,0.96)_100%)] px-3 py-3 sm:px-4 sm:py-4">
         {loading ? (
           <div className="rounded-[14px] border border-[#d8e1eb] bg-white px-4 py-8 text-center text-[13px] text-[#667085]">
-            正在加载文档空间...
+            正在加载 DocSpace...
           </div>
         ) : error ? (
           <div className="rounded-[14px] border border-[#f0d2d2] bg-[#fff8f8] px-4 py-8 text-center text-[13px] text-[#a33a3a]">
@@ -81,7 +81,7 @@ export function KnowHubDocumentsPage() {
         ) : filteredDocSpaces.length ? (
           <KnowHubCardGrid itemWidth={325}>
             {filteredDocSpaces.map((item) => (
-              <DocspaceCard
+              <DocSpaceCard
                 key={item.id}
                 item={item}
               />
@@ -89,12 +89,12 @@ export function KnowHubDocumentsPage() {
           </KnowHubCardGrid>
         ) : (
           <div className="rounded-[14px] border border-[#d8e1eb] bg-white px-4 py-8 text-center text-[13px] text-[#667085]">
-            当前没有匹配的文档空间。
+            当前没有匹配的 DocSpace。
           </div>
         )}
       </section>
 
-      <DocspaceCreateDialog
+      <DocSpaceCreateDialog
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
         onCreated={() => void loadDocSpaces()}

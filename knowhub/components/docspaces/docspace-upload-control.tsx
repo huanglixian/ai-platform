@@ -7,15 +7,15 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { uploadDocSpaceFilesApi } from "@/knowhub/features/docspaces/api";
 
-type DocspaceUploadControlProps = {
+type DocSpaceUploadControlProps = {
   id: string;
   variant?: "button" | "empty";
 };
 
-export function DocspaceUploadControl({
+export function DocSpaceUploadControl({
   id,
   variant = "button",
-}: DocspaceUploadControlProps) {
+}: DocSpaceUploadControlProps) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [uploading, setUploading] = useState(false);

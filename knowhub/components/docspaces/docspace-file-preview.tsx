@@ -3,10 +3,10 @@
 import { useMemo, useState } from "react";
 import { ChevronRight, FileText, Folder } from "lucide-react";
 
-import { DocspaceUploadControl } from "@/knowhub/components/documents/docspace-upload-control";
+import { DocSpaceUploadControl } from "@/knowhub/components/docspaces/docspace-upload-control";
 import type { DocSpaceRecord } from "@/knowhub/features/docspaces/types";
 
-type DocspaceFilePreviewProps = {
+type DocSpaceFilePreviewProps = {
   item: DocSpaceRecord | null;
 };
 
@@ -122,7 +122,7 @@ function buildBreadcrumbs(pathname: string) {
   return items;
 }
 
-export function DocspaceFilePreview({ item }: DocspaceFilePreviewProps) {
+export function DocSpaceFilePreview({ item }: DocSpaceFilePreviewProps) {
   const directoryMap = useMemo(
     () => buildDirectoryMap(item?.files || []),
     [item?.files],
@@ -143,7 +143,7 @@ export function DocspaceFilePreview({ item }: DocspaceFilePreviewProps) {
         <div className="mb-4 flex items-center justify-between gap-3">
           <div className="text-title text-[15px] font-semibold">文件列表</div>
         </div>
-        <DocspaceUploadControl
+        <DocSpaceUploadControl
           id={item.id}
           variant="empty"
         />

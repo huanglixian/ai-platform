@@ -7,11 +7,11 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { syncDocSpaceApi } from "@/knowhub/features/docspaces/api";
 
-type DocspaceSyncControlProps = {
+type DocSpaceSyncControlProps = {
   id: string;
 };
 
-export function DocspaceSyncControl({ id }: DocspaceSyncControlProps) {
+export function DocSpaceSyncControl({ id }: DocSpaceSyncControlProps) {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");

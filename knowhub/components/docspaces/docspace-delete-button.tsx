@@ -7,11 +7,11 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { deleteDocSpaceApi } from "@/knowhub/features/docspaces/api";
 
-type DocspaceDeleteButtonProps = {
+type DocSpaceDeleteButtonProps = {
   id: string;
 };
 
-export function DocspaceDeleteButton({ id }: DocspaceDeleteButtonProps) {
+export function DocSpaceDeleteButton({ id }: DocSpaceDeleteButtonProps) {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
 
@@ -24,7 +24,7 @@ export function DocspaceDeleteButton({ id }: DocspaceDeleteButtonProps) {
 
     try {
       await deleteDocSpaceApi(id);
-      router.push("/knowhub/documents");
+      router.push("/knowhub/docspaces");
       router.refresh();
     } finally {
       setSubmitting(false);

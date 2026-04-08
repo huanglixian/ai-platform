@@ -1,19 +1,19 @@
 import { notFound } from "next/navigation";
 
-import { KnowHubDocumentDetailPage } from "@/knowhub/components/documents/document-detail-page";
+import { KnowHubDocSpaceDetailPage } from "@/knowhub/components/docspaces/docspace-detail-page";
 import { getDocSpaceById } from "@/knowhub/features/docspaces/service";
 
 export const dynamic = "force-dynamic";
 
-type KnowHubDocumentDetailRoutePageProps = {
+type KnowHubDocSpaceDetailRoutePageProps = {
   params: Promise<{
     id: string;
   }>;
 };
 
-export default async function KnowHubDocumentDetailRoutePage({
+export default async function KnowHubDocSpaceDetailRoutePage({
   params,
-}: KnowHubDocumentDetailRoutePageProps) {
+}: KnowHubDocSpaceDetailRoutePageProps) {
   const { id } = await params;
   const item = await getDocSpaceById(id);
 
@@ -21,5 +21,5 @@ export default async function KnowHubDocumentDetailRoutePage({
     notFound();
   }
 
-  return <KnowHubDocumentDetailPage item={item} />;
+  return <KnowHubDocSpaceDetailPage item={item} />;
 }
