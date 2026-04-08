@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 
 type BotComposerPaneProps = {
   sending: boolean;
@@ -16,6 +16,22 @@ type BotComposerPaneProps = {
 };
 
 export function BotComposerPane({
+  initialValue = "",
+  resetKey = "",
+  ...props
+}: BotComposerPaneProps) {
+  const composerKey = `${resetKey}:${initialValue}`;
+
+  return (
+    <BotComposerPaneContent
+      key={composerKey}
+      initialValue={initialValue}
+      {...props}
+    />
+  );
+}
+
+function BotComposerPaneContent({
   sending,
   status,
   modelName,
@@ -24,15 +40,10 @@ export function BotComposerPane({
   footerActions,
   noHover = false,
   initialValue = "",
-  resetKey = "",
   onSend,
 }: BotComposerPaneProps) {
   const [value, setValue] = useState(initialValue);
   const [isComposing, setIsComposing] = useState(false);
-
-  useEffect(() => {
-    setValue(initialValue);
-  }, [initialValue, resetKey]);
 
   async function handleSend() {
     const content = value.trim();

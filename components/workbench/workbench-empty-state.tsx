@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 type WorkbenchEmptyStateProps = {
   modelName: string;
@@ -12,19 +12,30 @@ type WorkbenchEmptyStateProps = {
 };
 
 export function WorkbenchEmptyState({
+  initialValue = "",
+  resetKey = "",
+  ...props
+}: WorkbenchEmptyStateProps) {
+  const emptyStateKey = `${resetKey}:${initialValue}`;
+
+  return (
+    <WorkbenchEmptyStateContent
+      key={emptyStateKey}
+      initialValue={initialValue}
+      {...props}
+    />
+  );
+}
+
+function WorkbenchEmptyStateContent({
   modelName,
   sending,
   status,
   initialValue = "",
-  resetKey = "",
   onSend,
 }: WorkbenchEmptyStateProps) {
   const [value, setValue] = useState(initialValue);
   const [isComposing, setIsComposing] = useState(false);
-
-  useEffect(() => {
-    setValue(initialValue);
-  }, [initialValue, resetKey]);
 
   async function handleSend() {
     const content = value.trim();

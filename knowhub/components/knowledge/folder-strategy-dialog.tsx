@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -23,17 +23,31 @@ export function FolderStrategyDialog({
   onOpenChange,
   onSave,
 }: FolderStrategyDialogProps) {
-  const [draft, setDraft] = useState<FolderStrategyDraft | null>(value);
-  const [activeFileType, setActiveFileType] = useState<KnowledgeFileTypeKey>("word");
-
-  useEffect(() => {
-    setDraft(value);
-    setActiveFileType("word");
-  }, [value]);
-
-  if (!open || !draft) {
+  if (!open || !value) {
     return null;
   }
+
+  return (
+    <FolderStrategyDialogContent
+      key={value.id}
+      value={value}
+      onOpenChange={onOpenChange}
+      onSave={onSave}
+    />
+  );
+}
+
+type FolderStrategyDialogContentProps = Omit<FolderStrategyDialogProps, "open"> & {
+  value: FolderStrategyDraft;
+};
+
+function FolderStrategyDialogContent({
+  value,
+  onOpenChange,
+  onSave,
+}: FolderStrategyDialogContentProps) {
+  const [draft, setDraft] = useState(value);
+  const [activeFileType, setActiveFileType] = useState<KnowledgeFileTypeKey>("word");
 
   const activeConfig =
     draft.fileTypes.find((item) => item.key === activeFileType) ?? draft.fileTypes[0];

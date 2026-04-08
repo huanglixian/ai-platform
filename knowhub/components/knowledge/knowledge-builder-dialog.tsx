@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { ChevronDown, ChevronRight, Settings2, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -36,9 +36,36 @@ export function KnowledgeBuilderDialog({
   onOpenChange,
   onCreated,
 }: KnowledgeBuilderDialogProps) {
+  if (!open) {
+    return null;
+  }
+
+  const dialogKey = initialDocspaceId ?? "default";
+
+  return (
+    <KnowledgeBuilderDialogContent
+      key={dialogKey}
+      docspaceItems={docspaceItems}
+      initialDocspaceId={initialDocspaceId}
+      onOpenChange={onOpenChange}
+      onCreated={onCreated}
+    />
+  );
+}
+
+type KnowledgeBuilderDialogContentProps = Omit<KnowledgeBuilderDialogProps, "open">;
+
+function KnowledgeBuilderDialogContent({
+  docspaceItems,
+  initialDocspaceId,
+  onOpenChange,
+  onCreated,
+}: KnowledgeBuilderDialogContentProps) {
   const [keyword, setKeyword] = useState("");
-  const [selectedDocspaceIds, setSelectedDocspaceIds] = useState<string[]>([]);
-  const [knowledgeName, setKnowledgeName] = useState("");
+  const [selectedDocspaceIds, setSelectedDocspaceIds] = useState<string[]>(
+    initialDocspaceId ? [initialDocspaceId] : [],
+  );
+  const [knowledgeNameInput, setKnowledgeNameInput] = useState("");
   const [summary, setSummary] = useState("");
   const [activeFileType, setActiveFileType] = useState<KnowledgeFileTypeKey>("word");
   const [fileTypes, setFileTypes] = useState(createGlobalStrategyTemplate());
@@ -48,33 +75,6 @@ export function KnowledgeBuilderDialog({
   const [globalExpanded, setGlobalExpanded] = useState(false);
   const [nameTouched, setNameTouched] = useState(false);
   const [error, setError] = useState("");
-
-  useEffect(() => {
-    if (!open) {
-      return;
-    }
-
-    setSelectedDocspaceIds(initialDocspaceId ? [initialDocspaceId] : []);
-  }, [initialDocspaceId, open]);
-
-  useEffect(() => {
-    if (nameTouched) {
-      return;
-    }
-
-    if (selectedDocspaceIds.length === 1) {
-      const matchedDocspace = docspaceItems.find((item) => item.id === selectedDocspaceIds[0]);
-
-      if (matchedDocspace) {
-        setKnowledgeName(matchedDocspace.name);
-        return;
-      }
-    }
-
-    if (!initialDocspaceId) {
-      setKnowledgeName("");
-    }
-  }, [docspaceItems, initialDocspaceId, nameTouched, selectedDocspaceIds]);
 
   const visibleItems = useMemo(() => {
     const normalizedKeyword = keyword.trim().toLowerCase();
@@ -95,29 +95,15 @@ export function KnowledgeBuilderDialog({
     fileTypes.find((item) => item.key === activeFileType) ?? fileTypes[0];
   const editingFolder =
     folderStrategies.find((item) => item.id === editingFolderId) ?? null;
-
-  function resetForm() {
-    setKeyword("");
-    setSelectedDocspaceIds(initialDocspaceId ? [initialDocspaceId] : []);
-    setKnowledgeName("");
-    setSummary("");
-    setActiveFileType("word");
-    setFileTypes(createGlobalStrategyTemplate());
-    setFolderStrategies([]);
-    setPickerOpen(false);
-    setEditingFolderId(null);
-    setGlobalExpanded(false);
-    setNameTouched(false);
-    setError("");
-  }
+  const matchedDocspace =
+    selectedDocspaceIds.length === 1
+      ? docspaceItems.find((item) => item.id === selectedDocspaceIds[0]) ?? null
+      : null;
+  const knowledgeName =
+    nameTouched || !matchedDocspace ? knowledgeNameInput : matchedDocspace.name;
 
   function closeDialog() {
     onOpenChange(false);
-    resetForm();
-  }
-
-  if (!open) {
-    return null;
   }
 
   return (
@@ -152,7 +138,7 @@ export function KnowledgeBuilderDialog({
                     <Input
                       value={knowledgeName}
                       onChange={(event) => {
-                        setKnowledgeName(event.target.value);
+                        setKnowledgeNameInput(event.target.value);
                         setNameTouched(true);
                       }}
                       placeholder="例如：校审经验知识库"
