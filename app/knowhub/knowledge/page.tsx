@@ -1,4 +1,4 @@
-import { listDocSpaces } from "@/knowhub/features/docspaces/service";
+import { listDocspaceItems } from "@/knowhub/features/docspace/service";
 import { KnowHubKnowledgePage as KnowHubKnowledgeView } from "@/knowhub/components/knowledge/knowledge-page";
 
 type KnowHubKnowledgeRoutePageProps = {
@@ -11,12 +11,12 @@ type KnowHubKnowledgeRoutePageProps = {
 export default async function KnowHubKnowledgeRoutePage({
   searchParams,
 }: KnowHubKnowledgeRoutePageProps) {
-  const docspaces = await listDocSpaces();
+  const docspaceItems = await listDocspaceItems();
   const { action, docspaceId } = await searchParams;
 
   return (
     <KnowHubKnowledgeView
-      docspaces={docspaces}
+      docspaceItems={docspaceItems}
       initialBuilderOpen={action === "create" || Boolean(docspaceId)}
       initialDocspaceId={docspaceId}
     />

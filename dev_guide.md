@@ -38,7 +38,7 @@ Ai_Platform/
 │  │  ├─ services/
 │  │  └─ skills/
 │  ├─ knowhub/
-│  │  ├─ docspaces/
+│  │  ├─ docspace/
 │  │  ├─ strategies/
 │  │  ├─ settings/
 │  │  ├─ knowledge/
@@ -59,7 +59,7 @@ Ai_Platform/
 │  └─ workflows/
 ├─ knowhub/
 │  ├─ components/
-│  │  ├─ docspaces/
+│  │  ├─ docspace/
 │  │  ├─ layout/
 │  │  ├─ knowledge/
 │  │  ├─ overview/
@@ -68,7 +68,7 @@ Ai_Platform/
 │  │  ├─ shared/
 │  │  └─ strategies/
 │  └─ features/
-│     ├─ docspaces/
+│     ├─ docspace/
 │     ├─ knowledge/
 │     ├─ overview/
 │     └─ strategies/
@@ -169,7 +169,7 @@ Platform 业务数据与工具：
 ### 1. 功能模块说明
 
 - `overview`：知识域概览页
-- `docspaces`：DocSpace 空间管理
+- `docspace`：文档中心
 - `strategies`：策略中心
 - `knowledge`：知识库列表、详情与新建弹窗
 - `settings/global-strategies`：全局默认策略配置
@@ -178,7 +178,7 @@ Platform 业务数据与工具：
 ### 2. 文件组织方式
 
 - `app/knowhub/*`：KnowHub 路由入口层，只做路由承接和参数归一化
-- `knowhub/components/*`：KnowHub 页面实现层，按 `overview / docspaces / strategies / knowledge / settings / shared` 分组
+- `knowhub/components/*`：KnowHub 页面实现层，按 `overview / docspace / strategies / knowledge / settings / shared` 分组
 - `knowhub/features/*`：KnowHub 业务数据、类型、接口封装和服务端逻辑
 - `knowhub/components/shared/*`：KnowHub 内部共享导航、工具栏、卡片网格和占位组件
 - `app/api/knowhub/*`：KnowHub 文档空间相关接口
@@ -189,19 +189,19 @@ KnowHub 路由与接口入口：
 
 - KnowHub 独立布局入口：`app/knowhub/layout.tsx`
 - KnowHub 概览页路由入口：`app/knowhub/page.tsx`
-- DocSpace 列表页路由入口：`app/knowhub/docspaces/page.tsx`
-- 单个 DocSpace 详情页路由入口：`app/knowhub/docspaces/[id]/page.tsx`
+- 文档中心列表页路由入口：`app/knowhub/docspace/page.tsx`
+- 单个文档空间详情页路由入口：`app/knowhub/docspace/[id]/page.tsx`
 - 策略中心路由入口：`app/knowhub/strategies/page.tsx`
 - 知识中心列表页路由入口：`app/knowhub/knowledge/page.tsx`
 - 知识库详情页路由入口：`app/knowhub/knowledge/[id]/page.tsx`
 - 全局策略页路由入口：`app/knowhub/settings/global-strategies/page.tsx`
 - 检索页路由入口：`app/knowhub/retrieval/page.tsx`
-- 文档空间列表读取与创建接口：`app/api/knowhub/docspaces/route.ts`
-- 单个文档空间详情读取与删除接口：`app/api/knowhub/docspaces/[id]/route.ts`
-- 文档空间文件列表接口：`app/api/knowhub/docspaces/[id]/files/route.ts`
-- 文档空间手动同步接口：`app/api/knowhub/docspaces/[id]/sync/route.ts`
-- 本地空间文件上传接口：`app/api/knowhub/docspaces/[id]/upload/route.ts`
-- OSS 与 SMB 测试连接接口：`app/api/knowhub/docspaces/test-connection/route.ts`
+- 文档空间列表读取与创建接口：`app/api/knowhub/docspace/route.ts`
+- 单个文档空间详情读取与删除接口：`app/api/knowhub/docspace/[id]/route.ts`
+- 文档空间文件列表接口：`app/api/knowhub/docspace/[id]/files/route.ts`
+- 文档空间手动同步接口：`app/api/knowhub/docspace/[id]/sync/route.ts`
+- 本地空间文件上传接口：`app/api/knowhub/docspace/[id]/upload/route.ts`
+- OSS 与 SMB 测试连接接口：`app/api/knowhub/docspace/test-connection/route.ts`
 
 KnowHub 共享与概览：
 
@@ -218,14 +218,14 @@ KnowHub 共享与概览：
 
 KnowHub 文档中心：
 
-- DocSpace 列表页主组件：`knowhub/components/docspaces/docspaces-page.tsx`
-- DocSpace 卡片：`knowhub/components/docspaces/docspace-card.tsx`
-- DocSpace 创建弹窗：`knowhub/components/docspaces/docspace-create-dialog.tsx`
-- DocSpace 详情页主组件：`knowhub/components/docspaces/docspace-detail-page.tsx`
-- DocSpace 文件浏览区：`knowhub/components/docspaces/docspace-file-preview.tsx`
-- 本地空间上传控件：`knowhub/components/docspaces/docspace-upload-control.tsx`
-- 远程空间同步控件：`knowhub/components/docspaces/docspace-sync-control.tsx`
-- DocSpace 删除控件：`knowhub/components/docspaces/docspace-delete-button.tsx`
+- 文档中心列表页主组件：`knowhub/components/docspace/docspace-page.tsx`
+- 文档空间卡片：`knowhub/components/docspace/docspace-card.tsx`
+- 文档空间创建弹窗：`knowhub/components/docspace/docspace-create-dialog.tsx`
+- 文档空间详情页主组件：`knowhub/components/docspace/docspace-detail-page.tsx`
+- 文档空间文件浏览区：`knowhub/components/docspace/docspace-file-preview.tsx`
+- 本地空间上传控件：`knowhub/components/docspace/docspace-upload-control.tsx`
+- 远程空间同步控件：`knowhub/components/docspace/docspace-sync-control.tsx`
+- 文档空间删除控件：`knowhub/components/docspace/docspace-delete-button.tsx`
 
 KnowHub 策略中心：
 
@@ -247,13 +247,13 @@ KnowHub 知识中心与配置管理：
 
 KnowHub 业务数据与服务：
 
-- 文档空间前端请求封装：`knowhub/features/docspaces/api.ts`
-- 文档空间服务端业务逻辑：`knowhub/features/docspaces/service.ts`
-- 文档空间元数据读写：`knowhub/features/docspaces/repository.ts`
-- 本地持久化与托管目录操作：`knowhub/features/docspaces/storage.ts`
-- OSS 连接测试与对象读取：`knowhub/features/docspaces/oss-connector.ts`
-- SMB 连接测试与共享目录读取：`knowhub/features/docspaces/smb-connector.ts`
-- 文档空间类型定义：`knowhub/features/docspaces/types.ts`
+- 文档空间前端请求封装：`knowhub/features/docspace/api.ts`
+- 文档空间服务端业务逻辑：`knowhub/features/docspace/service.ts`
+- 文档空间元数据读写：`knowhub/features/docspace/repository.ts`
+- 本地持久化与托管目录操作：`knowhub/features/docspace/storage.ts`
+- OSS 连接测试与对象读取：`knowhub/features/docspace/oss-connector.ts`
+- SMB 连接测试与共享目录读取：`knowhub/features/docspace/smb-connector.ts`
+- 文档空间类型定义：`knowhub/features/docspace/types.ts`
 - 策略中心数据：`knowhub/features/strategies/data.ts`
 - 策略中心类型定义：`knowhub/features/strategies/types.ts`
 - 知识中心列表数据：`knowhub/features/knowledge/data.ts`
@@ -272,9 +272,9 @@ KnowHub 业务数据与服务：
 
 ### KnowHub
 
-- `docspaces`：真实后端与本地文件持久化
-- `overview`：`DocSpace` 数据真实，其余统计静态
-- `knowledge`：`DocSpace` 数据真实，列表与策略模板静态
+- `docspace`：真实后端与本地文件持久化
+- `overview`：文档空间数据真实，其余统计静态
+- `knowledge`：文档空间数据真实，列表与策略模板静态
 - `strategies`：前端原型与静态数据
 - `settings/global-strategies`：前端原型与静态模板
 - `retrieval`：占位页

@@ -1,4 +1,4 @@
-import type { DocSpaceRecord } from "@/knowhub/features/docspaces/types";
+import type { DocSpaceRecord } from "@/knowhub/features/docspace/types";
 import { strategyRecords } from "@/knowhub/features/strategies/data";
 import type {
   KnowHubFlowStage,
@@ -8,22 +8,22 @@ import type {
 export const knowHubOverviewIntro = {
   title: "KnowHub 知识中心",
   description:
-    "围绕企业知识接入、处理、组织和复用构建统一入口，以 DocSpace 作为文档载体，以策略库作为处理标准，以知识内容沉淀可检索的业务资产。",
+    "围绕企业知识接入、处理、组织和复用构建统一入口，以文档空间作为文档载体，以策略库作为处理标准，以知识内容沉淀可检索的业务资产。",
 };
 
 export function buildKnowHubOverviewStats(
-  docspaces: DocSpaceRecord[],
+  docspaceItems: DocSpaceRecord[],
 ): KnowHubOverviewStat[] {
-  const totalDocuments = docspaces.reduce(
+  const totalDocuments = docspaceItems.reduce(
     (sum, item) => sum + item.documentCount,
     0,
   );
 
   return [
     {
-      key: "docspaces",
-      label: "DocSpace",
-      value: String(docspaces.length),
+      key: "docspace",
+      label: "文档空间",
+      value: String(docspaceItems.length),
       hint: "知识空间总数",
     },
     {
@@ -66,7 +66,7 @@ export function buildKnowHubFlowStages(
     {
       key: "docspace",
       title: "文档管理",
-      summary: "按 DocSpace 组织文档归属、范围和维护方，统一管理文档空间。",
+      summary: "按文档空间组织文档归属、范围和维护方，统一管理文档中心。",
       metric: `${docspaceCount} 个空间`,
     },
     {

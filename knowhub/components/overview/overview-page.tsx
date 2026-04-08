@@ -19,10 +19,10 @@ import {
   knowHubOverviewIntro,
   buildKnowHubOverviewStats,
 } from "@/knowhub/features/overview/data";
-import type { DocSpaceRecord } from "@/knowhub/features/docspaces/types";
+import type { DocSpaceRecord } from "@/knowhub/features/docspace/types";
 
 const statIconMap = {
-  docspaces: FolderKanban,
+  docspace: FolderKanban,
   documents: FileText,
   strategies: SlidersHorizontal,
   knowledge: BookOpenText,
@@ -30,7 +30,7 @@ const statIconMap = {
 } as const;
 
 const statAccentMap = {
-  docspaces: "#0368b3",
+  docspace: "#0368b3",
   documents: "#2e7dd2",
   strategies: "#d08a33",
   knowledge: "#1f8a57",
@@ -56,14 +56,14 @@ const flowAccentMap = {
 } as const;
 
 type KnowHubOverviewPageProps = {
-  docspaces: DocSpaceRecord[];
+  docspaceItems: DocSpaceRecord[];
 };
 
 export function KnowHubOverviewPage({
-  docspaces,
+  docspaceItems,
 }: KnowHubOverviewPageProps) {
-  const knowHubOverviewStats = buildKnowHubOverviewStats(docspaces);
-  const knowHubFlowStages = buildKnowHubFlowStages(docspaces.length);
+  const knowHubOverviewStats = buildKnowHubOverviewStats(docspaceItems);
+  const knowHubFlowStages = buildKnowHubFlowStages(docspaceItems.length);
 
   return (
     <KnowHubPageShell>
@@ -97,7 +97,7 @@ export function KnowHubOverviewPage({
               知识处理流程
             </div>
             <div className="mt-0.5 text-[12px] leading-5 text-[#667085]">
-              从 DocSpace 建立到知识内容沉淀，围绕统一流程组织知识资产。
+              从文档空间接入到知识内容沉淀，围绕统一流程组织知识资产。
             </div>
           </div>
         </div>

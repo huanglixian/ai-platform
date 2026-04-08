@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 
 const primaryItems = [
   { label: "概览", href: "/knowhub" },
-  { label: "DocSpace", href: "/knowhub/docspaces" },
+  { label: "文档中心", href: "/knowhub/docspace" },
   { label: "策略中心", href: "/knowhub/strategies" },
   { label: "知识中心", href: "/knowhub/knowledge" },
   { label: "配置管理", href: "/knowhub/settings/global-strategies" },

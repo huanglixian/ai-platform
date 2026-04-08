@@ -19,11 +19,11 @@ import type {
   KnowledgeFileTypeKey,
 } from "@/knowhub/features/knowledge/builder-types";
 import type { PipelineRecord } from "@/knowhub/features/knowledge/types";
-import type { DocSpaceRecord } from "@/knowhub/features/docspaces/types";
+import type { DocSpaceRecord } from "@/knowhub/features/docspace/types";
 
 type KnowledgeBuilderDialogProps = {
   open: boolean;
-  docspaces: DocSpaceRecord[];
+  docspaceItems: DocSpaceRecord[];
   initialDocspaceId?: string;
   onOpenChange: (open: boolean) => void;
   onCreated: (item: PipelineRecord) => void;
@@ -31,7 +31,7 @@ type KnowledgeBuilderDialogProps = {
 
 export function KnowledgeBuilderDialog({
   open,
-  docspaces,
+  docspaceItems,
   initialDocspaceId,
   onOpenChange,
   onCreated,
@@ -63,7 +63,7 @@ export function KnowledgeBuilderDialog({
     }
 
     if (selectedDocspaceIds.length === 1) {
-      const matchedDocspace = docspaces.find((item) => item.id === selectedDocspaceIds[0]);
+      const matchedDocspace = docspaceItems.find((item) => item.id === selectedDocspaceIds[0]);
 
       if (matchedDocspace) {
         setKnowledgeName(matchedDocspace.name);
@@ -74,12 +74,12 @@ export function KnowledgeBuilderDialog({
     if (!initialDocspaceId) {
       setKnowledgeName("");
     }
-  }, [docspaces, initialDocspaceId, nameTouched, selectedDocspaceIds]);
+  }, [docspaceItems, initialDocspaceId, nameTouched, selectedDocspaceIds]);
 
-  const visibleDocspaces = useMemo(() => {
+  const visibleItems = useMemo(() => {
     const normalizedKeyword = keyword.trim().toLowerCase();
 
-    return docspaces.filter((item) => {
+    return docspaceItems.filter((item) => {
       if (!normalizedKeyword) {
         return true;
       }
@@ -89,7 +89,7 @@ export function KnowledgeBuilderDialog({
         item.summary.toLowerCase().includes(normalizedKeyword)
       );
     });
-  }, [docspaces, keyword]);
+  }, [docspaceItems, keyword]);
 
   const activeConfig =
     fileTypes.find((item) => item.key === activeFileType) ?? fileTypes[0];
@@ -172,7 +172,7 @@ export function KnowledgeBuilderDialog({
 
               <section className="rounded-[16px] border border-[#d8e1eb] bg-white px-4 py-4">
                 <div className="flex items-center justify-between gap-3">
-                  <div className="text-title text-[15px] font-semibold">目标 DocSpace</div>
+                  <div className="text-title text-[15px] font-semibold">目标文档空间</div>
                   <span className="text-[11px] text-[#7b8798]">
                     已选 {selectedDocspaceIds.length} 个
                   </span>
@@ -181,12 +181,12 @@ export function KnowledgeBuilderDialog({
                   <Input
                     value={keyword}
                     onChange={(event) => setKeyword(event.target.value)}
-                    placeholder="搜索 DocSpace"
+                    placeholder="搜索文档空间"
                     className="border-0 bg-transparent px-0 shadow-none focus-visible:ring-0"
                   />
                 </div>
                 <div className="mt-3 flex max-h-[320px] flex-col gap-2 overflow-y-auto">
-                  {visibleDocspaces.map((item) => {
+                  {visibleItems.map((item) => {
                     const checked = selectedDocspaceIds.includes(item.id);
                     const locked = initialDocspaceId === item.id;
 
@@ -371,7 +371,7 @@ export function KnowledgeBuilderDialog({
             </Button>
             <Button
               onClick={() => {
-                const selectedDocspaces = docspaces.filter((item) =>
+                const selectedItems = docspaceItems.filter((item) =>
                   selectedDocspaceIds.includes(item.id),
                 );
 
@@ -380,15 +380,15 @@ export function KnowledgeBuilderDialog({
                   return;
                 }
 
-                if (!selectedDocspaces.length) {
-                  setError("至少选择一个 DocSpace");
+                if (!selectedItems.length) {
+                  setError("至少选择一个文档空间");
                   return;
                 }
 
                 const nextItem = buildKnowledgeTaskRecord({
                   name: knowledgeName.trim(),
                   summary: summary.trim() || "基于默认策略创建的知识库。",
-                  docspaces: selectedDocspaces,
+                  docspaceItems: selectedItems,
                   fileTypes,
                 });
 
@@ -404,10 +404,10 @@ export function KnowledgeBuilderDialog({
 
       <FileScopePickerDialog
         open={pickerOpen}
-        docspaces={docspaces.filter((item) => selectedDocspaceIds.includes(item.id))}
+        docspaceItems={docspaceItems.filter((item) => selectedDocspaceIds.includes(item.id))}
         onOpenChange={setPickerOpen}
         onConfirm={(docspaceId, path) => {
-          const docspace = docspaces.find((item) => item.id === docspaceId);
+          const docspace = docspaceItems.find((item) => item.id === docspaceId);
 
           if (!docspace) {
             return;

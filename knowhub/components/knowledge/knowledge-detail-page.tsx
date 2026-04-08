@@ -7,7 +7,7 @@ import { buttonVariants } from "@/components/ui/button-variants";
 import { KnowHubPageShell } from "@/knowhub/components/layout/knowhub-page-shell";
 import { pipelineRecords } from "@/knowhub/features/knowledge/data";
 import { strategyRecords } from "@/knowhub/features/strategies/data";
-import type { DocSpaceRecord } from "@/knowhub/features/docspaces/types";
+import type { DocSpaceRecord } from "@/knowhub/features/docspace/types";
 import { cn } from "@/lib/utils";
 
 const statusMap = {
@@ -27,7 +27,7 @@ const statusMap = {
 
 type KnowHubKnowledgeDetailPageProps = {
   id: string;
-  docspaces: DocSpaceRecord[];
+  docspaceItems: DocSpaceRecord[];
 };
 
 function renderStrategyList(ids: string[]) {
@@ -56,7 +56,7 @@ function renderStrategyList(ids: string[]) {
 
 export function KnowHubKnowledgeDetailPage({
   id,
-  docspaces,
+  docspaceItems,
 }: KnowHubKnowledgeDetailPageProps) {
   const item = pipelineRecords.find((record) => record.id === id);
 
@@ -64,11 +64,11 @@ export function KnowHubKnowledgeDetailPage({
     notFound();
   }
 
-  const matchedDocspaces = docspaces.filter((record) =>
+  const matchedItems = docspaceItems.filter((record) =>
     item.docspaceIds.includes(record.id),
   );
   const status = statusMap[item.status];
-  const fileCount = matchedDocspaces.reduce(
+  const fileCount = matchedItems.reduce(
     (sum, record) => sum + record.documentCount,
     0,
   );
@@ -108,9 +108,9 @@ export function KnowHubKnowledgeDetailPage({
 
         <div className="grid gap-2.5 md:grid-cols-2 xl:grid-cols-4">
           <div className="rounded-[12px] border border-[#dde6f0] bg-[linear-gradient(180deg,rgba(236,242,248,0.78)_0%,rgba(247,250,253,0.92)_100%)] px-3 py-2">
-            <div className="text-[11px] text-[#98a2b3]">关联 DocSpace</div>
+            <div className="text-[11px] text-[#98a2b3]">关联文档空间</div>
             <div className="mt-1 text-[12px] leading-5 text-title">
-              {matchedDocspaces.map((record) => record.name).join("、")}
+              {matchedItems.map((record) => record.name).join("、")}
             </div>
           </div>
           <div className="rounded-[12px] border border-[#dde6f0] bg-[linear-gradient(180deg,rgba(236,242,248,0.78)_0%,rgba(247,250,253,0.92)_100%)] px-3 py-2">

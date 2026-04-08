@@ -1,4 +1,4 @@
-import { listDocSpaces } from "@/knowhub/features/docspaces/service";
+import { listDocspaceItems } from "@/knowhub/features/docspace/service";
 import { KnowHubKnowledgeDetailPage } from "@/knowhub/components/knowledge/knowledge-detail-page";
 
 type KnowHubKnowledgeDetailRoutePageProps = {
@@ -11,7 +11,7 @@ export default async function KnowHubKnowledgeDetailRoutePage({
   params,
 }: KnowHubKnowledgeDetailRoutePageProps) {
   const { id } = await params;
-  const docspaces = await listDocSpaces();
+  const docspaceItems = await listDocspaceItems();
 
-  return <KnowHubKnowledgeDetailPage id={id} docspaces={docspaces} />;
+  return <KnowHubKnowledgeDetailPage id={id} docspaceItems={docspaceItems} />;
 }

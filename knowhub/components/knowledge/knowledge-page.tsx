@@ -9,7 +9,7 @@ import { KnowHubCardGrid } from "@/knowhub/components/shared/card-grid";
 import { KnowHubPageToolbar } from "@/knowhub/components/shared/page-toolbar";
 import { pipelineRecords } from "@/knowhub/features/knowledge/data";
 import type { PipelineRecord } from "@/knowhub/features/knowledge/types";
-import type { DocSpaceRecord } from "@/knowhub/features/docspaces/types";
+import type { DocSpaceRecord } from "@/knowhub/features/docspace/types";
 
 const statusTabs = [
   { key: "all", label: "全部" },
@@ -19,13 +19,13 @@ const statusTabs = [
 ] as const;
 
 type KnowHubKnowledgePageProps = {
-  docspaces: DocSpaceRecord[];
+  docspaceItems: DocSpaceRecord[];
   initialBuilderOpen?: boolean;
   initialDocspaceId?: string;
 };
 
 export function KnowHubKnowledgePage({
-  docspaces,
+  docspaceItems,
   initialBuilderOpen = false,
   initialDocspaceId,
 }: KnowHubKnowledgePageProps) {
@@ -64,7 +64,7 @@ export function KnowHubKnowledgePage({
       <section className="rounded-[20px] border border-[#dde6f0] bg-[linear-gradient(180deg,rgba(236,241,247,0.92)_0%,rgba(244,247,251,0.96)_100%)] px-3 py-3 sm:px-4 sm:py-4">
         <KnowHubCardGrid itemWidth={325}>
           {visiblePipelines.map((item) => {
-            const docspaceNames = docspaces
+            const docspaceNames = docspaceItems
               .filter((record) => item.docspaceIds.includes(record.id))
               .map((record) => record.name);
 
@@ -82,7 +82,7 @@ export function KnowHubKnowledgePage({
 
       <KnowledgeBuilderDialog
         open={builderOpen}
-        docspaces={docspaces}
+        docspaceItems={docspaceItems}
         initialDocspaceId={initialDocspaceId}
         onOpenChange={setBuilderOpen}
         onCreated={(item) => setItems((current) => [item, ...current])}

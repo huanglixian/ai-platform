@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { Folder, FolderOpen, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import type { DocSpaceRecord } from "@/knowhub/features/docspaces/types";
+import type { DocSpaceRecord } from "@/knowhub/features/docspace/types";
 
 type FolderTreeNode = {
   name: string;
@@ -15,7 +15,7 @@ type FolderTreeNode = {
 
 type FileScopePickerDialogProps = {
   open: boolean;
-  docspaces: DocSpaceRecord[];
+  docspaceItems: DocSpaceRecord[];
   onOpenChange: (open: boolean) => void;
   onConfirm: (docspaceId: string, path: string) => void;
 };
@@ -75,11 +75,11 @@ function getNodeByPath(node: FolderTreeNode, targetPath: string): FolderTreeNode
 
 export function FileScopePickerDialog({
   open,
-  docspaces,
+  docspaceItems,
   onOpenChange,
   onConfirm,
 }: FileScopePickerDialogProps) {
-  const defaultDocspaceId = docspaces[0]?.id ?? "";
+  const defaultDocspaceId = docspaceItems[0]?.id ?? "";
   const [activeDocspaceId, setActiveDocspaceId] = useState(defaultDocspaceId);
   const [currentPath, setCurrentPath] = useState("/");
   const [selectedPath, setSelectedPath] = useState("/");
@@ -87,13 +87,13 @@ export function FileScopePickerDialog({
   const folderTrees = useMemo(
     () =>
       Object.fromEntries(
-        docspaces.map((item) => [item.id, buildFolderTree(item)]),
+        docspaceItems.map((item) => [item.id, buildFolderTree(item)]),
       ) as Record<string, FolderTreeNode>,
-    [docspaces],
+    [docspaceItems],
   );
 
   const activeDocspace =
-    docspaces.find((item) => item.id === activeDocspaceId) ?? docspaces[0];
+    docspaceItems.find((item) => item.id === activeDocspaceId) ?? docspaceItems[0];
   const activeTree = activeDocspace ? folderTrees[activeDocspace.id] : null;
   const currentNode = activeTree ? getNodeByPath(activeTree, currentPath) : null;
 
@@ -114,7 +114,7 @@ export function FileScopePickerDialog({
               新增文件夹策略
             </div>
             <div className="mt-1 text-[13px] leading-6 text-[#667085]">
-              选择某个 DocSpace 下的文件夹域，单独覆盖默认建库策略。
+              选择某个文档空间下的文件夹域，单独覆盖默认建库策略。
             </div>
           </div>
           <button
@@ -128,9 +128,9 @@ export function FileScopePickerDialog({
 
         <div className="grid flex-1 gap-4 overflow-y-auto px-5 py-4 lg:grid-cols-[220px_minmax(0,1fr)]">
           <aside className="rounded-[16px] border border-[#d8e1eb] bg-[#f8fbfe] p-3">
-            <div className="text-[12px] font-semibold text-[#5f6f82]">选择 DocSpace</div>
+            <div className="text-[12px] font-semibold text-[#5f6f82]">选择文档空间</div>
             <div className="mt-3 flex flex-col gap-2">
-              {docspaces.map((item) => {
+              {docspaceItems.map((item) => {
                 const active = item.id === activeDocspaceId;
 
                 return (

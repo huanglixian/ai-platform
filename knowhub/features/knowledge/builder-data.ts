@@ -1,6 +1,6 @@
 import { strategyRecords } from "@/knowhub/features/strategies/data";
 import type { PipelineRecord } from "@/knowhub/features/knowledge/types";
-import type { DocSpaceRecord } from "@/knowhub/features/docspaces/types";
+import type { DocSpaceRecord } from "@/knowhub/features/docspace/types";
 import type {
   FolderStrategyDraft,
   KnowledgeFileTypeDraft,
@@ -164,21 +164,21 @@ function collectEnabledStrategyIds(
 export function buildKnowledgeTaskRecord(input: {
   name: string;
   summary: string;
-  docspaces: DocSpaceRecord[];
+  docspaceItems: DocSpaceRecord[];
   fileTypes: KnowledgeFileTypeDraft[];
 }): PipelineRecord {
-  const enabledDocspaces = input.docspaces;
+  const enabledItems = input.docspaceItems;
   const targetLabel =
-    enabledDocspaces.length > 1
-      ? `${enabledDocspaces.length} 个 DocSpace / 混合文档`
-      : `${enabledDocspaces[0]?.name ?? "未选择空间"} / 混合文档`;
+    enabledItems.length > 1
+      ? `${enabledItems.length} 个文档空间 / 混合文档`
+      : `${enabledItems[0]?.name ?? "未选择空间"} / 混合文档`;
 
   return {
     id: `draft_${Date.now().toString(36)}`,
     name: input.name,
     summary: input.summary,
     status: "draft",
-    docspaceIds: enabledDocspaces.map((item) => item.id),
+    docspaceIds: enabledItems.map((item) => item.id),
     targetLabel,
     preprocessStrategyIds: collectEnabledStrategyIds(input.fileTypes, "preprocess"),
     chunkingStrategyIds: collectEnabledStrategyIds(input.fileTypes, "chunking"),

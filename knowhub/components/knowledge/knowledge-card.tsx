@@ -78,7 +78,7 @@ export function KnowledgeCard({
       </div>
 
       <div className="mt-auto pt-3 text-[11px] text-[#7b8798]">
-        <div className="truncate">DocSpace：{docspaceNames.join("、") || "未绑定"}</div>
+        <div className="truncate">文档空间：{docspaceNames.join("、") || "未绑定"}</div>
         <div className="mt-1">最近运行：{item.lastRunAt}</div>
       </div>
       <div
