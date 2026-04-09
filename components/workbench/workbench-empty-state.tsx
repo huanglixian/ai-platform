@@ -2,12 +2,21 @@
 
 import { useState } from "react";
 
+type WorkbenchMode = "search" | "chat";
+
 type WorkbenchEmptyStateProps = {
-  modelName: string;
+  mode: WorkbenchMode;
+  knowledgeId: string;
+  knowledgeOptions: Array<{
+    id: string;
+    name: string;
+  }>;
   sending: boolean;
   status: string;
   initialValue?: string;
   resetKey?: string;
+  onModeChange: (mode: WorkbenchMode) => void;
+  onKnowledgeChange: (knowledgeId: string) => void;
   onSend: (value: string) => void | Promise<void>;
 };
 
@@ -28,10 +37,14 @@ export function WorkbenchEmptyState({
 }
 
 function WorkbenchEmptyStateContent({
-  modelName,
+  mode,
+  knowledgeId,
+  knowledgeOptions,
   sending,
   status,
   initialValue = "",
+  onModeChange,
+  onKnowledgeChange,
   onSend,
 }: WorkbenchEmptyStateProps) {
   const [value, setValue] = useState(initialValue);
@@ -72,16 +85,64 @@ function WorkbenchEmptyStateContent({
                 void handleSend();
               }
             }}
-            placeholder="输入问题或任务，开始对话"
+            placeholder={
+              mode === "chat"
+                ? "输入问题或任务，开始对话"
+                : "输入问题，搜索知识库中的相关片段"
+            }
             className="min-h-[132px] w-full resize-none border-0 bg-transparent px-1 py-1 text-[16px] leading-8 text-title outline-none placeholder:text-[#98a2b3]"
           />
           <div className="mt-4 flex items-center justify-between gap-4 border-t border-[#eef2f6] pt-4">
-            <div className="min-w-0 truncate text-[12px] text-[#7f8ea3]">
-              {status
-                ? `处理中：${status}`
-                : sending
-                  ? "nanobot 正在处理这条消息..."
-                  : `模型：${modelName || "-"}`}
+            <div className="flex min-w-0 flex-1 items-center gap-3">
+              <div className="flex items-center gap-1 rounded-[10px] border border-[#dbe5f0] bg-[#f8fbfe] px-1 py-1">
+                <button
+                  type="button"
+                  onClick={() => onModeChange("chat")}
+                  className={[
+                    "rounded-[7px] px-3 py-1.5 text-[13px] transition-colors",
+                    mode === "chat"
+                      ? "bg-white text-[#1a4d87]"
+                      : "text-[#667085] hover:bg-white/70",
+                  ].join(" ")}
+                >
+                  问答
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onModeChange("search")}
+                  className={[
+                    "rounded-[7px] px-3 py-1.5 text-[13px] transition-colors",
+                    mode === "search"
+                      ? "bg-white text-[#1a4d87]"
+                      : "text-[#667085] hover:bg-white/70",
+                  ].join(" ")}
+                >
+                  搜索
+                </button>
+              </div>
+
+              {mode === "search" ? (
+                <select
+                  value={knowledgeId}
+                  onChange={(event) => onKnowledgeChange(event.target.value)}
+                  className="h-[34px] w-[240px] rounded-[10px] border border-[#dbe5f0] bg-white px-3 text-[12px] text-title outline-none transition-colors focus:border-[#6f96c4]"
+                >
+                  <option value="">请选择知识库</option>
+                  {knowledgeOptions.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.name}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <div className="min-w-0 truncate text-[12px] text-[#7f8ea3]">
+                  {status
+                    ? `处理中：${status}`
+                    : sending
+                      ? "nanobot 正在处理这条消息..."
+                      : "直接提问当前自由体"}
+                </div>
+              )}
             </div>
             <button
               type="button"
@@ -89,7 +150,7 @@ function WorkbenchEmptyStateContent({
               onClick={() => void handleSend()}
               className="h-[42px] rounded-[12px] bg-[#0368b3] px-5 text-[14px] font-medium text-white transition-colors hover:bg-[#1a4d87] disabled:cursor-not-allowed disabled:bg-[#7eaed6]"
             >
-              {sending ? "处理中..." : "发送"}
+              {sending ? "处理中..." : mode === "chat" ? "发送" : "搜索"}
             </button>
           </div>
         </div>

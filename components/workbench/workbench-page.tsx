@@ -47,7 +47,6 @@ export function WorkbenchPage({ agentId }: WorkbenchPageProps) {
   const searchParams = useSearchParams();
   const searchParamsKey = searchParams.toString();
   const [bootstrap, setBootstrap] = useState<NanobotBootstrap | null>(null);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [reloadTick, setReloadTick] = useState(0);
   const [expandedSessionKey, setExpandedSessionKey] = useState("");
@@ -62,7 +61,7 @@ export function WorkbenchPage({ agentId }: WorkbenchPageProps) {
   const [editorStatus, setEditorStatus] = useState("");
   const [sessionSidebarExpanded, setSessionSidebarExpanded] = useState(false);
   const [configDrawerOpen, setConfigDrawerOpen] = useState(false);
-  const [mode, setMode] = useState<WorkbenchMode>("search");
+  const [mode, setMode] = useState<WorkbenchMode>("chat");
   const [knowledgeOptions, setKnowledgeOptions] = useState<WorkbenchKnowledgeOption[]>([]);
   const [knowledgeId, setKnowledgeId] = useState("");
   const [searching, setSearching] = useState(false);
@@ -422,11 +421,18 @@ export function WorkbenchPage({ agentId }: WorkbenchPageProps) {
     }
   }
 
+  function handleModeChange(nextMode: WorkbenchMode) {
+    setMode(nextMode);
+    if (nextMode === "chat") {
+      setSearchError("");
+      setSearchStatus("");
+    }
+  }
+
   useEffect(() => {
     let active = true;
 
     async function run() {
-      setLoading(true);
       setError("");
 
       try {
@@ -450,10 +456,6 @@ export function WorkbenchPage({ agentId }: WorkbenchPageProps) {
           return;
         }
         setError(loadError instanceof Error ? loadError.message : "加载失败");
-      } finally {
-        if (active) {
-          setLoading(false);
-        }
       }
     }
 
@@ -495,20 +497,12 @@ export function WorkbenchPage({ agentId }: WorkbenchPageProps) {
     };
   }, []);
 
-  if (loading) {
-    return (
-      <div className="app-card flex min-h-[240px] items-center justify-center px-6 text-[14px] text-[#667085]">
-        正在加载工作台...
-      </div>
-    );
-  }
-
-  if (error || !bootstrap) {
+  if (error) {
     return (
       <div className="app-card flex min-h-[240px] flex-col items-center justify-center gap-4 px-6">
         <div className="text-[18px] font-semibold text-title">工作台加载失败</div>
         <div className="text-center text-[13px] leading-6 text-[#667085]">
-          {error || "未获取到自由体数据"}
+          {error}
         </div>
         <button
           type="button"
@@ -521,7 +515,14 @@ export function WorkbenchPage({ agentId }: WorkbenchPageProps) {
     );
   }
 
+  if (!bootstrap) {
+    return null;
+  }
+
   const hasConversation = !!bootstrap.current_detail?.turns.length;
+  const showChatWorkspace = mode === "chat" && hasConversation;
+  const showSearchWorkspace = mode === "search" && hasSearched;
+  const showSessionSidebar = mode === "chat";
   const selectedKnowledge =
     knowledgeOptions.find((item) => item.id === knowledgeId) ?? null;
   const composerMetaSlot = (
@@ -529,19 +530,7 @@ export function WorkbenchPage({ agentId }: WorkbenchPageProps) {
       <div className="flex items-center gap-1 rounded-[8px] border border-[#dbe5f0] bg-white px-1 py-1">
         <button
           type="button"
-          onClick={() => setMode("search")}
-          className={[
-            "rounded-[6px] px-2.5 py-1 transition-colors",
-            mode === "search"
-              ? "bg-[#eef5fd] text-[#1a4d87]"
-              : "text-[#667085] hover:bg-[#f5f8fb]",
-          ].join(" ")}
-        >
-          搜索
-        </button>
-        <button
-          type="button"
-          onClick={() => setMode("chat")}
+          onClick={() => handleModeChange("chat")}
           className={[
             "rounded-[6px] px-2.5 py-1 transition-colors",
             mode === "chat"
@@ -551,6 +540,18 @@ export function WorkbenchPage({ agentId }: WorkbenchPageProps) {
         >
           问答
         </button>
+        <button
+          type="button"
+          onClick={() => handleModeChange("search")}
+          className={[
+            "rounded-[6px] px-2.5 py-1 transition-colors",
+            mode === "search"
+              ? "bg-[#eef5fd] text-[#1a4d87]"
+              : "text-[#667085] hover:bg-[#f5f8fb]",
+          ].join(" ")}
+        >
+          搜索
+        </button>
       </div>
 
       {mode === "chat" ? (
@@ -559,11 +560,10 @@ export function WorkbenchPage({ agentId }: WorkbenchPageProps) {
             ? `处理中：${composerStatus}`
             : sending
               ? "nanobot 正在处理这条消息..."
-              : `模型：${bootstrap.model_name || "-"}`}
+              : "直接提问当前自由体"}
         </div>
       ) : (
         <>
-          <label className="shrink-0 text-[#7f8ea3]">知识库</label>
           <select
             value={knowledgeId}
             onChange={(event) => setKnowledgeId(event.target.value)}
@@ -584,37 +584,47 @@ export function WorkbenchPage({ agentId }: WorkbenchPageProps) {
 
   return (
     <>
-      <section className="-ml-6 grid h-[calc(100vh-104px)] min-h-0 w-[calc(100%+1.5rem)] grid-cols-[auto_minmax(0,1fr)] py-1 sm:-ml-8 sm:w-[calc(100%+2rem)]">
-        <WorkbenchSessionSidebar
-          expanded={sessionSidebarExpanded}
-          sessionCount={bootstrap.sessions.length}
-          onToggle={() => setSessionSidebarExpanded((current) => !current)}
-          onStartNewSession={() => {
-            setExpandedSessionKey("");
-            setComposerStatus("");
-            setComposerResetTick((current) => current + 1);
-            syncUrl({ newSession: true });
-            setReloadTick((current) => current + 1);
-          }}
-        >
-          <BotSessionPane
-            sessions={bootstrap.sessions}
-            currentKey={bootstrap.current_key}
-            currentDetail={bootstrap.current_detail}
-            expandedSessionKey={expandedSessionKey}
-            noHover
-            onOpenSession={(sessionKey, anchor) => handleOpenSession(sessionKey, anchor)}
-            onDeleteSession={(sessionKey) => handleDeleteSession(sessionKey)}
+      <section
+        className={[
+          "-ml-6 grid h-[calc(100vh-104px)] min-h-0 w-[calc(100%+1.5rem)] py-1 sm:-ml-8 sm:w-[calc(100%+2rem)]",
+          showSessionSidebar ? "grid-cols-[auto_minmax(0,1fr)]" : "grid-cols-[minmax(0,1fr)]",
+        ].join(" ")}
+      >
+        {showSessionSidebar ? (
+          <WorkbenchSessionSidebar
+            expanded={sessionSidebarExpanded}
+            sessionCount={bootstrap.sessions.length}
+            onToggle={() => setSessionSidebarExpanded((current) => !current)}
             onStartNewSession={() => {
               setExpandedSessionKey("");
               setComposerStatus("");
+              setMode("chat");
+              setHasSearched(false);
               syncUrl({ newSession: true });
               setReloadTick((current) => current + 1);
             }}
-          />
-        </WorkbenchSessionSidebar>
+          >
+            <BotSessionPane
+              sessions={bootstrap.sessions}
+              currentKey={bootstrap.current_key}
+              currentDetail={bootstrap.current_detail}
+              expandedSessionKey={expandedSessionKey}
+              noHover
+              onOpenSession={(sessionKey, anchor) => handleOpenSession(sessionKey, anchor)}
+              onDeleteSession={(sessionKey) => handleDeleteSession(sessionKey)}
+              onStartNewSession={() => {
+                setExpandedSessionKey("");
+                setComposerStatus("");
+                setMode("chat");
+                setHasSearched(false);
+                syncUrl({ newSession: true });
+                setReloadTick((current) => current + 1);
+              }}
+            />
+          </WorkbenchSessionSidebar>
+        ) : null}
 
-        {hasConversation ? (
+        {showChatWorkspace || showSearchWorkspace ? (
           <section className="min-h-0 min-w-0 overflow-hidden rounded-[18px] bg-white px-5 py-4">
             <div className="grid h-full min-h-0 min-w-0 grid-rows-[auto_minmax(0,1fr)] gap-4">
               <BotComposerPane
@@ -644,7 +654,7 @@ export function WorkbenchPage({ agentId }: WorkbenchPageProps) {
                 }
                 onSend={mode === "chat" ? handleSendMessage : handleSearch}
               />
-              {mode === "chat" ? (
+              {showChatWorkspace ? (
                 <BotTranscriptPane detail={bootstrap.current_detail} noHover />
               ) : (
                 <WorkbenchSearchResultPane
@@ -660,38 +670,17 @@ export function WorkbenchPage({ agentId }: WorkbenchPageProps) {
           </section>
         ) : (
           <div className="min-h-0 min-w-0 overflow-hidden rounded-[18px] bg-white px-5 py-4">
-            {mode === "chat" ? (
-              <WorkbenchEmptyState
-                modelName={bootstrap.model_name || ""}
-                sending={sending}
-                status={composerStatus}
-                resetKey={`${bootstrap.current_key || "new"}:${composerResetTick}`}
-                onSend={handleSendMessage}
-              />
-            ) : (
-              <div className="grid h-full min-h-0 min-w-0 grid-rows-[auto_minmax(0,1fr)] gap-4">
-                <BotComposerPane
-                  sending={searching}
-                  status={searchStatus}
-                  modelName={bootstrap.model_name || ""}
-                  metaSlot={composerMetaSlot}
-                  title="知识检索"
-                  placeholder="输入问题，搜索知识库中的相关片段"
-                  noHover
-                  resetKey={`search:${composerResetTick}`}
-                  submitLabel="搜索"
-                  onSend={handleSearch}
-                />
-                <WorkbenchSearchResultPane
-                  searching={searching}
-                  query={searchResult?.query || ""}
-                  knowledgeName={selectedKnowledge?.name || ""}
-                  hasSearched={hasSearched}
-                  error={searchError}
-                  items={searchResult?.items ?? []}
-                />
-              </div>
-            )}
+            <WorkbenchEmptyState
+              mode={mode}
+              knowledgeId={knowledgeId}
+              knowledgeOptions={knowledgeOptions}
+              sending={mode === "chat" ? sending : searching}
+              status={mode === "chat" ? composerStatus : searchStatus}
+              resetKey={`${mode}:${bootstrap.current_key || "new"}:${composerResetTick}`}
+              onModeChange={handleModeChange}
+              onKnowledgeChange={setKnowledgeId}
+              onSend={mode === "chat" ? handleSendMessage : handleSearch}
+            />
           </div>
         )}
       </section>

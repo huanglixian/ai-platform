@@ -1,5 +1,6 @@
 "use client";
 
+import { BotMessageMarkdown } from "@/components/bots/bot-message-markdown";
 import type { WorkbenchSearchItem } from "@/features/workbench/api";
 
 type WorkbenchSearchResultPaneProps = {
@@ -56,35 +57,33 @@ export function WorkbenchSearchResultPane({
                 key={`${item.filePath}:${item.startLine}:${item.endLine}:${index}`}
                 className="rounded-[12px] border border-[#e4edf6] bg-white px-4 py-3"
               >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
+                <div className="rounded-[10px] border border-[#edf2f7] bg-[#fafbfd] px-3 py-2.5">
+                  <BotMessageMarkdown content={item.content} />
+                </div>
+
+                <div className="mt-3 flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
                     <div className="truncate text-[13px] font-semibold text-title">
                       {item.fileName}
                     </div>
                     <div className="mt-1 truncate text-[11px] text-[#98a2b3]">
                       {item.filePath}
                     </div>
+                    {item.parentHeadings.length || item.headingTitle ? (
+                      <div className="mt-2 text-[11px] leading-5 text-[#667085]">
+                        标题链：
+                        {[...item.parentHeadings.map((heading) => heading.title), item.headingTitle]
+                          .filter(Boolean)
+                          .join(" / ")}
+                      </div>
+                    ) : null}
+                    <div className="mt-1 text-[11px] text-[#7f8ea3]">
+                      索引：{item.startLine}-{item.endLine}
+                    </div>
                   </div>
                   <div className="shrink-0 rounded-full border border-[#dbe5f0] bg-[#f7fafc] px-2.5 py-1 text-[11px] text-[#51657d]">
                     {item.score}
                   </div>
-                </div>
-
-                {item.parentHeadings.length || item.headingTitle ? (
-                  <div className="mt-3 text-[11px] leading-5 text-[#667085]">
-                    标题链：
-                    {[...item.parentHeadings.map((heading) => heading.title), item.headingTitle]
-                      .filter(Boolean)
-                      .join(" / ")}
-                  </div>
-                ) : null}
-
-                <div className="mt-1 text-[11px] text-[#7f8ea3]">
-                  索引：{item.startLine}-{item.endLine}
-                </div>
-
-                <div className="mt-3 rounded-[10px] border border-[#edf2f7] bg-[#fafbfd] px-3 py-2.5 text-[13px] leading-6 text-title">
-                  {item.content}
                 </div>
               </article>
             ))}
