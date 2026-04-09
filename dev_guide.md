@@ -177,6 +177,7 @@ Platform 业务数据与工具：
 
 ### 2. 文件组织方式
 
+- 命名约定：英文路径、目录、接口统一使用 `docspace`；功能模块中文名称使用“文档中心”；文档中心中的单个实例使用“文档空间”
 - `app/knowhub/*`：KnowHub 路由入口层，只做路由承接和参数归一化
 - `knowhub/components/*`：KnowHub 页面实现层，按 `overview / docspace / strategies / knowledge / settings / shared` 分组
 - `knowhub/features/*`：KnowHub 业务数据、类型、接口封装和服务端逻辑
@@ -247,6 +248,7 @@ KnowHub 知识中心与配置管理：
 
 KnowHub 业务数据与服务：
 
+- `docspace`：文档中心核心业务域，负责文档空间元数据、连接测试、文件扫描与本地持久化
 - 文档空间前端请求封装：`knowhub/features/docspace/api.ts`
 - 文档空间服务端业务逻辑：`knowhub/features/docspace/service.ts`
 - 文档空间元数据读写：`knowhub/features/docspace/repository.ts`
