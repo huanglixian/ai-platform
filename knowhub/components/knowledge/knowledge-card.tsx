@@ -5,7 +5,7 @@ import type { PipelineRecord } from "@/knowhub/features/knowledge/types";
 
 type KnowledgeCardProps = {
   item: PipelineRecord;
-  docspaceNames: string[];
+  docspaceSummaries: string[];
   href?: string;
 };
 
@@ -34,21 +34,25 @@ const statusMap = {
 
 export function KnowledgeCard({
   item,
-  docspaceNames,
+  docspaceSummaries,
   href,
 }: KnowledgeCardProps) {
   const status = statusMap[item.status];
+  const docspaceLabel = docspaceSummaries.join("、") || "未绑定";
   const containerClassName =
     "block h-full overflow-hidden rounded-[16px] border border-[#d8e1eb] bg-white text-left shadow-[0_8px_22px_rgba(15,23,42,0.04)] transition-all hover:-translate-y-0.5 hover:border-[#bfd0e2] hover:shadow-[0_12px_26px_rgba(15,23,42,0.07)]";
   const content = (
-    <div className="flex min-h-[214px] flex-col px-4 py-4">
+    <div className="flex min-h-[220px] flex-col px-4 py-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="text-title text-[16px] font-semibold tracking-[-0.02em]">
             {item.name}
           </div>
-          <div className="mt-1 line-clamp-2 text-[13px] leading-5.5 text-[#667085]">
-            {item.summary}
+          <div className="mt-3 line-clamp-2 text-[12px] text-[#7b8798]">
+            所属空间：{docspaceLabel}
+          </div>
+          <div className="mt-1 text-[12px] text-[#7b8798]">
+            Embedding：{item.embeddingModel}
           </div>
         </div>
         <Badge className={status.badgeClassName} variant="outline">
@@ -56,35 +60,21 @@ export function KnowledgeCard({
         </Badge>
       </div>
 
-      <div className="mt-3 rounded-[12px] border border-[#e7edf4] bg-[#f8fbfe] px-3 py-2.5 text-[12px] text-[#5f6f82]">
-        <div>
-          <span className="text-[#98a2b3]">对象</span>
-          <span className="ml-2 text-title font-medium">{item.targetLabel}</span>
+      <div className="mt-3 flex items-center rounded-[12px] border border-[#e9eff5] bg-white px-3.5 py-2.5 text-[12px] text-[#5f6f82]">
+        <div className="flex min-w-0 flex-1 items-baseline justify-center gap-1.5">
+          <span className="text-[#98a2b3]">文件数</span>
+          <span className="text-title font-medium">{item.fileCount}</span>
         </div>
-        <div className="mt-1">
-          <span className="text-[#98a2b3]">输出</span>
-          <span className="ml-2 text-title font-medium">{item.knowledgeTarget}</span>
-        </div>
-      </div>
-
-      <div className="mt-3 grid grid-cols-3 gap-2 text-[12px]">
-        <div className="rounded-[12px] border border-[#eef2f6] bg-white px-3 py-2">
-          <div className="text-[#98a2b3]">预处理</div>
-          <div className="mt-1 text-title font-medium">{item.preprocessStrategyIds.length}</div>
-        </div>
-        <div className="rounded-[12px] border border-[#eef2f6] bg-white px-3 py-2">
-          <div className="text-[#98a2b3]">切片</div>
-          <div className="mt-1 text-title font-medium">{item.chunkingStrategyIds.length}</div>
-        </div>
-        <div className="rounded-[12px] border border-[#eef2f6] bg-white px-3 py-2">
-          <div className="text-[#98a2b3]">提取</div>
-          <div className="mt-1 text-title font-medium">{item.extractStrategyIds.length}</div>
+        <div className="mx-3 h-4 w-px shrink-0 bg-[#dbe5ef]" />
+        <div className="flex min-w-0 flex-1 items-baseline justify-center gap-1.5">
+          <span className="text-[#98a2b3]">切片数</span>
+          <span className="text-title font-medium">{item.chunkCount}</span>
         </div>
       </div>
 
       <div className="mt-auto pt-3 text-[11px] text-[#7b8798]">
-        <div className="truncate">文档空间：{docspaceNames.join("、") || "未绑定"}</div>
-        <div className="mt-1">最近运行：{item.lastRunAt}</div>
+        <span className="shrink-0">最近运行：</span>
+        <span className="text-title/80">{item.lastRunAt}</span>
       </div>
       <div
         className="mt-3 h-1 w-full rounded-full"

@@ -33,6 +33,12 @@ const statusMap = {
   },
 } as const;
 
+const runStatusLabelMap = {
+  running: "建库进行中",
+  succeeded: "建库完成",
+  failed: "建库失败",
+} as const;
+
 type KnowHubKnowledgeDetailPageProps = {
   item: PipelineRecord | null;
   runs: KnowledgeRunRecord[];
@@ -61,6 +67,29 @@ function renderStrategyList(ids: string[]) {
       ))}
     </div>
   );
+}
+
+function formatDateTime(value: string | null) {
+  if (!value) {
+    return "暂无";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat("zh-CN", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  })
+    .format(date)
+    .replace(/\//g, "-");
 }
 
 export function KnowHubKnowledgeDetailPage({
@@ -175,14 +204,21 @@ export function KnowHubKnowledgeDetailPage({
                   className="rounded-[12px] border border-[#e7edf4] bg-[#f8fbfe] px-3 py-2.5"
                 >
                   <div className="flex items-center justify-between gap-3">
-                    <div className="text-title text-[13px] font-medium">{run.message}</div>
+                    <div className="text-title text-[13px] font-medium">
+                      {runStatusLabelMap[run.status]}
+                    </div>
                     <div className="text-[11px] text-[#98a2b3]">{run.status}</div>
                   </div>
+                  {run.status === "failed" && run.message ? (
+                    <div className="mt-2 break-words text-[11px] leading-5 text-[#667085]">
+                      错误：{run.message}
+                    </div>
+                  ) : null}
                   <div className="mt-2 text-[11px] leading-5 text-[#667085]">
                     文件 {run.fileCount} / 切片 {run.chunkCount} / 向量 {run.vectorCount}
                   </div>
                   <div className="mt-1 text-[11px] text-[#7b8798]">
-                    开始：{run.startedAt}
+                    开始：{formatDateTime(run.startedAt)}
                   </div>
                 </div>
               ))
