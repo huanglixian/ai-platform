@@ -1,5 +1,7 @@
 import "server-only";
 
+import { Buffer } from "buffer";
+
 import SMB2 from "smb2";
 
 import type { SmbDocSpaceSource } from "@/knowhub/features/docspace/types";
@@ -21,6 +23,11 @@ type SmbStat = {
 type SmbClient = {
   readdir: (path: string, callback: (error: Error | null, files?: string[]) => void) => void;
   stat: (path: string, callback: (error: Error | null, stat?: SmbStat) => void) => void;
+  readFile: (
+    path: string,
+    options: { encoding?: BufferEncoding },
+    callback: (error: Error | null, content?: string | Buffer) => void,
+  ) => void;
   disconnect: () => void;
 };
 
@@ -69,6 +76,23 @@ function stat(client: SmbClient, pathname: string) {
       }
 
       resolve(nextStat);
+    });
+  });
+}
+
+function readFile(
+  client: SmbClient,
+  pathname: string,
+  options?: { encoding?: BufferEncoding },
+) {
+  return new Promise<string | Buffer>((resolve, reject) => {
+    client.readFile(pathname, options ?? {}, (error, content) => {
+      if (error || content === undefined) {
+        reject(error || new Error("无法读取 SMB 文件内容"));
+        return;
+      }
+
+      resolve(content);
     });
   });
 }
@@ -133,6 +157,23 @@ export async function listSmbFiles(source: SmbDocSpaceSource) {
   try {
     await walkSmbDirectory(client, toWindowsPath(source.basePath), files);
     return files;
+  } finally {
+    client.disconnect();
+  }
+}
+
+export async function readSmbFileText(source: SmbDocSpaceSource, filePath: string) {
+  const client = createSmbClient(source);
+  const basePath = normalizeSmbPath(source.basePath);
+  const relativePath = normalizeSmbPath(filePath);
+  const resolvedPath = [basePath, relativePath].filter(Boolean).join("/");
+
+  try {
+    const content = await readFile(client, toWindowsPath(resolvedPath), {
+      encoding: "utf8",
+    });
+
+    return typeof content === "string" ? content : Buffer.from(content).toString("utf8");
   } finally {
     client.disconnect();
   }

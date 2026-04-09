@@ -1,5 +1,7 @@
 import "server-only";
 
+import { Buffer } from "buffer";
+
 import OSS from "ali-oss";
 
 import type { OssDocSpaceSource } from "@/knowhub/features/docspace/types";
@@ -30,6 +32,17 @@ function createOssClient(source: OssDocSpaceSource) {
 
 function normalizePrefix(prefix: string) {
   return prefix.replace(/^\/+/, "").replace(/\/+$/, "");
+}
+
+function normalizeObjectPath(filePath: string) {
+  return filePath.replace(/\\/g, "/").replace(/^\/+/, "");
+}
+
+function buildObjectKey(source: OssDocSpaceSource, filePath: string) {
+  const prefix = normalizePrefix(source.prefix);
+  const relativePath = normalizeObjectPath(filePath);
+
+  return prefix ? `${prefix}/${relativePath}` : relativePath;
 }
 
 export function buildOssTarget(source: OssDocSpaceSource) {
@@ -91,4 +104,21 @@ export async function listOssFiles(source: OssDocSpaceSource) {
   }
 
   return files;
+}
+
+export async function readOssFileText(source: OssDocSpaceSource, filePath: string) {
+  const client = createOssClient(source);
+  const objectKey = buildObjectKey(source, filePath);
+  const result = await client.get(objectKey);
+  const content = result.content;
+
+  if (typeof content === "string") {
+    return content;
+  }
+
+  if (Buffer.isBuffer(content)) {
+    return content.toString("utf8");
+  }
+
+  return Buffer.from(content).toString("utf8");
 }

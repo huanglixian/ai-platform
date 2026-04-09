@@ -1,6 +1,8 @@
+import { createTemplateRecord, listStrategyTemplates } from "@/knowhub/features/strategies/registry";
 import type { StrategyRecord } from "@/knowhub/features/strategies/types";
 
 export const strategyRecords: StrategyRecord[] = [
+  ...listStrategyTemplates().map((item) => createTemplateRecord(item)),
   {
     id: "excel-xls-to-xlsx",
     name: "XLS 转 XLSX",

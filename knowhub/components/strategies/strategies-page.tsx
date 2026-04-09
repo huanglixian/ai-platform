@@ -1,13 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import { KnowHubPageShell } from "@/knowhub/components/layout/knowhub-page-shell";
 import { KnowHubCardGrid } from "@/knowhub/components/shared/card-grid";
 import { KnowHubPageToolbar } from "@/knowhub/components/shared/page-toolbar";
 import { StrategyBar } from "@/knowhub/components/strategies/strategy-bar";
 import { StrategyCard } from "@/knowhub/components/strategies/strategy-card";
+import { StrategyDetailDrawer } from "@/knowhub/components/strategies/strategy-detail-drawer";
 import { strategyRecords } from "@/knowhub/features/strategies/data";
+import { getStrategyTemplateById } from "@/knowhub/features/strategies/registry";
 import type {
   StrategyCategory,
   StrategyRecord,
@@ -65,6 +67,7 @@ export function KnowHubStrategiesPage({
   activeCategory,
 }: KnowHubStrategiesPageProps) {
   const [keyword, setKeyword] = useState("");
+  const [selectedStrategyId, setSelectedStrategyId] = useState<string | null>(null);
   const activeCategoryRecords = strategyRecords.filter(
     (item) => item.category === activeCategory,
   );
@@ -105,6 +108,13 @@ export function KnowHubStrategiesPage({
       items: visibleStrategies.filter((item) => item.group === tab.key),
     }))
     .filter((section) => section.items.length > 0);
+  const selectedStrategy = useMemo(
+    () => strategyRecords.find((item) => item.id === selectedStrategyId) ?? null,
+    [selectedStrategyId],
+  );
+  const selectedTemplate = selectedStrategy
+    ? getStrategyTemplateById(selectedStrategy.id)
+    : null;
 
   return (
     <KnowHubPageShell>
@@ -151,7 +161,12 @@ export function KnowHubStrategiesPage({
                   </div>
                   <KnowHubCardGrid itemWidth={320}>
                     {section.items.map((item) => (
-                      <StrategyCard key={item.id} item={item} />
+                      <StrategyCard
+                        key={item.id}
+                        item={item}
+                        interactive={Boolean(getStrategyTemplateById(item.id))}
+                        onClick={() => setSelectedStrategyId(item.id)}
+                      />
                     ))}
                   </KnowHubCardGrid>
                 </section>
@@ -160,7 +175,12 @@ export function KnowHubStrategiesPage({
           ) : (
             <KnowHubCardGrid itemWidth={320}>
               {visibleStrategies.map((item) => (
-                <StrategyCard key={item.id} item={item} />
+                <StrategyCard
+                  key={item.id}
+                  item={item}
+                  interactive={Boolean(getStrategyTemplateById(item.id))}
+                  onClick={() => setSelectedStrategyId(item.id)}
+                />
               ))}
             </KnowHubCardGrid>
           )}
@@ -177,6 +197,17 @@ export function KnowHubStrategiesPage({
           </div>
         </section>
       )}
+
+      <StrategyDetailDrawer
+        item={selectedStrategy}
+        template={selectedTemplate}
+        open={Boolean(selectedStrategy)}
+        onOpenChange={(nextOpen) => {
+          if (!nextOpen) {
+            setSelectedStrategyId(null);
+          }
+        }}
+      />
     </KnowHubPageShell>
   );
 }

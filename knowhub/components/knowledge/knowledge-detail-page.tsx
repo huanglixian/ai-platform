@@ -5,8 +5,12 @@ import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { KnowHubPageShell } from "@/knowhub/components/layout/knowhub-page-shell";
-import { pipelineRecords } from "@/knowhub/features/knowledge/data";
+import { KnowledgeRunButton } from "@/knowhub/components/knowledge/knowledge-run-button";
 import { strategyRecords } from "@/knowhub/features/strategies/data";
+import type {
+  KnowledgeRunRecord,
+  PipelineRecord,
+} from "@/knowhub/features/knowledge/types";
 import type { DocSpaceRecord } from "@/knowhub/features/docspace/types";
 import { cn } from "@/lib/utils";
 
@@ -23,10 +27,15 @@ const statusMap = {
     label: "运行中",
     className: "border-[#efd5a8] bg-[#fff5e7] text-[#9b6630]",
   },
+  failed: {
+    label: "失败",
+    className: "border-[#f0d2d2] bg-[#fff5f5] text-[#a33a3a]",
+  },
 } as const;
 
 type KnowHubKnowledgeDetailPageProps = {
-  id: string;
+  item: PipelineRecord | null;
+  runs: KnowledgeRunRecord[];
   docspaceItems: DocSpaceRecord[];
 };
 
@@ -55,11 +64,10 @@ function renderStrategyList(ids: string[]) {
 }
 
 export function KnowHubKnowledgeDetailPage({
-  id,
+  item,
+  runs,
   docspaceItems,
 }: KnowHubKnowledgeDetailPageProps) {
-  const item = pipelineRecords.find((record) => record.id === id);
-
   if (!item) {
     notFound();
   }
@@ -71,10 +79,6 @@ export function KnowHubKnowledgeDetailPage({
   const fileCount = matchedItems.reduce(
     (sum, record) => sum + record.documentCount,
     0,
-  );
-  const chunkCount = Math.max(
-    fileCount * Math.max(item.chunkingStrategyIds.length, 1) * 8,
-    item.chunkingStrategyIds.length * 24,
   );
 
   return (
@@ -94,16 +98,19 @@ export function KnowHubKnowledgeDetailPage({
               {item.summary}
             </div>
           </div>
-          <Link
-            href="/knowhub/knowledge"
-            className={cn(
-              buttonVariants({ variant: "secondary", size: "sm" }),
-              "h-8 shrink-0 px-3 text-[12px]"
-            )}
-          >
-            <ArrowLeft className="mr-1 h-3.5 w-3.5" />
-            返回知识中心
-          </Link>
+          <div className="flex flex-col items-end gap-2">
+            <KnowledgeRunButton knowledgeId={item.id} />
+            <Link
+              href="/knowhub/knowledge"
+              className={cn(
+                buttonVariants({ variant: "secondary", size: "sm" }),
+                "h-8 shrink-0 px-3 text-[12px]"
+              )}
+            >
+              <ArrowLeft className="mr-1 h-3.5 w-3.5" />
+              返回知识中心
+            </Link>
+          </div>
         </div>
 
         <div className="grid gap-2.5 md:grid-cols-2 xl:grid-cols-4">
@@ -119,16 +126,22 @@ export function KnowHubKnowledgeDetailPage({
           </div>
           <div className="rounded-[12px] border border-[#dde6f0] bg-[linear-gradient(180deg,rgba(236,242,248,0.78)_0%,rgba(247,250,253,0.92)_100%)] px-3 py-2">
             <div className="text-[11px] text-[#98a2b3]">文件数</div>
-            <div className="mt-1 text-[12px] leading-5 text-title">{fileCount}</div>
+            <div className="mt-1 text-[12px] leading-5 text-title">{item.fileCount || fileCount}</div>
           </div>
           <div className="rounded-[12px] border border-[#dde6f0] bg-[linear-gradient(180deg,rgba(236,242,248,0.78)_0%,rgba(247,250,253,0.92)_100%)] px-3 py-2">
             <div className="text-[11px] text-[#98a2b3]">切片数</div>
-            <div className="mt-1 text-[12px] leading-5 text-title">{chunkCount}</div>
+            <div className="mt-1 text-[12px] leading-5 text-title">{item.chunkCount}</div>
           </div>
         </div>
+
+        {item.lastError ? (
+          <div className="mt-3 rounded-[12px] border border-[#f0d2d2] bg-[#fff8f8] px-3 py-2 text-[12px] text-[#a33a3a]">
+            最近错误：{item.lastError}
+          </div>
+        ) : null}
       </section>
 
-      <div className="grid gap-4 xl:grid-cols-3">
+      <div className="grid gap-4 xl:grid-cols-4">
         <section className="rounded-[16px] border border-[#d8e1eb] bg-white px-4 py-4 shadow-[0_8px_24px_rgba(15,23,42,0.04)]">
           <div className="mb-3 text-title text-[16px] font-semibold tracking-[-0.02em]">
             预处理策略
@@ -148,6 +161,37 @@ export function KnowHubKnowledgeDetailPage({
             提取策略
           </div>
           {renderStrategyList(item.extractStrategyIds)}
+        </section>
+
+        <section className="rounded-[16px] border border-[#d8e1eb] bg-white px-4 py-4 shadow-[0_8px_24px_rgba(15,23,42,0.04)]">
+          <div className="mb-3 text-title text-[16px] font-semibold tracking-[-0.02em]">
+            运行记录
+          </div>
+          <div className="space-y-2">
+            {runs.length ? (
+              runs.map((run) => (
+                <div
+                  key={run.id}
+                  className="rounded-[12px] border border-[#e7edf4] bg-[#f8fbfe] px-3 py-2.5"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="text-title text-[13px] font-medium">{run.message}</div>
+                    <div className="text-[11px] text-[#98a2b3]">{run.status}</div>
+                  </div>
+                  <div className="mt-2 text-[11px] leading-5 text-[#667085]">
+                    文件 {run.fileCount} / 切片 {run.chunkCount} / 向量 {run.vectorCount}
+                  </div>
+                  <div className="mt-1 text-[11px] text-[#7b8798]">
+                    开始：{run.startedAt}
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="rounded-[12px] border border-dashed border-[#d6e0eb] bg-[#fafcff] px-3 py-6 text-[12px] text-[#667085]">
+                暂无运行记录
+              </div>
+            )}
+          </div>
         </section>
       </div>
     </KnowHubPageShell>

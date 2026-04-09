@@ -3,6 +3,10 @@ import "server-only";
 import { Buffer } from "buffer";
 
 import {
+  normalizeReadableDocSpacePath,
+  readStoredDocSpaceFileContent,
+} from "@/knowhub/features/docspace/file-reader";
+import {
   getStoredDocSpace,
   listStoredDocspaceItems,
   removeStoredDocSpace,
@@ -29,6 +33,7 @@ import {
 import type {
   CreateDocSpaceInput,
   DocSpaceFileSnapshot,
+  DocSpaceFileContent,
   DocSpaceRecord,
   DocSpaceSource,
   StoredDocSpace,
@@ -197,6 +202,36 @@ export async function listDocSpaceFiles(id: string) {
   }
 
   return docspace.files;
+}
+
+export async function readDocSpaceFile(
+  id: string,
+  filePath: string,
+): Promise<DocSpaceFileContent | null> {
+  const docspace = await getStoredDocSpace(id);
+
+  if (!docspace) {
+    return null;
+  }
+
+  const normalizedPath = normalizeReadableDocSpacePath(filePath);
+  const file = docspace.files.find((item) => item.path === normalizedPath);
+
+  if (!file) {
+    return null;
+  }
+
+  const content = await readStoredDocSpaceFileContent(docspace, normalizedPath);
+
+  return {
+    id: file.id,
+    name: file.name,
+    path: file.path,
+    extension: file.name.includes(".") ? `.${file.name.split(".").pop()}`.toLowerCase() : "",
+    sizeBytes: file.sizeBytes,
+    updatedAt: file.updatedAt,
+    content,
+  };
 }
 
 export async function testDocSpaceConnection(input: TestDocSpaceConnectionInput) {

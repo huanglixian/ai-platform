@@ -10,7 +10,7 @@ import { createGlobalStrategyTemplate } from "@/knowhub/features/knowledge/build
 import type { KnowledgeFileTypeKey } from "@/knowhub/features/knowledge/builder-types";
 
 export function GlobalStrategyPage() {
-  const [activeFileType, setActiveFileType] = useState<KnowledgeFileTypeKey>("word");
+  const [activeFileType, setActiveFileType] = useState<KnowledgeFileTypeKey>("markdown");
   const [fileTypes, setFileTypes] = useState(createGlobalStrategyTemplate());
   const [expanded, setExpanded] = useState(true);
   const activeConfig =

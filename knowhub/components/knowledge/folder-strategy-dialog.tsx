@@ -47,7 +47,7 @@ function FolderStrategyDialogContent({
   onSave,
 }: FolderStrategyDialogContentProps) {
   const [draft, setDraft] = useState(value);
-  const [activeFileType, setActiveFileType] = useState<KnowledgeFileTypeKey>("word");
+  const [activeFileType, setActiveFileType] = useState<KnowledgeFileTypeKey>("markdown");
 
   const activeConfig =
     draft.fileTypes.find((item) => item.key === activeFileType) ?? draft.fileTypes[0];

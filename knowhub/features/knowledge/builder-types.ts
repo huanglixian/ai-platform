@@ -1,6 +1,6 @@
 export type KnowledgeStageKey = "preprocess" | "chunking" | "extract";
 
-export type KnowledgeFileTypeKey = "word" | "excel" | "pdfText" | "pdfImage";
+export type KnowledgeFileTypeKey = "markdown" | "word" | "excel" | "pdfText" | "pdfImage";
 
 export interface KnowledgeStrategyDraftItem {
   id: string;

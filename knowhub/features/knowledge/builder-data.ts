@@ -1,10 +1,14 @@
+import { getStrategyTemplateById } from "@/knowhub/features/strategies/registry";
 import { strategyRecords } from "@/knowhub/features/strategies/data";
-import type { PipelineRecord } from "@/knowhub/features/knowledge/types";
 import type { DocSpaceRecord } from "@/knowhub/features/docspace/types";
 import type {
   FolderStrategyDraft,
   KnowledgeFileTypeDraft,
 } from "@/knowhub/features/knowledge/builder-types";
+import type {
+  CreateKnowledgeInput,
+  StrategyPresetBinding,
+} from "@/knowhub/features/knowledge/types";
 
 function createStrategyDraftItem(id: string, enabled: boolean) {
   const strategy = strategyRecords.find((item) => item.id === id);
@@ -22,6 +26,30 @@ function createStrategyDraftItem(id: string, enabled: boolean) {
 }
 
 const templateFactory = (): KnowledgeFileTypeDraft[] => [
+  {
+    key: "markdown",
+    label: "Markdown 文档",
+    stages: [
+      {
+        key: "preprocess",
+        label: "预处理阶段",
+        description: "Markdown 原文直接入库，当前默认不额外预处理。",
+        items: [],
+      },
+      {
+        key: "chunking",
+        label: "切片阶段",
+        description: "按标题层级和段落结构切分 Markdown 内容。",
+        items: [createStrategyDraftItem("markdown-obsidian-slicer", true)],
+      },
+      {
+        key: "extract",
+        label: "提取阶段",
+        description: "当前默认不启用额外提取。",
+        items: [],
+      },
+    ],
+  },
   {
     key: "word",
     label: "Word 文档",
@@ -161,31 +189,56 @@ function collectEnabledStrategyIds(
     .map((item) => item.id);
 }
 
-export function buildKnowledgeTaskRecord(input: {
+function collectStrategyPresetBindings(fileTypes: KnowledgeFileTypeDraft[]) {
+  const enabledStrategyIds = fileTypes
+    .flatMap((fileType) => fileType.stages)
+    .flatMap((stage) => stage.items)
+    .filter((item) => item.enabled)
+    .map((item) => item.id);
+  const bindings: StrategyPresetBinding[] = [];
+
+  enabledStrategyIds.forEach((strategyId) => {
+    if (!getStrategyTemplateById(strategyId)) {
+      return;
+    }
+
+    bindings.push({
+      strategyId,
+      presetId: `${strategyId}__default`,
+    });
+  });
+
+  return bindings;
+}
+
+export function buildKnowledgeCreateInput(input: {
   name: string;
   summary: string;
   docspaceItems: DocSpaceRecord[];
   fileTypes: KnowledgeFileTypeDraft[];
-}): PipelineRecord {
+}): CreateKnowledgeInput {
   const enabledItems = input.docspaceItems;
+  const fileTypeLabels = input.fileTypes
+    .filter((fileType) =>
+      fileType.stages.some((stage) => stage.items.some((item) => item.enabled)),
+    )
+    .map((fileType) => fileType.label.replace(" 文档", ""))
+    .join(" + ");
   const targetLabel =
     enabledItems.length > 1
-      ? `${enabledItems.length} 个文档空间 / 混合文档`
-      : `${enabledItems[0]?.name ?? "未选择空间"} / 混合文档`;
+      ? `${enabledItems.length} 个文档空间 / ${fileTypeLabels || "混合文档"}`
+      : `${enabledItems[0]?.name ?? "未选择空间"} / ${fileTypeLabels || "混合文档"}`;
 
   return {
-    id: `draft_${Date.now().toString(36)}`,
     name: input.name,
     summary: input.summary,
-    status: "draft",
     docspaceIds: enabledItems.map((item) => item.id),
     targetLabel,
     preprocessStrategyIds: collectEnabledStrategyIds(input.fileTypes, "preprocess"),
     chunkingStrategyIds: collectEnabledStrategyIds(input.fileTypes, "chunking"),
     extractStrategyIds: collectEnabledStrategyIds(input.fileTypes, "extract"),
-    embeddingModel: "bge-m3",
+    strategyPresetBindings: collectStrategyPresetBindings(input.fileTypes),
+    embeddingModel: "builtin-hash-384",
     knowledgeTarget: input.name,
-    lastRunAt: "未启动",
-    runCount: 0,
   };
 }

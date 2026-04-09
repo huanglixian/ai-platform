@@ -25,6 +25,11 @@ const statusMap = {
     badgeClassName: "border-[#efd5a8] bg-[#fff5e7] text-[#9b6630]",
     lineColor: "#d08a33",
   },
+  failed: {
+    label: "失败",
+    badgeClassName: "border-[#f0d2d2] bg-[#fff5f5] text-[#a33a3a]",
+    lineColor: "#c94848",
+  },
 } as const;
 
 export function KnowledgeCard({

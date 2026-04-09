@@ -10,10 +10,14 @@ import { FileScopePickerDialog } from "@/knowhub/components/knowledge/file-scope
 import { FolderStrategyDialog } from "@/knowhub/components/knowledge/folder-strategy-dialog";
 import { StrategyStageEditor } from "@/knowhub/components/knowledge/strategy-stage-editor";
 import {
-  buildKnowledgeTaskRecord,
+  buildKnowledgeCreateInput,
   createFolderStrategyDraft,
   createGlobalStrategyTemplate,
 } from "@/knowhub/features/knowledge/builder-data";
+import {
+  createKnowledgeApi,
+  runKnowledgeApi,
+} from "@/knowhub/features/knowledge/api";
 import type {
   FolderStrategyDraft,
   KnowledgeFileTypeKey,
@@ -67,7 +71,7 @@ function KnowledgeBuilderDialogContent({
   );
   const [knowledgeNameInput, setKnowledgeNameInput] = useState("");
   const [summary, setSummary] = useState("");
-  const [activeFileType, setActiveFileType] = useState<KnowledgeFileTypeKey>("word");
+  const [activeFileType, setActiveFileType] = useState<KnowledgeFileTypeKey>("markdown");
   const [fileTypes, setFileTypes] = useState(createGlobalStrategyTemplate());
   const [folderStrategies, setFolderStrategies] = useState<FolderStrategyDraft[]>([]);
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -75,6 +79,7 @@ function KnowledgeBuilderDialogContent({
   const [globalExpanded, setGlobalExpanded] = useState(false);
   const [nameTouched, setNameTouched] = useState(false);
   const [error, setError] = useState("");
+  const [pending, setPending] = useState(false);
 
   const visibleItems = useMemo(() => {
     const normalizedKeyword = keyword.trim().toLowerCase();
@@ -356,7 +361,8 @@ function KnowledgeBuilderDialogContent({
               取消
             </Button>
             <Button
-              onClick={() => {
+              disabled={pending}
+              onClick={async () => {
                 const selectedItems = docspaceItems.filter((item) =>
                   selectedDocspaceIds.includes(item.id),
                 );
@@ -371,18 +377,30 @@ function KnowledgeBuilderDialogContent({
                   return;
                 }
 
-                const nextItem = buildKnowledgeTaskRecord({
-                  name: knowledgeName.trim(),
-                  summary: summary.trim() || "基于默认策略创建的知识库。",
-                  docspaceItems: selectedItems,
-                  fileTypes,
-                });
+                setPending(true);
+                setError("");
 
-                onCreated(nextItem);
-                closeDialog();
+                try {
+                  const createdItem = await createKnowledgeApi(
+                    buildKnowledgeCreateInput({
+                      name: knowledgeName.trim(),
+                      summary: summary.trim() || "基于默认策略创建的知识库。",
+                      docspaceItems: selectedItems,
+                      fileTypes,
+                    }),
+                  );
+                  const runResult = await runKnowledgeApi(createdItem.id);
+
+                  onCreated(runResult.item);
+                  closeDialog();
+                } catch (nextError) {
+                  setError(nextError instanceof Error ? nextError.message : "建库失败");
+                } finally {
+                  setPending(false);
+                }
               }}
             >
-              确认建库
+              {pending ? "建库中..." : "确认建库"}
             </Button>
           </div>
         </div>

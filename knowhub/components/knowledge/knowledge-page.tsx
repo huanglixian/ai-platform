@@ -7,7 +7,6 @@ import { KnowledgeBuilderDialog } from "@/knowhub/components/knowledge/knowledge
 import { KnowHubPageShell } from "@/knowhub/components/layout/knowhub-page-shell";
 import { KnowHubCardGrid } from "@/knowhub/components/shared/card-grid";
 import { KnowHubPageToolbar } from "@/knowhub/components/shared/page-toolbar";
-import { pipelineRecords } from "@/knowhub/features/knowledge/data";
 import type { PipelineRecord } from "@/knowhub/features/knowledge/types";
 import type { DocSpaceRecord } from "@/knowhub/features/docspace/types";
 
@@ -20,12 +19,14 @@ const statusTabs = [
 
 type KnowHubKnowledgePageProps = {
   docspaceItems: DocSpaceRecord[];
+  initialItems: PipelineRecord[];
   initialBuilderOpen?: boolean;
   initialDocspaceId?: string;
 };
 
 export function KnowHubKnowledgePage({
   docspaceItems,
+  initialItems,
   initialBuilderOpen = false,
   initialDocspaceId,
 }: KnowHubKnowledgePageProps) {
@@ -33,7 +34,7 @@ export function KnowHubKnowledgePage({
   const [statusFilter, setStatusFilter] =
     useState<(typeof statusTabs)[number]["key"]>("all");
   const [builderOpen, setBuilderOpen] = useState(initialBuilderOpen);
-  const [items, setItems] = useState<PipelineRecord[]>(pipelineRecords);
+  const [items, setItems] = useState<PipelineRecord[]>(initialItems);
 
   const normalizedKeyword = keyword.trim().toLowerCase();
   const visiblePipelines = useMemo(() => items.filter((item) => {
@@ -73,7 +74,7 @@ export function KnowHubKnowledgePage({
                 key={item.id}
                 item={item}
                 docspaceNames={docspaceNames}
-                href={item.id.startsWith("draft_") ? undefined : `/knowhub/knowledge/${item.id}`}
+                href={`/knowhub/knowledge/${item.id}`}
               />
             );
           })}

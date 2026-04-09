@@ -12,6 +12,16 @@ export interface DocSpaceFileSnapshot {
   statusLabel: string;
 }
 
+export interface DocSpaceFileContent {
+  id: string;
+  name: string;
+  path: string;
+  extension: string;
+  sizeBytes: number;
+  updatedAt: string;
+  content: string;
+}
+
 export interface DocSpaceRecord {
   id: string;
   name: string;
