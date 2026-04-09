@@ -92,7 +92,7 @@
 
 ### 必做项
 
-- [x] 创建 `retrieval-list.md`
+- [x] 创建 `dev_files/retrieval-list.md`
 - [x] 固定目录与命名方案
 - [x] 固定 `Platform` 与 `KnowHub` 的职责边界
 
@@ -217,7 +217,7 @@
 
 ### 计划修改文件
 
-- [ ] `retrieval-list.md`
+- [ ] `dev_files/retrieval-list.md`
 
 ---
 
@@ -233,7 +233,7 @@
 
 ### 2026-04-09
 
-- [x] 创建 `retrieval-list.md`
+- [x] 创建 `dev_files/retrieval-list.md`
 - [x] 固定 `Platform` 与 `KnowHub` 的职责边界
 - [x] 固定 embedding 配置目录为 `knowhub/features/settings/embedding/*`
 - [x] 固定运行时调用文件为 `knowhub/features/knowledge/embedding-client.ts`

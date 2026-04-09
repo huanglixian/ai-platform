@@ -4,7 +4,6 @@ import { useState } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { EmbeddingSettingsPanel } from "@/knowhub/components/settings/embedding-settings-panel";
 import { KnowHubPageShell } from "@/knowhub/components/layout/knowhub-page-shell";
 import { StrategyStageEditor } from "@/knowhub/components/knowledge/strategy-stage-editor";
 import { createGlobalStrategyTemplate } from "@/knowhub/features/knowledge/builder-data";
@@ -32,8 +31,6 @@ export function GlobalStrategyPage() {
           <Button>保存全局策略</Button>
         </div>
       </section>
-
-      <EmbeddingSettingsPanel />
 
       <section className="rounded-[16px] border border-[#d8e1eb] bg-white px-4 py-4">
         <button

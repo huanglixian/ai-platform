@@ -26,6 +26,7 @@
 - `knowhub/components` 与 `knowhub/features`：KnowHub 页面实现、共享组件和业务逻辑
 - `storage/knowhub`：KnowHub 本地持久化目录
 - `reference`：外部参考实现与调研素材
+- `dev_files`：项目开发文档与阶段性 checklist
 - `components/ui` 与 `lib`：跨模块基础控件和平台级工具
 
 ## 当前目录结构
@@ -35,6 +36,7 @@ Ai_Platform/
 ├─ app/
 │  ├─ (platform)/
 │  │  ├─ bots/
+│  │  ├─ portal/
 │  │  ├─ workbench/
 │  │  ├─ workflows/
 │  │  ├─ tools/
@@ -79,12 +81,12 @@ Ai_Platform/
 │     ├─ settings/
 │     ├─ strategies/
 │     └─ vector-store/
+├─ dev_files/
 ├─ reference/
 ├─ storage/
 │  └─ knowhub/
-├─ knowhub-cycle-list.md
-├─ retrieval-list.md
-└─ dev_guide.md
+├─ public/
+└─ lib/
 ```
 
 目录树只展示到文件夹级别；具体文件职责见下方 `Platform` 与 `KnowHub` 的“主要文件索引”。

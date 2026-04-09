@@ -17,6 +17,7 @@ const primaryItems = [
 
 const secondaryItems = [
   { label: "全局策略", href: "/knowhub/settings/global-strategies" },
+  { label: "Embedding", href: "/knowhub/settings/embedding" },
 ] as const;
 
 function isActive(pathname: string, href: string) {

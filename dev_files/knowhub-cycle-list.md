@@ -333,7 +333,7 @@
 
 ### 计划修改文件
 
-- [ ] `knowhub-cycle-list.md`
+- [ ] `dev_files/knowhub-cycle-list.md`
 
 ### 完成标准
 
@@ -375,7 +375,7 @@
 
 ### 2026-04-09
 
-- [x] 创建 `knowhub-cycle-list.md`
+- [x] 创建 `dev_files/knowhub-cycle-list.md`
 - [x] 固定当前闭环目标、阶段划分和文件落位方案
 - [x] 固定向量库第一版方案为 `SQLite + sqlite-vec`
 - [x] 固定后续替换必须通过 `VectorStoreAdapter`
