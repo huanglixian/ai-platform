@@ -80,8 +80,8 @@
 | 3 | 策略中心交互 | 已完成 | 已支持详情抽屉、参数编辑、预设保存、文件测试 |
 | 4 | 知识库真实持久化 | 已完成 | 已切换到真实 JSON 存储与 API |
 | 5 | 建库流水线 | 已完成 | 已接入 SQLite + sqlite-vec 和最小建库运行链路 |
-| 6 | 检索验证 | 未开始 | 用最小查询接口验证闭环 |
-| 7 | 收尾与文档 | 未开始 | 补充验证、风险和后续替换说明 |
+| 6 | 检索验证 | 已完成 | 已补齐检索 API、检索页，并接入 Platform 搜索模式 |
+| 7 | 收尾与文档 | 进行中 | 继续补充验证、风险和后续替换说明 |
 
 ---
 
@@ -220,7 +220,6 @@
 ### 计划修改文件
 
 - [x] `knowhub/features/knowledge/types.ts`
-- [x] `knowhub/features/knowledge/data.ts`
 - [x] `knowhub/features/knowledge/builder-types.ts`
 - [x] `knowhub/features/knowledge/builder-data.ts`
 - [x] `knowhub/components/knowledge/knowledge-page.tsx`
@@ -285,28 +284,37 @@
 
 ### 目标
 
-通过最小检索接口验证向量入库结果是可用的。
+通过真实检索接口验证向量入库结果，并为 Platform 搜索模式提供统一能力。
 
 ### 必做项
 
-- [ ] 提供 query embedding 调用
-- [ ] 提供按知识库检索接口
-- [ ] 返回相似度和切片元数据
-- [ ] 最小接入检索页或调试接口
+- [x] 提供 query embedding 调用
+- [x] 提供按知识库检索接口
+- [x] 返回相似度和切片元数据
+- [x] 接入 KnowHub 检索页
+- [x] 接入 Platform 搜索模式
 
 ### 计划新增文件
 
-- [ ] `app/api/knowhub/retrieval/search/route.ts`
-- [ ] `knowhub/features/retrieval/service.ts`
+- [x] `app/api/knowhub/retrieval/search/route.ts`
+- [x] `knowhub/features/retrieval/service.ts`
+- [x] `knowhub/features/retrieval/types.ts`
+- [x] `knowhub/components/retrieval/retrieval-results-panel.tsx`
+- [x] `features/workbench/api.ts`
+- [x] `components/workbench/workbench-search-result-pane.tsx`
 
 ### 计划修改文件
 
-- [ ] `knowhub/components/retrieval/retrieval-page.tsx`
+- [x] `knowhub/components/retrieval/retrieval-page.tsx`
+- [x] `components/workbench/workbench-page.tsx`
+- [x] `components/workbench/workbench-empty-state.tsx`
+- [x] `components/bots/bot-composer-pane.tsx`
 
 ### 完成标准
 
 - 输入查询后能返回命中切片
 - 返回结果包含知识库、文件路径、标题链、行号范围
+- Platform 搜索模式复用同一条检索 API
 
 ---
 
@@ -357,8 +365,9 @@
 - [x] `sqlite-vec` 已确认可在当前运行环境加载
 - [x] 知识库运行状态字段和错误展示方式已落库
 - [x] embedding 已切到真实 `/embeddings` 调用
+- [x] `Workbench` 搜索模式已接入 `KnowHub` 检索 API
 - [ ] 文件哈希与增量建库索引尚未实现
-- [ ] `Workbench` 搜索模式尚未接入 `KnowHub` 检索 API
+- [ ] `sqlite-vec` 的替换边界与迁移说明仍需整理
 
 ---
 
@@ -444,6 +453,25 @@
 - [x] `sqlite-vec` 已做本机加载烟雾测试
 - [x] `sqlite-vec` 的 `INTEGER metadata` 写入已统一收敛到适配层，显式使用 `BigInt`
 - [x] 已完成阶段 4 / 5 局部 eslint 校验
+- [x] 完成阶段 6：补齐检索 API、检索页和 Platform 搜索模式
+- [x] 实际修改文件：
+  - `knowhub/features/settings/embedding/embedding-types.ts`
+  - `knowhub/features/settings/embedding/embedding-storage.ts`
+  - `knowhub/features/settings/embedding/embedding-config-service.ts`
+  - `knowhub/components/settings/embedding-settings-panel.tsx`
+  - `app/api/knowhub/settings/embedding/route.ts`
+  - `knowhub/features/knowledge/embedding-client.ts`
+  - `knowhub/features/retrieval/types.ts`
+  - `knowhub/features/retrieval/service.ts`
+  - `app/api/knowhub/retrieval/search/route.ts`
+  - `knowhub/components/retrieval/retrieval-page.tsx`
+  - `knowhub/components/retrieval/retrieval-results-panel.tsx`
+  - `features/workbench/api.ts`
+  - `components/workbench/workbench-page.tsx`
+  - `components/workbench/workbench-empty-state.tsx`
+  - `components/workbench/workbench-search-result-pane.tsx`
+  - `components/bots/bot-composer-pane.tsx`
+- [x] 已完成阶段 6 局部 eslint 校验
 - [x] 收敛策略详情交互：
   - 预设管理折叠为高级功能
   - 上传改为轻量小按钮

@@ -2,27 +2,30 @@
 
 ## 项目简介
 
-`Ai Platform` 是一个面向企业级场景的智能体平台前端，负责统一承载智能体工作台、流程编排、数据中心、工具与服务接入等业务入口与交互界面。数据中心里的知识库 `KnowHub` 由于功能复杂度更高，当前作为独立模块组织，方便后续单独演进。
+`Ai Platform` 是一个面向企业级场景的智能体平台前端，统一承载自由体工作台、工作流、工具、服务、技能和知识业务入口。
 
-因此，当前代码里有两条主线：
+当前代码分成两条主线：
 
-- `Platform`：`bots / workflows / tools / services / skills`
-- `KnowHub`：平台内独立的知识业务域，使用独立路由和布局
+- `Platform`：`bots / workbench / workflows / tools / services / skills`
+- `KnowHub`：平台内独立的知识业务域，包含文档空间、策略中心、知识库、检索与配置管理
 
 ## 技术路线
 
 - 前端：`Next.js + React + TypeScript`
 - 路由与接口：`Next.js App Router + Route Handlers`
-- 样式与 UI：`Tailwind CSS`，全局样式入口是 `app/globals.css`，UI 体系是 `Base UI + shadcn 风格约定`
-- KnowHub 数据：文档空间支持 `OSS + SMB`，当前未接独立数据库，文档空间数据走本地文件持久化
+- 样式与 UI：`Tailwind CSS`，全局样式入口是 `app/globals.css`
+- Platform 数据：`bots` 走真实后端接口，其余模块按模块状态分别接真实接口或静态数据
+- KnowHub 数据：文档空间、知识库、策略预设、embedding 配置走本地文件持久化；向量数据走 `SQLite + sqlite-vec`
 
 ## 边界说明
 
 - `app`：路由入口、布局和 API route
 - `app/(platform)`：Platform 路由入口层
 - `app/knowhub`：KnowHub 路由入口层
-- `components` 与 `features`：Platform 页面实现、共享组件和业务数据层
-- `knowhub/components` 与 `knowhub/features`：KnowHub 页面实现、共享组件和业务数据层
+- `components` 与 `features`：Platform 页面实现、共享组件和业务逻辑
+- `knowhub/components` 与 `knowhub/features`：KnowHub 页面实现、共享组件和业务逻辑
+- `storage/knowhub`：KnowHub 本地持久化目录
+- `reference`：外部参考实现与调研素材
 - `components/ui` 与 `lib`：跨模块基础控件和平台级工具
 
 ## 当前目录结构
@@ -56,6 +59,7 @@ Ai_Platform/
 │  ├─ services/
 │  ├─ skills/
 │  ├─ tools/
+│  ├─ workbench/
 │  └─ workflows/
 ├─ knowhub/
 │  ├─ components/
@@ -71,8 +75,15 @@ Ai_Platform/
 │     ├─ docspace/
 │     ├─ knowledge/
 │     ├─ overview/
-│     └─ strategies/
-├─ lib/
+│     ├─ retrieval/
+│     ├─ settings/
+│     ├─ strategies/
+│     └─ vector-store/
+├─ reference/
+├─ storage/
+│  └─ knowhub/
+├─ knowhub-cycle-list.md
+├─ retrieval-list.md
 └─ dev_guide.md
 ```
 
@@ -83,7 +94,7 @@ Ai_Platform/
 ### 1. 功能模块说明
 
 - `bots`：自由体配置与 Playground
-- `workbench`：用户工作台与会话入口
+- `workbench`：用户工作台，支持问答会话与知识搜索两种模式
 - `workflows`：工作流列表与示例详情
 - `tools`：工具中心
 - `services`：服务中心
@@ -93,7 +104,7 @@ Ai_Platform/
 
 - `app/(platform)/*`：Platform 路由入口层，只负责接住页面和动态参数
 - `components/*`：Platform 页面实现层，按 `bots / workbench / workflows / shared / ui` 分组
-- `features/*`：Platform 业务数据、类型、接口封装层
+- `features/*`：Platform 业务数据、类型和接口封装层
 - `components/shared/*`：Platform 共享壳层、导航和通用页面结构
 - `components/ui/*`：Platform 与 KnowHub 共用的基础控件
 
@@ -130,8 +141,8 @@ Platform 页面组件：
 - 工作台主容器：`components/workbench/workbench-page.tsx`
 - 工作台空态页：`components/workbench/workbench-empty-state.tsx`
 - 工作台左侧会话侧栏：`components/workbench/workbench-session-sidebar.tsx`
-- 移动端工作台会话抽屉：`components/workbench/workbench-session-drawer.tsx`
 - 工作台右侧配置抽屉：`components/workbench/workbench-config-drawer.tsx`
+- 工作台搜索结果区：`components/workbench/workbench-search-result-pane.tsx`
 - 工作流列表与演示页主组件：`components/workflows/workflow-demo-page.tsx`
 - 工作流卡片：`components/workflows/workflow-card.tsx`
 - 新建工作流入口卡片：`components/workflows/create-workflow-card.tsx`
@@ -152,6 +163,7 @@ Platform 业务数据与工具：
 
 - 自由体相关 API 封装：`features/bots/api.ts`
 - 自由体相关类型定义：`features/bots/types.ts`
+- 工作台知识库列表与搜索 API 封装：`features/workbench/api.ts`
 - 工作流页面数据：`features/workflows/data.ts`
 - 工作流类型定义：`features/workflows/types.ts`
 - 工具中心数据：`features/tools/data.ts`
@@ -170,19 +182,20 @@ Platform 业务数据与工具：
 
 - `overview`：知识域概览页
 - `docspace`：文档中心
-- `strategies`：策略中心
-- `knowledge`：知识库列表、详情与新建弹窗
-- `settings/global-strategies`：全局默认策略配置
-- `retrieval`：检索占位页
+- `strategies`：策略中心，支持真实模板、预设与切片测试
+- `knowledge`：知识库列表、详情、建库与运行记录
+- `settings/global-strategies`：全局默认策略配置与 embedding 配置入口
+- `retrieval`：检索验证页，也是 Platform 搜索模式复用的后端入口
 
 ### 2. 文件组织方式
 
 - 命名约定：英文路径、目录、接口统一使用 `docspace`；功能模块中文名称使用“文档中心”；文档中心中的单个实例使用“文档空间”
 - `app/knowhub/*`：KnowHub 路由入口层，只做路由承接和参数归一化
-- `knowhub/components/*`：KnowHub 页面实现层，按 `overview / docspace / strategies / knowledge / settings / shared` 分组
-- `knowhub/features/*`：KnowHub 业务数据、类型、接口封装和服务端逻辑
-- `knowhub/components/shared/*`：KnowHub 内部共享导航、工具栏、卡片网格和占位组件
-- `app/api/knowhub/*`：KnowHub 文档空间相关接口
+- `app/api/knowhub/*`：KnowHub 接口入口层，包含 `docspace / strategies / knowledge / settings / retrieval`
+- `knowhub/components/*`：KnowHub 页面实现层，按 `overview / docspace / strategies / knowledge / retrieval / settings / shared` 分组
+- `knowhub/features/*`：KnowHub 业务逻辑、类型、持久化、执行器与服务端能力
+- `knowhub/features/vector-store/*`：向量库适配层
+- `storage/knowhub/*`：本地持久化文件、策略预设、知识库记录、embedding 配置和向量库文件
 
 ### 3. 主要文件索引
 
@@ -203,6 +216,14 @@ KnowHub 路由与接口入口：
 - 文档空间手动同步接口：`app/api/knowhub/docspace/[id]/sync/route.ts`
 - 本地空间文件上传接口：`app/api/knowhub/docspace/[id]/upload/route.ts`
 - OSS 与 SMB 测试连接接口：`app/api/knowhub/docspace/test-connection/route.ts`
+- 知识库列表读取与创建接口：`app/api/knowhub/knowledge/route.ts`
+- 单个知识库详情接口：`app/api/knowhub/knowledge/[id]/route.ts`
+- 知识库建库运行接口：`app/api/knowhub/knowledge/[id]/run/route.ts`
+- 策略预设列表与创建接口：`app/api/knowhub/strategies/presets/route.ts`
+- 单个策略预设更新接口：`app/api/knowhub/strategies/presets/[id]/route.ts`
+- 策略测试接口：`app/api/knowhub/strategies/test/route.ts`
+- embedding 配置接口：`app/api/knowhub/settings/embedding/route.ts`
+- 检索接口：`app/api/knowhub/retrieval/search/route.ts`
 
 KnowHub 共享与概览：
 
@@ -215,7 +236,6 @@ KnowHub 共享与概览：
 - 概览页介绍面板：`knowhub/components/overview/intro-panel.tsx`
 - 概览统计卡片：`knowhub/components/overview/stat-card.tsx`
 - 概览流程阶段卡片：`knowhub/components/overview/flow-stage-card.tsx`
-- 检索页主组件：`knowhub/components/retrieval/retrieval-page.tsx`
 
 KnowHub 文档中心：
 
@@ -233,35 +253,66 @@ KnowHub 策略中心：
 - 策略中心主页面：`knowhub/components/strategies/strategies-page.tsx`
 - 策略分类切换条：`knowhub/components/strategies/strategy-bar.tsx`
 - 策略卡片：`knowhub/components/strategies/strategy-card.tsx`
+- 策略详情抽屉：`knowhub/components/strategies/strategy-detail-drawer.tsx`
+- 策略参数表单：`knowhub/components/strategies/strategy-settings-form.tsx`
+- 策略测试面板：`knowhub/components/strategies/strategy-test-panel.tsx`
 - 策略分类配色定义：`knowhub/components/strategies/strategy-colors.ts`
 
-KnowHub 知识中心与配置管理：
+KnowHub 知识中心、检索与配置管理：
 
 - 知识中心列表页主组件：`knowhub/components/knowledge/knowledge-page.tsx`
 - 知识库卡片：`knowhub/components/knowledge/knowledge-card.tsx`
 - 知识库详情页主组件：`knowhub/components/knowledge/knowledge-detail-page.tsx`
+- 知识库运行按钮：`knowhub/components/knowledge/knowledge-run-button.tsx`
 - 新建知识库弹窗：`knowhub/components/knowledge/knowledge-builder-dialog.tsx`
 - 文件夹域选择弹窗：`knowhub/components/knowledge/file-scope-picker-dialog.tsx`
 - 文件夹策略弹窗：`knowhub/components/knowledge/folder-strategy-dialog.tsx`
 - 策略阶段编辑组件：`knowhub/components/knowledge/strategy-stage-editor.tsx`
+- 检索页主组件：`knowhub/components/retrieval/retrieval-page.tsx`
+- 检索结果面板：`knowhub/components/retrieval/retrieval-results-panel.tsx`
 - 全局策略页主组件：`knowhub/components/settings/global-strategy-page.tsx`
+- Embedding 配置面板：`knowhub/components/settings/embedding-settings-panel.tsx`
 
 KnowHub 业务数据与服务：
 
-- `docspace`：文档中心核心业务域，负责文档空间元数据、连接测试、文件扫描与本地持久化
+- `docspace`：文档空间核心业务域，负责元数据、连接测试、文件扫描、原文读取与本地持久化
 - 文档空间前端请求封装：`knowhub/features/docspace/api.ts`
+- 文档空间统一读取服务：`knowhub/features/docspace/file-reader.ts`
 - 文档空间服务端业务逻辑：`knowhub/features/docspace/service.ts`
 - 文档空间元数据读写：`knowhub/features/docspace/repository.ts`
-- 本地持久化与托管目录操作：`knowhub/features/docspace/storage.ts`
-- OSS 连接测试与对象读取：`knowhub/features/docspace/oss-connector.ts`
-- SMB 连接测试与共享目录读取：`knowhub/features/docspace/smb-connector.ts`
+- 文档空间本地持久化与托管目录操作：`knowhub/features/docspace/storage.ts`
+- OSS 连接与对象读取：`knowhub/features/docspace/oss-connector.ts`
+- SMB 连接与共享目录读取：`knowhub/features/docspace/smb-connector.ts`
 - 文档空间类型定义：`knowhub/features/docspace/types.ts`
-- 策略中心数据：`knowhub/features/strategies/data.ts`
-- 策略中心类型定义：`knowhub/features/strategies/types.ts`
-- 知识中心列表数据：`knowhub/features/knowledge/data.ts`
-- 知识中心类型定义：`knowhub/features/knowledge/types.ts`
-- 知识库配置弹窗与全局策略页使用的默认策略模板数据：`knowhub/features/knowledge/builder-data.ts`
-- 知识库配置与文件夹策略相关类型定义：`knowhub/features/knowledge/builder-types.ts`
+- `strategies`：策略模板、预设、测试与执行器
+- 策略静态展示数据：`knowhub/features/strategies/data.ts`
+- 策略模板与预设类型定义：`knowhub/features/strategies/types.ts`
+- 策略模板注册中心：`knowhub/features/strategies/registry.ts`
+- 策略预设存储：`knowhub/features/strategies/preset-storage.ts`
+- 策略预设读写：`knowhub/features/strategies/preset-repository.ts`
+- 策略服务：`knowhub/features/strategies/service.ts`
+- Markdown 切片执行器：`knowhub/features/strategies/executors/markdown-obsidian-slicer.ts`
+- `knowledge`：知识库记录、建库运行、切片入库与运行状态
+- 知识库前端请求封装：`knowhub/features/knowledge/api.ts`
+- 知识库类型定义：`knowhub/features/knowledge/types.ts`
+- 知识库构建器数据：`knowhub/features/knowledge/builder-data.ts`
+- 知识库构建器类型：`knowhub/features/knowledge/builder-types.ts`
+- 知识库本地持久化：`knowhub/features/knowledge/storage.ts`
+- 知识库记录读写：`knowhub/features/knowledge/repository.ts`
+- 知识库服务：`knowhub/features/knowledge/service.ts`
+- 建库流水线：`knowhub/features/knowledge/build-service.ts`
+- Embedding 运行时客户端：`knowhub/features/knowledge/embedding-client.ts`
+- `retrieval`：查询向量化、向量检索和结果整形
+- 检索结果类型定义：`knowhub/features/retrieval/types.ts`
+- 检索服务：`knowhub/features/retrieval/service.ts`
+- `settings/embedding`：embedding 配置类型、存储与服务
+- Embedding 配置类型：`knowhub/features/settings/embedding/embedding-types.ts`
+- Embedding 配置存储：`knowhub/features/settings/embedding/embedding-storage.ts`
+- Embedding 配置服务：`knowhub/features/settings/embedding/embedding-config-service.ts`
+- `vector-store`：向量库适配层
+- 向量库接口定义：`knowhub/features/vector-store/types.ts`
+- 向量库适配器入口：`knowhub/features/vector-store/index.ts`
+- SQLite 向量库实现：`knowhub/features/vector-store/sqlite-vec-store.ts`
 - 概览页数据：`knowhub/features/overview/data.ts`
 - 概览页类型定义：`knowhub/features/overview/types.ts`
 
@@ -270,22 +321,23 @@ KnowHub 业务数据与服务：
 ### Platform
 
 - `bots`：真实后端
-- `workbench / workflows / tools / services / skills`：前端原型与静态数据
+- `workbench`：真实后端，已接入问答会话与 KnowHub 搜索模式
+- `workflows / tools / services / skills`：前端原型与静态数据
 
 ### KnowHub
 
 - `docspace`：真实后端与本地文件持久化
-- `overview`：文档空间数据真实，其余统计静态
-- `knowledge`：文档空间数据真实，列表与策略模板静态
-- `strategies`：前端原型与静态数据
-- `settings/global-strategies`：前端原型与静态模板
-- `retrieval`：占位页
+- `overview`：文档空间数据真实，其余统计仍有静态占位
+- `knowledge`：真实 JSON 存储、建库运行记录与向量入库链路
+- `strategies`：真实模板、预设、执行器与文件测试
+- `settings/global-strategies`：Embedding 配置真实；全局默认策略仍为页面内配置
+- `retrieval`：真实检索页与检索 API
 
 ## 开发规则
 
 ### 通用规则
 
-通用代码风格以“合理、清晰、简洁”为优先。  
+通用代码风格以“合理、清晰、简洁”为优先。
 在满足需求、结构清楚和便于维护的前提下，代码尽量精简，不做不必要的抽象、兼容层和铺垫。
 
 - 优先采用直接、稳定、易维护的实现方式。
@@ -296,7 +348,7 @@ KnowHub 业务数据与服务：
 ### 项目规则
 
 - 路由层只接路由和参数，不承载页面实现。
-- Platform 改 `app/(platform)`、`components`、`features`，KnowHub 改 `app/knowhub`、`knowhub/components`、`knowhub/features`。
+- Platform 改 `app/(platform)`、`components`、`features`，KnowHub 改 `app/knowhub`、`app/api/knowhub`、`knowhub/components`、`knowhub/features`。
 - 共享层放对位置：Platform 共享放 `components/shared`，KnowHub 私有共享放 `knowhub/components/shared`，基础控件放 `components/ui`。
 - KnowHub 保持独立导航、全宽布局、策略中心单一路由和全局策略独立配置入口。
 
