@@ -238,7 +238,7 @@ export function buildKnowledgeCreateInput(input: {
     chunkingStrategyIds: collectEnabledStrategyIds(input.fileTypes, "chunking"),
     extractStrategyIds: collectEnabledStrategyIds(input.fileTypes, "extract"),
     strategyPresetBindings: collectStrategyPresetBindings(input.fileTypes),
-    embeddingModel: "builtin-hash-384",
+    embeddingModel: "跟随全局 Embedding 配置",
     knowledgeTarget: input.name,
   };
 }

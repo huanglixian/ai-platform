@@ -28,11 +28,20 @@ import { BotSessionPane } from "@/components/bots/bot-session-pane";
 import { BotTranscriptPane } from "@/components/bots/bot-transcript-pane";
 import { WorkbenchConfigDrawer } from "@/components/workbench/workbench-config-drawer";
 import { WorkbenchEmptyState } from "@/components/workbench/workbench-empty-state";
+import { WorkbenchSearchResultPane } from "@/components/workbench/workbench-search-result-pane";
 import { WorkbenchSessionSidebar } from "@/components/workbench/workbench-session-sidebar";
+import {
+  listWorkbenchKnowledgeOptions,
+  searchWorkbenchKnowledge,
+  type WorkbenchKnowledgeOption,
+  type WorkbenchSearchResult,
+} from "@/features/workbench/api";
 
 type WorkbenchPageProps = {
   agentId: string;
 };
+
+type WorkbenchMode = "search" | "chat";
 
 export function WorkbenchPage({ agentId }: WorkbenchPageProps) {
   const searchParams = useSearchParams();
@@ -53,6 +62,14 @@ export function WorkbenchPage({ agentId }: WorkbenchPageProps) {
   const [editorStatus, setEditorStatus] = useState("");
   const [sessionSidebarExpanded, setSessionSidebarExpanded] = useState(false);
   const [configDrawerOpen, setConfigDrawerOpen] = useState(false);
+  const [mode, setMode] = useState<WorkbenchMode>("search");
+  const [knowledgeOptions, setKnowledgeOptions] = useState<WorkbenchKnowledgeOption[]>([]);
+  const [knowledgeId, setKnowledgeId] = useState("");
+  const [searching, setSearching] = useState(false);
+  const [searchStatus, setSearchStatus] = useState("");
+  const [searchError, setSearchError] = useState("");
+  const [searchResult, setSearchResult] = useState<WorkbenchSearchResult | null>(null);
+  const [hasSearched, setHasSearched] = useState(false);
 
   function syncUrl(options?: {
     sessionKey?: string;
@@ -369,6 +386,42 @@ export function WorkbenchPage({ agentId }: WorkbenchPageProps) {
     }
   }
 
+  async function handleSearch(content: string) {
+    const query = content.trim();
+
+    if (!knowledgeId) {
+      setSearchError("请先选择一个知识库");
+      return;
+    }
+
+    if (!query) {
+      setSearchError("请输入检索问题");
+      return;
+    }
+
+    setSearching(true);
+    setHasSearched(true);
+    setSearchError("");
+    setSearchStatus("正在检索相关片段...");
+
+    try {
+      const result = await searchWorkbenchKnowledge({
+        knowledgeId,
+        query,
+      });
+      setSearchResult(result);
+      setSearchStatus(result.items.length ? `已召回 ${result.items.length} 个片段` : "未找到相关片段");
+    } catch (searchLoadError) {
+      setSearchResult(null);
+      setSearchStatus("");
+      setSearchError(
+        searchLoadError instanceof Error ? searchLoadError.message : "检索失败，请重试",
+      );
+    } finally {
+      setSearching(false);
+    }
+  }
+
   useEffect(() => {
     let active = true;
 
@@ -411,6 +464,37 @@ export function WorkbenchPage({ agentId }: WorkbenchPageProps) {
     };
   }, [agentId, reloadTick, searchParamsKey]);
 
+  useEffect(() => {
+    let active = true;
+
+    async function loadKnowledgeOptions() {
+      try {
+        const items = await listWorkbenchKnowledgeOptions();
+
+        if (!active) {
+          return;
+        }
+
+        setKnowledgeOptions(items);
+        setKnowledgeId((current) => current || items[0]?.id || "");
+      } catch (loadError) {
+        if (!active) {
+          return;
+        }
+
+        setSearchError(
+          loadError instanceof Error ? loadError.message : "知识库加载失败",
+        );
+      }
+    }
+
+    void loadKnowledgeOptions();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
   if (loading) {
     return (
       <div className="app-card flex min-h-[240px] items-center justify-center px-6 text-[14px] text-[#667085]">
@@ -438,6 +522,65 @@ export function WorkbenchPage({ agentId }: WorkbenchPageProps) {
   }
 
   const hasConversation = !!bootstrap.current_detail?.turns.length;
+  const selectedKnowledge =
+    knowledgeOptions.find((item) => item.id === knowledgeId) ?? null;
+  const composerMetaSlot = (
+    <div className="flex flex-wrap items-center gap-3 text-[12px] text-[#7f8ea3]">
+      <div className="flex items-center gap-1 rounded-[8px] border border-[#dbe5f0] bg-white px-1 py-1">
+        <button
+          type="button"
+          onClick={() => setMode("search")}
+          className={[
+            "rounded-[6px] px-2.5 py-1 transition-colors",
+            mode === "search"
+              ? "bg-[#eef5fd] text-[#1a4d87]"
+              : "text-[#667085] hover:bg-[#f5f8fb]",
+          ].join(" ")}
+        >
+          搜索
+        </button>
+        <button
+          type="button"
+          onClick={() => setMode("chat")}
+          className={[
+            "rounded-[6px] px-2.5 py-1 transition-colors",
+            mode === "chat"
+              ? "bg-[#eef5fd] text-[#1a4d87]"
+              : "text-[#667085] hover:bg-[#f5f8fb]",
+          ].join(" ")}
+        >
+          问答
+        </button>
+      </div>
+
+      {mode === "chat" ? (
+        <div className="truncate">
+          {composerStatus
+            ? `处理中：${composerStatus}`
+            : sending
+              ? "nanobot 正在处理这条消息..."
+              : `模型：${bootstrap.model_name || "-"}`}
+        </div>
+      ) : (
+        <>
+          <label className="shrink-0 text-[#7f8ea3]">知识库</label>
+          <select
+            value={knowledgeId}
+            onChange={(event) => setKnowledgeId(event.target.value)}
+            className="h-[32px] min-w-[220px] rounded-[8px] border border-[#dbe5f0] bg-white px-2.5 text-[12px] text-title outline-none transition-colors focus:border-[#6f96c4]"
+          >
+            <option value="">请选择知识库</option>
+            {knowledgeOptions.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.name}
+              </option>
+            ))}
+          </select>
+          <div className="truncate">{searchStatus || "通过问题召回相关片段和文档索引"}</div>
+        </>
+      )}
+    </div>
+  );
 
   return (
     <>
@@ -475,36 +618,80 @@ export function WorkbenchPage({ agentId }: WorkbenchPageProps) {
           <section className="min-h-0 min-w-0 overflow-hidden rounded-[18px] bg-white px-5 py-4">
             <div className="grid h-full min-h-0 min-w-0 grid-rows-[auto_minmax(0,1fr)] gap-4">
               <BotComposerPane
-                sending={sending}
-                status={composerStatus}
+                sending={mode === "chat" ? sending : searching}
+                status={mode === "chat" ? composerStatus : searchStatus}
                 modelName={bootstrap.model_name || ""}
-                title="继续对话"
-                placeholder="输入问题或任务，继续对话"
+                metaSlot={composerMetaSlot}
+                title={mode === "chat" ? "继续对话" : "知识检索"}
+                placeholder={
+                  mode === "chat"
+                    ? "输入问题或任务，继续对话"
+                    : "输入问题，搜索知识库中的相关片段"
+                }
                 noHover
                 resetKey={`${bootstrap.current_key || "new"}:${composerResetTick}`}
+                submitLabel={mode === "chat" ? "发送" : "搜索"}
                 footerActions={
-                  <button
-                    type="button"
-                    onClick={() => setConfigDrawerOpen(true)}
-                    className="h-[36px] rounded-[8px] border border-[#dbe5f0] px-4 text-[13px] font-medium text-[#356da8] transition-colors hover:border-[#bfd7f2] hover:bg-[#eef5fd]"
-                  >
-                    配置
-                  </button>
+                  mode === "chat" ? (
+                    <button
+                      type="button"
+                      onClick={() => setConfigDrawerOpen(true)}
+                      className="h-[36px] rounded-[8px] border border-[#dbe5f0] px-4 text-[13px] font-medium text-[#356da8] transition-colors hover:border-[#bfd7f2] hover:bg-[#eef5fd]"
+                    >
+                      配置
+                    </button>
+                  ) : null
                 }
-                onSend={handleSendMessage}
+                onSend={mode === "chat" ? handleSendMessage : handleSearch}
               />
-              <BotTranscriptPane detail={bootstrap.current_detail} noHover />
+              {mode === "chat" ? (
+                <BotTranscriptPane detail={bootstrap.current_detail} noHover />
+              ) : (
+                <WorkbenchSearchResultPane
+                  searching={searching}
+                  query={searchResult?.query || ""}
+                  knowledgeName={selectedKnowledge?.name || ""}
+                  hasSearched={hasSearched}
+                  error={searchError}
+                  items={searchResult?.items ?? []}
+                />
+              )}
             </div>
           </section>
         ) : (
           <div className="min-h-0 min-w-0 overflow-hidden rounded-[18px] bg-white px-5 py-4">
-            <WorkbenchEmptyState
-              modelName={bootstrap.model_name || ""}
-              sending={sending}
-              status={composerStatus}
-              resetKey={`${bootstrap.current_key || "new"}:${composerResetTick}`}
-              onSend={handleSendMessage}
-            />
+            {mode === "chat" ? (
+              <WorkbenchEmptyState
+                modelName={bootstrap.model_name || ""}
+                sending={sending}
+                status={composerStatus}
+                resetKey={`${bootstrap.current_key || "new"}:${composerResetTick}`}
+                onSend={handleSendMessage}
+              />
+            ) : (
+              <div className="grid h-full min-h-0 min-w-0 grid-rows-[auto_minmax(0,1fr)] gap-4">
+                <BotComposerPane
+                  sending={searching}
+                  status={searchStatus}
+                  modelName={bootstrap.model_name || ""}
+                  metaSlot={composerMetaSlot}
+                  title="知识检索"
+                  placeholder="输入问题，搜索知识库中的相关片段"
+                  noHover
+                  resetKey={`search:${composerResetTick}`}
+                  submitLabel="搜索"
+                  onSend={handleSearch}
+                />
+                <WorkbenchSearchResultPane
+                  searching={searching}
+                  query={searchResult?.query || ""}
+                  knowledgeName={selectedKnowledge?.name || ""}
+                  hasSearched={hasSearched}
+                  error={searchError}
+                  items={searchResult?.items ?? []}
+                />
+              </div>
+            )}
           </div>
         )}
       </section>

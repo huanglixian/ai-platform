@@ -1,7 +1,7 @@
 import "server-only";
 
 import { getDocSpaceById, readDocSpaceFile } from "@/knowhub/features/docspace/service";
-import { embedTexts } from "@/knowhub/features/knowledge/embedding-service";
+import { embedTexts as requestEmbeddings } from "@/knowhub/features/knowledge/embedding-client";
 import {
   getStoredKnowledgeById,
   saveStoredKnowledgeRun,
@@ -102,6 +102,7 @@ export async function runKnowledgeBuild(knowledgeId: string) {
 
     const presetId = getMarkdownPresetId(runningKnowledge);
     const vectorRecords: VectorRecordInput[] = [];
+    let embeddingModelName = runningKnowledge.embeddingModel;
     let processedFileCount = 0;
 
     for (const entry of markdownFiles) {
@@ -122,7 +123,13 @@ export async function runKnowledgeBuild(knowledgeId: string) {
         continue;
       }
 
-      const embeddings = await embedTexts(result.slices.map((slice) => slice.content));
+      const embeddingResult = await requestEmbeddings(
+        result.slices.map((slice) => slice.content),
+      );
+
+      if (embeddingResult.model) {
+        embeddingModelName = embeddingResult.model;
+      }
 
       result.slices.forEach((slice, index) => {
         vectorRecords.push({
@@ -140,7 +147,7 @@ export async function runKnowledgeBuild(knowledgeId: string) {
           kind: slice.kind,
           headingTitle: slice.heading?.title ?? null,
           parentHeadingsJson: JSON.stringify(slice.parentHeadings),
-          embedding: embeddings[index],
+          embedding: embeddingResult.embeddings[index],
         });
       });
 
@@ -151,7 +158,13 @@ export async function runKnowledgeBuild(knowledgeId: string) {
       throw new Error("Markdown 文件未生成有效切片");
     }
 
-    const vectorStore = await getVectorStore();
+    const vectorDimension = vectorRecords[0]?.embedding.length ?? 0;
+
+    if (!vectorDimension) {
+      throw new Error("切片向量为空，无法写入向量库");
+    }
+
+    const vectorStore = await getVectorStore(vectorDimension);
     const stats = vectorStore.replaceKnowledgeVectors(runningKnowledge.id, vectorRecords);
     const finishedAt = new Date().toISOString();
     const nextRun = await updateStoredKnowledgeRun(run.id, (currentRun) => ({
@@ -170,6 +183,7 @@ export async function runKnowledgeBuild(knowledgeId: string) {
       chunkCount: vectorRecords.length,
       vectorCount: stats.vectorCount,
       vectorStoreName: "sqlite-vec",
+      embeddingModel: embeddingModelName,
       lastRunAt: formatDateTime(finishedAt),
       runCount: item.runCount + 1,
       lastError: null,

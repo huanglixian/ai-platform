@@ -356,8 +356,9 @@
 
 - [x] `sqlite-vec` 已确认可在当前运行环境加载
 - [x] 知识库运行状态字段和错误展示方式已落库
-- [ ] 检索阶段是否继续沿用本地 `builtin-hash-384` 仍待确认
+- [x] embedding 已切到真实 `/embeddings` 调用
 - [ ] 文件哈希与增量建库索引尚未实现
+- [ ] `Workbench` 搜索模式尚未接入 `KnowHub` 检索 API
 
 ---
 
@@ -430,7 +431,7 @@
 - [x] 完成阶段 5：接入 `SQLite + sqlite-vec` 建库链路
 - [x] 实际修改文件：
   - `knowhub/features/knowledge/builder-data.ts`
-  - `knowhub/features/knowledge/embedding-service.ts`
+  - `knowhub/features/knowledge/embedding-client.ts`
   - `knowhub/features/knowledge/build-service.ts`
   - `knowhub/features/vector-store/types.ts`
   - `knowhub/features/vector-store/sqlite-vec-store.ts`
@@ -439,7 +440,7 @@
 - [x] 已安装依赖：
   - `better-sqlite3`
   - `sqlite-vec`
-- [x] 当前默认 embedding 实现为本地 `builtin-hash-384`
+- [x] 当前默认 embedding 已切到真实 `/embeddings` 调用
 - [x] `sqlite-vec` 已做本机加载烟雾测试
 - [x] `sqlite-vec` 的 `INTEGER metadata` 写入已统一收敛到适配层，显式使用 `BigInt`
 - [x] 已完成阶段 4 / 5 局部 eslint 校验

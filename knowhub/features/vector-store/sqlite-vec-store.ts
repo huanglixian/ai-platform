@@ -5,8 +5,6 @@ import { createRequire } from "module";
 import path from "path";
 
 import Database from "better-sqlite3";
-
-import { getEmbeddingDimension } from "@/knowhub/features/knowledge/embedding-service";
 import type {
   KnowledgeVectorStats,
   VectorRecordInput,
@@ -24,28 +22,80 @@ type SqliteVecModule = {
 let dbInstance: Database.Database | null = null;
 let sqliteVecModule: SqliteVecModule | null = null;
 
-function getSqliteVecModule() {
-  if (sqliteVecModule) {
-    return sqliteVecModule;
-  }
+function hasVectorTable(db: Database.Database) {
+  const row = db
+    .prepare(
+      "select name from sqlite_master where type = 'table' and name = 'knowhub_vectors'",
+    )
+    .get() as { name: string } | undefined;
 
-  const require = createRequire(path.join(process.cwd(), "package.json"));
-  sqliteVecModule = require("sqlite-vec") as SqliteVecModule;
-  return sqliteVecModule;
+  return Boolean(row);
 }
 
-function getDatabase() {
-  if (dbInstance) {
-    return dbInstance;
+function getStoredDimension(db: Database.Database) {
+  db.exec(`
+    create table if not exists knowhub_vector_meta(
+      key text primary key,
+      value text not null
+    );
+  `);
+
+  const row = db
+    .prepare("select value from knowhub_vector_meta where key = 'embedding_dimension'")
+    .get() as { value: string } | undefined;
+
+  return row ? Number(row.value) : null;
+}
+
+function setStoredDimension(db: Database.Database, dimension: number) {
+  db.prepare(`
+    insert into knowhub_vector_meta(key, value)
+    values ('embedding_dimension', ?)
+    on conflict(key) do update set value = excluded.value
+  `).run(String(dimension));
+}
+
+function getVectorCount(db: Database.Database) {
+  if (!hasVectorTable(db)) {
+    return 0;
   }
 
-  const db = new Database(databasePath);
-  db.pragma("journal_mode = WAL");
-  getSqliteVecModule().load(db);
+  const row = db
+    .prepare("select count(*) as count from knowhub_vectors")
+    .get() as { count: number };
+
+  return row.count;
+}
+
+function ensureVectorTable(db: Database.Database, dimension: number) {
+  if (!Number.isInteger(dimension) || dimension <= 0) {
+    throw new Error("向量维度无效，无法初始化向量库");
+  }
+
+  const storedDimension = getStoredDimension(db);
+  const tableExists = hasVectorTable(db);
+
+  if (storedDimension === dimension && tableExists) {
+    return;
+  }
+
+  if ((storedDimension !== null && storedDimension !== dimension) || (tableExists && storedDimension === null)) {
+    const vectorCount = getVectorCount(db);
+
+    if (vectorCount > 0) {
+      throw new Error(
+        `当前向量库维度为 ${storedDimension ?? "未知"}，与新的 embedding 维度 ${dimension} 不一致，请先清理向量库后再重建`,
+      );
+    }
+
+    if (tableExists) {
+      db.exec("drop table knowhub_vectors;");
+    }
+  }
 
   db.exec(`
     create virtual table if not exists knowhub_vectors using vec0(
-      embedding float[${getEmbeddingDimension()}],
+      embedding float[${dimension}],
       knowledge_id text,
       source_key text,
       docspace_id text,
@@ -62,6 +112,29 @@ function getDatabase() {
       +parent_headings_json text
     );
   `);
+  setStoredDimension(db, dimension);
+}
+
+function getSqliteVecModule() {
+  if (sqliteVecModule) {
+    return sqliteVecModule;
+  }
+
+  const require = createRequire(path.join(process.cwd(), "package.json"));
+  sqliteVecModule = require("sqlite-vec") as SqliteVecModule;
+  return sqliteVecModule;
+}
+
+function getDatabase(dimension: number) {
+  if (dbInstance) {
+    ensureVectorTable(dbInstance, dimension);
+    return dbInstance;
+  }
+
+  const db = new Database(databasePath);
+  db.pragma("journal_mode = WAL");
+  getSqliteVecModule().load(db);
+  ensureVectorTable(db, dimension);
 
   dbInstance = db;
   return db;
@@ -83,16 +156,18 @@ function toIntegerMetadata(value: number, fieldName: string) {
   return BigInt(value);
 }
 
-export async function ensureVectorStore() {
+export async function ensureVectorStore(dimension: number) {
   await ensureStorageDir();
-  getDatabase();
+  getDatabase(dimension);
 }
 
 export class SqliteVecStore implements VectorStoreAdapter {
   private readonly db: Database.Database;
+  private readonly dimension: number;
 
-  constructor() {
-    this.db = getDatabase();
+  constructor(dimension: number) {
+    this.dimension = dimension;
+    this.db = getDatabase(dimension);
   }
 
   replaceKnowledgeVectors(knowledgeId: string, records: VectorRecordInput[]) {
