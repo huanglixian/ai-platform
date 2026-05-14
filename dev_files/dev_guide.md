@@ -98,8 +98,8 @@ Ai_Platform/
 - `bots`：自由体配置与 Playground
 - `workbench`：用户工作台，支持问答会话与知识搜索两种模式
 - `workflows`：工作流列表与示例详情
-- `tools`：工具中心
-- `services`：服务中心
+- `tools`：通用工具
+- `services`：业务API
 - `skills`：技能中心
 
 ### 2. 文件组织方式
@@ -125,8 +125,8 @@ Platform 路由入口：
 - 工作台动态路由入口：`app/(platform)/workbench/[agentId]/page.tsx`
 - 工作流列表页路由入口：`app/(platform)/workflows/page.tsx`
 - 工作流示例详情路由入口：`app/(platform)/workflows/[id]/page.tsx`
-- 工具中心路由入口：`app/(platform)/tools/page.tsx`
-- 服务中心路由入口：`app/(platform)/services/page.tsx`
+- 通用工具路由入口：`app/(platform)/tools/page.tsx`
+- 业务API路由入口：`app/(platform)/services/page.tsx`
 - 技能中心路由入口：`app/(platform)/skills/page.tsx`
 
 Platform 页面组件：
@@ -168,10 +168,10 @@ Platform 业务数据与工具：
 - 工作台知识库列表与搜索 API 封装：`features/workbench/api.ts`
 - 工作流页面数据：`features/workflows/data.ts`
 - 工作流类型定义：`features/workflows/types.ts`
-- 工具中心数据：`features/tools/data.ts`
-- 工具中心类型定义：`features/tools/types.ts`
-- 服务中心数据：`features/services/data.ts`
-- 服务中心类型定义：`features/services/types.ts`
+- 通用工具数据：`features/tools/data.ts`
+- 通用工具类型定义：`features/tools/types.ts`
+- 业务API数据：`features/services/data.ts`
+- 业务API类型定义：`features/services/types.ts`
 - 技能中心数据：`features/skills/data.ts`
 - 技能中心类型定义：`features/skills/types.ts`
 - 能力卡片共用类型：`features/capabilities/types.ts`

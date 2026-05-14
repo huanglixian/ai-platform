@@ -55,7 +55,7 @@ export default function ToolsPage() {
 
   return (
     <CardPageFrame
-      title="工具中心"
+      title="通用工具"
       count={visibleTools.length}
       itemWidth={ITEM_WIDTH}
       actionLabel="新建"

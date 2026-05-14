@@ -38,8 +38,8 @@ export const platformNavGroups: PlatformNavGroup[] = [
     key: "capabilities",
     label: "能力中心",
     items: [
-      { label: "工具中心", href: "/tools", hint: "工具接入与调度能力" },
-      { label: "服务中心", href: "/services", hint: "外部服务与连接配置" },
+      { label: "通用工具", href: "/tools", hint: "工具接入与调度能力" },
+      { label: "业务API", href: "/services", hint: "外部服务与连接配置" },
     ],
   },
   {

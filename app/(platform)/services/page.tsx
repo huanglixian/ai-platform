@@ -31,7 +31,7 @@ export default function ServicesPage() {
 
   return (
     <CardPageFrame
-      title="服务中心"
+      title="业务API"
       count={visibleServices.length}
       itemWidth={ITEM_WIDTH}
       actionLabel="新建"
