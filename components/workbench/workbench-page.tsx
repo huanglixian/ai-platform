@@ -22,6 +22,26 @@ function createMessageId() {
   return `msg-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
+function AssistantMessageContent({ content }: { content: string }) {
+  const skillCallMatch = content.match(/^调用技能：(.+?)(?:\n|$)/);
+  const body = skillCallMatch
+    ? content.slice(skillCallMatch[0].length).trimStart()
+    : content;
+
+  if (skillCallMatch) {
+    return (
+      <div>
+        <div className="text-[12px] font-medium leading-5 text-[#2474a6]">
+          调用技能：{skillCallMatch[1]}
+        </div>
+        {body ? <MessageMarkdown content={body} /> : null}
+      </div>
+    );
+  }
+
+  return <MessageMarkdown content={body || "回复生成中..."} />;
+}
+
 function ChatMessageCard({ message }: { message: WorkbenchChatMessage }) {
   const isUser = message.role === "user";
 
@@ -42,7 +62,7 @@ function ChatMessageCard({ message }: { message: WorkbenchChatMessage }) {
           {message.content}
         </div>
       ) : (
-        <MessageMarkdown content={message.content || "回复生成中..."} />
+        <AssistantMessageContent content={message.content} />
       )}
     </article>
   );

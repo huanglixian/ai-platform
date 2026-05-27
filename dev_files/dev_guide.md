@@ -17,6 +17,7 @@
 - Platform 数据：`workbench` 的知识搜索走真实接口，能力中心与智能体模块按模块状态分别接真实接口或静态数据
 - Platform AI：工作台问答通过 Vercel AI SDK 接入 DeepSeek-V4，当前只做技能、工具和业务 API 推荐
 - Platform Skills：技能中心读取 `storage/platform/skills` 中的配置型技能包，`SKILL.md` 是技能执行核心，`skill.json` 只保存管理元数据
+- 技能创建规范：见 `dev_files/create_skills_guide.md`
 - KnowHub 数据：文档空间、知识库、策略预设、embedding 配置走本地文件持久化；向量数据走 `SQLite + sqlite-vec`
 
 ## 边界说明
@@ -149,6 +150,7 @@ Platform 业务数据与工具：
 
 - 工作台知识库列表与搜索 API 封装：`features/workbench/api.ts`
 - 工作台对话服务：`features/workbench/chat-service.ts`
+- 工作台技能执行提示词：`features/workbench/skill-execution-prompt.ts`
 - 工作台能力推荐上下文：`features/workbench/capability-context.ts`
 - 工作台能力推荐提示词：`features/workbench/recommendation-prompt.ts`
 - 工作台对话类型：`features/workbench/chat-types.ts`
@@ -164,7 +166,8 @@ Platform 业务数据与工具：
 - 技能定义类型：`features/skills/skill-types.ts`
 - 技能注册表：`features/skills/registry.ts`
 - 技能运行上下文构建器：`features/skills/runner.ts`
-- 配置型技能包目录：`storage/platform/skills/<skill-id>/`
+- 技能路由器：`features/skills/router.ts`
+- 配置型技能包目录：`storage/platform/skills/（技能名称）/`
 - 能力卡片共用类型：`features/capabilities/types.ts`
 - Platform 导航配置：`lib/nav.ts`
 - 通用工具函数：`lib/utils.ts`

@@ -170,6 +170,12 @@
 
 ### 新增文件
 
+- [x] `features/skills/router.ts`
+  使用 LLM Skill Router 根据 enabled skills 的 metadata 判断 `use_skill | normal_chat`。
+
+- [x] `features/workbench/skill-execution-prompt.ts`
+  命中技能后，按需加载对应 `SKILL.md` 并生成技能执行提示词。
+
 - [ ] `features/skills/tool-adapter.ts`
   将技能定义转换为 Vercel AI SDK tool。
 
@@ -199,8 +205,14 @@
 - [ ] `features/workbench/chat-service.ts`
   增加 tool calling、最大 step 限制、技能执行日志和错误处理。
 
+- [x] `features/workbench/chat-service.ts`
+  先接入 LLM Skill Router；命中技能时直接按 `SKILL.md` 生成结果，未命中时保留能力推荐。
+
 - [ ] `app/api/platform/workbench/chat/route.ts`
   流式返回 AI 文本和技能调用事件。
+
+- [x] `app/api/platform/workbench/chat/route.ts`
+  支持等待异步 router 判断后再返回流式响应。
 
 - [ ] `features/workbench/api.ts`
   解析对话流中的文本增量和技能调用事件。
@@ -229,8 +241,8 @@
 
 ### 验收标准
 
-- [ ] 普通问题可以直接回复，不强制调用技能。
-- [ ] 命中技能的任务可以自动调用至少一个技能。
+- [x] 普通问题可以回退到当前能力推荐，不强制调用技能。
+- [x] 命中技能的任务可以自动加载 `SKILL.md` 并生成技能结果。
 - [ ] 技能结果能回传给模型并参与最终回答。
 - [ ] 页面能展示本轮技能调用记录。
 - [ ] 页面能配置最大 step 数和自动调用策略。
