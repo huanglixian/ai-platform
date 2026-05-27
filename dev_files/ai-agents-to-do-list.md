@@ -7,7 +7,7 @@
 整体原则：
 
 - [x] 工作台负责用户交互、会话展示、能力推荐和技能调用过程展示。
-- [ ] 技能是智能体核心能力单元。
+- [x] 技能是智能体核心能力单元。
 - [ ] 通用工具和业务 API 是技能执行与能力推荐的辅助资源。
 - [x] 模型配置是平台级基础能力，不归属于工作台。
 - [x] 第一阶段只做推荐，不真实执行技能。
@@ -117,48 +117,48 @@
 
 ### 新增文件
 
-- [ ] `features/skills/skill-types.ts`
+- [x] `features/skills/skill-types.ts`
   技能定义、输入输出、风险等级、执行结果等类型。
 
-- [ ] `features/skills/registry.ts`
+- [x] `features/skills/registry.ts`
   技能注册表入口。
 
-- [ ] `features/skills/runner.ts`
+- [x] `features/skills/runner.ts`
   技能执行器，负责参数校验、错误处理和执行结果归一化。
 
-- [ ] `features/skills/examples/`
+- [x] `features/skills/examples/`
   示例技能目录。
 
-- [ ] `app/api/platform/skills/[skillId]/run/route.ts`
+- [x] `app/api/platform/skills/[skillId]/run/route.ts`
   单个技能测试执行接口。
 
 ### 调整文件
 
-- [ ] `features/skills/data.ts`
+- [x] `features/skills/data.ts`
   从纯展示数据调整为技能元信息来源。
 
-- [ ] `features/skills/types.ts`
+- [x] `features/skills/types.ts`
   与真实技能定义对齐，保留页面展示需要的类型。
 
-- [ ] `app/(platform)/skills/page.tsx`
+- [x] `app/(platform)/skills/page.tsx`
   接入真实技能数据。
 
-- [ ] 技能页面相关组件
+- [x] 技能页面相关组件
   展示技能状态、适用场景、风险等级、输入说明和调用说明。
 
 ### 示例技能
 
-- [ ] 文本摘要技能。
-- [ ] 需求结构化整理技能。
-- [ ] 模拟企业任务处理技能。
+- [x] 文本摘要技能。
+- [x] 需求结构化整理技能。
+- [x] 模拟企业任务处理技能。
 
 ### 验收标准
 
-- [ ] 技能中心展示真实技能注册表数据。
-- [ ] 至少 3 个示例技能可以通过接口执行。
-- [ ] 技能参数校验失败时返回友好错误。
-- [ ] 新增技能只需要补充元信息、schema 和 execute 函数。
-- [ ] `npm run build` 通过。
+- [x] 技能中心展示真实技能注册表数据。
+- [x] 至少 3 个示例技能可以通过接口执行。
+- [x] 技能参数校验失败时返回友好错误。
+- [x] 新增技能只需要补充元信息、schema 和 execute 函数。
+- [x] `npm run build` 通过。
 
 ## 阶段三：Skill Tool Loop 与运行配置
 
