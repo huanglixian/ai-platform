@@ -170,9 +170,10 @@ function buildSegments(lines: string[], headingLevels: number[]) {
 
   flushPlainSegment();
 
-  if (currentHeading) {
-    currentHeading.endLine = lines.length;
-    segments.push(currentHeading);
+  const finalHeading = currentHeading as Segment | null;
+  if (finalHeading) {
+    finalHeading.endLine = lines.length;
+    segments.push(finalHeading);
   }
 
   return segments;

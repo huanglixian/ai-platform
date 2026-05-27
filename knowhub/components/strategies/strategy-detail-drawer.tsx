@@ -46,13 +46,14 @@ export function StrategyDetailDrawer({
     }
 
     let cancelled = false;
+    const templateId = template.id;
 
     async function loadPresets() {
       setError("");
 
       try {
         const response = await fetch(
-          `/api/knowhub/strategies/presets?templateId=${encodeURIComponent(template.id)}`,
+          `/api/knowhub/strategies/presets?templateId=${encodeURIComponent(templateId)}`,
         );
         const payload = (await response.json()) as {
           ok: boolean;
@@ -145,19 +146,20 @@ export function StrategyDetailDrawer({
         throw new Error(payload.error || "保存预设失败");
       }
 
+      const savedPreset = payload.item;
       setPresets((current) => {
-        const exists = current.some((preset) => preset.id === payload.item?.id);
+        const exists = current.some((preset) => preset.id === savedPreset.id);
 
         if (exists) {
           return current.map((preset) =>
-            preset.id === payload.item?.id ? payload.item : preset,
+            preset.id === savedPreset.id ? savedPreset : preset,
           );
         }
 
-        return [...current, payload.item];
+        return [...current, savedPreset];
       });
-      setPresetId(payload.item.id);
-      setPresetName(payload.item.name);
+      setPresetId(savedPreset.id);
+      setPresetName(savedPreset.name);
     } catch (nextError) {
       setError(nextError instanceof Error ? nextError.message : "保存预设失败");
     } finally {
