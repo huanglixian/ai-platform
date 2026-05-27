@@ -1,3 +1,5 @@
+export type CapabilityKind = "skill" | "tool" | "service";
+
 export type CapabilityRecord = {
   id: string;
   name: string;

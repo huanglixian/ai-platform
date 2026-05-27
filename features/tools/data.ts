@@ -192,8 +192,8 @@ export const toolRecords: ToolRecord[] = [
     category: "通用工具",
   },
   {
-    id: "workflow-trigger-tool",
-    name: "审批流触发工具",
+    id: "approval-trigger-tool",
+    name: "审批触发工具",
     description: "发起流程、更新状态、回写办理结果。",
     invokeType: "API",
     calls: "156",

@@ -46,7 +46,6 @@ export const platformNavGroups: PlatformNavGroup[] = [
     key: "agents",
     label: "智能体",
     items: [
-      { label: "工作流", href: "/workflows", hint: "流程编排与自动化任务" },
       { label: "技能中心", href: "/skills", hint: "技能封装与能力分发" },
     ],
   },
@@ -68,10 +67,6 @@ export function getActiveNavGroup(pathname: string) {
     pathname.startsWith("/workbench/")
   ) {
     return "home";
-  }
-
-  if (pathname === "/workflows" || pathname.startsWith("/workflows/")) {
-    return "agents";
   }
 
   if (pathname === "/knowhub" || pathname.startsWith("/knowhub/")) {

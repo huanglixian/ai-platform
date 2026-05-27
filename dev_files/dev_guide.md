@@ -2,11 +2,11 @@
 
 ## 项目简介
 
-`Ai Platform` 是一个面向企业级场景的智能体平台前端，统一承载工作台、工作流、工具、服务、技能和知识业务入口。
+`Ai Platform` 是一个面向企业级场景的智能体平台前端，统一承载工作台、工具、服务、技能和知识业务入口。
 
 当前代码分成两条主线：
 
-- `Platform`：`workbench / workflows / tools / services / skills`
+- `Platform`：`workbench / tools / services / skills`
 - `KnowHub`：平台内独立的知识业务域，包含文档空间、策略中心、知识库、检索与配置管理
 
 ## 技术路线
@@ -15,6 +15,7 @@
 - 路由与接口：`Next.js App Router + Route Handlers`
 - 样式与 UI：`Tailwind CSS`，全局样式入口是 `app/globals.css`
 - Platform 数据：`workbench` 的知识搜索走真实接口，能力中心与智能体模块按模块状态分别接真实接口或静态数据
+- Platform AI：工作台问答通过 Vercel AI SDK 接入 DeepSeek-V4，当前只做技能、工具和业务 API 推荐
 - KnowHub 数据：文档空间、知识库、策略预设、embedding 配置走本地文件持久化；向量数据走 `SQLite + sqlite-vec`
 
 ## 边界说明
@@ -37,10 +38,11 @@ Ai_Platform/
 │  ├─ (platform)/
 │  │  ├─ portal/
 │  │  ├─ workbench/
-│  │  ├─ workflows/
 │  │  ├─ tools/
 │  │  ├─ services/
 │  │  └─ skills/
+│  ├─ api/
+│  │  └─ platform/
 │  ├─ knowhub/
 │  │  ├─ docspace/
 │  │  ├─ strategies/
@@ -51,15 +53,14 @@ Ai_Platform/
 ├─ components/
 │  ├─ shared/
 │  ├─ ui/
-│  ├─ workbench/
-│  └─ workflows/
+│  └─ workbench/
 ├─ features/
 │  ├─ capabilities/
+│  ├─ models/
 │  ├─ services/
 │  ├─ skills/
 │  ├─ tools/
-│  ├─ workbench/
-│  └─ workflows/
+│  └─ workbench/
 ├─ knowhub/
 │  ├─ components/
 │  │  ├─ docspace/
@@ -93,7 +94,6 @@ Ai_Platform/
 ### 1. 功能模块说明
 
 - `workbench`：用户工作台，支持知识搜索和能力推荐入口
-- `workflows`：工作流列表与示例详情
 - `tools`：通用工具
 - `services`：业务API
 - `skills`：技能中心
@@ -101,7 +101,7 @@ Ai_Platform/
 ### 2. 文件组织方式
 
 - `app/(platform)/*`：Platform 路由入口层，只负责接住页面和动态参数
-- `components/*`：Platform 页面实现层，按 `workbench / workflows / shared / ui` 分组
+- `components/*`：Platform 页面实现层，按 `workbench / shared / ui` 分组
 - `features/*`：Platform 业务数据、类型和接口封装层
 - `components/shared/*`：Platform 共享壳层、导航和通用页面结构
 - `components/ui/*`：Platform 与 KnowHub 共用的基础控件
@@ -115,8 +115,7 @@ Platform 路由入口：
 - 全局样式入口：`app/globals.css`
 - Platform 布局入口：`app/(platform)/layout.tsx`
 - 默认工作台路由入口：`app/(platform)/workbench/page.tsx`
-- 工作流列表页路由入口：`app/(platform)/workflows/page.tsx`
-- 工作流示例详情路由入口：`app/(platform)/workflows/[id]/page.tsx`
+- 工作台 AI 推荐接口：`app/api/platform/workbench/chat/route.ts`
 - 通用工具路由入口：`app/(platform)/tools/page.tsx`
 - 业务API路由入口：`app/(platform)/services/page.tsx`
 - 技能中心路由入口：`app/(platform)/skills/page.tsx`
@@ -126,9 +125,6 @@ Platform 页面组件：
 - 工作台主容器：`components/workbench/workbench-page.tsx`
 - 工作台空态页：`components/workbench/workbench-empty-state.tsx`
 - 工作台搜索结果区：`components/workbench/workbench-search-result-pane.tsx`
-- 工作流列表与演示页主组件：`components/workflows/workflow-demo-page.tsx`
-- 工作流卡片：`components/workflows/workflow-card.tsx`
-- 新建工作流入口卡片：`components/workflows/create-workflow-card.tsx`
 
 Platform 共享与基础组件：
 
@@ -146,8 +142,13 @@ Platform 共享与基础组件：
 Platform 业务数据与工具：
 
 - 工作台知识库列表与搜索 API 封装：`features/workbench/api.ts`
-- 工作流页面数据：`features/workflows/data.ts`
-- 工作流类型定义：`features/workflows/types.ts`
+- 工作台对话服务：`features/workbench/chat-service.ts`
+- 工作台能力推荐上下文：`features/workbench/capability-context.ts`
+- 工作台能力推荐提示词：`features/workbench/recommendation-prompt.ts`
+- 工作台对话类型：`features/workbench/chat-types.ts`
+- 模型环境配置读取：`features/models/env.ts`
+- 模型 provider 封装：`features/models/provider.ts`
+- 模型配置类型：`features/models/types.ts`
 - 通用工具数据：`features/tools/data.ts`
 - 通用工具类型定义：`features/tools/types.ts`
 - 业务API数据：`features/services/data.ts`
@@ -302,8 +303,8 @@ KnowHub 业务数据与服务：
 
 ### Platform
 
-- `workbench`：KnowHub 搜索模式真实可用，能力推荐入口为占位
-- `workflows / tools / services / skills`：前端原型与静态数据
+- `workbench`：KnowHub 搜索模式真实可用，问答模式已接入 DeepSeek-V4 做能力推荐
+- `tools / services / skills`：前端原型与静态数据
 
 ### KnowHub
 

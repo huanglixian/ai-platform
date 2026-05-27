@@ -27,6 +27,12 @@ export interface WorkbenchSearchResult {
   items: WorkbenchSearchItem[];
 }
 
+export type WorkbenchChatMessage = {
+  id?: string;
+  role: "user" | "assistant";
+  content: string;
+};
+
 type ApiResponse<T> = T & {
   ok: boolean;
   error?: string;
@@ -74,4 +80,56 @@ export async function searchWorkbenchKnowledge(input: {
   }
 
   return payload.result;
+}
+
+export async function streamWorkbenchChat(
+  messages: WorkbenchChatMessage[],
+  handlers: {
+    onDelta?: (delta: string) => void;
+  } = {},
+) {
+  const response = await fetch("/api/platform/workbench/chat", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    cache: "no-store",
+    body: JSON.stringify({ messages }),
+  });
+
+  if (!response.ok) {
+    try {
+      const payload = (await response.json()) as ApiResponse<Record<string, unknown>>;
+      throw new Error(payload.error || "工作台 AI 推荐失败");
+    } catch (error) {
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error("工作台 AI 推荐失败");
+    }
+  }
+
+  if (!response.body) {
+    throw new Error("后端未返回流式响应");
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let content = "";
+
+  while (true) {
+    const { value, done } = await reader.read();
+    const delta = decoder.decode(value || new Uint8Array(), { stream: !done });
+
+    if (delta) {
+      content += delta;
+      handlers.onDelta?.(delta);
+    }
+
+    if (done) {
+      break;
+    }
+  }
+
+  return content;
 }
