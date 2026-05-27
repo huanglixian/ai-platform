@@ -1,6 +1,6 @@
 "use client";
 
-import { BotMessageMarkdown } from "@/components/bots/bot-message-markdown";
+import { MessageMarkdown } from "@/components/shared/message-markdown";
 import type { WorkbenchSearchItem } from "@/features/workbench/api";
 
 type WorkbenchSearchResultPaneProps = {
@@ -58,7 +58,7 @@ export function WorkbenchSearchResultPane({
                 className="rounded-[12px] border border-[#e4edf6] bg-white px-4 py-3"
               >
                 <div className="rounded-[10px] border border-[#edf2f7] bg-[#fafbfd] px-3 py-2.5">
-                  <BotMessageMarkdown content={item.content} />
+                  <MessageMarkdown content={item.content} />
                 </div>
 
                 <div className="mt-3 flex items-start justify-between gap-3">

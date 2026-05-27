@@ -140,65 +140,65 @@
       box-shadow 180ms ease;
   }
 
-  .bot-markdown {
+  .message-markdown {
     word-break: break-word;
   }
 
-  .bot-markdown > :first-child {
+  .message-markdown > :first-child {
     margin-top: 0;
   }
 
-  .bot-markdown > :last-child {
+  .message-markdown > :last-child {
     margin-bottom: 0;
   }
 
-  .bot-markdown p,
-  .bot-markdown ul,
-  .bot-markdown ol,
-  .bot-markdown blockquote,
-  .bot-markdown pre,
-  .bot-markdown table,
-  .bot-markdown hr {
+  .message-markdown p,
+  .message-markdown ul,
+  .message-markdown ol,
+  .message-markdown blockquote,
+  .message-markdown pre,
+  .message-markdown table,
+  .message-markdown hr {
     margin: 0.5rem 0;
   }
 
-  .bot-markdown ul,
-  .bot-markdown ol {
+  .message-markdown ul,
+  .message-markdown ol {
     padding-left: 1.25rem;
   }
 
-  .bot-markdown ul {
+  .message-markdown ul {
     list-style: disc;
   }
 
-  .bot-markdown ol {
+  .message-markdown ol {
     list-style: decimal;
   }
 
-  .bot-markdown li + li {
+  .message-markdown li + li {
     margin-top: 0.18rem;
   }
 
-  .bot-markdown blockquote {
+  .message-markdown blockquote {
     border-left: 3px solid #bfd7f2;
     padding-left: 0.75rem;
     color: #51657d;
   }
 
-  .bot-markdown a {
+  .message-markdown a {
     color: #0368b3;
     text-decoration: underline;
     text-underline-offset: 0.16em;
   }
 
-  .bot-markdown code {
+  .message-markdown code {
     border-radius: 0.35rem;
     background: #f3f6fa;
     padding: 0.1rem 0.35rem;
     font-size: 0.92em;
   }
 
-  .bot-markdown pre {
+  .message-markdown pre {
     overflow-x: auto;
     border: 1px solid #e4edf6;
     border-radius: 0.75rem;
@@ -206,12 +206,12 @@
     padding: 0.8rem 0.95rem;
   }
 
-  .bot-markdown pre code {
+  .message-markdown pre code {
     background: transparent;
     padding: 0;
   }
 
-  .bot-markdown table {
+  .message-markdown table {
     width: 100%;
     border-collapse: collapse;
     overflow: hidden;
@@ -219,38 +219,38 @@
     border-radius: 0.75rem;
   }
 
-  .bot-markdown th,
-  .bot-markdown td {
+  .message-markdown th,
+  .message-markdown td {
     border-bottom: 1px solid #e8eef5;
     padding: 0.55rem 0.7rem;
     text-align: left;
     vertical-align: top;
   }
 
-  .bot-markdown th {
+  .message-markdown th {
     background: #f8fbfe;
     font-weight: 600;
   }
 
-  .bot-markdown h1,
-  .bot-markdown h2,
-  .bot-markdown h3,
-  .bot-markdown h4 {
+  .message-markdown h1,
+  .message-markdown h2,
+  .message-markdown h3,
+  .message-markdown h4 {
     margin: 0.75rem 0 0.35rem;
     font-weight: 600;
     color: var(--text-title);
   }
 
-  .bot-markdown h1 {
+  .message-markdown h1 {
     font-size: 1.1rem;
   }
 
-  .bot-markdown h2 {
+  .message-markdown h2 {
     font-size: 1.03rem;
   }
 
-  .bot-markdown h3,
-  .bot-markdown h4 {
+  .message-markdown h3,
+  .message-markdown h4 {
     font-size: 0.98rem;
   }
 }

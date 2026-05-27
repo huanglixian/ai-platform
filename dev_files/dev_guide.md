@@ -2,11 +2,11 @@
 
 ## 项目简介
 
-`Ai Platform` 是一个面向企业级场景的智能体平台前端，统一承载自由体工作台、工作流、工具、服务、技能和知识业务入口。
+`Ai Platform` 是一个面向企业级场景的智能体平台前端，统一承载工作台、工作流、工具、服务、技能和知识业务入口。
 
 当前代码分成两条主线：
 
-- `Platform`：`bots / workbench / workflows / tools / services / skills`
+- `Platform`：`workbench / workflows / tools / services / skills`
 - `KnowHub`：平台内独立的知识业务域，包含文档空间、策略中心、知识库、检索与配置管理
 
 ## 技术路线
@@ -14,7 +14,7 @@
 - 前端：`Next.js + React + TypeScript`
 - 路由与接口：`Next.js App Router + Route Handlers`
 - 样式与 UI：`Tailwind CSS`，全局样式入口是 `app/globals.css`
-- Platform 数据：`bots` 走真实后端接口，其余模块按模块状态分别接真实接口或静态数据
+- Platform 数据：`workbench` 的知识搜索走真实接口，能力中心与智能体模块按模块状态分别接真实接口或静态数据
 - KnowHub 数据：文档空间、知识库、策略预设、embedding 配置走本地文件持久化；向量数据走 `SQLite + sqlite-vec`
 
 ## 边界说明
@@ -35,7 +35,6 @@
 Ai_Platform/
 ├─ app/
 │  ├─ (platform)/
-│  │  ├─ bots/
 │  │  ├─ portal/
 │  │  ├─ workbench/
 │  │  ├─ workflows/
@@ -50,13 +49,11 @@ Ai_Platform/
 │  │  └─ retrieval/
 │  └─ api/
 ├─ components/
-│  ├─ bots/
 │  ├─ shared/
 │  ├─ ui/
 │  ├─ workbench/
 │  └─ workflows/
 ├─ features/
-│  ├─ bots/
 │  ├─ capabilities/
 │  ├─ services/
 │  ├─ skills/
@@ -95,8 +92,7 @@ Ai_Platform/
 
 ### 1. 功能模块说明
 
-- `bots`：自由体配置与 Playground
-- `workbench`：用户工作台，支持问答会话与知识搜索两种模式
+- `workbench`：用户工作台，支持知识搜索和能力推荐入口
 - `workflows`：工作流列表与示例详情
 - `tools`：通用工具
 - `services`：业务API
@@ -105,7 +101,7 @@ Ai_Platform/
 ### 2. 文件组织方式
 
 - `app/(platform)/*`：Platform 路由入口层，只负责接住页面和动态参数
-- `components/*`：Platform 页面实现层，按 `bots / workbench / workflows / shared / ui` 分组
+- `components/*`：Platform 页面实现层，按 `workbench / workflows / shared / ui` 分组
 - `features/*`：Platform 业务数据、类型和接口封装层
 - `components/shared/*`：Platform 共享壳层、导航和通用页面结构
 - `components/ui/*`：Platform 与 KnowHub 共用的基础控件
@@ -117,12 +113,8 @@ Platform 路由入口：
 - 平台默认首页入口：`app/page.tsx`
 - 全局布局入口：`app/layout.tsx`
 - 全局样式入口：`app/globals.css`
-- `nanobot` 后端代理接口：`app/api/nanobot/[...path]/route.ts`
 - Platform 布局入口：`app/(platform)/layout.tsx`
-- 自由体列表页路由入口：`app/(platform)/bots/page.tsx`
-- 单自由体 Playground 路由入口：`app/(platform)/bots/[agentId]/page.tsx`
 - 默认工作台路由入口：`app/(platform)/workbench/page.tsx`
-- 工作台动态路由入口：`app/(platform)/workbench/[agentId]/page.tsx`
 - 工作流列表页路由入口：`app/(platform)/workflows/page.tsx`
 - 工作流示例详情路由入口：`app/(platform)/workflows/[id]/page.tsx`
 - 通用工具路由入口：`app/(platform)/tools/page.tsx`
@@ -131,19 +123,8 @@ Platform 路由入口：
 
 Platform 页面组件：
 
-- 自由体卡片：`components/bots/bot-card.tsx`
-- 新建自由体入口卡片：`components/bots/create-bot-card.tsx`
-- 单自由体 Playground 主页面：`components/bots/bot-playground.tsx`
-- 会话列表主组件：`components/bots/bot-session-pane.tsx`
-- 发送区主组件：`components/bots/bot-composer-pane.tsx`
-- 对话记录主组件：`components/bots/bot-transcript-pane.tsx`
-- 对话消息 Markdown 渲染组件：`components/bots/bot-message-markdown.tsx`
-- 自由体配置区主组件：`components/bots/bot-config-panel.tsx`
-- 自由体配置编辑表单：`components/bots/bot-config-edit.tsx`
 - 工作台主容器：`components/workbench/workbench-page.tsx`
 - 工作台空态页：`components/workbench/workbench-empty-state.tsx`
-- 工作台左侧会话侧栏：`components/workbench/workbench-session-sidebar.tsx`
-- 工作台右侧配置抽屉：`components/workbench/workbench-config-drawer.tsx`
 - 工作台搜索结果区：`components/workbench/workbench-search-result-pane.tsx`
 - 工作流列表与演示页主组件：`components/workflows/workflow-demo-page.tsx`
 - 工作流卡片：`components/workflows/workflow-card.tsx`
@@ -155,6 +136,7 @@ Platform 共享与基础组件：
 - Platform 顶部导航：`components/shared/top-nav.tsx`
 - 平台卡片页通用外框：`components/shared/card-page-frame.tsx`
 - 能力中心通用卡片：`components/shared/capability-card.tsx`
+- Markdown 消息渲染组件：`components/shared/message-markdown.tsx`
 - 页面占位组件：`components/shared/page-placeholder.tsx`
 - 基础按钮组件：`components/ui/button.tsx`
 - 按钮样式变体定义：`components/ui/button-variants.ts`
@@ -163,8 +145,6 @@ Platform 共享与基础组件：
 
 Platform 业务数据与工具：
 
-- 自由体相关 API 封装：`features/bots/api.ts`
-- 自由体相关类型定义：`features/bots/types.ts`
 - 工作台知识库列表与搜索 API 封装：`features/workbench/api.ts`
 - 工作流页面数据：`features/workflows/data.ts`
 - 工作流类型定义：`features/workflows/types.ts`
@@ -322,8 +302,7 @@ KnowHub 业务数据与服务：
 
 ### Platform
 
-- `bots`：真实后端
-- `workbench`：真实后端，已接入问答会话与 KnowHub 搜索模式
+- `workbench`：KnowHub 搜索模式真实可用，能力推荐入口为占位
 - `workflows / tools / services / skills`：前端原型与静态数据
 
 ### KnowHub

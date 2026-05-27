@@ -4,15 +4,15 @@ import { memo } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
-type BotMessageMarkdownProps = {
+type MessageMarkdownProps = {
   content: string;
 };
 
-export const BotMessageMarkdown = memo(function BotMessageMarkdown({
+export const MessageMarkdown = memo(function MessageMarkdown({
   content,
-}: BotMessageMarkdownProps) {
+}: MessageMarkdownProps) {
   return (
-    <div className="bot-markdown mt-1.5 text-[13px] leading-5.5 text-title">
+    <div className="message-markdown mt-1.5 text-[13px] leading-5.5 text-title">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{

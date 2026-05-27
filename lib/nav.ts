@@ -54,7 +54,6 @@ export const platformNavGroups: PlatformNavGroup[] = [
     key: "settings",
     label: "配置管理",
     items: [
-      { label: "自由体设置", href: "/bots", hint: "自由体配置与 Playground" },
       { label: "组织管理", disabled: true, hint: "组织结构与协作边界" },
       { label: "角色管理", disabled: true, hint: "角色权限与职责控制" },
       { label: "用户管理", disabled: true, hint: "用户账号与成员维护" },
@@ -69,10 +68,6 @@ export function getActiveNavGroup(pathname: string) {
     pathname.startsWith("/workbench/")
   ) {
     return "home";
-  }
-
-  if (pathname === "/bots" || pathname.startsWith("/bots/")) {
-    return "settings";
   }
 
   if (pathname === "/workflows" || pathname.startsWith("/workflows/")) {
