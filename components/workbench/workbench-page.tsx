@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { MessageMarkdown } from "@/components/shared/message-markdown";
 import { WorkbenchEmptyState } from "@/components/workbench/workbench-empty-state";
@@ -40,7 +40,7 @@ function ChatMessageCard({ message }: { message: WorkbenchChatMessage }) {
           {message.content}
         </div>
       ) : (
-        <MessageMarkdown content={message.content || "正在生成推荐..."} />
+        <MessageMarkdown content={message.content || "回复生成中..."} />
       )}
     </article>
   );
@@ -59,8 +59,10 @@ export function WorkbenchPage() {
   const [chatMessages, setChatMessages] = useState<WorkbenchChatMessage[]>([]);
   const [chatInput, setChatInput] = useState("");
   const [chatSending, setChatSending] = useState(false);
-  const [chatStatus, setChatStatus] = useState("描述任务后，系统会推荐匹配的技能、通用工具和业务 API。");
+  const [chatStatus, setChatStatus] = useState("描述任务后，工作台 AI 会生成回复。");
   const [chatError, setChatError] = useState("");
+  const chatScrollRef = useRef<HTMLDivElement | null>(null);
+  const [isChatComposing, setIsChatComposing] = useState(false);
 
   async function handleSearch(content: string) {
     const query = content.trim();
@@ -122,7 +124,7 @@ export function WorkbenchPage() {
     setChatInput("");
     setChatSending(true);
     setChatError("");
-    setChatStatus("正在生成能力推荐...");
+    setChatStatus("回复生成中...");
 
     try {
       let assistantContent = "";
@@ -141,9 +143,9 @@ export function WorkbenchPage() {
           },
         },
       );
-      setChatStatus("推荐已生成");
+      setChatStatus("");
     } catch (sendError) {
-      const message = sendError instanceof Error ? sendError.message : "工作台 AI 推荐失败";
+      const message = sendError instanceof Error ? sendError.message : "工作台 AI 回复失败";
       setChatError(message);
       setChatStatus("");
       setChatMessages((current) =>
@@ -197,6 +199,22 @@ export function WorkbenchPage() {
     };
   }, []);
 
+  useEffect(() => {
+    if (mode !== "chat" || !chatMessages.length) {
+      return;
+    }
+
+    const frame = window.requestAnimationFrame(() => {
+      const container = chatScrollRef.current;
+
+      if (container) {
+        container.scrollTop = container.scrollHeight;
+      }
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [mode, chatMessages]);
+
   const showChatWorkspace = mode === "chat" && chatMessages.length > 0;
   const showSearchWorkspace = mode === "search" && hasSearched;
   const selectedKnowledge =
@@ -223,7 +241,10 @@ export function WorkbenchPage() {
     return (
       <section className="-ml-6 h-[calc(100vh-104px)] min-h-0 w-[calc(100%+1.5rem)] py-1 sm:-ml-8 sm:w-[calc(100%+2rem)]">
         <div className="grid h-full min-h-0 grid-rows-[minmax(0,1fr)_auto] gap-4 overflow-hidden rounded-[18px] bg-white px-5 py-4">
-          <div className="min-h-0 overflow-y-auto rounded-[14px] border border-[#e4edf6] bg-[#f8fbfe] px-4 py-4">
+          <div
+            ref={chatScrollRef}
+            className="min-h-0 overflow-y-auto rounded-[14px] border border-[#dbe5f0] bg-[#eef3f8] px-4 py-4"
+          >
             <div className="flex flex-col gap-3">
               {chatMessages.map((message) => (
                 <ChatMessageCard key={message.id} message={message} />
@@ -232,20 +253,6 @@ export function WorkbenchPage() {
           </div>
 
           <section className="app-card-no-hover overflow-hidden">
-            <div className="flex items-center justify-between border-b border-[#eef2f6] px-4 py-3">
-              <div className="text-[15px] font-semibold text-title">能力推荐</div>
-              <button
-                type="button"
-                onClick={() => {
-                  setChatMessages([]);
-                  setChatError("");
-                  setChatStatus("描述任务后，系统会推荐匹配的技能、通用工具和业务 API。");
-                }}
-                className="rounded-[8px] border border-[#dbe5f0] px-3 py-1.5 text-[12px] font-medium text-[#51657d] transition-colors hover:bg-[#f7fafc]"
-              >
-                清空
-              </button>
-            </div>
             <div className="grid gap-3 px-4 py-4">
               {chatError ? (
                 <div className="rounded-[10px] border border-[#f0d2d2] bg-[#fff8f8] px-3 py-2 text-[12px] text-[#a33a3a]">
@@ -255,21 +262,47 @@ export function WorkbenchPage() {
               <textarea
                 value={chatInput}
                 onChange={(event) => setChatInput(event.target.value)}
-                placeholder="继续描述任务，获取技能、工具和业务 API 推荐"
+                onCompositionStart={() => setIsChatComposing(true)}
+                onCompositionEnd={() => setIsChatComposing(false)}
+                onKeyDown={(event) => {
+                  if (
+                    event.key === "Enter" &&
+                    !event.shiftKey &&
+                    !isChatComposing &&
+                    !event.nativeEvent.isComposing
+                  ) {
+                    event.preventDefault();
+                    void handleChat(chatInput);
+                  }
+                }}
+                placeholder="继续描述任务，获取工作台 AI 回复"
                 className="min-h-[88px] resize-none rounded-[12px] border border-[#dbe5f0] bg-white px-4 py-3 text-[13px] leading-6 text-title outline-none transition-colors placeholder:text-[#98a2b3] focus:border-[#6f96c4]"
               />
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="min-w-0 flex-1 truncate text-[12px] text-[#7f8ea3]">
                   {chatStatus}
                 </div>
-                <button
-                  type="button"
-                  disabled={chatSending}
-                  onClick={() => void handleChat(chatInput)}
-                  className="h-[36px] rounded-[8px] bg-[#0368b3] px-4 text-[13px] font-medium text-white transition-colors hover:bg-[#1a4d87] disabled:cursor-not-allowed disabled:bg-[#7eaed6]"
-                >
-                  {chatSending ? "生成中..." : "发送"}
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setChatMessages([]);
+                      setChatError("");
+                      setChatStatus("描述任务后，工作台 AI 会生成回复。");
+                    }}
+                    className="h-[36px] rounded-[8px] border border-[#dbe5f0] px-4 text-[13px] font-medium text-[#51657d] transition-colors hover:bg-[#f7fafc]"
+                  >
+                    清空
+                  </button>
+                  <button
+                    type="button"
+                    disabled={chatSending}
+                    onClick={() => void handleChat(chatInput)}
+                    className="h-[36px] rounded-[8px] bg-[#0368b3] px-4 text-[13px] font-medium text-white transition-colors hover:bg-[#1a4d87] disabled:cursor-not-allowed disabled:bg-[#7eaed6]"
+                  >
+                    {chatSending ? "生成中..." : "发送"}
+                  </button>
+                </div>
               </div>
             </div>
           </section>

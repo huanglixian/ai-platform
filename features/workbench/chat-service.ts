@@ -1,7 +1,6 @@
 import { streamText, type ModelMessage } from "ai";
 
-import { getActiveModelConfig } from "@/features/models/env";
-import { getActiveLanguageModel } from "@/features/models/provider";
+import { getActiveModelRuntime } from "@/features/models/provider";
 import type { WorkbenchChatMessage } from "@/features/workbench/chat-types";
 import { getWorkbenchCapabilityContext } from "@/features/workbench/capability-context";
 import { buildWorkbenchRecommendationPrompt } from "@/features/workbench/recommendation-prompt";
@@ -27,20 +26,13 @@ export function streamWorkbenchRecommendation(messages: WorkbenchChatMessage[]) 
   }
 
   const capabilityContext = getWorkbenchCapabilityContext(latestUserMessage);
-  const modelConfig = getActiveModelConfig();
+  const modelRuntime = getActiveModelRuntime();
 
   return streamText({
-    model: getActiveLanguageModel(),
+    model: modelRuntime.model,
     system: buildWorkbenchRecommendationPrompt(capabilityContext),
     messages: toModelMessages(messages),
     temperature: 0.2,
-    providerOptions: {
-      deepseek: {
-        reasoningEffort: modelConfig.reasoningEffort,
-        thinking: {
-          type: modelConfig.thinkingType,
-        },
-      },
-    },
+    providerOptions: modelRuntime.providerOptions,
   });
 }

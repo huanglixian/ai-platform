@@ -49,7 +49,6 @@ Ai_Platform/
 │  │  ├─ settings/
 │  │  ├─ knowledge/
 │  │  └─ retrieval/
-│  └─ api/
 ├─ components/
 │  ├─ shared/
 │  ├─ ui/
@@ -103,6 +102,7 @@ Ai_Platform/
 - `app/(platform)/*`：Platform 路由入口层，只负责接住页面和动态参数
 - `components/*`：Platform 页面实现层，按 `workbench / shared / ui` 分组
 - `features/*`：Platform 业务数据、类型和接口封装层
+- `features/models/*`：平台级模型运行时封装，工作台和后续技能执行共用
 - `components/shared/*`：Platform 共享壳层、导航和通用页面结构
 - `components/ui/*`：Platform 与 KnowHub 共用的基础控件
 
@@ -158,6 +158,15 @@ Platform 业务数据与工具：
 - 能力卡片共用类型：`features/capabilities/types.ts`
 - Platform 导航配置：`lib/nav.ts`
 - 通用工具函数：`lib/utils.ts`
+
+### 4. 模型 provider/runtime 说明
+
+- 模型运行时入口：`features/models/provider.ts`
+- 模型环境配置读取：`features/models/env.ts`
+- 模型运行时类型：`features/models/types.ts`
+- 工作台只调用 `getActiveModelRuntime()`，不直接写 DeepSeek、豆包等厂商参数
+- 厂商差异统一收口在 `features/models/provider.ts`，包括 Vercel AI SDK model 实例和 `providerOptions`
+- 新增模型 provider 时，优先扩展 `features/models`，不要把 provider 专属参数写进 `features/workbench`
 
 ## KnowHub 说明
 

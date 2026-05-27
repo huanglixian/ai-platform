@@ -100,12 +100,12 @@ export async function streamWorkbenchChat(
   if (!response.ok) {
     try {
       const payload = (await response.json()) as ApiResponse<Record<string, unknown>>;
-      throw new Error(payload.error || "工作台 AI 推荐失败");
+      throw new Error(payload.error || "工作台 AI 回复失败");
     } catch (error) {
       if (error instanceof Error) {
         throw error;
       }
-      throw new Error("工作台 AI 推荐失败");
+      throw new Error("工作台 AI 回复失败");
     }
   }
 

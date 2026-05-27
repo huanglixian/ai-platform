@@ -87,7 +87,7 @@ function WorkbenchEmptyStateContent({
             }}
             placeholder={
               mode === "chat"
-                ? "输入需求，系统将推荐匹配的技能、工具和业务 API"
+                ? "输入需求，获取工作台 AI 回复"
                 : "输入问题，搜索知识库中的相关片段"
             }
             className="min-h-[132px] w-full resize-none border-0 bg-transparent px-1 py-1 text-[16px] leading-8 text-title outline-none placeholder:text-[#98a2b3]"
@@ -140,7 +140,7 @@ function WorkbenchEmptyStateContent({
                     ? `处理中：${status}`
                     : sending
                       ? "正在处理..."
-                      : "只做能力推荐，不执行技能或业务能力"}
+                      : "当前不会执行技能或业务能力"}
                 </div>
               )}
             </div>

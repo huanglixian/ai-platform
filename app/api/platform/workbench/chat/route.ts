@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "工作台 AI 推荐失败";
+    const message = error instanceof Error ? error.message : "工作台 AI 回复失败";
 
     return NextResponse.json(
       {
