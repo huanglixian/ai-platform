@@ -75,7 +75,7 @@
   统一能力摘要类型，服务技能、工具和业务 API 推荐。
 
 - [x] `features/skills/data.ts`
-  确保技能数据具备推荐所需的名称、描述、标签和适用场景。
+  确保技能数据具备推荐所需的名称、描述和触发语句。
 
 - [x] `features/tools/data.ts`
   确保通用工具数据具备推荐所需的名称、描述、标签和适用场景。
@@ -113,21 +113,21 @@
 
 ### 目标
 
-把技能中心从静态展示模块改造为真实技能注册与管理模块。技能先支持后端定义和示例执行，后续再接入 AI tool loop。
+把技能中心从静态展示模块改造为真实技能注册与管理模块。技能以 `SKILL.md` 为核心说明和执行依据，`skill.json` 只保存管理元数据、触发信息和权限相关字段，后续再接入 AI tool loop。
 
 ### 新增文件
 
 - [x] `features/skills/skill-types.ts`
-  技能定义、输入输出、风险等级、执行结果等类型。
+  技能元数据、触发语句、运行上下文等类型。
 
 - [x] `features/skills/registry.ts`
   技能注册表入口。
 
 - [x] `features/skills/runner.ts`
-  技能执行器，负责参数校验、错误处理和执行结果归一化。
+  技能运行上下文构建器，负责读取 `SKILL.md` 并返回后续 AI loop 所需的技能说明。
 
-- [x] `features/skills/examples/`
-  示例技能目录。
+- [x] `storage/platform/skills/`
+  配置型技能包目录，每个技能包含 `SKILL.md / skill.json / references`。
 
 - [x] `app/api/platform/skills/[skillId]/run/route.ts`
   单个技能测试执行接口。
@@ -144,7 +144,7 @@
   接入真实技能数据。
 
 - [x] 技能页面相关组件
-  展示技能状态、适用场景、风险等级、输入说明和调用说明。
+  展示技能名称、状态、维护方、描述和触发语句。
 
 ### 示例技能
 
@@ -155,9 +155,9 @@
 ### 验收标准
 
 - [x] 技能中心展示真实技能注册表数据。
-- [x] 至少 3 个示例技能可以通过接口执行。
-- [x] 技能参数校验失败时返回友好错误。
-- [x] 新增技能只需要补充元信息、schema 和 execute 函数。
+- [x] 至少 3 个示例技能可以通过接口读取运行上下文。
+- [x] 技能缺失或未启用时返回友好错误。
+- [x] 新增技能只需要补充 `SKILL.md`、`skill.json` 和可选 `references`。
 - [x] `npm run build` 通过。
 
 ## 阶段三：Skill Tool Loop 与运行配置

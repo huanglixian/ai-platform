@@ -5,17 +5,9 @@ import { useState } from "react";
 import { CardPageFrame } from "@/components/shared/card-page-frame";
 import type { SkillRecord } from "@/features/skills/types";
 
-const ITEM_WIDTH = 340;
-const SKILL_TABS = ["全部", "精选", "文本处理", "业务辅助"] as const;
-const SKILL_GROUP_TABS = SKILL_TABS.filter(
-  (tab) => tab !== "全部" && tab !== "精选",
-);
-
-const riskLabels: Record<SkillRecord["riskLevel"], string> = {
-  low: "低风险",
-  medium: "中风险",
-  high: "高风险",
-};
+const ITEM_WIDTH = 300;
+const SKILL_TABS = ["全部", "文本处理", "业务辅助"] as const;
+const SKILL_GROUP_TABS = SKILL_TABS.filter((tab) => tab !== "全部");
 
 type SkillsPageClientProps = {
   skills: SkillRecord[];
@@ -24,10 +16,7 @@ type SkillsPageClientProps = {
 function SkillCard({ item }: { item: SkillRecord }) {
   return (
     <article className="app-card h-full overflow-hidden">
-      <div className="flex min-h-[64px] items-center gap-3 border-b border-[#e8eef5] bg-[linear-gradient(180deg,#f5f9fe_0%,#eff5fb_100%)] px-4 py-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] bg-white text-[18px] shadow-[0_4px_10px_rgba(15,23,42,0.04)]">
-          {item.emoji}
-        </div>
+      <div className="border-b border-[#e8eef5] bg-[linear-gradient(180deg,#f5f9fe_0%,#eff5fb_100%)] px-4 py-3">
         <div className="min-w-0 flex-1">
           <div className="truncate text-title text-[16px] font-semibold tracking-[-0.02em]">
             {item.name}
@@ -37,46 +26,26 @@ function SkillCard({ item }: { item: SkillRecord }) {
               {item.enabled ? "已启用" : "未启用"}
             </span>
             <span className="rounded-full border border-[#dbe5f0] bg-white px-2 py-0.5 text-[10px] text-[#51657d]">
-              {riskLabels[item.riskLevel]}
+              {item.owner}
             </span>
           </div>
         </div>
-        <div
-          className={[
-            "text-[14px] leading-none",
-            item.featured ? "text-[#f5b301]" : "text-[#d7e1ec]",
-          ].join(" ")}
-        >
-          ★
-        </div>
       </div>
 
-      <div className="space-y-3 bg-white px-4 py-3.5">
-        <p className="line-clamp-2 min-h-[44px] text-[13px] leading-5.5 text-[#667085]">
+      <div className="space-y-2.5 bg-white px-4 py-3.5">
+        <p className="line-clamp-2 text-[13px] leading-5.5 text-[#667085]">
           {item.description}
         </p>
 
-        <div className="grid grid-cols-2 gap-2 text-[11px] text-[#667085]">
-          <div className="rounded-[10px] border border-[#eef2f6] bg-[#fafbfd] px-3 py-2">
-            <div className="mb-1 font-medium text-[#98a2b3]">维护方</div>
-            <div className="truncate text-title">{item.owner}</div>
-          </div>
-          <div className="rounded-[10px] border border-[#eef2f6] bg-[#fafbfd] px-3 py-2">
-            <div className="mb-1 font-medium text-[#98a2b3]">调用方式</div>
-            <div className="truncate text-title">{item.invokeType}</div>
-          </div>
-        </div>
-
         <div className="space-y-1.5">
-          <div className="text-[11px] font-medium text-[#98a2b3]">输入字段</div>
+          <div className="text-[11px] font-medium text-[#98a2b3]">触发语句</div>
           <div className="flex flex-wrap gap-1.5">
-            {item.inputFields.map((field) => (
+            {item.triggers.slice(0, 4).map((trigger) => (
               <span
-                key={field.name}
+                key={trigger}
                 className="rounded-full border border-[#dbe5f0] bg-[#f7fafc] px-2 py-1 text-[11px] text-[#51657d]"
               >
-                {field.label}
-                {field.required ? " *" : ""}
+                {trigger}
               </span>
             ))}
           </div>
@@ -99,16 +68,12 @@ export function SkillsPageClient({ skills }: SkillsPageClientProps) {
     return (
       item.name.toLowerCase().includes(normalizedKeyword) ||
       item.description.toLowerCase().includes(normalizedKeyword) ||
-      item.tags.some((tag) => tag.toLowerCase().includes(normalizedKeyword))
+      item.triggers.some((trigger) => trigger.toLowerCase().includes(normalizedKeyword))
     );
   });
   const visibleSkills = searchedSkills.filter((item) => {
     if (activeTab === "全部") {
       return true;
-    }
-
-    if (activeTab === "精选") {
-      return item.featured;
     }
 
     return item.category === activeTab;
@@ -131,7 +96,7 @@ export function SkillsPageClient({ skills }: SkillsPageClientProps) {
       onTabChange={(tab) => setActiveTab(tab as (typeof SKILL_TABS)[number])}
       groupedSections={groupedSkills}
       searchValue={keyword}
-      searchPlaceholder="搜索技能名称、描述或标签"
+      searchPlaceholder="搜索技能名称、描述或触发语句"
       onSearchChange={setKeyword}
     >
       {visibleSkills.map(renderSkillCard)}

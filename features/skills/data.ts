@@ -6,20 +6,10 @@ export function listSkillRecords(): SkillRecord[] {
     id: skill.id,
     name: skill.name,
     description: skill.description,
-    invokeType: skill.invokeType,
-    calls: skill.calls,
-    featured: skill.featured,
-    emoji: skill.emoji,
     category: skill.category,
     owner: skill.owner,
     enabled: skill.enabled,
-    riskLevel: skill.riskLevel,
-    tags: skill.tags,
-    useCases: skill.useCases,
-    inputFields: skill.inputFields,
-    outputDescription: skill.outputDescription,
-    callGuide: skill.callGuide,
+    triggers: skill.triggers,
+    referenceFiles: skill.referenceFiles,
   }));
 }
-
-export const skillRecords = listSkillRecords();

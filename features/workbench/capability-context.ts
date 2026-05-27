@@ -1,5 +1,5 @@
 import { serviceRecords } from "@/features/services/data";
-import { skillRecords } from "@/features/skills/data";
+import { listSkillRecords } from "@/features/skills/data";
 import { toolRecords } from "@/features/tools/data";
 import type { WorkbenchCapabilitySummary } from "@/features/workbench/chat-types";
 
@@ -49,7 +49,15 @@ function toContextBlock(title: string, items: WorkbenchCapabilitySummary[]) {
 
 export function getWorkbenchCapabilityContext(query: string) {
   const capabilities: WorkbenchCapabilitySummary[] = [
-    ...skillRecords.map((item) => ({ ...item, kind: "skill" as const })),
+    ...listSkillRecords().map((item) => ({
+      id: item.id,
+      kind: "skill" as const,
+      name: item.name,
+      description: item.description,
+      category: item.category,
+      invokeType: "Skill.md",
+      featured: false,
+    })),
     ...toolRecords.map((item) => ({ ...item, kind: "tool" as const })),
     ...serviceRecords.map((item) => ({ ...item, kind: "service" as const })),
   ];

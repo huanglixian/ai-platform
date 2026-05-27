@@ -1,13 +1,10 @@
-import type { CapabilityRecord } from "@/features/capabilities/types";
-import type { SkillInputField, SkillRiskLevel } from "@/features/skills/skill-types";
-
-export type SkillRecord = CapabilityRecord & {
-  owner: string;
+export type SkillRecord = {
+  id: string;
+  name: string;
+  description: string;
   enabled: boolean;
-  riskLevel: SkillRiskLevel;
-  tags: string[];
-  useCases: string[];
-  inputFields: SkillInputField[];
-  outputDescription: string;
-  callGuide: string;
+  category: string;
+  owner: string;
+  triggers: string[];
+  referenceFiles: string[];
 };

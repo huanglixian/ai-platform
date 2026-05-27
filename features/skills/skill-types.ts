@@ -1,65 +1,33 @@
-import type { z } from "zod";
-
-export type SkillRiskLevel = "low" | "medium" | "high";
-
-export type SkillInputField = {
-  name: string;
-  label: string;
-  type: "string" | "number" | "boolean" | "array" | "object";
-  required: boolean;
-  description: string;
-};
-
-export type SkillExecutionContext = {
-  skillId: string;
-  requestId: string;
-  startedAt: string;
-};
-
-export type SkillDefinition<TInput = unknown, TOutput = unknown> = {
+export type SkillMetadata = {
   id: string;
   name: string;
   description: string;
-  category: string;
-  emoji: string;
-  featured: boolean;
   enabled: boolean;
+  category: string;
   owner: string;
-  riskLevel: SkillRiskLevel;
-  invokeType: string;
-  calls: string;
-  tags: string[];
-  useCases: string[];
-  inputFields: SkillInputField[];
-  outputDescription: string;
-  callGuide: string;
-  inputSchema: z.ZodType<TInput>;
-  execute: (input: TInput, context: SkillExecutionContext) => TOutput | Promise<TOutput>;
+  triggers: string[];
 };
 
-export type AnySkillDefinition = SkillDefinition<any, any>;
+export type SkillPackage = SkillMetadata & {
+  baseDir: string;
+  skillMarkdown: string;
+  referenceFiles: string[];
+};
 
-export type SkillRunSuccess<TOutput = unknown> = {
+export type SkillRunContext = {
   ok: true;
   skillId: string;
   skillName: string;
-  output: TOutput;
-  durationMs: number;
-  startedAt: string;
-  finishedAt: string;
+  status: "ready";
+  instruction: string;
+  metadata: SkillMetadata;
+  references: string[];
 };
 
 export type SkillRunFailure = {
   ok: false;
   skillId: string;
-  skillName?: string;
   error: string;
-  issues?: string[];
-  durationMs: number;
-  startedAt: string;
-  finishedAt: string;
 };
 
-export type SkillRunResult<TOutput = unknown> =
-  | SkillRunSuccess<TOutput>
-  | SkillRunFailure;
+export type SkillRunResult = SkillRunContext | SkillRunFailure;

@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
-import { z } from "zod";
 
-import { runSkill } from "@/features/skills/runner";
+import { buildSkillRunContext } from "@/features/skills/runner";
 
 export const dynamic = "force-dynamic";
 
@@ -11,16 +10,11 @@ type SkillRunRouteContext = {
   }>;
 };
 
-const skillRunRequestSchema = z.object({
-  input: z.unknown().optional(),
-});
-
-export async function POST(request: Request, context: SkillRunRouteContext) {
+export async function POST(_request: Request, context: SkillRunRouteContext) {
   const { skillId } = await context.params;
 
   try {
-    const payload = skillRunRequestSchema.parse(await request.json());
-    const result = await runSkill(skillId, payload.input ?? {});
+    const result = buildSkillRunContext(skillId);
 
     return NextResponse.json(result, {
       status: result.ok ? 200 : result.error === "未找到对应技能" ? 404 : 400,

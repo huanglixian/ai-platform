@@ -1,18 +1,73 @@
-import { exampleSkills } from "@/features/skills/examples";
-import type { AnySkillDefinition } from "@/features/skills/skill-types";
+import fs from "node:fs";
+import path from "node:path";
 
-const skillRegistry = new Map<string, AnySkillDefinition>();
+import { z } from "zod";
 
-for (const skill of exampleSkills) {
-  if (skillRegistry.has(skill.id)) {
-    throw new Error(`重复的技能 ID：${skill.id}`);
+import type { SkillMetadata, SkillPackage } from "@/features/skills/skill-types";
+
+const skillsRoot = path.join(process.cwd(), "storage", "platform", "skills");
+
+const skillMetadataSchema = z.object({
+  id: z.string().min(1),
+  name: z.string().min(1),
+  description: z.string().min(1),
+  enabled: z.boolean().default(true),
+  category: z.string().min(1),
+  owner: z.string().default("未指定"),
+  triggers: z.array(z.string()).default([]),
+});
+
+function readJsonFile(filePath: string) {
+  return JSON.parse(fs.readFileSync(filePath, "utf8")) as unknown;
+}
+
+function listReferenceFiles(skillDir: string) {
+  const referencesDir = path.join(skillDir, "references");
+
+  if (!fs.existsSync(referencesDir)) {
+    return [];
   }
 
-  skillRegistry.set(skill.id, skill);
+  return fs
+    .readdirSync(referencesDir, { withFileTypes: true })
+    .filter((entry) => entry.isFile())
+    .map((entry) => path.join("references", entry.name))
+    .sort();
+}
+
+function readSkillPackage(skillDir: string): SkillPackage | null {
+  const metadataPath = path.join(skillDir, "skill.json");
+  const markdownPath = path.join(skillDir, "SKILL.md");
+
+  if (!fs.existsSync(metadataPath) || !fs.existsSync(markdownPath)) {
+    return null;
+  }
+
+  const metadata = skillMetadataSchema.parse(readJsonFile(metadataPath)) satisfies SkillMetadata;
+
+  if (metadata.id !== path.basename(skillDir)) {
+    throw new Error(`技能目录名与 skill.json id 不一致：${metadata.id}`);
+  }
+
+  return {
+    ...metadata,
+    baseDir: skillDir,
+    skillMarkdown: fs.readFileSync(markdownPath, "utf8"),
+    referenceFiles: listReferenceFiles(skillDir),
+  };
 }
 
 export function listSkills() {
-  return Array.from(skillRegistry.values());
+  if (!fs.existsSync(skillsRoot)) {
+    return [];
+  }
+
+  return fs
+    .readdirSync(skillsRoot, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => readSkillPackage(path.join(skillsRoot, entry.name)))
+    .filter((skill): skill is SkillPackage => Boolean(skill))
+    .sort((a, b) => a.name.localeCompare(b.name, "zh-Hans-CN"));
 }
 
 export function listEnabledSkills() {
@@ -20,5 +75,5 @@ export function listEnabledSkills() {
 }
 
 export function getSkillById(skillId: string) {
-  return skillRegistry.get(skillId) ?? null;
+  return listSkills().find((skill) => skill.id === skillId) ?? null;
 }

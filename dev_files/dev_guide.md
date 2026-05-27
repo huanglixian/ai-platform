@@ -16,7 +16,7 @@
 - 样式与 UI：`Tailwind CSS`，全局样式入口是 `app/globals.css`
 - Platform 数据：`workbench` 的知识搜索走真实接口，能力中心与智能体模块按模块状态分别接真实接口或静态数据
 - Platform AI：工作台问答通过 Vercel AI SDK 接入 DeepSeek-V4，当前只做技能、工具和业务 API 推荐
-- Platform Skills：技能中心使用注册表定义真实技能，当前支持示例技能的参数校验和后端执行
+- Platform Skills：技能中心读取 `storage/platform/skills` 中的配置型技能包，`SKILL.md` 是技能执行核心，`skill.json` 只保存管理元数据
 - KnowHub 数据：文档空间、知识库、策略预设、embedding 配置走本地文件持久化；向量数据走 `SQLite + sqlite-vec`
 
 ## 边界说明
@@ -27,6 +27,7 @@
 - `components` 与 `features`：Platform 页面实现、共享组件和业务逻辑
 - `knowhub/components` 与 `knowhub/features`：KnowHub 页面实现、共享组件和业务逻辑
 - `storage/knowhub`：KnowHub 本地持久化目录
+- `storage/platform/skills`：Platform 配置型技能包目录，每个技能包含 `SKILL.md / skill.json / references`
 - `reference`：外部参考实现与调研素材
 - `dev_files`：项目开发文档与阶段性 checklist
 - `components/ui` 与 `lib`：跨模块基础控件和平台级工具
@@ -82,7 +83,9 @@ Ai_Platform/
 ├─ dev_files/
 ├─ reference/
 ├─ storage/
-│  └─ knowhub/
+│  ├─ knowhub/
+│  └─ platform/
+│     └─ skills/
 ├─ public/
 └─ lib/
 ```
@@ -117,7 +120,7 @@ Platform 路由入口：
 - Platform 布局入口：`app/(platform)/layout.tsx`
 - 默认工作台路由入口：`app/(platform)/workbench/page.tsx`
 - 工作台 AI 推荐接口：`app/api/platform/workbench/chat/route.ts`
-- 技能执行测试接口：`app/api/platform/skills/[skillId]/run/route.ts`
+- 技能运行上下文接口：`app/api/platform/skills/[skillId]/run/route.ts`
 - 通用工具路由入口：`app/(platform)/tools/page.tsx`
 - 业务API路由入口：`app/(platform)/services/page.tsx`
 - 技能中心路由入口：`app/(platform)/skills/page.tsx`
@@ -160,8 +163,8 @@ Platform 业务数据与工具：
 - 技能中心类型定义：`features/skills/types.ts`
 - 技能定义类型：`features/skills/skill-types.ts`
 - 技能注册表：`features/skills/registry.ts`
-- 技能执行器：`features/skills/runner.ts`
-- 示例技能目录：`features/skills/examples/*`
+- 技能运行上下文构建器：`features/skills/runner.ts`
+- 配置型技能包目录：`storage/platform/skills/<skill-id>/`
 - 能力卡片共用类型：`features/capabilities/types.ts`
 - Platform 导航配置：`lib/nav.ts`
 - 通用工具函数：`lib/utils.ts`
