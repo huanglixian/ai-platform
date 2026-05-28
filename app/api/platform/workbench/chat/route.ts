@@ -15,6 +15,7 @@ const chatRequestSchema = z.object({
   runtimeState: z.object({
     activeSkillId: z.string().optional(),
     skillStatus: z.enum(["idle", "collecting_input", "running_tool", "completed", "failed"]).optional(),
+    startedAtMessageIndex: z.number().optional(),
   }).optional(),
 });
 
@@ -43,6 +44,7 @@ export async function POST(request: NextRequest) {
             currentRuntimeState = {
               activeSkillId: result.activeSkillId,
               skillStatus: "collecting_input",
+              startedAtMessageIndex: payload.messages.length - 1, // 技能触发的那条消息的索引
             };
           }
         }
@@ -71,11 +73,13 @@ export async function POST(request: NextRequest) {
                   currentRuntimeState = {
                     activeSkillId: undefined,
                     skillStatus: "completed",
+                    startedAtMessageIndex: undefined,
                   };
                 } else {
                   currentRuntimeState = {
                     activeSkillId: undefined,
                     skillStatus: "failed",
+                    startedAtMessageIndex: undefined,
                   };
                 }
               }

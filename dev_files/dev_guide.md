@@ -16,7 +16,7 @@
 - 样式与 UI：`Tailwind CSS`，全局样式入口是 `app/globals.css`
 - Platform 数据：`workbench` 的知识搜索走真实接口，能力中心与智能体模块按模块状态分别接真实接口或静态数据
 - Platform AI：工作台问答通过 Vercel AI SDK 接入 DeepSeek-V4，当前只做技能、工具和业务 API 推荐
-- Platform Skills：技能中心读取 `storage/platform/skills` 中的配置型技能包，`SKILL.md` 是技能执行核心，`skill.json` 只保存管理元数据
+- Platform Skills：技能中心读取 `storage/platform/skills` 中的配置型技能包，`SKILL.md` 是技能执行核心；支持通过 `requiresSession` 和 `completionTools` 在工作台实现结构化多轮会话锁定与释放。
 - 技能创建规范：见 `dev_files/create_skills_guide.md`
 - 工具/API 注册规范：见 `dev_files/register-tools-guide.md`
 - KnowHub 数据：文档空间、知识库、策略预设、embedding 配置走本地文件持久化；向量数据走 `SQLite + sqlite-vec`
@@ -329,7 +329,7 @@ KnowHub 业务数据与服务：
 
 ### Platform
 
-- `workbench`：支持在命中技能上下文时自动基于 `allowedTools` 动态加载 Zod 强类型业务 API Tools，并在后端通过真实的 Tool Calling 循环向业务系统（如杆塔匹配 API）发起网络请求，前端支持流式解析并以可视化的折叠卡片渲染工具执行轨迹。
+- `workbench`：支持在命中技能上下文时基于 `allowedTools` 动态加载并请求 API Tools；支持基于 `runtimeState` 实现多轮技能会话锁定与上下文定向裁剪剪枝（Token 优化）；在无工具依赖时支持动态省略 Tools 机制以确保极速纯文本流式输出。前端支持流式解析并渲染工具执行轨迹。
 - `tools / services`：前端原型与静态数据
 - `skills`：支持真实的配置型技能注册与元数据（如 `allowedTools` 声明）解析。
 

@@ -1,4 +1,4 @@
-import { streamText, type ModelMessage } from "ai";
+import { streamText, pruneMessages, type ModelMessage } from "ai";
 
 import { getActiveModelRuntime } from "@/features/models/provider";
 import { buildSkillRunContext } from "@/features/skills/runner";
@@ -13,13 +13,29 @@ function toModelMessages(messages: WorkbenchChatMessage[]): ModelMessage[] {
   return messages
     .filter((message) => message.content.trim())
     .map((message) => ({
-      role: message.role,
+      role: message.role as "user" | "assistant",
       content: message.content.trim(),
     }));
 }
 
 function getLatestUserMessage(messages: WorkbenchChatMessage[]) {
   return [...messages].reverse().find((message) => message.role === "user")?.content.trim() || "";
+}
+
+function getMessagesForContext(
+  messages: WorkbenchChatMessage[],
+  activeSkillId?: string,
+  startedAtMessageIndex?: number
+): WorkbenchChatMessage[] {
+  if (
+    activeSkillId &&
+    startedAtMessageIndex !== undefined &&
+    startedAtMessageIndex >= 0 &&
+    startedAtMessageIndex < messages.length
+  ) {
+    return messages.slice(startedAtMessageIndex);
+  }
+  return messages.slice(-5);
 }
 
 export async function streamWorkbenchRecommendation(
@@ -49,6 +65,21 @@ export async function streamWorkbenchRecommendation(
     decision = await routeSkill(latestUserMessage);
   }
 
+  // 根据当前是否有激活技能来定向过滤出所需的对话上下文
+  const slicedMessages = getMessagesForContext(
+    messages,
+    decision.skillId || undefined,
+    runtimeState?.startedAtMessageIndex
+  );
+  const modelMessages = toModelMessages(slicedMessages);
+
+  // 对模型输入的消息使用 pruneMessages 进行老旧工具调用与空白内容的剪枝优化，以省 token
+  const prunedMessages = pruneMessages({
+    messages: modelMessages,
+    toolCalls: "before-last-message",
+    emptyMessages: "remove",
+  });
+
   if (decision.action === "use_skill" && decision.skillId) {
     const skillContext = buildSkillRunContext(decision.skillId);
 
@@ -63,16 +94,23 @@ export async function streamWorkbenchRecommendation(
         }
       }
 
+      // 如果有可用的工具，才挂载 tools 和 maxSteps，否则不传以保障极致的纯文本流式输出响应性能
+      const hasTools = Object.keys(activeTools).length > 0;
+      const streamOptions: any = {
+        model: modelRuntime.model,
+        system: buildSkillExecutionPrompt(skillContext),
+        messages: prunedMessages,
+        temperature: 0.1,
+        providerOptions: modelRuntime.providerOptions,
+      };
+
+      if (hasTools) {
+        streamOptions.tools = activeTools;
+        streamOptions.maxSteps = 5;
+      }
+
       return {
-        stream: streamText({
-          model: modelRuntime.model,
-          system: buildSkillExecutionPrompt(skillContext),
-          messages: toModelMessages(messages),
-          tools: activeTools,
-          maxSteps: 5,
-          temperature: 0.1,
-          providerOptions: modelRuntime.providerOptions,
-        } as any),
+        stream: streamText(streamOptions),
         skillName: skillContext.skillName,
         activeSkillId: decision.skillId,
         requiresSession: skillContext.metadata.requiresSession,
@@ -87,11 +125,12 @@ export async function streamWorkbenchRecommendation(
     stream: streamText({
       model: modelRuntime.model,
       system: buildWorkbenchRecommendationPrompt(capabilityContext),
-      messages: toModelMessages(messages),
+      messages: prunedMessages,
       temperature: 0.2,
       providerOptions: modelRuntime.providerOptions,
     }),
     activeSkillId: null,
   };
 }
+
 

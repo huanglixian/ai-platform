@@ -25,4 +25,5 @@ export type WorkbenchCapabilitySummary = {
 export type WorkbenchRuntimeState = {
   activeSkillId?: string;
   skillStatus?: 'idle' | 'collecting_input' | 'running_tool' | 'completed' | 'failed';
+  startedAtMessageIndex?: number;
 };
