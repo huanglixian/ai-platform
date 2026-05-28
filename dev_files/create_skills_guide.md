@@ -18,7 +18,7 @@ storage/platform/skills/text-summary/
 
 ## skill.json
 
-只保留必要字段：
+只保留必要字段。对于普通单轮技能，样例配置如下：
 
 ```json
 {
@@ -32,6 +32,23 @@ storage/platform/skills/text-summary/
 }
 ```
 
+对于**需要多步交互（参数收集）**或**需要调用具体后台工具**的技能，必须配置会话锁定参数，样例如下：
+
+```json
+{
+  "id": "tower-match",
+  "name": "杆塔匹配",
+  "description": "根据输电线路设计条件搜索和匹配可用杆塔方案。",
+  "enabled": true,
+  "category": "业务技能",
+  "owner": "平台示例",
+  "triggers": ["杆塔搜索", "杆塔匹配", "帮我匹配杆塔"],
+  "allowedTools": ["tower.match.search"],
+  "requiresSession": true,
+  "completionTools": ["tower.match.search"]
+}
+```
+
 字段说明：
 
 - `id`：技能唯一标识，英文、数字、短横线。
@@ -41,6 +58,9 @@ storage/platform/skills/text-summary/
 - `category`：技能分类，用于页面筛选。
 - `owner`：维护方，页面小标签展示。
 - `triggers`：触发语句，用于 Skill Router 判断候选。
+- `allowedTools` (可选)：允许该技能调用的工具标识数组。不在此列表中的工具在流推理中不可被模型调用。
+- `requiresSession` (可选)：布尔值。设置为 `true` 时，平台在模型进入该技能后将进行会话锁定（跳过重新路由），直到满足完成或失败条件。可避免多轮追问时，用户回复不带触发词而导致对话丢状态、退回普通闲聊。
+- `completionTools` (可选)：字符串数组。在此数组中的任何工具执行成功后，平台将自动清除当前技能的会话锁定。
 
 不要在 `skill.json` 里写执行步骤、参数 schema、输出模板或长说明。
 

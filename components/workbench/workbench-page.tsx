@@ -339,6 +339,10 @@ export function WorkbenchPage() {
   const [searchResult, setSearchResult] = useState<WorkbenchSearchResult | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
   const [chatMessages, setChatMessages] = useState<WorkbenchChatMessage[]>([]);
+  const [runtimeState, setRuntimeState] = useState<{
+    activeSkillId?: string;
+    skillStatus: "idle" | "collecting_input" | "running_tool" | "completed" | "failed";
+  }>({ skillStatus: "idle" });
   const [chatInput, setChatInput] = useState("");
   const [chatSending, setChatSending] = useState(false);
   const [chatStatus, setChatStatus] = useState("描述任务后，工作台 AI 会生成回复。");
@@ -411,19 +415,55 @@ export function WorkbenchPage() {
       let assistantContent = "";
       await streamWorkbenchChat(
         nextMessages.filter((message) => message.role !== "assistant" || message.content.trim()),
+        runtimeState,
         {
           onDelta: (delta) => {
             assistantContent += delta;
+            
+            // 实时检查并剔除流末尾的 [__STATE__: 标记，防止页面上闪现
+            let displayContent = assistantContent;
+            const stateIndex = assistantContent.indexOf("[__STATE__:");
+            if (stateIndex !== -1) {
+              displayContent = assistantContent.slice(0, stateIndex).trimEnd();
+            }
+
             setChatMessages((current) =>
               current.map((message) =>
                 message.id === assistantMessage.id
-                  ? { ...message, content: assistantContent }
+                  ? { ...message, content: displayContent }
                   : message,
               ),
             );
           },
         },
       );
+
+      // 请求成功结束后，提取 [__STATE__:{...}]
+      const stateMatch = assistantContent.match(/\[__STATE__:(\{[\s\S]*?\})\]/);
+      if (stateMatch) {
+        try {
+          const newState = JSON.parse(stateMatch[1]);
+          setRuntimeState(newState);
+        } catch (e) {
+          console.error("解析返回的 runtimeState 失败", e);
+        }
+      }
+
+      // 提取纯净的回复内容更新最终文本，清除状态标记
+      let cleanContent = assistantContent;
+      const stateIndex = assistantContent.indexOf("[__STATE__:");
+      if (stateIndex !== -1) {
+        cleanContent = assistantContent.slice(0, stateIndex).trimEnd();
+      }
+
+      setChatMessages((current) =>
+        current.map((message) =>
+          message.id === assistantMessage.id
+            ? { ...message, content: cleanContent }
+            : message,
+        ),
+      );
+
       setChatStatus("");
     } catch (sendError) {
       const message = sendError instanceof Error ? sendError.message : "工作台 AI 回复失败";
@@ -537,6 +577,7 @@ export function WorkbenchPage() {
               setChatMessages([]);
               setChatError("");
               setChatStatus("描述任务后，工作台 AI 会生成回复。");
+              setRuntimeState({ skillStatus: "idle" });
             }}
           />
         }

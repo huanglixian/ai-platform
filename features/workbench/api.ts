@@ -84,6 +84,10 @@ export async function searchWorkbenchKnowledge(input: {
 
 export async function streamWorkbenchChat(
   messages: WorkbenchChatMessage[],
+  runtimeState?: {
+    activeSkillId?: string;
+    skillStatus?: string;
+  },
   handlers: {
     onDelta?: (delta: string) => void;
   } = {},
@@ -94,7 +98,7 @@ export async function streamWorkbenchChat(
       "Content-Type": "application/json",
     },
     cache: "no-store",
-    body: JSON.stringify({ messages }),
+    body: JSON.stringify({ messages, runtimeState }),
   });
 
   if (!response.ok) {

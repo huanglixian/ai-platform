@@ -21,3 +21,8 @@ export type WorkbenchCapabilitySummary = {
   invokeType: string;
   featured: boolean;
 };
+
+export type WorkbenchRuntimeState = {
+  activeSkillId?: string;
+  skillStatus?: 'idle' | 'collecting_input' | 'running_tool' | 'completed' | 'failed';
+};

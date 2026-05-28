@@ -7,6 +7,8 @@ export type SkillMetadata = {
   owner: string;
   triggers: string[];
   allowedTools?: string[];
+  requiresSession?: boolean;
+  completionTools?: string[];
 };
 
 export type SkillPackage = SkillMetadata & {

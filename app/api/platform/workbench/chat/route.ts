@@ -12,12 +12,16 @@ const chatMessageSchema = z.object({
 
 const chatRequestSchema = z.object({
   messages: z.array(chatMessageSchema).min(1),
+  runtimeState: z.object({
+    activeSkillId: z.string().optional(),
+    skillStatus: z.enum(["idle", "collecting_input", "running_tool", "completed", "failed"]).optional(),
+  }).optional(),
 });
 
 export async function POST(request: NextRequest) {
   try {
     const payload = chatRequestSchema.parse(await request.json());
-    const result = await streamWorkbenchRecommendation(payload.messages);
+    const result = await streamWorkbenchRecommendation(payload.messages, payload.runtimeState);
     const headers = {
       "Cache-Control": "no-store",
     };
@@ -26,6 +30,21 @@ export async function POST(request: NextRequest) {
       async start(controller) {
         if (result.skillName) {
           controller.enqueue(`调用技能：${result.skillName}\n\n`);
+        }
+
+        // 初始化本轮最终的 runtimeState，继承自上一轮
+        let currentRuntimeState = payload.runtimeState
+          ? { ...payload.runtimeState }
+          : { skillStatus: "idle" as const };
+
+        // 如果新命中了需要锁定会话的技能，且尚未在会话中
+        if (result.activeSkillId && result.requiresSession) {
+          if (currentRuntimeState.activeSkillId !== result.activeSkillId) {
+            currentRuntimeState = {
+              activeSkillId: result.activeSkillId,
+              skillStatus: "collecting_input",
+            };
+          }
         }
 
         try {
@@ -39,8 +58,33 @@ export async function POST(request: NextRequest) {
               const toolName = chunk.toolName.replace(/_/g, ".");
               const resultVal = (chunk as any).result ?? (chunk as any).output;
               controller.enqueue(`\n\n[RESULT_TOOL:{"name":"${toolName}","result":${JSON.stringify(resultVal)}}]\n\n`);
+
+              // 检查调用的工具是否是当前技能的完成工具（completionTools）
+              const originalToolName = chunk.toolName; // 如 "create_skill"
+              const completionTools = result.completionTools || [];
+              if (
+                result.activeSkillId &&
+                (completionTools.includes(originalToolName) || completionTools.includes(toolName))
+              ) {
+                const isOk = resultVal?.ok === true || resultVal?.success === true;
+                if (isOk) {
+                  currentRuntimeState = {
+                    activeSkillId: undefined,
+                    skillStatus: "completed",
+                  };
+                } else {
+                  currentRuntimeState = {
+                    activeSkillId: undefined,
+                    skillStatus: "failed",
+                  };
+                }
+              }
             }
           }
+
+          // 将最新的 runtimeState 序列化为结构化标签追加在流末尾，供前端解析
+          controller.enqueue(`\n\n[__STATE__:${JSON.stringify(currentRuntimeState)}]\n\n`);
+
           controller.close();
         } catch (error) {
           controller.error(error);
@@ -64,3 +108,4 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
