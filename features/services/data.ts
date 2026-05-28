@@ -25,13 +25,13 @@ export const serviceRecords: ServiceRecord[] = [
   },
   {
     id: "tower-weight-estimation",
-    name: "塔重估测",
+    name: "杆塔匹配",
     description:
-      "根据工况条件推荐杆塔型号，并计算在已有数据范围内，预测不同工况条件下的塔重。",
+      "根据输电线路设计条件搜索和匹配可用杆塔方案。",
     invokeType: "API",
     calls: "318",
     featured: true,
-    emoji: "🏗️",
+    emoji: "🗼",
     category: "服务",
   },
   {

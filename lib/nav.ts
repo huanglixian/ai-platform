@@ -47,6 +47,7 @@ export const platformNavGroups: PlatformNavGroup[] = [
     label: "智能体",
     items: [
       { label: "技能中心", href: "/skills", hint: "技能封装与能力分发" },
+      { label: "定时任务", disabled: true, hint: "智能体定时计划与任务执行" },
     ],
   },
   {
