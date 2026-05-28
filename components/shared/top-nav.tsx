@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { Bot } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useRef, useState } from "react";
@@ -45,21 +45,14 @@ export function TopNav() {
       <div className="w-full px-6 sm:px-8">
         <div className="relative flex h-[64px] items-center gap-6">
           <div className="flex min-w-0 items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-md bg-white shadow-[0_2px_8px_rgba(15,23,42,0.06)]">
-              <Image
-                src="/logo.png"
-                alt="Ai Platform"
-                width={40}
-                height={40}
-                className="h-full w-full object-cover"
-                priority
-              />
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-tr from-[#0368b3] to-[#2e7dd2] text-white shadow-[0_3px_8px_rgba(3,104,179,0.2)]">
+              <Bot className="h-5 w-5" />
             </div>
             <div className="min-w-0">
               <div className="text-title text-sm font-semibold tracking-tight">
-                数智输电智能体平台
+                AI业务编排平台
               </div>
-              <div className="text-tertiary text-xs">智能化Agent-Platform</div>
+              <div className="text-tertiary text-xs">AI Workflow Orchestration</div>
             </div>
           </div>
 
