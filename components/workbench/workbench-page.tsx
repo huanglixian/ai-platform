@@ -22,24 +22,284 @@ function createMessageId() {
   return `msg-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
-function AssistantMessageContent({ content }: { content: string }) {
-  const skillCallMatch = content.match(/^调用技能：(.+?)(?:\n|$)/);
-  const body = skillCallMatch
-    ? content.slice(skillCallMatch[0].length).trimStart()
-    : content;
+function parseAssistantMessageSafe(content: string) {
+  const parts: Array<{ type: "text" | "tool_call" | "tool_result"; content: string; data?: any }> = [];
+  let currentIndex = 0;
 
-  if (skillCallMatch) {
+  while (currentIndex < content.length) {
+    const callIdx = content.indexOf("[CALL_TOOL:", currentIndex);
+    const resultIdx = content.indexOf("[RESULT_TOOL:", currentIndex);
+
+    let foundIdx = -1;
+    let type: "tool_call" | "tool_result" = "tool_call";
+    let prefixLen = 0;
+
+    if (callIdx !== -1 && (resultIdx === -1 || callIdx < resultIdx)) {
+      foundIdx = callIdx;
+      type = "tool_call";
+      prefixLen = "[CALL_TOOL:".length;
+    } else if (resultIdx !== -1 && (callIdx === -1 || resultIdx < callIdx)) {
+      foundIdx = resultIdx;
+      type = "tool_result";
+      prefixLen = "[RESULT_TOOL:".length;
+    }
+
+    if (foundIdx === -1) {
+      const text = content.slice(currentIndex);
+      if (text) {
+        parts.push({ type: "text", content: text });
+      }
+      break;
+    }
+
+    const prevText = content.slice(currentIndex, foundIdx);
+    if (prevText) {
+      parts.push({ type: "text", content: prevText });
+    }
+
+    let endIdx = -1;
+    let braceCount = 0;
+    let inString = false;
+    let escaped = false;
+
+    // 状态机扫描 JSON 结束位置，解决正则回溯崩溃问题
+    for (let k = foundIdx + prefixLen; k < content.length; k++) {
+      const char = content[k];
+
+      if (escaped) {
+        escaped = false;
+        continue;
+      }
+
+      if (char === "\\") {
+        escaped = true;
+        continue;
+      }
+
+      if (char === '"') {
+        inString = !inString;
+        continue;
+      }
+
+      if (!inString) {
+        if (char === "{") {
+          braceCount++;
+        } else if (char === "}") {
+          braceCount--;
+        } else if (char === "]" && braceCount === 0) {
+          endIdx = k;
+          break;
+        }
+      }
+    }
+
+    if (endIdx === -1) {
+      const incompleteText = content.slice(foundIdx);
+      parts.push({ type: "text", content: incompleteText });
+      break;
+    }
+
+    const jsonStr = content.slice(foundIdx + prefixLen, endIdx);
+    const fullMatchText = content.slice(foundIdx, endIdx + 1);
+
+    try {
+      const data = JSON.parse(jsonStr);
+      parts.push({ type, content: fullMatchText, data });
+    } catch {
+      parts.push({ type: "text", content: fullMatchText });
+    }
+
+    currentIndex = endIdx + 1;
+  }
+
+  return parts;
+}
+
+function ToolResultView({ name, result }: { name: string; result: any }) {
+  if (!result || result.success === false) {
+    return <div className="text-[#d32f2f] font-sans">调用失败：{result?.error || "未知接口错误"}</div>;
+  }
+
+  const dataList = result.data;
+  // 特别针对杆塔匹配服务结果进行精美的表格化展示
+  if (name === "tower.match.search" && Array.isArray(dataList) && dataList.length > 0) {
     return (
-      <div>
-        <div className="text-[12px] font-medium leading-5 text-[#2474a6]">
-          调用技能：{skillCallMatch[1]}
-        </div>
-        {body ? <MessageMarkdown content={body} /> : null}
+      <div className="mt-2 overflow-x-auto rounded border border-[#e2eaf2] font-sans">
+        <table className="w-full border-collapse text-left text-[11px] text-[#4f5e71]">
+          <thead>
+            <tr className="bg-[#f4f7fa] border-b border-[#e2eaf2] font-semibold text-title">
+              <th className="px-3 py-1.5 whitespace-nowrap">序号</th>
+              <th className="px-3 py-1.5 whitespace-nowrap">杆塔名称</th>
+              <th className="px-3 py-1.5 whitespace-nowrap">类型</th>
+              <th className="px-3 py-1.5 whitespace-nowrap">电压等级</th>
+              <th className="px-3 py-1.5 whitespace-nowrap">材质</th>
+              <th className="px-3 py-1.5 whitespace-nowrap">呼高 (m)</th>
+              <th className="px-3 py-1.5 whitespace-nowrap">总重量 (kg)</th>
+              <th className="px-3 py-1.5 whitespace-nowrap">匹配得分</th>
+            </tr>
+          </thead>
+          <tbody>
+            {dataList.map((item: any, idx: number) => (
+              <tr key={idx} className="border-b border-[#e2eaf2] hover:bg-[#fafcfe] last:border-b-0">
+                <td className="px-3 py-1.5 whitespace-nowrap">{idx + 1}</td>
+                <td className="px-3 py-1.5 font-mono font-bold text-[#2474a6] whitespace-nowrap">
+                  {item.杆塔名称 || item.towerName}
+                </td>
+                <td className="px-3 py-1.5 whitespace-nowrap">{item.杆塔类型 || item.towerType}</td>
+                <td className="px-3 py-1.5 whitespace-nowrap">
+                  {item.电压等级 || item.voltageClass}
+                  {String(item.电压等级 || item.voltageClass).toLowerCase().includes("kv") ? "" : "kV"}
+                </td>
+                <td className="px-3 py-1.5 whitespace-nowrap">{item.杆塔材质 || item.towerMaterial}</td>
+                <td className="px-3 py-1.5 font-mono whitespace-nowrap">{item.呼高 || item.expectedHeight}</td>
+                <td className="px-3 py-1.5 font-mono whitespace-nowrap">
+                  {parseFloat(item.总重量 || item.totalWeight || "0").toLocaleString()}
+                </td>
+                <td className="px-3 py-1.5 font-mono text-[#2e7d32] whitespace-nowrap">
+                  {parseFloat(item.match_score || item.score || "0").toFixed(4)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     );
   }
 
-  return <MessageMarkdown content={body || "回复生成中..."} />;
+  // 通用其它 API 工具结果展示为 JSON 代码块
+  return (
+    <pre className="max-h-[200px] overflow-auto rounded bg-[#f4f7f9] p-2 whitespace-pre-wrap break-all font-mono text-[11px]">
+      {JSON.stringify(result, null, 2)}
+    </pre>
+  );
+}
+
+function AssistantMessageContent({ content }: { content: string }) {
+  const skillCallMatch = content.match(/^调用技能：(.+?)(?:\n|$)/);
+  const remainingText = skillCallMatch
+    ? content.slice(skillCallMatch[0].length).trimStart()
+    : content;
+
+  // 使用基于状态机的高健壮性安全解析器，解决超大JSON正则回溯及流截断报错问题
+  const parts = parseAssistantMessageSafe(remainingText);
+
+  // 聚合配对渲染
+  const renderedElements: React.ReactNode[] = [];
+  let toolIndex = 0;
+
+  for (let i = 0; i < parts.length; i++) {
+    const part = parts[i];
+    if (part.type === "text") {
+      const text = part.content.trim();
+      if (text) {
+        renderedElements.push(<MessageMarkdown key={`text-${i}`} content={text} />);
+      }
+    } else if (part.type === "tool_call") {
+      const toolId = `${part.data.name}-${toolIndex++}`;
+      let matchedResult: any = null;
+
+      // 向后寻找对应配对的 result
+      for (let j = i + 1; j < parts.length; j++) {
+        if (parts[j].type === "tool_result" && parts[j].data.name === part.data.name) {
+          matchedResult = parts[j].data.result;
+          parts[j].type = "text";
+          parts[j].content = "";
+          break;
+        }
+      }
+
+      renderedElements.push(
+        <ToolInvocationCard
+          key={toolId}
+          name={part.data.name}
+          args={part.data.args}
+          result={matchedResult}
+        />,
+      );
+    }
+  }
+
+  return (
+    <div>
+      {skillCallMatch && (
+        <div className="text-[12px] font-medium leading-5 text-[#2474a6] mb-1">
+          调用技能：{skillCallMatch[1]}
+        </div>
+      )}
+      {renderedElements.length > 0 ? (
+        <div className="flex flex-col gap-1">{renderedElements}</div>
+      ) : (
+        <div className="text-[#7f8ea3] text-[13px] italic">回复生成中...</div>
+      )}
+    </div>
+  );
+}
+
+function ToolInvocationCard({ name, args, result }: { name: string; args: any; result?: any }) {
+  const [expanded, setExpanded] = useState(false);
+  const isPending = !result;
+  const isSuccess = result?.success !== false;
+
+  // 当结果返回后，自动展开卡片展示结果
+  useEffect(() => {
+    if (result) {
+      setExpanded(true);
+    }
+  }, [result]);
+
+  return (
+    <div className="my-2.5 overflow-hidden rounded-[10px] border border-[#e2eaf2] bg-[#f7fafd] text-[13px] leading-5 text-title">
+      <div 
+        onClick={() => setExpanded(!expanded)}
+        className="flex cursor-pointer items-center justify-between px-3 py-2 hover:bg-[#eef4fa] transition-colors"
+      >
+        <div className="flex items-center gap-2">
+          {isPending ? (
+            <span className="flex h-4 w-4 animate-spin rounded-full border-2 border-[#2474a6] border-t-transparent" />
+          ) : isSuccess ? (
+            <span className="text-[#2e7d32]">✅</span>
+          ) : (
+            <span className="text-[#d32f2f]">⚠️</span>
+          )}
+          <span className="font-mono font-medium text-[#2474a6]">{name}</span>
+          <span className="text-[11px] text-[#7f8ea3]">
+            {isPending ? "正在执行..." : isSuccess ? "执行成功" : "执行失败"}
+          </span>
+        </div>
+        <span className="text-[11px] text-[#7f8ea3] hover:text-[#2474a6]">
+          {expanded ? "收起 ▴" : "详情 ▾"}
+        </span>
+      </div>
+      {expanded && (
+        <div className="border-t border-[#e2eaf2] bg-white p-3 text-[11px] text-[#4f5e71]">
+          {isPending ? (
+            <div>
+              <div className="mb-1 font-semibold text-[#2474a6] font-sans">输入参数 (Input):</div>
+              <pre className="max-h-[150px] overflow-auto rounded bg-[#f4f7f9] p-2 font-mono text-[11px] whitespace-pre-wrap break-all">
+                {JSON.stringify(args, null, 2)}
+              </pre>
+            </div>
+          ) : (
+            <div>
+              {/* 输入参数折叠区 (details 原生折叠，默认收起) */}
+              <details className="group mb-3">
+                <summary className="flex cursor-pointer select-none items-center gap-1 text-[11px] text-[#7f8ea3] hover:text-[#2474a6] list-none [&::-webkit-details-marker]:hidden font-sans font-medium">
+                  <span className="transition-transform group-open:rotate-90">▸</span>
+                  <span>输入参数 (Input)</span>
+                </summary>
+                <pre className="mt-1.5 max-h-[150px] overflow-auto rounded bg-[#f4f7f9] p-2 font-mono text-[11px] whitespace-pre-wrap break-all text-[#4f5e71]">
+                  {JSON.stringify(args, null, 2)}
+                </pre>
+              </details>
+
+              <div className="mb-1 font-semibold text-[#2474a6] font-sans">返回结果 (Output):</div>
+              <ToolResultView name={name} result={result} />
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
 }
 
 function ChatMessageCard({ message }: { message: WorkbenchChatMessage }) {

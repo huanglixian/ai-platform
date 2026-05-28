@@ -6,6 +6,7 @@ export type SkillMetadata = {
   category: string;
   owner: string;
   triggers: string[];
+  allowedTools?: string[];
 };
 
 export type SkillPackage = SkillMetadata & {

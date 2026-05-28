@@ -14,24 +14,6 @@ const chatRequestSchema = z.object({
   messages: z.array(chatMessageSchema).min(1),
 });
 
-function prependTextStream(prefix: string, stream: AsyncIterable<string>) {
-  return new ReadableStream<string>({
-    async start(controller) {
-      controller.enqueue(prefix);
-
-      try {
-        for await (const delta of stream) {
-          controller.enqueue(delta);
-        }
-
-        controller.close();
-      } catch (error) {
-        controller.error(error);
-      }
-    },
-  });
-}
-
 export async function POST(request: NextRequest) {
   try {
     const payload = chatRequestSchema.parse(await request.json());
@@ -40,18 +22,35 @@ export async function POST(request: NextRequest) {
       "Cache-Control": "no-store",
     };
 
-    if (result.skillName) {
-      return createTextStreamResponse({
-        headers,
-        textStream: prependTextStream(
-          `调用技能：${result.skillName}\n\n`,
-          result.stream.textStream,
-        ),
-      });
-    }
+    const responseStream = new ReadableStream<string>({
+      async start(controller) {
+        if (result.skillName) {
+          controller.enqueue(`调用技能：${result.skillName}\n\n`);
+        }
 
-    return result.stream.toTextStreamResponse({
+        try {
+          for await (const chunk of result.stream.fullStream) {
+            if (chunk.type === "text-delta") {
+              controller.enqueue(chunk.text);
+            } else if (chunk.type === "tool-call") {
+              const toolName = chunk.toolName.replace(/_/g, ".");
+              controller.enqueue(`\n\n[CALL_TOOL:{"name":"${toolName}","args":${JSON.stringify(chunk.input)}}]\n\n`);
+            } else if (chunk.type === "tool-result") {
+              const toolName = chunk.toolName.replace(/_/g, ".");
+              const resultVal = (chunk as any).result ?? (chunk as any).output;
+              controller.enqueue(`\n\n[RESULT_TOOL:{"name":"${toolName}","result":${JSON.stringify(resultVal)}}]\n\n`);
+            }
+          }
+          controller.close();
+        } catch (error) {
+          controller.error(error);
+        }
+      },
+    });
+
+    return createTextStreamResponse({
       headers,
+      textStream: responseStream,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "工作台 AI 回复失败";

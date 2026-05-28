@@ -15,6 +15,7 @@ const skillMetadataSchema = z.object({
   category: z.string().min(1),
   owner: z.string().default("未指定"),
   triggers: z.array(z.string()).default([]),
+  allowedTools: z.array(z.string()).default([]),
 });
 
 function readJsonFile(filePath: string) {

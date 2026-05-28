@@ -6,8 +6,6 @@ import { CardPageFrame } from "@/components/shared/card-page-frame";
 import type { SkillRecord } from "@/features/skills/types";
 
 const ITEM_WIDTH = 300;
-const SKILL_TABS = ["全部", "文本处理", "业务辅助"] as const;
-const SKILL_GROUP_TABS = SKILL_TABS.filter((tab) => tab !== "全部");
 
 type SkillsPageClientProps = {
   skills: SkillRecord[];
@@ -57,9 +55,16 @@ function SkillCard({ item }: { item: SkillRecord }) {
 
 export function SkillsPageClient({ skills }: SkillsPageClientProps) {
   const [keyword, setKeyword] = useState("");
-  const [activeTab, setActiveTab] = useState<(typeof SKILL_TABS)[number]>("全部");
+  
+  // 动态从技能数据中提取并去重获取所有分类，支持未来任意新增分类无需修改代码
+  const categories = Array.from(new Set(skills.map((item) => item.category))).filter(Boolean);
+  const skillTabs = ["全部", ...categories];
+  const skillGroupTabs = categories;
+
+  const [activeTab, setActiveTab] = useState<string>("全部");
   const renderSkillCard = (item: SkillRecord) => <SkillCard key={item.id} item={item} />;
   const normalizedKeyword = keyword.trim().toLowerCase();
+  
   const searchedSkills = skills.filter((item) => {
     if (!normalizedKeyword) {
       return true;
@@ -71,6 +76,7 @@ export function SkillsPageClient({ skills }: SkillsPageClientProps) {
       item.triggers.some((trigger) => trigger.toLowerCase().includes(normalizedKeyword))
     );
   });
+
   const visibleSkills = searchedSkills.filter((item) => {
     if (activeTab === "全部") {
       return true;
@@ -78,7 +84,8 @@ export function SkillsPageClient({ skills }: SkillsPageClientProps) {
 
     return item.category === activeTab;
   });
-  const groupedSkills = SKILL_GROUP_TABS.map((tab) => ({
+
+  const groupedSkills = skillGroupTabs.map((tab) => ({
     key: tab,
     title: tab,
     children: searchedSkills
@@ -91,9 +98,9 @@ export function SkillsPageClient({ skills }: SkillsPageClientProps) {
       title="技能中心"
       count={visibleSkills.length}
       itemWidth={ITEM_WIDTH}
-      tabs={[...SKILL_TABS]}
+      tabs={skillTabs}
       activeTab={activeTab}
-      onTabChange={(tab) => setActiveTab(tab as (typeof SKILL_TABS)[number])}
+      onTabChange={(tab) => setActiveTab(tab)}
       groupedSections={groupedSkills}
       searchValue={keyword}
       searchPlaceholder="搜索技能名称、描述或触发语句"

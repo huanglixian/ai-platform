@@ -164,7 +164,7 @@
 
 ### 目标
 
-让工作台问答模式能够通过 Vercel AI SDK 自动选择并调用已启用技能，完成“用户对话 → 模型判断 → 调用技能 → 回传结果 → 继续生成最终回答”的闭环。
+让工作台问答模式在命中某个 Skill 后，大模型能够在该 Skill 的运行上下文（加载 `SKILL.md` 作为系统提示词）下，根据 `allowedTools` 白名单只加载特定的强类型业务 API Tool（如 `tower.match.search`），并通过 Vercel AI SDK 的 `stopWhen: stepCountIs(...)` 机制自动调用，实现“用户对话 → 命中技能 → 缺参追问 → 参数齐全后调用具体业务 API → 得到结果回传 → 生成最终回答”的受控智能体闭环。
 
 同时提供必要的图形化运行配置，让最大 step 数、可用技能范围、风险策略等关键行为可配置。
 
@@ -176,14 +176,17 @@
 - [x] `features/workbench/skill-execution-prompt.ts`
   命中技能后，按需加载对应 `SKILL.md` 并生成技能执行提示词。
 
-- [ ] `features/skills/tool-adapter.ts`
-  将技能定义转换为 Vercel AI SDK tool。
+- [ ] `features/services/tools/tower-match.ts`
+  封装“杆塔匹配”真实 API（`POST http://127.0.0.1:8420/api/match_towers`）为 Vercel AI SDK 的强类型 Tool。
 
-- [ ] `features/workbench/skill-loop-prompt.ts`
-  技能执行模式的系统提示词。
+- [ ] `features/services/tool-registry.ts`
+  平台业务 API Tools 的汇总注册中心。
 
-- [ ] `features/workbench/tool-call-events.ts`
-  工作台展示技能调用过程需要的事件类型。
+- [ ] `storage/platform/skills/tower-match/skill.json`
+  杆塔匹配技能元数据，声明 `"allowedTools": ["tower.match.search"]`。
+
+- [ ] `storage/platform/skills/tower-match/SKILL.md`
+  杆塔匹配技能编排说明，指导大模型如何追问、参数格式及结果归纳。
 
 - [ ] `features/workbench/runtime-config-types.ts`
   工作台 agent loop 运行配置类型。
@@ -192,7 +195,7 @@
   工作台运行配置持久化。
 
 - [ ] `features/workbench/runtime-config-service.ts`
-  工作台运行配置服务。
+  工作台运行配置服务.
 
 - [ ] `app/api/platform/workbench/runtime-config/route.ts`
   工作台运行配置读取与更新接口。
@@ -202,26 +205,23 @@
 
 ### 调整文件
 
-- [ ] `features/workbench/chat-service.ts`
-  增加 tool calling、最大 step 限制、技能执行日志和错误处理。
+- [ ] `features/skills/skill-types.ts`
+  在 `SkillMetadata` 中增加可选属性 `allowedTools?: string[]`。
 
-- [x] `features/workbench/chat-service.ts`
-  先接入 LLM Skill Router；命中技能时直接按 `SKILL.md` 生成结果，未命中时保留能力推荐。
+- [ ] `features/skills/registry.ts`
+  在解析 `skill.json` 时支持 `allowedTools` 数组字段的校验。
+
+- [ ] `features/workbench/chat-service.ts`
+  大模型运行时，根据命中技能的 `allowedTools` 白名单动态挂载 Tools，并支持多步 Tool Calling。
 
 - [ ] `app/api/platform/workbench/chat/route.ts`
-  流式返回 AI 文本和技能调用事件。
-
-- [x] `app/api/platform/workbench/chat/route.ts`
-  支持等待异步 router 判断后再返回流式响应。
+  通过 fullStream 异步迭代器解析多步响应，使用 `[CALL_TOOL:...]` 和 `[RESULT_TOOL:...]` 标记将工具调用过程和结果混合进流式响应返回给前端。
 
 - [ ] `features/workbench/api.ts`
-  解析对话流中的文本增量和技能调用事件。
+  流式响应解析支持。
 
 - [ ] `components/workbench/workbench-page.tsx`
-  展示多轮消息、本轮技能调用记录和运行配置入口。
-
-- [ ] 新增或调整工作台展示组件
-  用列表或卡片展示技能名称、状态、输入摘要、输出摘要、耗时和错误信息。
+  在消息渲染中识别 `[CALL_TOOL:...]` 和 `[RESULT_TOOL:...]` 并渲染为精美的 API 轨迹卡片，支持查看参数与数据，且展示运行配置入口。
 
 ### 配置项
 
@@ -242,11 +242,11 @@
 ### 验收标准
 
 - [x] 普通问题可以回退到当前能力推荐，不强制调用技能。
-- [x] 命中技能的任务可以自动加载 `SKILL.md` 并生成技能结果。
-- [ ] 技能结果能回传给模型并参与最终回答。
-- [ ] 页面能展示本轮技能调用记录。
-- [ ] 页面能配置最大 step 数和自动调用策略。
-- [ ] 技能失败时页面展示友好错误，后端日志可定位原因。
+- [ ] 命中杆塔匹配技能时，若缺少必要输入，模型能按照 `SKILL.md` 指导以自然语言向用户追问。
+- [ ] 参数齐备后，模型能自动调用 `tower.match.search` API，并在后端通过 fetch 真实请求本地 `8420` 端口。
+- [ ] 接口返回结果能回传给模型并参与最终回答。
+- [ ] 页面能通过流式标记解析，展示本轮 API 的调用记录卡片。
+- [ ] 页面能配置最大 step 数。
 - [ ] 超过最大 step 数时安全停止。
 - [ ] `npm run build` 通过。
 

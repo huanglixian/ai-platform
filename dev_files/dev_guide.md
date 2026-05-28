@@ -18,6 +18,7 @@
 - Platform AI：工作台问答通过 Vercel AI SDK 接入 DeepSeek-V4，当前只做技能、工具和业务 API 推荐
 - Platform Skills：技能中心读取 `storage/platform/skills` 中的配置型技能包，`SKILL.md` 是技能执行核心，`skill.json` 只保存管理元数据
 - 技能创建规范：见 `dev_files/create_skills_guide.md`
+- 工具/API 注册规范：见 `dev_files/register-tools-guide.md`
 - KnowHub 数据：文档空间、知识库、策略预设、embedding 配置走本地文件持久化；向量数据走 `SQLite + sqlite-vec`
 
 ## 边界说明
@@ -60,6 +61,7 @@ Ai_Platform/
 │  ├─ capabilities/
 │  ├─ models/
 │  ├─ services/
+│  │  └─ tools/
 │  ├─ skills/
 │  ├─ tools/
 │  └─ workbench/
@@ -161,13 +163,15 @@ Platform 业务数据与工具：
 - 通用工具类型定义：`features/tools/types.ts`
 - 业务API数据：`features/services/data.ts`
 - 业务API类型定义：`features/services/types.ts`
+- 业务API Tools汇总注册表：`features/services/tool-registry.ts`
+- 业务API杆塔匹配工具：`features/services/tools/tower-match.ts`
 - 技能中心数据：`features/skills/data.ts`
 - 技能中心类型定义：`features/skills/types.ts`
 - 技能定义类型：`features/skills/skill-types.ts`
 - 技能注册表：`features/skills/registry.ts`
 - 技能运行上下文构建器：`features/skills/runner.ts`
 - 技能路由器：`features/skills/router.ts`
-- 配置型技能包目录：`storage/platform/skills/（技能名称）/`
+- 配置型技能包目录：`storage/platform/skills/（技能名称）/`（内置 `SKILL.md`，可配置 `allowedTools` 白名单）
 - 能力卡片共用类型：`features/capabilities/types.ts`
 - Platform 导航配置：`lib/nav.ts`
 - 通用工具函数：`lib/utils.ts`
@@ -325,8 +329,9 @@ KnowHub 业务数据与服务：
 
 ### Platform
 
-- `workbench`：KnowHub 搜索模式真实可用，问答模式已接入 DeepSeek-V4 做能力推荐
-- `tools / services / skills`：前端原型与静态数据
+- `workbench`：支持在命中技能上下文时自动基于 `allowedTools` 动态加载 Zod 强类型业务 API Tools，并在后端通过真实的 Tool Calling 循环向业务系统（如杆塔匹配 API）发起网络请求，前端支持流式解析并以可视化的折叠卡片渲染工具执行轨迹。
+- `tools / services`：前端原型与静态数据
+- `skills`：支持真实的配置型技能注册与元数据（如 `allowedTools` 声明）解析。
 
 ### KnowHub
 

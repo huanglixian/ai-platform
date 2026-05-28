@@ -7,6 +7,7 @@ import type { WorkbenchChatMessage } from "@/features/workbench/chat-types";
 import { getWorkbenchCapabilityContext } from "@/features/workbench/capability-context";
 import { buildWorkbenchRecommendationPrompt } from "@/features/workbench/recommendation-prompt";
 import { buildSkillExecutionPrompt } from "@/features/workbench/skill-execution-prompt";
+import { toolRegistry } from "@/features/services/tool-registry";
 
 function toModelMessages(messages: WorkbenchChatMessage[]): ModelMessage[] {
   return messages
@@ -35,14 +36,26 @@ export async function streamWorkbenchRecommendation(messages: WorkbenchChatMessa
     const skillContext = buildSkillRunContext(decision.skillId);
 
     if (skillContext.ok) {
+      // 根据 allowedTools 动态过滤并挂载本轮可用的 API 工具
+      const allowedToolsNames = skillContext.metadata.allowedTools || [];
+      const activeTools: Record<string, any> = {};
+
+      for (const toolName of allowedToolsNames) {
+        if (toolRegistry[toolName]) {
+          activeTools[toolName.replace(/\./g, "_")] = toolRegistry[toolName]; // Vercel AI SDK 键名中不能有点，将点替换为下划线以便兼容
+        }
+      }
+
       return {
         stream: streamText({
           model: modelRuntime.model,
           system: buildSkillExecutionPrompt(skillContext),
           messages: toModelMessages(messages),
-          temperature: 0.2,
+          tools: activeTools,
+          maxSteps: 5,
+          temperature: 0.1,
           providerOptions: modelRuntime.providerOptions,
-        }),
+        } as any),
         skillName: skillContext.skillName,
       };
     }
