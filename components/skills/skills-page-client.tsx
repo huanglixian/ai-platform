@@ -56,8 +56,9 @@ function SkillCard({ item }: { item: SkillRecord }) {
 export function SkillsPageClient({ skills }: SkillsPageClientProps) {
   const [keyword, setKeyword] = useState("");
   
-  // 动态从技能数据中提取并去重获取所有分类，支持未来任意新增分类无需修改代码
-  const categories = Array.from(new Set(skills.map((item) => item.category))).filter(Boolean);
+  const categories = Array.from(new Set(skills.map((item) => item.category)))
+    .filter(Boolean)
+    .sort((a, b) => (a === "业务技能" ? -1 : b === "业务技能" ? 1 : a.localeCompare(b, "zh-Hans-CN")));
   const skillTabs = ["全部", ...categories];
   const skillGroupTabs = categories;
 
