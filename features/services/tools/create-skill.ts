@@ -2,6 +2,7 @@ import { tool } from "ai";
 import { z } from "zod";
 import * as fs from "fs/promises";
 import * as path from "path";
+import { generateSkillFlowMermaid } from "./skills-flow";
 
 // 技能存储的基础目录路径
 const SKILLS_BASE_DIR = path.resolve(process.cwd(), "storage/platform/skills");
@@ -52,6 +53,9 @@ export const createSkillTool = tool({
       // 写入配置文件和编排文件
       await fs.writeFile(path.join(targetDir, "skill.json"), JSON.stringify(skillJson, null, 2), "utf8");
       await fs.writeFile(path.join(targetDir, "SKILL.md"), skillMdContent, "utf8");
+
+      // 异步在后台生成该技能的流程图，不阻塞工具响应
+      void generateSkillFlowMermaid(id);
 
       return {
         ok: true,

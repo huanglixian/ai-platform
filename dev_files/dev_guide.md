@@ -45,6 +45,7 @@ Ai_Platform/
 │  │  ├─ tools/
 │  │  ├─ services/
 │  │  └─ skills/
+│  │     └─ [skillId]/
 │  ├─ api/
 │  │  └─ platform/
 │  ├─ knowhub/
@@ -124,9 +125,12 @@ Platform 路由入口：
 - 默认工作台路由入口：`app/(platform)/workbench/page.tsx`
 - 工作台 AI 推荐接口：`app/api/platform/workbench/chat/route.ts`
 - 技能运行上下文接口：`app/api/platform/skills/[skillId]/run/route.ts`
+- 技能配置更新接口：`app/api/platform/skills/[skillId]/update/route.ts`
+- 技能流程图生成接口：`app/api/platform/skills/[skillId]/analyze/route.ts`
 - 通用工具路由入口：`app/(platform)/tools/page.tsx`
 - 业务API路由入口：`app/(platform)/services/page.tsx`
 - 技能中心路由入口：`app/(platform)/skills/page.tsx`
+- 技能详情与可视化编辑路由：`app/(platform)/skills/[skillId]/page.tsx`
 
 Platform 页面组件：
 
@@ -134,6 +138,7 @@ Platform 页面组件：
 - 工作台空态页：`components/workbench/workbench-empty-state.tsx`
 - 工作台搜索结果区：`components/workbench/workbench-search-result-pane.tsx`
 - 技能中心客户端页面：`components/skills/skills-page-client.tsx`
+- 技能详情与可视化配置编辑主组件：`app/(platform)/skills/[skillId]/detail-page-client.tsx`
 
 Platform 共享与基础组件：
 
@@ -171,6 +176,7 @@ Platform 业务数据与工具：
 - 技能注册表：`features/skills/registry.ts`
 - 技能运行上下文构建器：`features/skills/runner.ts`
 - 技能路由器：`features/skills/router.ts`
+- 技能流程图 AI 生成工具：`features/services/tools/skills-flow.ts`
 - 配置型技能包目录：`storage/platform/skills/（技能名称）/`（内置 `SKILL.md`，可配置 `allowedTools` 白名单）
 - 能力卡片共用类型：`features/capabilities/types.ts`
 - Platform 导航配置：`lib/nav.ts`
@@ -331,7 +337,7 @@ KnowHub 业务数据与服务：
 
 - `workbench`：支持在命中技能上下文时基于 `allowedTools` 动态加载并请求 API Tools；支持基于 `runtimeState` 实现多轮技能会话锁定与上下文定向裁剪剪枝（Token 优化）；在无工具依赖时支持动态省略 Tools 机制以确保极速纯文本流式输出。前端支持流式解析并渲染工具执行轨迹。
 - `tools / services`：前端原型与静态数据
-- `skills`：支持真实的配置型技能注册与元数据（如 `allowedTools` 声明）解析。
+- `skills`：支持真实的配置型技能注册与元数据（如 `allowedTools` 声明）解析；支持可视化编辑配置与 `SKILL.md`；支持双轨制异步后台处理（新建、保存及前端无图时自动触发）智能生成与展示 Mermaid 流程图。
 
 ### KnowHub
 

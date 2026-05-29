@@ -3,6 +3,8 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
 
+import { generateSkillFlowMermaid } from "@/features/services/tools/skills-flow";
+
 const updateSkillSchema = z.object({
   name: z.string().min(1),
   description: z.string().min(1),
@@ -57,6 +59,9 @@ export async function POST(request: Request, context: RouteContext) {
 
     // 保存核心执行 Markdown 指令
     await fs.writeFile(markdownPath, payload.skillMarkdown, "utf8");
+
+    // 异步重新生成流程图，不阻塞保存接口的响应
+    void generateSkillFlowMermaid(skillId);
 
     return NextResponse.json({ ok: true });
   } catch (error) {

@@ -45,8 +45,15 @@ function MermaidRenderer({ chart }: { chart: string }) {
         if (!active) return;
         setRenderError("");
 
+        // 防御性过滤，防止用户在文本框手动编辑时意外粘贴了带 Markdown 标记的 ```mermaid 块
+        let cleanedChart = chart.trim();
+        const blockMatch = cleanedChart.match(/```mermaid\s*([\s\S]*?)\s*```/) || cleanedChart.match(/```\s*([\s\S]*?)\s*```/);
+        if (blockMatch) {
+          cleanedChart = blockMatch[1].trim();
+        }
+
         const id = `mermaid-svg-${Math.random().toString(36).substring(2, 9)}`;
-        const { svg } = await mermaid.render(id, chart);
+        const { svg } = await mermaid.render(id, cleanedChart);
 
         if (active) {
           setSvgContent(svg);
@@ -104,6 +111,15 @@ export function SkillDetailPageClient({ skill }: SkillDetailPageClientProps) {
   const [saveError, setSaveError] = useState("");
   const [analyzeError, setAnalyzeError] = useState("");
   const [flowMermaid, setFlowMermaid] = useState(skill.flowMermaid || "");
+  const [hasAttemptedAuto, setHasAttemptedAuto] = useState(false);
+
+  // 自动兜底生成：当首次访问详情页且发现没有流程图时，后台自动静默拉起分析生成，防止 IDE 离线修改断档
+  useEffect(() => {
+    if (!flowMermaid && !analyzing && !analyzeError && !hasAttemptedAuto) {
+      setHasAttemptedAuto(true);
+      void handleAnalyze();
+    }
+  }, [flowMermaid, analyzing, analyzeError, hasAttemptedAuto]);
 
   // 表单状态
   const [name, setName] = useState(skill.name);
@@ -160,6 +176,9 @@ export function SkillDetailPageClient({ skill }: SkillDetailPageClientProps) {
 
       setIsEditing(false);
       router.refresh();
+      
+      // 保存修改成功后，前端主动再调用一次分析逻辑，将更新后的 SKILL.md 重新分析并重新渲染图
+      void handleAnalyze();
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : "未知错误导致保存失败");
     } finally {
