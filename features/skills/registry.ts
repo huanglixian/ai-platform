@@ -41,6 +41,7 @@ function listReferenceFiles(skillDir: string) {
 function readSkillPackage(skillDir: string): SkillPackage | null {
   const metadataPath = path.join(skillDir, "skill.json");
   const markdownPath = path.join(skillDir, "SKILL.md");
+  const mermaidPath = path.join(skillDir, "flow.mermaid");
 
   if (!fs.existsSync(metadataPath) || !fs.existsSync(markdownPath)) {
     return null;
@@ -52,11 +53,16 @@ function readSkillPackage(skillDir: string): SkillPackage | null {
     throw new Error(`技能目录名与 skill.json id 不一致：${metadata.id}`);
   }
 
+  const flowMermaid = fs.existsSync(mermaidPath)
+    ? fs.readFileSync(mermaidPath, "utf8")
+    : undefined;
+
   return {
     ...metadata,
     baseDir: skillDir,
     skillMarkdown: fs.readFileSync(markdownPath, "utf8"),
     referenceFiles: listReferenceFiles(skillDir),
+    flowMermaid,
   };
 }
 

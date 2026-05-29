@@ -15,6 +15,7 @@ export type SkillPackage = SkillMetadata & {
   baseDir: string;
   skillMarkdown: string;
   referenceFiles: string[];
+  flowMermaid?: string;
 };
 
 export type SkillRunContext = {

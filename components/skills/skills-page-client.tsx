@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 
 import { CardPageFrame } from "@/components/shared/card-page-frame";
 import type { SkillRecord } from "@/features/skills/types";
@@ -14,7 +15,7 @@ type SkillsPageClientProps = {
 function SkillCard({ item }: { item: SkillRecord }) {
   return (
     <article className="app-card h-full overflow-hidden">
-      <div className="border-b border-[#e8eef5] bg-[linear-gradient(180deg,#f5f9fe_0%,#eff5fb_100%)] px-4 py-3">
+      <div className="border-b border-[#e8eef5] bg-[linear-gradient(180deg,#f5f9fe_0%,#eff5fb_100%)] px-4 py-3 flex items-center justify-between gap-3">
         <div className="min-w-0 flex-1">
           <div className="truncate text-title text-[16px] font-semibold tracking-[-0.02em]">
             {item.name}
@@ -28,6 +29,12 @@ function SkillCard({ item }: { item: SkillRecord }) {
             </span>
           </div>
         </div>
+        <Link
+          href={`/skills/${item.id}`}
+          className="shrink-0 rounded-[6px] border border-[#cbd5e1] bg-white px-2.5 py-1 text-[11px] font-semibold text-[#475569] shadow-sm transition-colors hover:border-[#94a3b8] hover:bg-[#f8fafc] hover:text-[#0f172a]"
+        >
+          配置详情
+        </Link>
       </div>
 
       <div className="space-y-2.5 bg-white px-4 py-3.5">
