@@ -1,16 +1,15 @@
 import React from "react";
-import { Handle, Position } from "@xyflow/react";
+import { Handle, Position, NodeProps } from "@xyflow/react";
 
-interface NodeProps {
-  data?: {
+export interface CustomNodeProps extends Omit<NodeProps, "type" | "data"> {
+  type: string;
+  data: {
     label: string;
     description?: string;
   };
-  selected?: boolean;
-  type: string;
 }
 
-export function CustomWorkflowNode({ data, selected, type }: NodeProps) {
+export function CustomWorkflowNode({ data, selected, type }: CustomNodeProps) {
   const configStyles: Record<string, { border: string; bg: string; icon: string; titleColor: string }> = {
     start: {
       border: "border-emerald-200",
