@@ -46,6 +46,7 @@ Ai_Platform/
 │  │  ├─ services/
 │  │  ├─ skills/
 │  │  │  └─ [skillId]/
+│  │  ├─ apps/
 │  │  └─ workflows/
 │  │     └─ [workflowId]/
 │  ├─ api/
@@ -60,6 +61,7 @@ Ai_Platform/
 │  ├─ shared/
 │  ├─ ui/
 │  ├─ workbench/
+│  ├─ apps/
 │  └─ workflows/
 ├─ features/
 │  ├─ capabilities/
@@ -69,6 +71,7 @@ Ai_Platform/
 │  ├─ skills/
 │  ├─ tools/
 │  ├─ workbench/
+│  ├─ apps/
 │  └─ workflows/
 ├─ knowhub/
 │  ├─ components/
@@ -108,6 +111,7 @@ Ai_Platform/
 - `tools`：通用工具
 - `services`：业务API
 - `skills`：技能中心
+- `apps`：应用中心，负责聚合发布和运行在旧平台（Dify/n8n/RAGFlow）上的旧智能体应用。
 - `workflows`：业务流编排中心，支持对模型、工具、API 和技能进行可视化 DAG 拖拽编排
 
 ### 2. 文件组织方式
@@ -136,6 +140,7 @@ Platform 路由入口：
 - 业务API路由入口：`app/(platform)/services/page.tsx`
 - 技能中心路由入口：`app/(platform)/skills/page.tsx`
 - 技能详情与可视化编辑路由：`app/(platform)/skills/[skillId]/page.tsx`
+- 应用中心页路由入口：`app/(platform)/apps/page.tsx`
 - 业务流管理页路由入口：`app/(platform)/workflows/page.tsx`
 - 业务流画布设计页路由入口：`app/(platform)/workflows/[workflowId]/page.tsx`
 
@@ -146,6 +151,7 @@ Platform 页面组件：
 - 工作台搜索结果区：`components/workbench/workbench-search-result-pane.tsx`
 - 技能中心客户端页面：`components/skills/skills-page-client.tsx`
 - 技能详情与可视化配置编辑主组件：`app/(platform)/skills/[skillId]/detail-page-client.tsx`
+- 应用中心列表与运行组件：`components/apps/apps-page-client.tsx`
 - 业务流列表客户端组件：`components/workflows/workflows-page-client.tsx`
 - 业务流画布编辑主组件：`components/workflows/workflow-designer-client.tsx`
 - 业务流自定义节点渲染：`components/workflows/nodes/custom-node.tsx`
@@ -192,6 +198,8 @@ Platform 业务数据与工具：
 - 能力卡片共用类型：`features/capabilities/types.ts`
 - Platform 导航配置：`lib/nav.ts`
 - 通用工具函数：`lib/utils.ts`
+- 应用中心数据结构接口：`features/apps/types.ts`
+- 应用中心内置Mock与缓存：`features/apps/mock-data.ts`
 - 业务流类型定义接口：`features/workflows/types.ts`
 - 业务流内置Mock与存储：`features/workflows/mock-data.ts`
 
@@ -351,6 +359,7 @@ KnowHub 业务数据与服务：
 - `workbench`：支持在命中技能上下文时基于 `allowedTools` 动态加载并请求 API Tools；支持基于 `runtimeState` 实现多轮技能会话锁定与上下文定向裁剪剪枝（Token 优化）；在无工具依赖时支持动态省略 Tools 机制以确保极速纯文本流式输出。前端支持流式解析并渲染工具执行轨迹。
 - `tools / services`：前端原型与静态数据
 - `skills`：支持真实的配置型技能注册与元数据（如 `allowedTools` 声明）解析；支持可视化编辑配置与 `SKILL.md`；支持双轨制异步后台处理（新建、保存及前端无图时自动触发）智能生成与展示 Mermaid 流程图。
+- `apps`：已实现前端聚合列表与滑层 iframe 页内加载调试容器；支持来源平台小药丸与类型标签配置；完全使用 `localStorage` 驱动，本地模拟发布增删改查。
 - `workflows`：支持可视化拖拽编排 DAG 无环图；新建时初始仅生成“开始”节点并精简连线；提供 9 种节点类型（开始、结束、大模型、通用工具、业务 API、技能、代码块、条件、知识库）以及实体高亮线框顶栏组件；支持右侧抽屉双向更新参数，并完全由前端 `localStorage` 缓存持久化。
 
 ### KnowHub
