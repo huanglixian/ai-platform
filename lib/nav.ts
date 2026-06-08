@@ -19,6 +19,11 @@ export const platformNavGroups: PlatformNavGroup[] = [
     href: "/workbench",
   },
   {
+    key: "workflows",
+    label: "业务流",
+    href: "/workflows",
+  },
+  {
     key: "data",
     label: "数据中心",
     items: [
@@ -38,16 +43,9 @@ export const platformNavGroups: PlatformNavGroup[] = [
     key: "capabilities",
     label: "能力中心",
     items: [
+      { label: "技能中心", href: "/skills", hint: "技能封装与能力分发" },
       { label: "通用工具", href: "/tools", hint: "工具接入与调度能力" },
       { label: "业务API", href: "/services", hint: "外部服务与连接配置" },
-    ],
-  },
-  {
-    key: "agents",
-    label: "智能体",
-    items: [
-      { label: "技能中心", href: "/skills", hint: "技能封装与能力分发" },
-      { label: "定时任务", disabled: true, hint: "智能体定时计划与任务执行" },
     ],
   },
   {
@@ -70,6 +68,10 @@ export function getActiveNavGroup(pathname: string) {
     return "home";
   }
 
+  if (pathname === "/workflows" || pathname.startsWith("/workflows/")) {
+    return "workflows";
+  }
+
   if (pathname === "/knowhub" || pathname.startsWith("/knowhub/")) {
     return "data";
   }
@@ -83,7 +85,7 @@ export function getActiveNavGroup(pathname: string) {
   }
 
   if (pathname === "/skills" || pathname.startsWith("/skills/")) {
-    return "agents";
+    return "capabilities";
   }
 
   return "home";
