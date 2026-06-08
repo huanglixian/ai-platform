@@ -44,8 +44,10 @@ Ai_Platform/
 │  │  ├─ workbench/
 │  │  ├─ tools/
 │  │  ├─ services/
-│  │  └─ skills/
-│  │     └─ [skillId]/
+│  │  ├─ skills/
+│  │  │  └─ [skillId]/
+│  │  └─ workflows/
+│  │     └─ [workflowId]/
 │  ├─ api/
 │  │  └─ platform/
 │  ├─ knowhub/
@@ -57,7 +59,8 @@ Ai_Platform/
 ├─ components/
 │  ├─ shared/
 │  ├─ ui/
-│  └─ workbench/
+│  ├─ workbench/
+│  └─ workflows/
 ├─ features/
 │  ├─ capabilities/
 │  ├─ models/
@@ -65,7 +68,8 @@ Ai_Platform/
 │  │  └─ tools/
 │  ├─ skills/
 │  ├─ tools/
-│  └─ workbench/
+│  ├─ workbench/
+│  └─ workflows/
 ├─ knowhub/
 │  ├─ components/
 │  │  ├─ docspace/
@@ -131,6 +135,8 @@ Platform 路由入口：
 - 业务API路由入口：`app/(platform)/services/page.tsx`
 - 技能中心路由入口：`app/(platform)/skills/page.tsx`
 - 技能详情与可视化编辑路由：`app/(platform)/skills/[skillId]/page.tsx`
+- 业务流管理页路由入口：`app/(platform)/workflows/page.tsx`
+- 业务流画布设计页路由入口：`app/(platform)/workflows/[workflowId]/page.tsx`
 
 Platform 页面组件：
 
@@ -139,6 +145,10 @@ Platform 页面组件：
 - 工作台搜索结果区：`components/workbench/workbench-search-result-pane.tsx`
 - 技能中心客户端页面：`components/skills/skills-page-client.tsx`
 - 技能详情与可视化配置编辑主组件：`app/(platform)/skills/[skillId]/detail-page-client.tsx`
+- 业务流列表客户端组件：`components/workflows/workflows-page-client.tsx`
+- 业务流画布编辑主组件：`components/workflows/workflow-designer-client.tsx`
+- 业务流自定义节点渲染：`components/workflows/nodes/custom-node.tsx`
+- 业务流节点配置抽屉面板：`components/workflows/panel/node-properties-panel.tsx`
 
 Platform 共享与基础组件：
 
@@ -181,6 +191,8 @@ Platform 业务数据与工具：
 - 能力卡片共用类型：`features/capabilities/types.ts`
 - Platform 导航配置：`lib/nav.ts`
 - 通用工具函数：`lib/utils.ts`
+- 业务流类型定义接口：`features/workflows/types.ts`
+- 业务流内置Mock与存储：`features/workflows/mock-data.ts`
 
 ### 4. 模型 provider/runtime 说明
 
