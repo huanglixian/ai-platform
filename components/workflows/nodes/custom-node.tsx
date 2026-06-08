@@ -46,6 +46,24 @@ export function CustomWorkflowNode({ data, selected, type }: CustomNodeProps) {
       bg: "bg-violet-50/70",
       icon: "🔮",
       titleColor: "text-violet-800"
+    },
+    code: {
+      border: "border-orange-200",
+      bg: "bg-orange-50/70",
+      icon: "💻",
+      titleColor: "text-orange-850"
+    },
+    condition: {
+      border: "border-pink-200",
+      bg: "bg-pink-50/70",
+      icon: "🔀",
+      titleColor: "text-pink-800"
+    },
+    knowhub: {
+      border: "border-teal-200",
+      bg: "bg-teal-50/70",
+      icon: "📚",
+      titleColor: "text-teal-800"
     }
   };
 
@@ -67,7 +85,7 @@ export function CustomWorkflowNode({ data, selected, type }: CustomNodeProps) {
         style.bg,
         selected
           ? "shadow-md ring-2 ring-primary/40 border-primary scale-[1.02]"
-          : "hover:border-slate-300"
+          : "hover:border-slate-350 hover:shadow-md"
       ].join(" ")}
     >
       {type !== "start" && (

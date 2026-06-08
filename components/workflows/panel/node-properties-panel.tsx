@@ -165,6 +165,46 @@ export function NodePropertiesPanel({ node, onClose, onUpdate }: Props) {
             </div>
           )}
 
+          {node.type === "code" && (
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[10px] text-slate-500 font-semibold">代码块内容 (Python/JavaScript)</label>
+              <textarea
+                value={config.codeContent || ""}
+                onChange={(e) => handleConfigChange("codeContent", e.target.value)}
+                className="w-full min-h-[140px] rounded-lg border border-input bg-transparent px-3 py-2 text-xs text-foreground outline-none focus:border-primary transition-colors resize-y font-mono"
+                placeholder="// 在此编写自定义脚本..."
+              />
+            </div>
+          )}
+
+          {node.type === "condition" && (
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[10px] text-slate-500 font-semibold">条件表达式</label>
+              <input
+                type="text"
+                value={config.conditionExpr || ""}
+                onChange={(e) => handleConfigChange("conditionExpr", e.target.value)}
+                className="w-full rounded-lg border border-input bg-transparent px-3 py-2 text-xs text-foreground outline-none focus:border-primary transition-colors font-mono"
+                placeholder="例如: score > 0.8"
+              />
+            </div>
+          )}
+
+          {node.type === "knowhub" && (
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[10px] text-slate-500 font-semibold">选择关联知识库</label>
+              <select
+                value={config.knowledgeBaseId || ""}
+                onChange={(e) => handleConfigChange("knowledgeBaseId", e.target.value)}
+                className="w-full rounded-lg border border-input bg-transparent px-3 py-2 text-xs text-foreground outline-none focus:border-primary transition-colors"
+              >
+                <option value="">-- 请选择知识库 --</option>
+                <option value="safety-rules">电力系统安全规程知识库</option>
+                <option value="tower-specs">输电杆塔技术规范说明书</option>
+              </select>
+            </div>
+          )}
+
           {node.type === "end" && (
             <span className="text-xs text-slate-400 italic">结束节点无须额外配置。</span>
           )}

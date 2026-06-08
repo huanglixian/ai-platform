@@ -61,7 +61,10 @@ export function WorkflowDesignerClient({ workflowId }: Props) {
     model: (props: NodeProps) => <CustomWorkflowNode {...(props as unknown as CustomNodeProps)} type="model" />,
     tool: (props: NodeProps) => <CustomWorkflowNode {...(props as unknown as CustomNodeProps)} type="tool" />,
     service: (props: NodeProps) => <CustomWorkflowNode {...(props as unknown as CustomNodeProps)} type="service" />,
-    skill: (props: NodeProps) => <CustomWorkflowNode {...(props as unknown as CustomNodeProps)} type="skill" />
+    skill: (props: NodeProps) => <CustomWorkflowNode {...(props as unknown as CustomNodeProps)} type="skill" />,
+    code: (props: NodeProps) => <CustomWorkflowNode {...(props as unknown as CustomNodeProps)} type="code" />,
+    condition: (props: NodeProps) => <CustomWorkflowNode {...(props as unknown as CustomNodeProps)} type="condition" />,
+    knowhub: (props: NodeProps) => <CustomWorkflowNode {...(props as unknown as CustomNodeProps)} type="knowhub" />
   }), []);
 
   // 建立连接
@@ -81,13 +84,16 @@ export function WorkflowDesignerClient({ workflowId }: Props) {
   }
 
   // 新增节点
-  function addNode(type: 'model' | 'tool' | 'service' | 'skill') {
+  function addNode(type: 'model' | 'tool' | 'service' | 'skill' | 'code' | 'condition' | 'knowhub') {
     const id = `node-${Date.now()}`;
     const labels: Record<string, string> = {
       model: "大模型节点",
       tool: "通用工具",
       service: "业务 API",
-      skill: "导入技能"
+      skill: "导入技能",
+      code: "代码块节点",
+      condition: "条件节点",
+      knowhub: "知识库调用"
     };
     const newNode: WorkflowNode = {
       id,
@@ -153,27 +159,45 @@ export function WorkflowDesignerClient({ workflowId }: Props) {
           <div className="flex items-center gap-2">
             <button
               onClick={() => addNode("model")}
-              className="rounded-lg border border-indigo-200 bg-indigo-50/20 text-indigo-700 font-semibold text-[10px] px-2.5 py-1.5 hover:bg-indigo-50/50 transition-colors cursor-pointer"
+              className="rounded-lg border border-indigo-300 bg-white text-indigo-600 font-semibold text-[10px] px-2.5 py-1.5 hover:bg-indigo-600 hover:border-indigo-600 hover:text-white transition-all duration-200 cursor-pointer shadow-sm"
             >
               + 模型节点
             </button>
             <button
               onClick={() => addNode("tool")}
-              className="rounded-lg border border-amber-200 bg-amber-50/20 text-amber-700 font-semibold text-[10px] px-2.5 py-1.5 hover:bg-amber-50/50 transition-colors cursor-pointer"
+              className="rounded-lg border border-amber-400 bg-white text-amber-600 font-semibold text-[10px] px-2.5 py-1.5 hover:bg-amber-600 hover:border-amber-600 hover:text-white transition-all duration-200 cursor-pointer shadow-sm"
             >
               + 工具节点
             </button>
             <button
               onClick={() => addNode("service")}
-              className="rounded-lg border border-sky-200 bg-sky-50/20 text-sky-700 font-semibold text-[10px] px-2.5 py-1.5 hover:bg-sky-50/50 transition-colors cursor-pointer"
+              className="rounded-lg border border-sky-400 bg-white text-sky-600 font-semibold text-[10px] px-2.5 py-1.5 hover:bg-sky-600 hover:border-sky-600 hover:text-white transition-all duration-200 cursor-pointer shadow-sm"
             >
               + API节点
             </button>
             <button
               onClick={() => addNode("skill")}
-              className="rounded-lg border border-violet-200 bg-violet-50/20 text-violet-700 font-semibold text-[10px] px-2.5 py-1.5 hover:bg-violet-50/50 transition-colors cursor-pointer"
+              className="rounded-lg border border-violet-400 bg-white text-violet-600 font-semibold text-[10px] px-2.5 py-1.5 hover:bg-violet-600 hover:border-violet-600 hover:text-white transition-all duration-200 cursor-pointer shadow-sm"
             >
               + 技能节点
+            </button>
+            <button
+              onClick={() => addNode("code")}
+              className="rounded-lg border border-orange-400 bg-white text-orange-600 font-semibold text-[10px] px-2.5 py-1.5 hover:bg-orange-600 hover:border-orange-600 hover:text-white transition-all duration-200 cursor-pointer shadow-sm"
+            >
+              + 代码块
+            </button>
+            <button
+              onClick={() => addNode("condition")}
+              className="rounded-lg border border-pink-400 bg-white text-pink-600 font-semibold text-[10px] px-2.5 py-1.5 hover:bg-pink-600 hover:border-pink-600 hover:text-white transition-all duration-200 cursor-pointer shadow-sm"
+            >
+              + 条件节点
+            </button>
+            <button
+              onClick={() => addNode("knowhub")}
+              className="rounded-lg border border-teal-400 bg-white text-teal-650 font-semibold text-[10px] px-2.5 py-1.5 hover:bg-teal-600 hover:border-teal-600 hover:text-white transition-all duration-200 cursor-pointer shadow-sm"
+            >
+              + 知识库调用
             </button>
             <span className="text-slate-200 mx-1">|</span>
             <button

@@ -108,12 +108,9 @@ export function WorkflowsPageClient() {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       nodes: [
-        { id: "start-1", type: "start", position: { x: 100, y: 150 }, data: { label: "开始", description: "接收输入参数", config: {} } },
-        { id: "end-1", type: "end", position: { x: 600, y: 150 }, data: { label: "结束", description: "输出编排报告", config: {} } }
+        { id: "start-1", type: "start", position: { x: 100, y: 150 }, data: { label: "开始", description: "接收输入参数", config: {} } }
       ],
-      edges: [
-        { id: "edge-start-end", source: "start-1", target: "end-1" }
-      ]
+      edges: []
     };
     const updated = [newFlow, ...list];
     setList(updated);

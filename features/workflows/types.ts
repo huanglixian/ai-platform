@@ -3,7 +3,7 @@
  */
 export interface WorkflowNode {
   id: string;
-  type: 'start' | 'model' | 'tool' | 'service' | 'skill' | 'end'; // 节点类型：开始、模型、工具、服务、技能、结束
+  type: 'start' | 'model' | 'tool' | 'service' | 'skill' | 'end' | 'code' | 'condition' | 'knowhub'; // 节点类型：开始、模型、工具、服务、技能、结束、代码、条件、知识库
   position: { x: number; y: number }; // 节点在画布上的坐标
   data: {
     label: string; // 节点名称
@@ -14,6 +14,9 @@ export interface WorkflowNode {
       toolId?: string; // 关联的工具ID
       serviceId?: string; // 关联的服务ID
       skillId?: string; // 关联的技能ID
+      codeContent?: string; // 关联的代码内容
+      conditionExpr?: string; // 条件表达式
+      knowledgeBaseId?: string; // 关联的知识库 ID
     };
   };
 }
