@@ -29,6 +29,6 @@ export function buildSkillRunContext(skillId: string): SkillRunResult {
     status: "ready",
     instruction: skillMarkdown,
     metadata,
-    references: referenceFiles,
+    references: referenceFiles.map((r) => r.name),
   };
 }

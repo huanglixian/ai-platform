@@ -10,6 +10,6 @@ export function listSkillRecords(): SkillRecord[] {
     owner: skill.owner,
     enabled: skill.enabled,
     triggers: skill.triggers,
-    referenceFiles: skill.referenceFiles,
+    referenceFiles: skill.referenceFiles.map(r => r.name),
   }));
 }

@@ -16,6 +16,12 @@ const updateSkillSchema = z.object({
   requiresSession: z.boolean().optional(),
   completionTools: z.array(z.string()).optional(),
   skillMarkdown: z.string().min(1),
+  referenceFiles: z.array(
+    z.object({
+      name: z.string(),
+      content: z.string(),
+    })
+  ).default([]),
 });
 
 type RouteContext = {
@@ -59,6 +65,20 @@ export async function POST(request: Request, context: RouteContext) {
 
     // 保存核心执行 Markdown 指令
     await fs.writeFile(markdownPath, payload.skillMarkdown, "utf8");
+
+    // 物理清空已有的 references 目录以彻底移除已删除文件，如果不存在也无妨
+    const referencesDir = path.join(targetDir, "references");
+    await fs.rm(referencesDir, { recursive: true, force: true });
+
+    if (payload.referenceFiles.length > 0) {
+      await fs.mkdir(referencesDir, { recursive: true });
+      for (const refFile of payload.referenceFiles) {
+        // 安全提取文件名，规避目录穿越风险
+        const baseName = path.basename(refFile.name);
+        const refPath = path.join(referencesDir, baseName);
+        await fs.writeFile(refPath, refFile.content, "utf8");
+      }
+    }
 
     // 异步重新生成流程图，不阻塞保存接口的响应
     void generateSkillFlowMermaid(skillId);

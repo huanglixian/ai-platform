@@ -14,7 +14,7 @@ export type SkillMetadata = {
 export type SkillPackage = SkillMetadata & {
   baseDir: string;
   skillMarkdown: string;
-  referenceFiles: string[];
+  referenceFiles: { name: string; content: string }[];
   flowMermaid?: string;
 };
 

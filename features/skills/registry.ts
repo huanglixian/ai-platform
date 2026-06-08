@@ -24,7 +24,7 @@ function readJsonFile(filePath: string) {
   return JSON.parse(fs.readFileSync(filePath, "utf8")) as unknown;
 }
 
-function listReferenceFiles(skillDir: string) {
+function listReferenceFiles(skillDir: string): { name: string; content: string }[] {
   const referencesDir = path.join(skillDir, "references");
 
   if (!fs.existsSync(referencesDir)) {
@@ -34,8 +34,13 @@ function listReferenceFiles(skillDir: string) {
   return fs
     .readdirSync(referencesDir, { withFileTypes: true })
     .filter((entry) => entry.isFile())
-    .map((entry) => path.join("references", entry.name))
-    .sort();
+    .map((entry) => {
+      const relPath = path.join("references", entry.name);
+      const absPath = path.join(referencesDir, entry.name);
+      const content = fs.readFileSync(absPath, "utf8");
+      return { name: relPath, content };
+    })
+    .sort((a, b) => a.name.localeCompare(b.name));
 }
 
 function readSkillPackage(skillDir: string): SkillPackage | null {

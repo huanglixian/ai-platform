@@ -105,7 +105,7 @@ function WorkbenchEmptyStateContent({
                       : "text-[#667085] hover:bg-white/70",
                   ].join(" ")}
                 >
-                  问答
+                  助手
                 </button>
                 <button
                   type="button"
