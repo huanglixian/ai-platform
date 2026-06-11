@@ -1,5 +1,5 @@
-export type PlatformSource = 'dify' | 'n8n' | 'ragflow' | 'native';
-export type AppType = 'chat' | 'workflow' | 'agent' | 'completion';
+export type PlatformSource = 'dify' | 'n8n' | 'native';
+export type AppType = 'business' | 'general';
 
 export interface PublishedApp {
   id: string;

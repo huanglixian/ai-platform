@@ -6,7 +6,7 @@
 
 当前代码分成两条主线：
 
-- `Platform`：`workbench / tools / services / skills`
+- `Platform`：`workbench / tools / services / skills / apps / workflows`
 - `KnowHub`：平台内独立的知识业务域，包含文档空间、策略中心、知识库、检索与配置管理
 
 ## 技术路线
@@ -14,7 +14,7 @@
 - 前端：`Next.js + React + TypeScript`
 - 路由与接口：`Next.js App Router + Route Handlers`
 - 样式与 UI：`Tailwind CSS`，全局样式入口是 `app/globals.css`
-- Platform 数据：`workbench` 的知识搜索走真实接口，能力中心与智能体模块按模块状态分别接真实接口或静态数据
+- Platform 数据：`workbench` 的知识搜索走真实接口；`tools / services / skills / apps / workflows` 按模块状态分别接真实接口、本地配置或静态模拟数据
 - Platform AI：工作台问答通过 Vercel AI SDK 接入 DeepSeek-V4，当前只做技能、工具和业务 API 推荐
 - Platform Skills：技能中心读取 `storage/platform/skills` 中的配置型技能包，`SKILL.md` 是技能执行核心；支持通过 `requiresSession` 和 `completionTools` 在工作台实现结构化多轮会话锁定与释放。
 - 技能创建规范：见 `dev_files/create_skills_guide.md`
@@ -50,7 +50,8 @@ Ai_Platform/
 │  │  └─ workflows/
 │  │     └─ [workflowId]/
 │  ├─ api/
-│  │  └─ platform/
+│  │  ├─ platform/
+│  │  └─ knowhub/
 │  ├─ knowhub/
 │  │  ├─ docspace/
 │  │  ├─ strategies/
@@ -61,6 +62,7 @@ Ai_Platform/
 │  ├─ shared/
 │  ├─ ui/
 │  ├─ workbench/
+│  ├─ skills/
 │  ├─ apps/
 │  └─ workflows/
 ├─ features/
@@ -111,14 +113,14 @@ Ai_Platform/
 - `tools`：通用工具
 - `services`：业务API
 - `skills`：技能中心
-- `apps`：应用中心，负责聚合发布和运行在旧平台（Dify/n8n/RAGFlow）上的旧智能体应用。
+- `apps`：应用中心，负责聚合发布和运行平台原生、Dify 与 n8n 应用入口。
 - `workflows`：业务流编排中心，支持对模型、工具、API 和技能进行可视化 DAG 拖拽编排
 
 ### 2. 文件组织方式
 
 - `app/(platform)/*`：Platform 路由入口层，只负责接住页面和动态参数
-- `components/*`：Platform 页面实现层，按 `workbench / shared / ui` 分组
-- `features/*`：Platform 业务数据、类型和接口封装层
+- `components/*`：Platform 页面实现层，按 `workbench / skills / apps / workflows / shared / ui` 分组
+- `features/*`：Platform 业务数据、类型和接口封装层，按 `workbench / tools / services / skills / apps / workflows / models` 分组
 - `features/models/*`：平台级模型运行时封装，工作台和后续技能执行共用
 - `components/shared/*`：Platform 共享壳层、导航和通用页面结构
 - `components/ui/*`：Platform 与 KnowHub 共用的基础控件
@@ -199,7 +201,7 @@ Platform 业务数据与工具：
 - Platform 导航配置：`lib/nav.ts`
 - 通用工具函数：`lib/utils.ts`
 - 应用中心数据结构接口：`features/apps/types.ts`
-- 应用中心内置Mock与缓存：`features/apps/mock-data.ts`
+- 应用中心本地模拟数据与缓存版本：`features/apps/mock-data.ts`
 - 业务流类型定义接口：`features/workflows/types.ts`
 - 业务流内置Mock与存储：`features/workflows/mock-data.ts`
 
@@ -359,7 +361,7 @@ KnowHub 业务数据与服务：
 - `workbench`：支持在命中技能上下文时基于 `allowedTools` 动态加载并请求 API Tools；支持基于 `runtimeState` 实现多轮技能会话锁定与上下文定向裁剪剪枝（Token 优化）；在无工具依赖时支持动态省略 Tools 机制以确保极速纯文本流式输出。前端支持流式解析并渲染工具执行轨迹。
 - `tools / services`：前端原型与静态数据
 - `skills`：支持真实的配置型技能注册与元数据（如 `allowedTools` 声明）解析；支持可视化编辑配置与 `SKILL.md`；支持双轨制异步后台处理（新建、保存及前端无图时自动触发）智能生成与展示 Mermaid 流程图。
-- `apps`：已实现前端聚合列表与滑层 iframe 页内加载调试容器；支持来源平台小药丸与类型标签配置；完全使用 `localStorage` 驱动，本地模拟发布增删改查。
+- `apps`：已实现前端聚合列表与滑层 iframe 页内加载调试容器；复用平台卡片页外框，支持 `全部 / 原生 / Dify / n8n` 标签筛选、搜索、业务场景卡片、业务类/通用类应用类型、发布、删除和复制链接；使用带版本标记的 `localStorage` 驱动本地模拟数据。
 - `workflows`：支持可视化拖拽编排 DAG 无环图；新建时初始仅生成“开始”节点并精简连线；提供 9 种节点类型（开始、结束、大模型、通用工具、业务 API、技能、代码块、条件、知识库）以及实体高亮线框顶栏组件；支持右侧抽屉双向更新参数，并完全由前端 `localStorage` 缓存持久化。
 
 ### KnowHub
