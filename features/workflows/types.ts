@@ -1,3 +1,5 @@
+export type WorkflowCategory = '业务审批' | '巡检运维' | '文档知识' | '客户服务';
+
 /**
  * 业务流节点接口定义
  */
@@ -37,6 +39,7 @@ export interface Workflow {
   id: string;
   name: string; // 业务流名称
   description: string; // 业务流描述
+  category: WorkflowCategory; // 业务流分类
   nodes: WorkflowNode[]; // 包含的节点列表
   edges: WorkflowEdge[]; // 包含的连接线列表
   createdAt: string; // 创建时间

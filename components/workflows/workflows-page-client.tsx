@@ -9,6 +9,8 @@ import { getLocalWorkflows, saveLocalWorkflows } from "@/features/workflows/mock
 import { Workflow } from "@/features/workflows/types";
 
 const ITEM_WIDTH = 300;
+const WORKFLOW_TABS = ["全部", "业务审批", "巡检运维", "文档知识", "客户服务"] as const;
+const WORKFLOW_GROUP_TABS = WORKFLOW_TABS.filter((tab) => tab !== "全部");
 
 type WorkflowCardProps = {
   flow: Workflow;
@@ -48,6 +50,9 @@ function WorkflowCard({ flow, onDelete }: WorkflowCardProps) {
         <h3 className="mt-2 line-clamp-2 text-[15px] font-bold leading-5 text-title transition-colors group-hover:text-primary">
           {flow.name}
         </h3>
+        <span className="mt-2 inline-flex rounded-full border border-[#dbe8f6] bg-[#f5f9fe] px-2 py-0.5 text-[10px] font-semibold text-[#51657d]">
+          {flow.category}
+        </span>
         <p className="mt-2.5 line-clamp-2 text-xs leading-5 text-[#667085]">
           {flow.description}
         </p>
@@ -93,6 +98,7 @@ function EmptyWorkflows({ onCreate }: { onCreate: () => void }) {
 export function WorkflowsPageClient() {
   const [list, setList] = useState<Workflow[]>([]);
   const [keyword, setKeyword] = useState("");
+  const [activeTab, setActiveTab] = useState<(typeof WORKFLOW_TABS)[number]>("全部");
   const [showModal, setShowModal] = useState(false);
   const [newFlowName, setNewFlowName] = useState("");
   const [newFlowDesc, setNewFlowDesc] = useState("");
@@ -112,6 +118,7 @@ export function WorkflowsPageClient() {
       id: `workflow-${Date.now()}`,
       name: trimmedName,
       description: newFlowDesc.trim() || "暂无描述",
+      category: "业务审批",
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       nodes: [
@@ -147,15 +154,46 @@ export function WorkflowsPageClient() {
 
   const normalizedKeyword = keyword.trim().toLowerCase();
   const visibleWorkflows = list.filter((flow) => {
+    const matchedKeyword = !normalizedKeyword || (
+      flow.name.toLowerCase().includes(normalizedKeyword) ||
+      flow.description.toLowerCase().includes(normalizedKeyword) ||
+      flow.category.toLowerCase().includes(normalizedKeyword)
+    );
+
+    if (!matchedKeyword) {
+      return false;
+    }
+
+    if (activeTab === "全部") {
+      return true;
+    }
+
+    return flow.category === activeTab;
+  });
+
+  const searchedWorkflows = list.filter((flow) => {
     if (!normalizedKeyword) {
       return true;
     }
 
     return (
       flow.name.toLowerCase().includes(normalizedKeyword) ||
-      flow.description.toLowerCase().includes(normalizedKeyword)
+      flow.description.toLowerCase().includes(normalizedKeyword) ||
+      flow.category.toLowerCase().includes(normalizedKeyword)
     );
   });
+
+  const renderWorkflowCard = (flow: Workflow) => (
+    <WorkflowCard key={flow.id} flow={flow} onDelete={handleDelete} />
+  );
+
+  const groupedWorkflows = WORKFLOW_GROUP_TABS.map((tab) => ({
+    key: tab,
+    title: tab,
+    children: searchedWorkflows
+      .filter((flow) => flow.category === tab)
+      .map(renderWorkflowCard),
+  })).filter((section) => section.children.length > 0);
 
   return (
     <>
@@ -165,14 +203,16 @@ export function WorkflowsPageClient() {
         itemWidth={ITEM_WIDTH}
         actionLabel="新建业务流"
         onActionClick={() => setShowModal(true)}
+        tabs={[...WORKFLOW_TABS]}
+        activeTab={activeTab}
+        onTabChange={(tab) => setActiveTab(tab as (typeof WORKFLOW_TABS)[number])}
+        groupedSections={groupedWorkflows}
         searchValue={keyword}
         searchPlaceholder="搜索业务流名称或描述"
         onSearchChange={setKeyword}
       >
         {visibleWorkflows.length ? (
-          visibleWorkflows.map((flow) => (
-            <WorkflowCard key={flow.id} flow={flow} onDelete={handleDelete} />
-          ))
+          visibleWorkflows.map(renderWorkflowCard)
         ) : (
           <EmptyWorkflows onCreate={() => setShowModal(true)} />
         )}
