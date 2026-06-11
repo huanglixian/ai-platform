@@ -220,6 +220,9 @@ export function WorkflowDesignerClient({ workflowId }: Props) {
             onNodeClick={onNodeClick}
             nodeTypes={nodeTypes}
             fitView
+            fitViewOptions={{ padding: 0.24, maxZoom: 1.02 }}
+            minZoom={0.35}
+            maxZoom={1.4}
           >
             <Background color="#cbd5e1" gap={16} size={1} />
             <Controls showInteractive={false} />
