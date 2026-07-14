@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AI业务编排平台功能架构图</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: #ffffff;
+      font-family: "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+      color: #2f343b;
+    }
+
+    .slide {
+      width: 1600px;
+      height: 900px;
+      background: #ffffff;
+      position: relative;
+      overflow: hidden;
+      padding: 58px 82px;
+    }
+
+    .slide::before {
+      content: "";
+      position: absolute;
+      left: 64px;
+      right: 64px;
+      top: 42px;
+      height: 5px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #e60012 0%, #c9151e 38%, rgba(230, 0, 18, 0.12) 100%);
+    }
+
+    .architecture {
+      height: 100%;
+      display: grid;
+      grid-template-columns: 250px 1fr;
+      gap: 26px;
+      align-items: stretch;
+    }
+
+    .axis {
+      padding-top: 38px;
+      display: grid;
+      grid-template-rows: repeat(4, 1fr);
+      gap: 20px;
+      position: relative;
+    }
+
+    .axis::after {
+      content: "";
+      position: absolute;
+      top: 88px;
+      bottom: 62px;
+      left: 124px;
+      width: 2px;
+      background: linear-gradient(180deg, rgba(230, 0, 18, 0.7), rgba(230, 0, 18, 0.08));
+    }
+
+    .layer-badge {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      place-items: center;
+      align-self: center;
+      justify-self: center;
+      width: 174px;
+      height: 118px;
+      border-radius: 24px;
+      background: linear-gradient(145deg, #e60012 0%, #a21920 100%);
+      color: #ffffff;
+      box-shadow: 0 16px 28px rgba(166, 25, 32, 0.22);
+    }
+
+    .layer-badge:nth-child(2) {
+      background: linear-gradient(145deg, #d9484f 0%, #b5232b 100%);
+    }
+
+    .layer-badge:nth-child(3) {
+      background: linear-gradient(145deg, #e56d72 0%, #ca3e45 100%);
+    }
+
+    .layer-badge:nth-child(4) {
+      background: linear-gradient(145deg, #d99a9e 0%, #bd6870 100%);
+    }
+
+    .badge-title {
+      font-size: 30px;
+      font-weight: 900;
+      letter-spacing: 0.02em;
+    }
+
+    .badge-subtitle {
+      margin-top: 8px;
+      font-size: 15px;
+      font-weight: 700;
+      opacity: 0.86;
+    }
+
+    .layers {
+      display: grid;
+      grid-template-rows: repeat(4, 1fr);
+      gap: 20px;
+      padding-top: 38px;
+    }
+
+    .layer-card {
+      position: relative;
+      display: grid;
+      grid-template-columns: 270px 1fr;
+      gap: 22px;
+      align-items: center;
+      min-height: 160px;
+      border-radius: 22px;
+      border: 1px solid #edf1f6;
+      background:
+        linear-gradient(90deg, rgba(255, 246, 247, 0.92), rgba(255, 255, 255, 0.95) 42%),
+        #ffffff;
+      box-shadow: 0 14px 30px rgba(30, 58, 86, 0.08);
+      padding: 26px 30px;
+      overflow: hidden;
+    }
+
+    .layer-card::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 7px;
+      background: linear-gradient(180deg, #e60012, #c9151e);
+    }
+
+    .layer-card::after {
+      content: "";
+      position: absolute;
+      right: -70px;
+      top: -80px;
+      width: 230px;
+      height: 230px;
+      border-radius: 50%;
+      background: rgba(230, 0, 18, 0.035);
+    }
+
+    .layer-title {
+      position: relative;
+      z-index: 1;
+      padding-left: 16px;
+    }
+
+    .layer-title h2 {
+      margin: 0;
+      color: #98080f;
+      font-size: 34px;
+      font-weight: 900;
+      line-height: 1.08;
+      letter-spacing: 0.01em;
+    }
+
+    .layer-title p {
+      margin: 12px 0 0;
+      color: #646b76;
+      font-size: 17px;
+      font-weight: 650;
+      line-height: 1.55;
+    }
+
+    .module-grid {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      gap: 14px;
+    }
+
+    .module-grid.two {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .module-grid.three {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .module-grid.four {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .module {
+      min-height: 68px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      border-radius: 14px;
+      border: 1px solid #f1d0d3;
+      background:
+        linear-gradient(180deg, #ffffff 0%, #fff7f8 100%);
+      color: #8f151c;
+      font-size: 22px;
+      font-weight: 850;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 8px 18px rgba(152, 8, 15, 0.06);
+      padding: 0 12px;
+    }
+
+    .module.strong {
+      border-color: #e6a8ad;
+      background: linear-gradient(180deg, #fff5f6 0%, #ffecee 100%);
+    }
+
+    .flow-ribbon {
+      position: absolute;
+      left: 370px;
+      right: 118px;
+      top: 50%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(230, 0, 18, 0.16), transparent);
+      transform: translateY(-50%);
+    }
+  </style>
+</head>
+<body>
+  <main class="slide" aria-label="AI业务编排平台功能架构图">
+    <div class="flow-ribbon"></div>
+    <section class="architecture">
+      <aside class="axis" aria-hidden="true">
+        <div class="layer-badge">
+          <div>
+            <div class="badge-title">整合层</div>
+            <div class="badge-subtitle">统一入口</div>
+          </div>
+        </div>
+        <div class="layer-badge">
+          <div>
+            <div class="badge-title">编排层</div>
+            <div class="badge-subtitle">流程调度</div>
+          </div>
+        </div>
+        <div class="layer-badge">
+          <div>
+            <div class="badge-title">能力层</div>
+            <div class="badge-subtitle">能力供给</div>
+          </div>
+        </div>
+        <div class="layer-badge">
+          <div>
+            <div class="badge-title">管理层</div>
+            <div class="badge-subtitle">治理管控</div>
+          </div>
+        </div>
+      </aside>
+
+      <section class="layers">
+        <article class="layer-card">
+          <div class="layer-title">
+            <h2>整合层</h2>
+            <p>统一用户工作入口，聚合 AI 工作台与集成应用能力。</p>
+          </div>
+          <div class="module-grid two">
+            <div class="module strong">AI工作台</div>
+            <div class="module strong">集成应用中心</div>
+          </div>
+        </article>
+
+        <article class="layer-card">
+          <div class="layer-title">
+            <h2>编排层</h2>
+            <p>将业务流、技能与定时任务组织成可复用的业务执行链路。</p>
+          </div>
+          <div class="module-grid three">
+            <div class="module strong">业务流</div>
+            <div class="module strong">技能中心</div>
+            <div class="module">定时任务</div>
+          </div>
+        </article>
+
+        <article class="layer-card">
+          <div class="layer-title">
+            <h2>能力层</h2>
+            <p>沉淀平台原子能力，向上支撑智能体、流程和业务场景调用。</p>
+          </div>
+          <div class="module-grid four">
+            <div class="module">MCP</div>
+            <div class="module">通用工具</div>
+            <div class="module strong">业务API</div>
+            <div class="module strong">数据中心</div>
+          </div>
+        </article>
+
+        <article class="layer-card">
+          <div class="layer-title">
+            <h2>管理层</h2>
+            <p>统一组织、账号、角色与权限治理，保障平台安全可控。</p>
+          </div>
+          <div class="module-grid four">
+            <div class="module">用户管理</div>
+            <div class="module">组织管理</div>
+            <div class="module">角色管理</div>
+            <div class="module">权限管理</div>
+          </div>
+        </article>
+      </section>
+    </section>
+  </main>
+</body>
+</html>

@@ -2,7 +2,6 @@ import { createTemplateRecord, listStrategyTemplates } from "@/knowhub/features/
 import type { StrategyRecord } from "@/knowhub/features/strategies/types";
 
 export const strategyRecords: StrategyRecord[] = [
-  ...listStrategyTemplates().map((item) => createTemplateRecord(item)),
   {
     id: "excel-xls-to-xlsx",
     name: "XLS 转 XLSX",
@@ -278,4 +277,5 @@ export const strategyRecords: StrategyRecord[] = [
     owner: "算法组",
     usageCount: 17,
   },
+  ...listStrategyTemplates().map((item) => createTemplateRecord(item)),
 ];

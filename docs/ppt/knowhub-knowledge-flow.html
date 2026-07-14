@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>KnowHub 知识处理流程</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: #ffffff;
+        font-family:
+          "PingFang SC",
+          "Microsoft YaHei",
+          "Helvetica Neue",
+          Arial,
+          sans-serif;
+        color: #2b2b2b;
+      }
+
+      .slide {
+        position: relative;
+        width: 1600px;
+        height: 900px;
+        overflow: hidden;
+        background:
+          linear-gradient(180deg, rgba(255, 248, 248, 0.95), rgba(255, 255, 255, 0.9) 34%),
+          #ffffff;
+        padding: 58px 72px 54px;
+      }
+
+      .slide::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background:
+          linear-gradient(90deg, rgba(232, 20, 35, 0.08) 1px, transparent 1px),
+          linear-gradient(180deg, rgba(232, 20, 35, 0.06) 1px, transparent 1px);
+        background-size: 80px 80px;
+        mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.5), transparent 42%);
+      }
+
+      .header {
+        position: relative;
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        padding-bottom: 22px;
+        border-bottom: 5px solid #e81224;
+      }
+
+      .header::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        bottom: -12px;
+        width: 100%;
+        height: 2px;
+        background: #e81224;
+        opacity: 0.85;
+      }
+
+      .title {
+        margin: 0;
+        color: #e81224;
+        font-size: 56px;
+        line-height: 1.05;
+        font-weight: 900;
+        letter-spacing: 0;
+      }
+
+      .subtitle {
+        margin: 0 0 4px;
+        color: #9d121c;
+        font-size: 24px;
+        font-weight: 800;
+        letter-spacing: 0;
+      }
+
+      .summary {
+        position: relative;
+        margin: 42px auto 34px;
+        width: 1040px;
+        min-height: 72px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        background: #fff4f4;
+        color: #980c14;
+        font-size: 28px;
+        font-weight: 800;
+        text-align: center;
+      }
+
+      .flow {
+        position: relative;
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 28px;
+        align-items: stretch;
+        margin-top: 34px;
+      }
+
+      .stage {
+        position: relative;
+        min-height: 410px;
+        border-radius: 18px;
+        background: #ffffff;
+        border: 1px solid rgba(232, 20, 35, 0.18);
+        box-shadow: 0 18px 35px rgba(150, 22, 30, 0.11);
+        overflow: hidden;
+      }
+
+      .stage::before {
+        content: "";
+        position: absolute;
+        inset: 0 0 auto;
+        height: 9px;
+        background: linear-gradient(90deg, #9e161d, #e81224, #f26f78);
+      }
+
+      .stage::after {
+        content: "";
+        position: absolute;
+        top: 132px;
+        left: 26px;
+        right: 26px;
+        height: 1px;
+        background: linear-gradient(90deg, rgba(232, 20, 35, 0.12), rgba(232, 20, 35, 0.42), rgba(232, 20, 35, 0.12));
+      }
+
+      .badge {
+        width: 64px;
+        height: 64px;
+        margin: 30px 0 18px 24px;
+        display: grid;
+        place-items: center;
+        border-radius: 18px;
+        background: #e81224;
+        color: #ffffff;
+        font-size: 30px;
+        font-weight: 900;
+        box-shadow: 0 12px 24px rgba(232, 20, 35, 0.24);
+      }
+
+      .stage h2 {
+        margin: 0 22px;
+        color: #9c0d14;
+        font-size: 25px;
+        line-height: 1.24;
+        font-weight: 900;
+        letter-spacing: 0;
+      }
+
+      .desc {
+        margin: 32px 22px 0;
+        color: #555;
+        font-size: 17px;
+        line-height: 1.6;
+        font-weight: 650;
+      }
+
+      .chips {
+        position: absolute;
+        left: 18px;
+        right: 18px;
+        bottom: 18px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        height: 30px;
+        padding: 0 11px;
+        border-radius: 999px;
+        background: #fff1f1;
+        color: #b1111b;
+        font-size: 14px;
+        font-weight: 800;
+        white-space: nowrap;
+      }
+
+      .arrow {
+        position: absolute;
+        top: 205px;
+        right: -31px;
+        z-index: 5;
+        width: 34px;
+        height: 24px;
+      }
+
+      .arrow::before {
+        content: "";
+        position: absolute;
+        top: 10px;
+        left: 0;
+        width: 24px;
+        height: 4px;
+        border-radius: 99px;
+        background: #e81224;
+      }
+
+      .arrow::after {
+        content: "";
+        position: absolute;
+        top: 3px;
+        right: 0;
+        width: 0;
+        height: 0;
+        border-top: 11px solid transparent;
+        border-bottom: 11px solid transparent;
+        border-left: 14px solid #e81224;
+      }
+
+      .stage:last-child .arrow {
+        display: none;
+      }
+
+      .footer {
+        position: absolute;
+        left: 72px;
+        right: 72px;
+        bottom: 52px;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+      }
+
+      .footer-item {
+        height: 78px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 14px;
+        background: #f8fbff;
+        border: 1px solid #e8eef7;
+        color: #5a6370;
+        font-size: 19px;
+        font-weight: 800;
+      }
+
+      .footer-item em {
+        margin-right: 12px;
+        color: #e81224;
+        font-style: normal;
+        font-size: 22px;
+        font-weight: 900;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="slide" aria-label="KnowHub 知识处理流程">
+      <header class="header">
+        <h1 class="title">KnowHub 知识处理流程</h1>
+        <p class="subtitle">从文档接入到检索使用的知识库构建链路</p>
+      </header>
+
+      <section class="summary">
+        文档源接入 → 文档治理 → 策略加工 → 知识库构建 → 业务检索复用
+      </section>
+
+      <section class="flow" aria-label="知识处理流程">
+        <article class="stage">
+          <div class="badge">01</div>
+          <h2>接入文档源</h2>
+          <p class="desc">通过平台托管空间、SMB、OSS 等方式接入企业资料，形成来源清晰、可追踪的文档快照。</p>
+          <div class="chips">
+            <span class="chip">托管空间</span>
+            <span class="chip">SMB</span>
+            <span class="chip">OSS</span>
+          </div>
+          <div class="arrow"></div>
+        </article>
+
+        <article class="stage">
+          <div class="badge">02</div>
+          <h2>文档管理</h2>
+          <p class="desc">按文档空间组织归属、维护方、业务范围和状态，统一管理文档中心的内容资产。</p>
+          <div class="chips">
+            <span class="chip">文档空间</span>
+            <span class="chip">版本维护</span>
+            <span class="chip">状态跟踪</span>
+          </div>
+          <div class="arrow"></div>
+        </article>
+
+        <article class="stage">
+          <div class="badge">03</div>
+          <h2>配置预处理策略</h2>
+          <p class="desc">对正文、附件、表格和噪声内容进行清洗、归并与结构整理，为后续切片提供稳定输入。</p>
+          <div class="chips">
+            <span class="chip">正文清洗</span>
+            <span class="chip">表格整理</span>
+            <span class="chip">附件归并</span>
+          </div>
+          <div class="arrow"></div>
+        </article>
+
+        <article class="stage">
+          <div class="badge">04</div>
+          <h2>配置切片策略</h2>
+          <p class="desc">根据业务场景选择标题切片、父子切片或问答切片，让知识颗粒度更适合检索与引用。</p>
+          <div class="chips">
+            <span class="chip">标题切片</span>
+            <span class="chip">父子切片</span>
+            <span class="chip">问答切片</span>
+          </div>
+          <div class="arrow"></div>
+        </article>
+
+        <article class="stage">
+          <div class="badge">05</div>
+          <h2>构建知识库</h2>
+          <p class="desc">将整理后的内容沉淀为可复用知识资产，围绕业务主题、权限范围和使用场景组织知识库。</p>
+          <div class="chips">
+            <span class="chip">知识资产</span>
+            <span class="chip">业务主题</span>
+            <span class="chip">权限范围</span>
+          </div>
+          <div class="arrow"></div>
+        </article>
+
+        <article class="stage">
+          <div class="badge">06</div>
+          <h2>检索使用</h2>
+          <p class="desc">对接智能体、应用、工具和业务流，支撑问题检索、答案引用与业务场景中的知识复用。</p>
+          <div class="chips">
+            <span class="chip">智能体</span>
+            <span class="chip">业务流</span>
+            <span class="chip">引用复用</span>
+          </div>
+        </article>
+      </section>
+
+      <section class="footer" aria-label="流程价值">
+        <div class="footer-item"><em>输入</em> 多来源文档统一接入</div>
+        <div class="footer-item"><em>治理</em> 文档空间集中管理</div>
+        <div class="footer-item"><em>沉淀</em> 策略化构建知识库</div>
+        <div class="footer-item"><em>输出</em> 面向业务检索使用</div>
+      </section>
+    </main>
+  </body>
+</html>

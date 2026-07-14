@@ -1,0 +1,418 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>KnowHub 对比传统知识库</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: #ffffff;
+        font-family:
+          "PingFang SC",
+          "Microsoft YaHei",
+          "Helvetica Neue",
+          Arial,
+          sans-serif;
+        color: #2f3136;
+      }
+
+      .slide {
+        position: relative;
+        width: 1600px;
+        height: 900px;
+        overflow: hidden;
+        background: #ffffff;
+        padding: 46px 66px 36px;
+      }
+
+      .slide::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background:
+          linear-gradient(90deg, rgba(232, 20, 35, 0.04) 1px, transparent 1px),
+          linear-gradient(180deg, rgba(232, 20, 35, 0.03) 1px, transparent 1px);
+        background-size: 88px 88px;
+        mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.18), transparent 42%);
+      }
+
+      .top-band {
+        position: relative;
+        display: grid;
+        grid-template-columns: 1fr 68px 1fr;
+        align-items: center;
+        gap: 18px;
+        margin-bottom: 16px;
+      }
+
+      .top-band::before {
+        content: "";
+        position: absolute;
+        left: 8px;
+        right: 8px;
+        top: 50%;
+        height: 2px;
+        border-radius: 999px;
+        background: linear-gradient(90deg, rgba(232, 20, 35, 0.12), rgba(232, 20, 35, 0.4), rgba(232, 20, 35, 0.12));
+        transform: translateY(-50%);
+      }
+
+      .top-card {
+        position: relative;
+        z-index: 1;
+        min-height: 128px;
+        border-radius: 22px;
+        padding: 18px 22px;
+        border: 1px solid rgba(232, 20, 35, 0.16);
+        box-shadow: 0 16px 34px rgba(141, 28, 37, 0.09);
+        overflow: hidden;
+      }
+
+      .top-card::after {
+        content: "";
+        position: absolute;
+        right: -28px;
+        top: -22px;
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        background: rgba(232, 20, 35, 0.05);
+      }
+
+      .top-card.traditional {
+        background: linear-gradient(180deg, #fff7f7, #fffdfd);
+      }
+
+      .top-card.modern {
+        background: linear-gradient(145deg, #e81224, #a5161e);
+        color: #ffffff;
+        border-color: #e81224;
+      }
+
+      .top-card.modern::after {
+        background: rgba(255, 255, 255, 0.16);
+      }
+
+      .top-label {
+        display: inline-flex;
+        align-items: center;
+        height: 34px;
+        padding: 0 14px;
+        border-radius: 999px;
+        font-size: 16px;
+        font-weight: 900;
+        letter-spacing: 0;
+      }
+
+      .traditional .top-label {
+        background: #ffecec;
+        color: #af111a;
+      }
+
+      .modern .top-label {
+        background: rgba(255, 255, 255, 0.18);
+        color: #ffffff;
+      }
+
+      .top-value {
+        margin-top: 12px;
+        font-size: 38px;
+        line-height: 1.02;
+        font-weight: 950;
+        letter-spacing: 0;
+        color: inherit;
+      }
+
+      .top-note {
+        margin-top: 8px;
+        max-width: 86%;
+        font-size: 16px;
+        line-height: 1.5;
+        font-weight: 650;
+        color: inherit;
+        opacity: 0.92;
+      }
+
+      .center-badge {
+        position: relative;
+        z-index: 1;
+        width: 68px;
+        height: 68px;
+        border-radius: 20px;
+        display: grid;
+        place-items: center;
+        background: #e81224;
+        color: #ffffff;
+        box-shadow: 0 14px 26px rgba(232, 20, 35, 0.22);
+        font-size: 28px;
+        font-weight: 900;
+      }
+
+      .rows {
+        display: grid;
+        gap: 12px;
+      }
+
+      .row {
+        position: relative;
+        display: grid;
+        grid-template-columns: 178px 1fr 58px 1fr;
+        gap: 14px;
+        align-items: stretch;
+        min-height: 106px;
+      }
+
+      .topic {
+        border-radius: 18px;
+        background: linear-gradient(180deg, #ffffff, #fff8f8);
+        border: 1px solid #f2d8db;
+        padding: 16px 18px;
+        display: grid;
+        align-content: center;
+        box-shadow: 0 10px 24px rgba(118, 28, 35, 0.06);
+      }
+
+      .topic .num {
+        color: #e81224;
+        font-size: 18px;
+        font-weight: 900;
+        line-height: 1;
+      }
+
+      .topic .name {
+        margin-top: 6px;
+        color: #8f121a;
+        font-size: 24px;
+        line-height: 1.15;
+        font-weight: 900;
+      }
+
+      .compare {
+        border-radius: 20px;
+        border: 1px solid rgba(232, 20, 35, 0.16);
+        overflow: hidden;
+        box-shadow: 0 14px 28px rgba(118, 28, 35, 0.08);
+        background: #ffffff;
+      }
+
+      .compare.traditional {
+        background: linear-gradient(180deg, #fffdfd, #fff8f8);
+      }
+
+      .compare.modern {
+        background: linear-gradient(180deg, #fff8f8, #fff1f2);
+      }
+
+      .compare-head {
+        height: 30px;
+        display: flex;
+        align-items: center;
+        padding: 0 16px;
+        font-size: 14px;
+        font-weight: 900;
+        letter-spacing: 0;
+      }
+
+      .traditional .compare-head {
+        background: linear-gradient(90deg, rgba(232, 20, 35, 0.08), rgba(232, 20, 35, 0.02));
+        color: #af111a;
+      }
+
+      .modern .compare-head {
+        background: linear-gradient(90deg, rgba(232, 20, 35, 0.14), rgba(232, 20, 35, 0.04));
+        color: #9e0f17;
+      }
+
+      .compare-body {
+        min-height: 76px;
+        padding: 12px 16px 14px;
+      }
+
+      .compare-text {
+        font-size: 17px;
+        line-height: 1.45;
+        font-weight: 700;
+        color: #4a4e56;
+      }
+
+      .traditional .compare-text {
+        color: #5d626c;
+      }
+
+      .modern .compare-text {
+        color: #6f1118;
+      }
+
+      .arrow {
+        position: relative;
+        align-self: center;
+        justify-self: center;
+        width: 58px;
+        height: 22px;
+      }
+
+      .arrow::before {
+        content: "";
+        position: absolute;
+        top: 9px;
+        left: 0;
+        right: 12px;
+        height: 4px;
+        border-radius: 99px;
+        background: #e81224;
+      }
+
+      .arrow::after {
+        content: "";
+        position: absolute;
+        top: 2px;
+        right: 0;
+        width: 0;
+        height: 0;
+        border-top: 9px solid transparent;
+        border-bottom: 9px solid transparent;
+        border-left: 13px solid #e81224;
+      }
+
+      .footer {
+        margin-top: 12px;
+        display: grid;
+        grid-template-columns: 1.1fr 0.9fr;
+        gap: 14px;
+      }
+
+      .footer-card {
+        min-height: 68px;
+        border-radius: 16px;
+        background: #f8fbff;
+        border: 1px solid #e6edf6;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 10px 18px;
+        color: #5b6470;
+        font-size: 17px;
+        font-weight: 800;
+        line-height: 1.4;
+        text-align: center;
+      }
+
+      .footer-card strong {
+        color: #e81224;
+        font-weight: 900;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="slide" aria-label="传统知识库与KnowHub对比页">
+      <section class="top-band" aria-label="总体效果对比">
+        <article class="top-card traditional">
+          <span class="top-label">传统知识库</span>
+          <div class="top-value">知识调用效果不稳定</div>
+          <div class="top-note">靠通用规则处理文档，容易受格式、内容结构和场景差异影响。</div>
+        </article>
+
+        <div class="center-badge">VS</div>
+
+        <article class="top-card modern">
+          <span class="top-label">KnowHub</span>
+          <div class="top-value">准确率 85%+</div>
+          <div class="top-note">按文档特点、内容版式和场景策略处理，知识调用更稳定。</div>
+        </article>
+      </section>
+
+      <section class="rows" aria-label="四项能力对比">
+        <article class="row">
+          <div class="topic">
+            <div class="num">01</div>
+            <div class="name">接入方式</div>
+          </div>
+          <div class="compare traditional">
+            <div class="compare-head">传统</div>
+            <div class="compare-body">
+              <div class="compare-text">只能上传文件。</div>
+            </div>
+          </div>
+          <div class="arrow" aria-hidden="true"></div>
+          <div class="compare modern">
+            <div class="compare-head">我们</div>
+            <div class="compare-body">
+              <div class="compare-text">除了上传文件，还能对接 <strong>OSS</strong> 和企业网盘。</div>
+            </div>
+          </div>
+        </article>
+
+        <article class="row">
+          <div class="topic">
+            <div class="num">02</div>
+            <div class="name">预处理策略</div>
+          </div>
+          <div class="compare traditional">
+            <div class="compare-head">传统</div>
+            <div class="compare-body">
+              <div class="compare-text">没有精准预处理，不同格式通常使用统一处理函数。</div>
+            </div>
+          </div>
+          <div class="arrow" aria-hidden="true"></div>
+          <div class="compare modern">
+            <div class="compare-head">我们</div>
+            <div class="compare-body">
+              <div class="compare-text">可以按文档特点、内容版式匹配不同的预处理策略。</div>
+            </div>
+          </div>
+        </article>
+
+        <article class="row">
+          <div class="topic">
+            <div class="num">03</div>
+            <div class="name">切片能力</div>
+          </div>
+          <div class="compare traditional">
+            <div class="compare-head">传统</div>
+            <div class="compare-body">
+              <div class="compare-text">提供有限几种切片方式，颗粒度和精准度难以控制。</div>
+            </div>
+          </div>
+          <div class="arrow" aria-hidden="true"></div>
+          <div class="compare modern">
+            <div class="compare-head">我们</div>
+            <div class="compare-body">
+              <div class="compare-text">有切片函数库，而且可以动态增加切片函数。</div>
+            </div>
+          </div>
+        </article>
+
+        <article class="row">
+          <div class="topic">
+            <div class="num">04</div>
+            <div class="name">建库策略</div>
+          </div>
+          <div class="compare traditional">
+            <div class="compare-head">传统</div>
+            <div class="compare-body">
+              <div class="compare-text">建库流程单一。</div>
+            </div>
+          </div>
+          <div class="arrow" aria-hidden="true"></div>
+          <div class="compare modern">
+            <div class="compare-head">我们</div>
+            <div class="compare-body">
+              <div class="compare-text">支持知识库建库策略组合，能按场景配置。</div>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <section class="footer" aria-label="页脚说明">
+        <div class="footer-card"><strong>传统方案</strong> 更像“统一上传 + 统一处理”，知识调用效果依赖通用规则。</div>
+        <div class="footer-card"><strong>KnowHub</strong> 通过策略化处理，把文档特性真正纳入知识构建过程。</div>
+      </section>
+    </main>
+  </body>
+</html>

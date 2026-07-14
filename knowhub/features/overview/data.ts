@@ -83,8 +83,8 @@ export function buildKnowHubFlowStages(
     },
     {
       key: "knowledge",
-      title: "生成知识内容",
-      summary: "把整理后的内容沉淀为可复用知识资产，面向业务场景组织。",
+      title: "构建知识库",
+      summary: "将整理后的内容沉淀为可复用知识资产，围绕业务主题、权限范围和使用场景组织知识库。",
       metric: "10 个知识库",
     },
     {
