@@ -174,13 +174,13 @@
 - [ ] 基于现有 `nextjs-build` 规则创建 AppFactory 默认 Coding Skill。
 - [ ] 增加 `SKILL.md + references + templates + validators` 的正式包结构。
 - [ ] 支持 references 按需读取，不把所有文档一次塞入上下文。
-- [ ] 默认模板使用 Next.js App Router、TypeScript、Tailwind、shadcn/ui 和统一基础主题。
-- [ ] 新项目自动创建 `app.yaml`、`dev_todo.md`、`dev_status.md` 等必要文件。
+- [x] 默认模板使用 Next.js App Router、TypeScript、Tailwind、shadcn/ui 和统一基础主题（Contract 模板已落地，应用源码由 Pi 生成）。
+- [x] 新项目自动创建 `app.yaml`、`dev_todo.md`、`dev_status.md` 等必要文件。
 
 ### 4.4 开发工作区 UI
 
 - [x] 对话区显示模型文本、Tool Call、审批、失败和完成状态（统一事件面板）。
-- [ ] 文件区显示文件树、内容、统一 Diff 和最近改动。
+- [x] 文件区提供 Workspace 文件树与内容 API，统一 Diff 和最近改动待补。
 - [ ] 日志区显示命令、任务和构建输出，支持停止长任务。
 - [ ] 支持刷新或重新进入项目后恢复必要会话和任务状态。
 - [ ] 三栏布局以实际开发工作区为主，不使用大 Hero 或大统计区挤占视口。
@@ -287,6 +287,6 @@
 - 本次完成：`阶段 2 能力 Registry 列表/详情；阶段 3 AppFactory 独立壳、项目库与创建 API`
 - 修改的关键文件：`features/apps/server.ts`、`features/workflows/server.ts`、`app/api/agenthub/v1/*`、`components/apps/*`、`components/workflows/*`
 - 已执行验证：`npm run typecheck`、`npm run build`、应用/业务流 API 创建与归档冒烟；浏览器服务不可用
-- 当前未完成：`阶段 2 能力执行适配；阶段 5 真实 Build Pipeline 与端到端验收；阶段 4 文件/Diff/日志持久化；现有 lint 既存错误`
+- 当前未完成：`阶段 2 能力执行适配；阶段 4 Diff/日志持久化；阶段 5 真实 Build Pipeline 与端到端验收；现有 lint 既存错误`
 - 阻塞/风险：`无`
-- 下一步唯一动作：`实现默认项目模板、Workspace 文件 API 与端到端真实项目验证`
+- 下一步唯一动作：`补齐 Preview/Build/Release 状态持久化并进行阶段 5 端到端验证`
