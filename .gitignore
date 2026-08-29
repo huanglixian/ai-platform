@@ -29,6 +29,7 @@
 /storage/**/sessions/
 /storage/**/builds/
 /storage/**/runtime/
+/storage/appfactory/transcripts/
 !/storage/agenthub/.gitkeep
 !/storage/appfactory/.gitkeep
 
