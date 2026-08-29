@@ -27,10 +27,6 @@ export default function AppFactoryLayout({
             >
               项目
             </Link>
-            <span className="rounded-md px-3 py-1.5 text-[#98a2b3]">模板</span>
-            <span className="rounded-md px-3 py-1.5 text-[#98a2b3]">
-              运行记录
-            </span>
             <Link
               href="/appfactory/settings"
               className="rounded-md px-3 py-1.5 text-[#667085] transition hover:bg-[#f6f8fb] hover:text-[#1a4d87]"

@@ -57,6 +57,7 @@ export function runWorkspaceCommand(
   root: string,
   command: string,
   timeoutMs = 30_000,
+  options: { nodeEnv?: string } = {},
 ) {
   if (/(^|\s)(rm\s+-rf|sudo|mkfs|shutdown|docker\s+run)/i.test(command)) {
     throw new Error("Command rejected by workspace policy");
@@ -70,8 +71,8 @@ export function runWorkspaceCommand(
       cwd: path.resolve(root),
       env: {
         PATH: `${path.join(process.cwd(), "node_modules/.bin")}:${process.env.PATH ?? ""}`,
-        NODE_ENV: process.env.NODE_ENV ?? "development",
-      },
+        NODE_ENV: options.nodeEnv ?? process.env.NODE_ENV ?? "development",
+      } as NodeJS.ProcessEnv,
     });
     let stdout = "";
     let stderr = "";

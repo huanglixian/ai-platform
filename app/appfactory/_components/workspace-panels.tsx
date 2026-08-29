@@ -15,6 +15,7 @@ export const workspaceEventLabel: Record<string, string> = {
   build: "构建",
   preview: "预览",
   deploy: "本地发布",
+  register: "发布到 AgentHub",
 };
 
 export function ProjectFileTree({

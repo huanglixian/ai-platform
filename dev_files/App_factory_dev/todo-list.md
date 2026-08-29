@@ -7,7 +7,7 @@
 - 总体状态：`进行中`
 - 当前阶段：`阶段 6：能力绑定、AgentHub 注册与最终交付`
 - 当前目标：`完成端到端验收并记录剩余限制`
-- 最近完成：`阶段 6 Capability Client/Gateway、来源展示、独立闭环与事实源清理；Pi Provider/模型配置与非交互 Harness；生成项目 ESLint 配置；阶段 5 Preview 重启失效识别；阶段 4 Pi cwd/会话持久化与取消回收、Workspace Runtime seam、默认 Coding Skill、职责层、预览打开、安全检查与三栏工作区`
+- 最近完成：`阶段 6 Capability Client/Gateway、来源展示、独立闭环与事实源清理；Pi Provider/模型配置与非交互 Harness；生成项目 ESLint 配置；Build 生产环境修复、健康部署地址注册与工作区发布入口；阶段 5 Preview 重启失效识别；阶段 4 Pi cwd/会话持久化与取消回收、Workspace Runtime seam、默认 Coding Skill、职责层、预览打开、安全检查与三栏工作区`
 - 最近验证：`Next.js 16.3.3；lint/typecheck/build/diff-check 通过；真实 DeepSeek Pi 自然语言修改文件成功；Preview→Check→Build→Release→Local Deployment→AgentHub 注册→应用中心可见闭环实测；文件读写与快照 Diff API 实测；AgentHub/AgentHub 页面与 API 均返回 200；localStorage 替代调用已清理；Chrome 桌面、平板、移动端视觉验收通过`
 - 阻塞项：`无`
 - 下一步：`根据后续反馈继续迭代模板、运行记录和流式事件体验`
@@ -243,7 +243,7 @@
 
 ### 6.2 注册 AgentHub
 
-- [x] 发布 API 支持本地 Release 后注册 AgentHub（UI 操作入口待细化）。
+- [x] 发布 API 支持本地 Release 后注册 AgentHub，项目活动面板已提供操作入口。
 - [x] 通过 `AgentHubClient` 幂等创建或更新 Application Registry 记录（以 externalId 查重）。
 - [x] 注册内容至少包括 producer、runtime、version、status、entryUrl、description 和 externalId。
 - [x] AgentHub 应用中心正确显示 AppFactory 来源、版本、状态并可打开应用。

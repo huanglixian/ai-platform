@@ -31,7 +31,12 @@ export async function POST(_: Request, context: { params: Promise<{ id: string }
     const stages = hasPackage ? [["lint", "eslint app"], ["typecheck", "npm run typecheck"], ["build", "npm run build"]] as const : [];
     for (const [stage, command] of stages) {
       buildRepository.update(build.id, "running", stage, log);
-      const result = await runWorkspaceCommand(project.workspacePath, command, 120_000);
+      const result = await runWorkspaceCommand(
+        project.workspacePath,
+        command,
+        120_000,
+        { nodeEnv: "production" },
+      );
       log += `\n[${stage}]\n${result.stdout}\n${result.stderr}`;
       if (result.code !== 0) throw new Error(`${stage} 失败`);
     }

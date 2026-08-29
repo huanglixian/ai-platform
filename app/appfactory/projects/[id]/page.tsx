@@ -530,6 +530,16 @@ export default function ProjectPage({
                 >
                   发布到本地
                 </button>
+                {project.agentHubMode !== "disabled" && (
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => void action("register")}
+                    className="rounded-lg bg-[#0368b3] px-3 py-2 text-xs font-medium text-white hover:bg-[#1a4d87] disabled:opacity-40"
+                  >
+                    发布到 AgentHub
+                  </button>
+                )}
                 {lastOperation && (
                   <button
                     type="button"
