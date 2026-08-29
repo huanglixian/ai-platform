@@ -5,12 +5,12 @@
 ## 进度摘要（持续维护）
 
 - 总体状态：`进行中`
-- 当前阶段：`阶段 2：AgentHub 能力注册与跨服务接口`
-- 当前目标：`建立 Capability Registry 与版本化跨服务接口`
-- 最近完成：`阶段 1 Application/Workflow Registry 前后端正式化`
-- 最近验证：`Next.js 16.3.3；typecheck/build 通过；应用 API 18 条、业务流 API 10 条、能力 API 61 条；非法字段 422；现有 lint 有 13 个既存错误`
+- 当前阶段：`阶段 6：能力绑定、AgentHub 注册与最终交付`
+- 当前目标：`完成端到端验收并记录剩余限制`
+- 最近完成：`阶段 5 Pipeline/Release/健康检查；阶段 6 外部密钥治理与应用开发入口`
+- 最近验证：`Next.js 16.3.3；typecheck/build 通过；应用 API 18 条、业务流 API 10 条、能力 API 61 条；Check→Build→Release 闭环；健康检查失败可回收；现有 lint 有 13 个既存错误`
 - 阻塞项：`无`
-- 下一步：`建立 Capability Registry 与 AgentHub v1 能力接口`
+- 下一步：`完成全量验收审计并记录剩余限制`
 
 状态约定：
 
@@ -284,9 +284,9 @@
 
 - 日期：`2026-08-29`
 - 当前阶段：`阶段 6`
-- 本次完成：`阶段 5 状态查询与阶段 6 交付文档、端到端 API 冒烟`
-- 修改的关键文件：`app/api/appfactory/v1/projects/[id]/status`、`app/appfactory/projects/[id]/page.tsx`、`.env.example`、`README.md`、`dev_files/dev_guide.md`
-- 已执行验证：`npm run typecheck`、`npm run build`、项目→Check→Build→Release API 闭环；注册在缺少 AgentHub 地址时按预期返回 502
-- 当前未完成：`Pi 真实模型执行、完整 Next.js Build/Standalone、Diff/日志持久化、浏览器视觉验证；lint 仍有既存错误`
+- 本次完成：`阶段 5 健康检查与 Pipeline；阶段 6 外部密钥治理、应用开发入口与交付记录`
+- 修改的关键文件：`app_factory/server/deployment.ts`、`app/api/appfactory/v1/projects/[id]/*`、`features/services/tools/tower-match.ts`、`lib/nav.ts`、`.env.example`
+- 已执行验证：`npm run typecheck`、`npm run build`、项目→Check→Build→Release API 闭环；注册在缺少 AgentHub 地址时按预期返回 502；健康检查脚本通过
+- 当前未完成：`Pi 真实模型执行、完整 Next.js Build/Standalone、Diff/日志持久化、AgentHub 注册成功路径、浏览器视觉验证；lint 仍有既存错误`
 - 阻塞/风险：`无`
-- 下一步唯一动作：`完成全量验收审计并记录剩余限制`
+- 下一步唯一动作：`补齐 Pi/Standalone/Diff 后再进行最终验收`
