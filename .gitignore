@@ -27,6 +27,7 @@
 /storage/**/*.db-*
 /storage/**/workspaces/
 /storage/**/sessions/
+/storage/appfactory/pi-sessions/
 /storage/**/builds/
 /storage/**/runtime/
 /storage/appfactory/transcripts/

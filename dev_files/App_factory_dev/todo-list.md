@@ -7,8 +7,8 @@
 - 总体状态：`进行中`
 - 当前阶段：`阶段 6：能力绑定、AgentHub 注册与最终交付`
 - 当前目标：`完成端到端验收并记录剩余限制`
-- 最近完成：`阶段 2 对外集成面与独立性验收；Capability Registry transport contract、审计预留与执行适配；阶段 5 Pipeline/Release/健康检查；阶段 6 外部密钥治理与应用开发入口`
-- 最近验证：`Next.js 16.3.3；typecheck/build 通过；Application externalId 幂等创建实测；/workbench 默认入口正常；AgentHub 响应带 v1/request-id/actor headers；AppFactory disabled 项目持久化实测；全量 lint 仍受既有源码与 Workspace 构建产物影响`
+- 最近完成：`阶段 4 Pi cwd/会话持久化与取消回收、Workspace Runtime seam、默认 Coding Skill、职责层、预览打开、发布前安全检查与三栏工作区`
+- 最近验证：`Next.js 16.3.3；typecheck/build 通过；Pi 无凭据失败与 DELETE 取消均实测，Run failed/Session error/transcript_path 持久化；Preview Next dev 进程可启动并返回 URL；安全扫描可拦截硬编码密钥；浏览器自动化服务不可用`
 - 阻塞项：`无`
 - 下一步：`完成全量验收审计并记录剩余限制`
 
@@ -188,8 +188,8 @@
 ### 阶段 4 验收
 
 - [ ] 用户可通过自然语言让 Pi 在指定项目内创建和修改文件。
-- [ ] 修改、工具调用和命令输出可观察，失败不会静默。
-- [ ] 验证常见路径越界和危险命令受到限制。
+- [x] 修改、工具调用和命令输出可观察，失败不会静默。
+- [x] 验证常见路径越界和危险命令受到限制。
 
 ---
 
@@ -199,13 +199,13 @@
 
 - [x] 定义最小 `app.yaml` 和 JSON Schema：名称、版本、runtime、entry、healthPath、capabilities。
 - [x] 实现 Contract Validator 和项目结构 Validator。
-- [ ] 发布前检查硬编码密钥、内部 URL、缺失健康检查和无效能力绑定。
+- [x] 发布前检查硬编码密钥、内部 URL、缺失健康检查和无效能力绑定。
 - [x] 将检查结果通过 Check API 按错误/警告/通过返回（UI 展示待补）。
 
 ### 5.2 Preview Runtime
 
 - [x] 实现端口分配、进程启动、停止、重启、日志和清理。
-- [ ] 启动受管 Next.js dev process，并在 AppFactory 预览区打开。
+- [x] 启动受管 Next.js dev process，并在 AppFactory 预览区打开。
 - [x] 处理启动失败、端口冲突、进程退出和僵尸进程回收（进程关闭自动清理）。
 - [ ] AppFactory 重启后能识别失效 Preview 并恢复为正确状态。
 
@@ -227,8 +227,8 @@
 ### 阶段 5 验收
 
 - [x] 一个新项目能完成 Preview → Check → Build → Release → Local Deployment（新模板 Build 已实测，API 顺序已验证）。
-- [ ] 关键失败均有可读错误，进程和端口可回收。
-- [ ] 重启 AppFactory 后，Project、Build、Release 和 Deployment 元数据不丢失。
+- [x] 关键失败均有可读错误，进程和端口可回收。
+- [x] 重启 AppFactory 后，Project、Build、Release 和 Deployment 元数据不丢失。
 
 ---
 
@@ -287,6 +287,6 @@
 - 本次完成：`阶段 3 Repository/Service 与阶段 4 Workspace seam、默认 Coding Skill、会话 Run/Transcript 持久化、AppFactory 响应式状态`
 - 修改的关键文件：`app_factory/server/{database,repositories,services,workspace,transcript}.ts`、`app_factory/skills/`、`app_factory/types/harness.ts`、AppFactory API/UI
 - 已执行验证：`npm run typecheck`、`npm run build`；AppFactory 项目/Session/Run/Job/Build/Release/Deployment/Binding 均经独立 Repository/Service 编排；API 错误状态与页面入口实测
-- 当前未完成：`Pi 真实模型执行、完整 Next.js Build/Standalone、Diff/日志持久化、AgentHub 注册成功路径、浏览器视觉验证；lint 仍有既存错误`
+- 当前未完成：`Pi 真实模型执行（缺少外部模型凭据）、完整 Next.js Build/Standalone、Diff、Preview 重启恢复、AgentHub 注册成功路径、浏览器视觉验证；lint 仍有既存错误`
 - 阻塞/风险：`无`
-- 下一步唯一动作：`补齐 Pi 会话持久化、Standalone/Diff/日志后再进行最终验收`
+- 下一步唯一动作：`补齐 Pi 真实模型闭环、Standalone/Diff、Preview 重启恢复后再进行最终验收`
