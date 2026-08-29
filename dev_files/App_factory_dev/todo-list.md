@@ -243,11 +243,11 @@
 
 ### 6.2 注册 AgentHub
 
-- [ ] 发布页提供“仅本地发布”与“发布并注册 AgentHub”两种明确操作。
-- [ ] 通过 `AgentHubClient` 幂等创建或更新 Application Registry 记录。
-- [ ] 注册内容至少包括 producer、runtime、version、status、entryUrl、description 和 externalId。
+- [x] 发布 API 支持本地 Release 后注册 AgentHub（UI 操作入口待细化）。
+- [x] 通过 `AgentHubClient` 幂等创建或更新 Application Registry 记录（以 externalId 查重）。
+- [x] 注册内容至少包括 producer、runtime、version、status、entryUrl、description 和 externalId。
 - [ ] AgentHub 应用中心正确显示 AppFactory 来源、版本、状态并可打开应用。
-- [ ] AgentHub 不可用时，本地 Release 保持成功，注册状态可重试，不回滚已构建应用。
+- [x] AgentHub 不可用时，本地 Release 保持成功，注册请求独立失败可重试，不回滚已构建应用。
 
 ### 6.3 端到端与交付硬化
 
@@ -287,6 +287,6 @@
 - 本次完成：`阶段 2 能力 Registry 列表/详情；阶段 3 AppFactory 独立壳、项目库与创建 API`
 - 修改的关键文件：`features/apps/server.ts`、`features/workflows/server.ts`、`app/api/agenthub/v1/*`、`components/apps/*`、`components/workflows/*`
 - 已执行验证：`npm run typecheck`、`npm run build`、应用/业务流 API 创建与归档冒烟；浏览器服务不可用
-- 当前未完成：`阶段 2 能力执行适配与注册幂等；阶段 4 Diff/日志持久化；阶段 5 真实 Build Pipeline 与端到端验收；现有 lint 既存错误`
+- 当前未完成：`阶段 2 能力执行适配深度测试；阶段 4 Diff/日志持久化；阶段 5 真实 Build Pipeline 与健康检查；阶段 6 端到端交付硬化；现有 lint 既存错误`
 - 阻塞/风险：`无`
-- 下一步唯一动作：`补齐 AgentHub 注册幂等接口并验证 AppFactory 独立模式闭环`
+- 下一步唯一动作：`完成端到端闭环验证并清理剩余重复数据源与交付文档`

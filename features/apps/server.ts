@@ -42,6 +42,10 @@ export function listApplications() {
 }
 
 export function createApplication(input: z.infer<typeof applicationInputSchema>) {
+  if (input.externalId) {
+    const existing = getAgentHubDatabase().prepare("SELECT id FROM applications WHERE external_id = ?").get(input.externalId) as { id: string } | undefined;
+    if (existing) return updateApplication(existing.id, input);
+  }
   const now = new Date().toISOString();
   const id = `app-${crypto.randomUUID()}`;
   getAgentHubDatabase().prepare(`INSERT INTO applications
