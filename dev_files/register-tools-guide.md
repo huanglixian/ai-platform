@@ -21,7 +21,7 @@
 - 请求失败时，统一返回 `{ success: false, error: "错误原因" }` 格式。
 
 ### 4. 汇总注册
-打开 [features/services/tool-registry.ts](file:///Users/huanglixian-m2/Documents/LienCode/Ai_Platform/features/services/tool-registry.ts)，将新建的 Tool 文件引入，并在导出的 `toolRegistry` 对象中注册一个唯一的键名（例如 `"your.service.api"`）。
+打开 `features/capabilities/implementation-registry.ts`，将新建的 Tool 文件引入，并在实现映射中注册一个唯一的 `handlerKey`（例如 `"your.service.api"`）。随后在 AgentHub Capability Registry 中为该 handlerKey 配置能力元数据。
 
 > [!NOTE]
 > Vercel AI SDK 的工具键名中不能包含点号（`.`）。后端在运行时会自动将键名中的点号替换为下划线（`_`）以兼容 SDK，前端展示时会重新转换回点号。
@@ -43,7 +43,7 @@
 
 您可以直接参考以下两处源码：
 - **具体 Tool 实现**：`features/services/tools/tower-match.ts`
-- **汇总注册表**：`features/services/tool-registry.ts`
+- **执行适配器**：`features/capabilities/implementation-registry.ts`
 
 ### 1. 业务 Tool 独立文件模版 (`features/services/tools/demo.ts`)
 
@@ -78,7 +78,7 @@ export const demoTool = tool({
 });
 ```
 
-### 2. 注册表引入模版 (`features/services/tool-registry.ts`)
+### 2. 执行适配器引入模版 (`features/capabilities/implementation-registry.ts`)
 
 ```typescript
 import { towerMatchSearch } from "./tools/tower-match";

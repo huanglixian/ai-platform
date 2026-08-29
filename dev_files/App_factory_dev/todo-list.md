@@ -7,8 +7,8 @@
 - 总体状态：`进行中`
 - 当前阶段：`阶段 6：能力绑定、AgentHub 注册与最终交付`
 - 当前目标：`完成端到端验收并记录剩余限制`
-- 最近完成：`阶段 5 Pipeline/Release/健康检查；阶段 6 外部密钥治理与应用开发入口`
-- 最近验证：`Next.js 16.3.3；typecheck/build 通过；应用 API 18 条、业务流 API 10 条、能力 API 61 条；Check→Build→Release 闭环；健康检查失败可回收；现有 lint 有 13 个既存错误`
+- 最近完成：`阶段 2 Capability Registry 执行适配与 invoke；阶段 5 Pipeline/Release/健康检查；阶段 6 外部密钥治理与应用开发入口`
+- 最近验证：`Next.js 16.3.3；typecheck/build 通过；能力 Tool 26 条（2 条可执行 handler）；invoke dry-run/参数校验/禁用/缺失 handler/外部错误/超时均实测；全量 lint 仍受既有源码与 Workspace 构建产物影响`
 - 阻塞项：`无`
 - 下一步：`完成全量验收审计并记录剩余限制`
 
@@ -94,11 +94,11 @@
 - [x] 定义正式 Capability DTO：`id/version/name/description/kind/protocol/schema/handlerKey/endpoint/credentialRef/status/availability`。
 - [x] 建立 `capabilities` 表、migration、seed、Repository 和 Service。
 - [x] 将现有 tools、services、skills 的展示元数据迁入统一 Registry。
-- [ ] 保留代码实现注册表，但仅作为 `handlerKey → implementation` 的执行适配器。
-- [ ] 工作台可从统一 Registry 取得可用能力并继续正常执行现有 Tool。
+- [x] 保留代码实现注册表，但仅作为 `handlerKey → implementation` 的执行适配器。
+- [x] 工作台可从统一 Registry 取得可用能力并继续正常执行现有 Tool。
 - [x] 外部业务 API 的 URL 和 Key 改由环境变量/Secret Resolver 提供，删除源码明文密钥。
-- [x] 实现能力列表、详情及必要的 test/invoke API（列表/详情已完成）。
-- [ ] 验证 Schema、禁用状态、缺失 handler、超时和外部错误处理。
+- [x] 实现能力列表、详情及必要的 test/invoke API（支持 dry-run、参数校验和受控执行）。
+- [x] 验证 Schema、禁用状态、缺失 handler、超时和外部错误处理（参数/禁用/缺失 handler/外部未配置已实测）。
 
 ### 2.2 AgentHub 对外集成面
 
@@ -111,8 +111,8 @@
 
 ### 阶段 2 验收
 
-- [ ] 能力中心展示和实际执行使用同一 Registry 事实源。
-- [ ] AppFactory 所需的能力查询和应用注册接口可独立调用。
+- [x] 能力中心展示和实际执行使用同一 Registry 事实源。
+- [x] AppFactory 所需的能力查询和应用注册接口可独立调用。
 - [ ] AgentHub 不依赖 AppFactory 才能运行。
 
 ---
@@ -284,9 +284,9 @@
 
 - 日期：`2026-08-29`
 - 当前阶段：`阶段 6`
-- 本次完成：`阶段 5 健康检查与 Pipeline；阶段 6 外部密钥治理、应用开发入口与交付记录`
-- 修改的关键文件：`app_factory/server/deployment.ts`、`app/api/appfactory/v1/projects/[id]/*`、`features/services/tools/tower-match.ts`、`lib/nav.ts`、`.env.example`
-- 已执行验证：`npm run typecheck`、`npm run build`、项目→Check→Build→Release API 闭环；注册在缺少 AgentHub 地址时按预期返回 502；健康检查脚本通过
+- 本次完成：`阶段 2 Capability Registry 执行适配与 invoke API`
+- 修改的关键文件：`features/capabilities/{server,execution,implementation-registry}.ts`、`features/workbench/{capability-context,chat-service}.ts`、`app/api/agenthub/v1/capabilities/[id]/invoke/route.ts`
+- 已执行验证：`npm run typecheck`、`npm run build`；Tool Registry 返回 26 条且 2 条绑定 handler；dry-run、参数校验、禁用、缺失 handler、外部错误和 100ms 超时均按预期返回
 - 当前未完成：`Pi 真实模型执行、完整 Next.js Build/Standalone、Diff/日志持久化、AgentHub 注册成功路径、浏览器视觉验证；lint 仍有既存错误`
 - 阻塞/风险：`无`
-- 下一步唯一动作：`补齐 Pi/Standalone/Diff 后再进行最终验收`
+- 下一步唯一动作：`补齐 Pi 会话持久化、Standalone/Diff/日志后再进行最终验收`

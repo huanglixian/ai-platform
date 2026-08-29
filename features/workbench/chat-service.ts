@@ -7,7 +7,8 @@ import type { WorkbenchChatMessage, WorkbenchRuntimeState } from "@/features/wor
 import { getWorkbenchCapabilityContext } from "@/features/workbench/capability-context";
 import { buildWorkbenchRecommendationPrompt } from "@/features/workbench/recommendation-prompt";
 import { buildSkillExecutionPrompt } from "@/features/workbench/skill-execution-prompt";
-import { toolRegistry } from "@/features/services/tool-registry";
+import { getCapabilityImplementation } from "@/features/capabilities/implementation-registry";
+import { getCapabilityByHandlerKey } from "@/features/capabilities/server";
 
 function toModelMessages(messages: WorkbenchChatMessage[]): ModelMessage[] {
   return messages
@@ -89,8 +90,15 @@ export async function streamWorkbenchRecommendation(
       const activeTools: Record<string, any> = {};
 
       for (const toolName of allowedToolsNames) {
-        if (toolRegistry[toolName]) {
-          activeTools[toolName.replace(/\./g, "_")] = toolRegistry[toolName]; // Vercel AI SDK 键名中不能有点，将点替换为下划线以便兼容
+        const capability = getCapabilityByHandlerKey(toolName);
+        const implementation = getCapabilityImplementation(toolName);
+        if (
+          capability?.status === "active" &&
+          capability.availability === "available" &&
+          implementation
+        ) {
+          // Vercel AI SDK 键名中不能有点，将点替换为下划线以便兼容。
+          activeTools[toolName.replace(/\./g, "_")] = implementation;
         }
       }
 
@@ -132,5 +140,4 @@ export async function streamWorkbenchRecommendation(
     activeSkillId: null,
   };
 }
-
 

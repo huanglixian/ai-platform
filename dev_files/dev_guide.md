@@ -187,7 +187,7 @@ Platform 业务数据与工具：
 - 通用工具类型定义：`features/tools/types.ts`
 - 业务API数据：`features/services/data.ts`
 - 业务API类型定义：`features/services/types.ts`
-- 业务API Tools汇总注册表：`features/services/tool-registry.ts`
+- 业务 API 的 `handlerKey → implementation` 适配器：`features/capabilities/implementation-registry.ts`；能力状态与元数据以 AgentHub Registry 为准。
 - 业务API杆塔匹配工具：`features/services/tools/tower-match.ts`
 - 技能中心数据：`features/skills/data.ts`
 - 技能中心类型定义：`features/skills/types.ts`

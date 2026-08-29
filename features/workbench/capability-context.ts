@@ -1,6 +1,4 @@
-import { serviceRecords } from "@/features/services/data";
-import { listSkillRecords } from "@/features/skills/data";
-import { toolRecords } from "@/features/tools/data";
+import { listCapabilities } from "@/features/capabilities/server";
 import type { WorkbenchCapabilitySummary } from "@/features/workbench/chat-types";
 
 const maxItemsPerKind = 10;
@@ -48,19 +46,17 @@ function toContextBlock(title: string, items: WorkbenchCapabilitySummary[]) {
 }
 
 export function getWorkbenchCapabilityContext(query: string) {
-  const capabilities: WorkbenchCapabilitySummary[] = [
-    ...listSkillRecords().map((item) => ({
+  const capabilities: WorkbenchCapabilitySummary[] = listCapabilities()
+    .filter((item) => item.status === "active" && item.availability === "available")
+    .map((item) => ({
       id: item.id,
-      kind: "skill" as const,
+      kind: item.kind,
       name: item.name,
       description: item.description,
-      category: item.category,
-      invokeType: "Skill.md",
+      category: typeof item.schema.category === "string" ? item.schema.category : "未分类",
+      invokeType: item.protocol,
       featured: false,
-    })),
-    ...toolRecords.map((item) => ({ ...item, kind: "tool" as const })),
-    ...serviceRecords.map((item) => ({ ...item, kind: "service" as const })),
-  ];
+    }));
 
   const grouped = {
     skills: capabilities.filter((item) => item.kind === "skill"),
