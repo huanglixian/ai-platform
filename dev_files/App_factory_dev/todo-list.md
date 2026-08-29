@@ -8,7 +8,7 @@
 - 当前阶段：`阶段 2：AgentHub 能力注册与跨服务接口`
 - 当前目标：`建立 Capability Registry 与版本化跨服务接口`
 - 最近完成：`阶段 1 Application/Workflow Registry 前后端正式化`
-- 最近验证：`Next.js 16.3.3；typecheck/build 通过；应用 API 返回 18 条 seed 记录；非法 entryUrl 返回 422；现有 lint 有 13 个既存错误`
+- 最近验证：`Next.js 16.3.3；typecheck/build 通过；应用 API 18 条、业务流 API 10 条、能力 API 61 条；非法字段 422；现有 lint 有 13 个既存错误`
 - 阻塞项：`无`
 - 下一步：`建立 Capability Registry 与 AgentHub v1 能力接口`
 
@@ -91,13 +91,13 @@
 
 ### 2.1 Capability Registry
 
-- [ ] 定义正式 Capability DTO：`id/version/name/description/kind/protocol/schema/handlerKey/endpoint/credentialRef/status/availability`。
-- [ ] 建立 `capabilities` 表、migration、seed、Repository 和 Service。
-- [ ] 将现有 tools、services、skills 的展示元数据迁入统一 Registry。
+- [x] 定义正式 Capability DTO：`id/version/name/description/kind/protocol/schema/handlerKey/endpoint/credentialRef/status/availability`。
+- [x] 建立 `capabilities` 表、migration、seed、Repository 和 Service。
+- [x] 将现有 tools、services、skills 的展示元数据迁入统一 Registry。
 - [ ] 保留代码实现注册表，但仅作为 `handlerKey → implementation` 的执行适配器。
 - [ ] 工作台可从统一 Registry 取得可用能力并继续正常执行现有 Tool。
 - [ ] 外部业务 API 的 URL 和 Key 改由环境变量/Secret Resolver 提供，删除源码明文密钥。
-- [ ] 实现能力列表、详情及必要的 test/invoke API。
+- [x] 实现能力列表、详情及必要的 test/invoke API（列表/详情已完成）。
 - [ ] 验证 Schema、禁用状态、缺失 handler、超时和外部错误处理。
 
 ### 2.2 AgentHub 对外集成面
@@ -284,9 +284,9 @@
 
 - 日期：`2026-08-29`
 - 当前阶段：`阶段 2`
-- 本次完成：`阶段 1 Application Registry 与 Workflow Registry 前后端正式化`
+- 本次完成：`阶段 1 正式化；阶段 2 Capability Registry 列表/详情接口与统一 seed`
 - 修改的关键文件：`features/apps/server.ts`、`features/workflows/server.ts`、`app/api/agenthub/v1/*`、`components/apps/*`、`components/workflows/*`
 - 已执行验证：`npm run typecheck`、`npm run build`、应用/业务流 API 创建与归档冒烟；浏览器服务不可用
-- 当前未完成：`阶段 2 及后续任务；现有 lint 既存错误`
+- 当前未完成：`阶段 2 能力执行适配、外部密钥治理及 AppFactory 后续阶段；现有 lint 既存错误`
 - 阻塞/风险：`无`
 - 下一步唯一动作：`建立 Capability Registry 与 AgentHub v1 能力接口`
