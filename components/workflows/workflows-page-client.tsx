@@ -5,7 +5,6 @@ import Link from "next/link";
 import { Plus, Trash2 } from "lucide-react";
 
 import { CardPageFrame } from "@/components/shared/card-page-frame";
-import { getLocalWorkflows, saveLocalWorkflows } from "@/features/workflows/mock-data";
 import { Workflow } from "@/features/workflows/types";
 
 const ITEM_WIDTH = 300;
@@ -104,52 +103,21 @@ export function WorkflowsPageClient() {
   const [newFlowDesc, setNewFlowDesc] = useState("");
 
   useEffect(() => {
-    const data = getLocalWorkflows();
-    Promise.resolve().then(() => {
-      setList(data);
-    });
+    fetch("/api/agenthub/v1/workflows").then((r) => r.json()).then((payload) => setList(payload.data ?? []));
   }, []);
 
   function handleCreate() {
     const trimmedName = newFlowName.trim();
     if (!trimmedName) return;
 
-    const newFlow: Workflow = {
-      id: `workflow-${Date.now()}`,
-      name: trimmedName,
-      description: newFlowDesc.trim() || "暂无描述",
-      category: "业务审批",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      nodes: [
-        {
-          id: "start-1",
-          type: "start",
-          position: { x: 100, y: 150 },
-          data: {
-            label: "开始",
-            description: "接收输入参数",
-            config: {},
-          },
-        },
-      ],
-      edges: [],
-    };
-    const updated = [newFlow, ...list];
-    setList(updated);
-    saveLocalWorkflows(updated);
-    setShowModal(false);
-    setNewFlowName("");
-    setNewFlowDesc("");
+    fetch("/api/agenthub/v1/workflows", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ name: trimmedName, description: newFlowDesc.trim() || "暂无描述", category: "业务审批", nodes: [{ id: "start-1", type: "start", position: { x: 100, y: 150 }, data: { label: "开始", description: "接收输入参数", config: {} } }], edges: [] }) }).then((r) => r.json()).then((payload) => { setList((current) => [payload.data, ...current]); setShowModal(false); setNewFlowName(""); setNewFlowDesc(""); });
   }
 
   function handleDelete(id: string, event: React.MouseEvent) {
     event.preventDefault();
     event.stopPropagation();
     if (!confirm("确定删除该业务流吗？")) return;
-    const updated = list.filter((item) => item.id !== id);
-    setList(updated);
-    saveLocalWorkflows(updated);
+    fetch(`/api/agenthub/v1/workflows/${id}`, { method: "DELETE" }).then(() => setList((current) => current.filter((item) => item.id !== id)));
   }
 
   const normalizedKeyword = keyword.trim().toLowerCase();

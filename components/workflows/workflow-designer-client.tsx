@@ -18,7 +18,6 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 
-import { getLocalWorkflows, saveLocalWorkflows } from "@/features/workflows/mock-data";
 import { Workflow, WorkflowNode } from "@/features/workflows/types";
 import { CustomWorkflowNode, CustomNodeProps } from "./nodes/custom-node";
 import { NodePropertiesPanel } from "./panel/node-properties-panel";
@@ -43,15 +42,7 @@ export function WorkflowDesignerClient({ workflowId }: Props) {
 
   // 加载数据
   useEffect(() => {
-    const all = getLocalWorkflows();
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setWorkflows(all);
-    const matched = all.find((w) => w.id === workflowId);
-    if (matched) {
-      setCurrentWorkflow(matched);
-      setNodes(matched.nodes as Node[]);
-      setEdges(matched.edges as Edge[]);
-    }
+    fetch(`/api/agenthub/v1/workflows/${workflowId}`).then((r) => r.json()).then((payload) => { const matched = payload.data as Workflow | undefined; if (matched) { setWorkflows([matched]); setCurrentWorkflow(matched); setNodes(matched.nodes as Node[]); setEdges(matched.edges as Edge[]); } });
   }, [workflowId, setNodes, setEdges]);
 
   // 自定义节点类型定义
@@ -126,10 +117,7 @@ export function WorkflowDesignerClient({ workflowId }: Props) {
       })),
       updatedAt: new Date().toISOString()
     };
-    const updatedList = workflows.map((w) => (w.id === workflowId ? updatedFlow : w));
-    setWorkflows(updatedList);
-    saveLocalWorkflows(updatedList);
-    alert("保存成功！");
+    fetch(`/api/agenthub/v1/workflows/${workflowId}`, { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify({ name: updatedFlow.name, description: updatedFlow.description, category: updatedFlow.category, nodes: updatedFlow.nodes, edges: updatedFlow.edges }) }).then((r) => { if (!r.ok) throw new Error("保存失败"); setCurrentWorkflow(updatedFlow); alert("保存成功！"); }).catch((error: Error) => alert(error.message));
   }
 
   if (!currentWorkflow) {

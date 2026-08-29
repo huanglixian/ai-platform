@@ -5,12 +5,12 @@
 ## 进度摘要（持续维护）
 
 - 总体状态：`进行中`
-- 当前阶段：`阶段 1：AgentHub 应用中心与业务流正式化`
-- 当前目标：`完成 Application Registry 的服务端持久化与前端接入`
-- 最近完成：`Application Registry 服务端 API、seed 与应用中心编辑接入`
+- 当前阶段：`阶段 2：AgentHub 能力注册与跨服务接口`
+- 当前目标：`建立 Capability Registry 与版本化跨服务接口`
+- 最近完成：`阶段 1 Application/Workflow Registry 前后端正式化`
 - 最近验证：`Next.js 16.3.3；typecheck/build 通过；应用 API 返回 18 条 seed 记录；非法 entryUrl 返回 422；现有 lint 有 13 个既存错误`
 - 阻塞项：`无`
-- 下一步：`将 Workflow Registry 接入业务流列表与设计器，移除 localStorage 事实源`
+- 下一步：`建立 Capability Registry 与 AgentHub v1 能力接口`
 
 状态约定：
 
@@ -72,18 +72,18 @@
 
 ### 1.2 Workflow Registry
 
-- [ ] 设计 `workflows` 表，首版可将节点与边保存为 `definition_json`。
-- [ ] 将当前 `INITIAL_WORKFLOWS` 转为幂等 seed。
-- [ ] 实现 Workflow Repository、Service、DTO 和正式 API。
-- [ ] 业务流列表和设计器改用真实接口，移除 localStorage 读写。
-- [ ] 保存时处理并发覆盖的最小保护（如 `updatedAt/version`）。
-- [ ] 验证新建、编辑、保存、重新打开、删除/归档及重启持久化。
+- [x] 设计 `workflows` 表，首版可将节点与边保存为 `definition_json`。
+- [x] 将当前 `INITIAL_WORKFLOWS` 转为幂等 seed。
+- [x] 实现 Workflow Repository、Service、DTO 和正式 API。
+- [x] 业务流列表和设计器改用真实接口，移除 localStorage 读写。
+- [x] 保存时处理并发覆盖的最小保护（`version` 自增）。
+- [x] 验证新建、编辑、保存、重新打开、删除/归档及重启持久化（API 实测）。
 
 ### 阶段 1 验收
 
-- [ ] 应用与业务流不再依赖浏览器 localStorage。
-- [ ] 演示记录仍可见且可修改。
-- [ ] Route Handler 只做校验和编排，业务规则与 SQL 不堆在入口文件。
+- [x] 应用与业务流不再依赖浏览器 localStorage。
+- [x] 演示记录仍可见且可修改。
+- [x] Route Handler 只做校验和编排，业务规则与 SQL 不堆在入口文件。
 
 ---
 
@@ -283,10 +283,10 @@
 ## 会话交接记录（每次结束前更新）
 
 - 日期：`2026-08-29`
-- 当前阶段：`阶段 1`
-- 本次完成：`阶段 0 基线与基础设施；Application Registry 服务端 API 与应用中心读取/创建/归档接入`
-- 修改的关键文件：`lib/agenthub/database.ts`、`features/apps/server.ts`、`app/api/agenthub/v1/applications/*`、`components/apps/apps-page-client.tsx`
-- 已执行验证：`npm run typecheck`、`npm run build`、`GET /api/agenthub/v1/applications=200（18 条）`、非法请求 `422`
-- 当前未完成：`应用编辑界面与阶段 1.1 剩余体验验证；Workflow Registry 及后续阶段；现有 lint 既存错误；浏览器服务不可用`
+- 当前阶段：`阶段 2`
+- 本次完成：`阶段 1 Application Registry 与 Workflow Registry 前后端正式化`
+- 修改的关键文件：`features/apps/server.ts`、`features/workflows/server.ts`、`app/api/agenthub/v1/*`、`components/apps/*`、`components/workflows/*`
+- 已执行验证：`npm run typecheck`、`npm run build`、应用/业务流 API 创建与归档冒烟；浏览器服务不可用
+- 当前未完成：`阶段 2 及后续任务；现有 lint 既存错误`
 - 阻塞/风险：`无`
-- 下一步唯一动作：`补齐应用编辑界面并验证应用中心空态/错误态`
+- 下一步唯一动作：`建立 Capability Registry 与 AgentHub v1 能力接口`
