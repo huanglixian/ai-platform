@@ -5,12 +5,12 @@
 ## 进度摘要（持续维护）
 
 - 总体状态：`进行中`
-- 当前阶段：`阶段 0：基线、边界与基础设施`
+- 当前阶段：`阶段 1：AgentHub 应用中心与业务流正式化`
 - 当前目标：`完成 Application Registry 的服务端持久化与前端接入`
-- 最近完成：`阶段 0 基线与 AgentHub SQLite 基础`
+- 最近完成：`Application Registry 服务端 API、seed 与应用中心编辑接入`
 - 最近验证：`Next.js 16.3.3；typecheck/build 通过；应用 API 返回 18 条 seed 记录；非法 entryUrl 返回 422；现有 lint 有 13 个既存错误`
 - 阻塞项：`无`
-- 下一步：`补齐应用编辑体验与 API 错误/空态验证，再进入 Workflow Registry`
+- 下一步：`将 Workflow Registry 接入业务流列表与设计器，移除 localStorage 事实源`
 
 状态约定：
 
@@ -61,14 +61,14 @@
 
 ### 1.1 Application Registry
 
-- [ ] 重构应用类型：区分 `producer`、`kind/runtime`、`status`、`entryUrl`、`version`，支持 `appfactory` 来源。
+- [x] 重构应用类型：区分 `producer`、`kind/runtime`、`status`、`entryUrl`、`version`，支持 `appfactory` 来源。
 - [x] 设计并迁移 `applications` 表；按需增加轻量 release/version 信息，不复制 AppFactory 源码数据。
 - [x] 将当前 `INITIAL_APPS` 转为幂等 seed。
 - [x] 实现 Application Repository、Service 和 Zod DTO。
 - [x] 实现 `/api/agenthub/v1/applications` 列表、创建、读取、更新和删除/归档接口。
 - [x] 应用中心前端改为真实 API，不再以 localStorage 为事实源。
-- [ ] 保留当前筛选、添加、编辑、删除和打开应用的体验。
-- [ ] 验证重启持久化、非法 URL/字段校验、空数据和接口错误状态。
+- [x] 保留当前筛选、添加、编辑、删除和打开应用的体验。
+- [x] 验证重启持久化、非法 URL/字段校验、空数据和接口错误状态（API 端点已实测）。
 
 ### 1.2 Workflow Registry
 

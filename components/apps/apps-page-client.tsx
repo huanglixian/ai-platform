@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AlertTriangle, Check, Copy, RefreshCw, Trash2, X } from "lucide-react";
+import { AlertTriangle, Check, Copy, Pencil, RefreshCw, Trash2, X } from "lucide-react";
 
 import { CardPageFrame } from "@/components/shared/card-page-frame";
 import { AppType, PlatformSource, PublishedApp } from "@/features/apps/types";
@@ -33,9 +33,10 @@ type AppCardProps = {
   onSelect: (app: PublishedApp) => void;
   onCopy: (id: string, appUrl: string, event: React.MouseEvent) => void;
   onDelete: (id: string, event: React.MouseEvent) => void;
+  onEdit: (app: PublishedApp, event: React.MouseEvent) => void;
 };
 
-function AppCard({ app, copied, onSelect, onCopy, onDelete }: AppCardProps) {
+function AppCard({ app, copied, onSelect, onCopy, onDelete, onEdit }: AppCardProps) {
   const sourceStyle = sourceStyles[app.source];
 
   return (
@@ -79,6 +80,7 @@ function AppCard({ app, copied, onSelect, onCopy, onDelete }: AppCardProps) {
             >
               {copied ? <Check size={14} /> : <Copy size={14} />}
             </button>
+            <button type="button" onClick={(event) => onEdit(app, event)} className="flex h-6 w-6 items-center justify-center rounded text-slate-400 transition-all hover:bg-slate-50 hover:text-primary" title="编辑应用"><Pencil size={14} /></button>
             <button
               type="button"
               onClick={(event) => onDelete(app.id, event)}
@@ -121,6 +123,7 @@ export function AppsPageClient() {
   const [mounted, setMounted] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [selectedApp, setSelectedApp] = useState<PublishedApp | null>(null);
+  const [editingApp, setEditingApp] = useState<PublishedApp | null>(null);
   const [activeTab, setActiveTab] = useState<(typeof APP_TABS)[number]>("全部");
   const [keyword, setKeyword] = useState("");
 
@@ -183,6 +186,19 @@ export function AppsPageClient() {
       .catch((error: Error) => setFormError(error.message));
   }
 
+  function handleEdit(app: PublishedApp, event: React.MouseEvent) {
+    event.preventDefault(); event.stopPropagation();
+    setEditingApp(app); setName(app.name); setDesc(app.description); setSource(app.source); setAppType(app.appType); setUrl(app.url); setFormError(""); setShowModal(true);
+  }
+
+  function handleSubmit() {
+    if (!editingApp) return handleCreate();
+    const trimmedName = name.trim(); const trimmedUrl = url.trim();
+    if (!trimmedName || !trimmedUrl) { setFormError("请完整填写应用名称和访问链接"); return; }
+    fetch(`/api/agenthub/v1/applications/${editingApp.id}`, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ name: trimmedName, description: desc.trim(), producer: source, kind: appType, entryUrl: trimmedUrl }) })
+      .then((response) => response.json().then((payload) => ({ response, payload }))).then(({ response, payload }) => { if (!response.ok) throw new Error(payload.error?.message || "保存失败"); setList((current) => current.map((item) => item.id === editingApp.id ? payload.data : item)); setEditingApp(null); setShowModal(false); }).catch((error: Error) => setFormError(error.message));
+  }
+
   function handleDelete(id: string, event: React.MouseEvent) {
     event.preventDefault();
     event.stopPropagation();
@@ -239,6 +255,7 @@ export function AppsPageClient() {
       onSelect={handleSelectApp}
       onCopy={handleCopy}
       onDelete={handleDelete}
+      onEdit={handleEdit}
     />
   );
 
@@ -289,7 +306,7 @@ export function AppsPageClient() {
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
           <div className="w-full max-w-md rounded-[10px] border border-border bg-white p-6 shadow-2xl animate-in fade-in-50 zoom-in-95 duration-200">
-            <h3 className="mb-4 text-sm font-bold text-title">发布已有应用</h3>
+            <h3 className="mb-4 text-sm font-bold text-title">{editingApp ? "编辑应用" : "发布已有应用"}</h3>
 
             {formError && (
               <div className="mb-4 flex items-center gap-2 rounded-lg border border-rose-100 bg-rose-50 p-2.5 text-xs text-rose-600">
@@ -355,17 +372,17 @@ export function AppsPageClient() {
             <div className="mt-6 flex justify-end gap-2.5">
               <button
                 type="button"
-                onClick={() => setShowModal(false)}
+                onClick={() => { setShowModal(false); setEditingApp(null); }}
                 className="rounded-lg border border-border px-3.5 py-2 text-xs font-semibold text-slate-600 transition-colors hover:bg-slate-50"
               >
                 取消
               </button>
               <button
                 type="button"
-                onClick={handleCreate}
+                onClick={handleSubmit}
                 className="rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-white transition-all hover:brightness-105"
               >
-                发布应用
+                {editingApp ? "保存修改" : "发布应用"}
               </button>
             </div>
           </div>

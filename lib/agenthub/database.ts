@@ -51,6 +51,7 @@ const migrations = [
       updated_at TEXT NOT NULL
     );`,
   },
+  { id: "002_workflow_category", sql: "ALTER TABLE workflows ADD COLUMN category TEXT NOT NULL DEFAULT '业务审批';" },
 ];
 
 export function getAgentHubDatabase(): Database.Database {
