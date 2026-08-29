@@ -9,7 +9,7 @@
 - 当前目标：`完成端到端验收并记录剩余限制`
 - 最近完成：`阶段 6 Capability Client/Gateway、来源展示、独立闭环与事实源清理；阶段 5 Preview 重启失效识别；阶段 4 Pi cwd/会话持久化与取消回收、Workspace Runtime seam、默认 Coding Skill、职责层、预览打开、安全检查与三栏工作区`
 - 最近验证：`Next.js 16.3.3；typecheck/build 通过；独立模式 Check→Build→Release→Deployment 健康检查闭环实测；AgentHub/AgentHub 页面与 API 均返回 200；localStorage 替代调用已清理；浏览器自动化服务不可用`
-- 阻塞项：`无`
+- 阻塞项：`外部 Pi/AgentHub 凭据与浏览器自动化服务不可用，相关真实链路和视觉验收暂无法完成`
 - 下一步：`完成全量验收审计并记录剩余限制`
 
 状态约定：
@@ -284,9 +284,9 @@
 
 - 日期：`2026-08-29`
 - 当前阶段：`阶段 6`
-- 本次完成：`阶段 5 Preview 重启失效识别与恢复语义`
-- 修改的关键文件：`app_factory/server/preview.ts`、`app/appfactory/projects/[id]/page.tsx`、`dev_files/App_factory_dev/todo-list.md`
-- 已执行验证：`npm run typecheck`、`npm run build`；Preview 进程启动/URL 返回/停止以及服务重启后 stale 状态识别均实测
-- 当前未完成：`Pi 真实模型执行（缺少外部模型凭据）、Diff、AgentHub 注册成功路径、浏览器视觉验证；lint 仍有既存错误`
-- 阻塞/风险：`无`
-- 下一步唯一动作：`补齐 Pi 真实模型闭环、Diff、AgentHub 注册成功路径后再进行最终验收`
+- 本次完成：`阶段 6 能力网关、Standalone 构建产物、交付审计与剩余限制核对`
+- 修改的关键文件：`app_factory/`、`features/capabilities/`、`features/apps/`、`app/appfactory/`、`dev_files/dev_guide.md`
+- 已执行验证：`npm run typecheck`、`npm run build`、关键 AppFactory/AgentHub API 与页面健康检查；新项目 Contract Check → Build → Release → Local Deployment 顺序实测；能力调用成功/失败/超时/禁用分支实测；Pi 无凭据取消与 transcript 持久化实测；重启后 Preview stale 识别实测
+- 当前未完成：`Pi 真实模型文件编辑（缺少外部模型凭据）、自然语言端到端注册成功路径、Diff 视图、浏览器视觉验证；lint 仍有既存错误`
+- 阻塞/风险：`浏览器自动化服务当前不可用；外部 Pi Provider 凭据未提供；AgentHub 应用注册成功路径需真实可用服务与凭据`
+- 下一步唯一动作：`获得可用 Pi/AgentHub 外部凭据后，补做自然语言→注册全链路；恢复浏览器自动化后完成三种视口验收`
