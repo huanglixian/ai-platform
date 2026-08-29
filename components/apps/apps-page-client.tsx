@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { AlertTriangle, Check, Copy, RefreshCw, Trash2, X } from "lucide-react";
 
 import { CardPageFrame } from "@/components/shared/card-page-frame";
-import { getLocalApps, saveLocalApps } from "@/features/apps/mock-data";
 import { AppType, PlatformSource, PublishedApp } from "@/features/apps/types";
 
 const ITEM_WIDTH = 300;
@@ -145,8 +144,10 @@ export function AppsPageClient() {
   useEffect(() => {
     // 异步加载本地数据，避免服务端渲染与本地存储状态不一致
     const timer = setTimeout(() => {
-      setList(getLocalApps());
-      setMounted(true);
+      fetch("/api/agenthub/v1/applications").then((response) => response.json()).then((payload) => {
+        setList(payload.data ?? []);
+        setMounted(true);
+      }).catch(() => setMounted(true));
     }, 0);
     return () => clearTimeout(timer);
   }, []);
@@ -176,34 +177,17 @@ export function AppsPageClient() {
       return;
     }
 
-    const newApp: PublishedApp = {
-      id: `app-${Date.now()}`,
-      name: trimmedName,
-      description: desc.trim() || "暂无应用描述",
-      source,
-      appType,
-      url: trimmedUrl,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
-    const updated = [newApp, ...list];
-    setList(updated);
-    saveLocalApps(updated);
-    setShowModal(false);
-    setName("");
-    setDesc("");
-    setUrl("");
-    setFormError("");
+    fetch("/api/agenthub/v1/applications", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ name: trimmedName, description: desc.trim() || "暂无应用描述", producer: source, kind: appType, entryUrl: trimmedUrl }) })
+      .then((response) => response.json().then((payload) => ({ response, payload })))
+      .then(({ response, payload }) => { if (!response.ok) throw new Error(payload.error?.message || "创建失败"); setList((current) => [payload.data, ...current]); setShowModal(false); setName(""); setDesc(""); setUrl(""); })
+      .catch((error: Error) => setFormError(error.message));
   }
 
   function handleDelete(id: string, event: React.MouseEvent) {
     event.preventDefault();
     event.stopPropagation();
     if (!confirm("确定下线并删除该应用吗？")) return;
-    const updated = list.filter((app) => app.id !== id);
-    setList(updated);
-    saveLocalApps(updated);
+    fetch(`/api/agenthub/v1/applications/${id}`, { method: "DELETE" }).then(() => setList((current) => current.filter((app) => app.id !== id)));
     if (selectedApp?.id === id) {
       setSelectedApp(null);
     }
