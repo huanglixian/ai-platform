@@ -220,9 +220,9 @@
 ### 5.4 Local Deployment
 
 - [x] 定义轻量 `DeploymentRuntime`，首版实现 `LocalProcessRuntime`。
-- [x] 从 Release 启动稳定 Node 进程，分配入口 URL并执行健康检查（进程与入口 URL 已接入）。
+- [x] 从 Release 启动稳定 Node 进程，分配入口 URL并执行健康检查（启动后轮询健康路径，失败自动回收）。
 - [x] 支持启动、停止、重启、查看日志和切换当前 Release（启动/停止与日志内存态已接入）。
-- [ ] 应用可直接从 AppFactory 打开和测试，不依赖 AgentHub。
+- [x] 应用可直接从 AppFactory 打开和测试，不依赖 AgentHub（部署返回稳定入口 URL）。
 
 ### 阶段 5 验收
 
@@ -287,6 +287,6 @@
 - 本次完成：`阶段 5 状态查询与阶段 6 交付文档、端到端 API 冒烟`
 - 修改的关键文件：`app/api/appfactory/v1/projects/[id]/status`、`app/appfactory/projects/[id]/page.tsx`、`.env.example`、`README.md`、`dev_files/dev_guide.md`
 - 已执行验证：`npm run typecheck`、`npm run build`、项目→Check→Build→Release API 闭环；注册在缺少 AgentHub 地址时按预期返回 502
-- 当前未完成：`Pi 真实模型执行、完整 Next.js Build/Standalone、Deployment 健康检查、Diff/日志持久化、浏览器视觉验证；lint 仍有既存错误`
+- 当前未完成：`Pi 真实模型执行、完整 Next.js Build/Standalone、Diff/日志持久化、浏览器视觉验证；lint 仍有既存错误`
 - 阻塞/风险：`无`
-- 下一步唯一动作：`补齐 Deployment 健康检查、应用打开入口和最终交付审计`
+- 下一步唯一动作：`完成全量验收审计并记录剩余限制`
