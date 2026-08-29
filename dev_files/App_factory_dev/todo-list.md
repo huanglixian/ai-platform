@@ -121,26 +121,26 @@
 
 ### 3.1 独立模块边界
 
-- [ ] 新建 `app/appfactory` 路由域和独立 `layout.tsx`。
-- [ ] 新建根目录 `app_factory/`，按 components/features/server/skills/templates/contracts/types 组织。
-- [ ] 新建 `/api/appfactory/v1`，不把 AppFactory API 放进 `/api/platform`。
-- [ ] 新建 `storage/appfactory`，与 AgentHub、KnowHub 数据完全分离。
+- [x] 新建 `app/appfactory` 路由域和独立 `layout.tsx`。
+- [x] 新建根目录 `app_factory/`，按 components/features/server/skills/templates/contracts/types 组织（当前先落地 server）。
+- [x] 新建 `/api/appfactory/v1`，不把 AppFactory API 放进 `/api/platform`。
+- [x] 新建 `storage/appfactory`，与 AgentHub、KnowHub 数据完全分离。
 - [ ] AppFactory 不 import AgentHub 业务组件或 Repository；仅允许基础 UI、主题和明确 Client contract。
 
 ### 3.2 AppFactory 数据与服务
 
-- [ ] 建立 AppFactory SQLite、migration 和幂等 seed。
-- [ ] 建立 `projects`、`sessions`、`runs`、`jobs`、`builds`、`releases`、`deployments`、`capability_bindings` 最小表。
+- [x] 建立 AppFactory SQLite、migration 和幂等 seed（项目表已建立，其他表按阶段增加）。
+- [~] 建立 `projects`、`sessions`、`runs`、`jobs`、`builds`、`releases`、`deployments`、`capability_bindings` 最小表。
 - [ ] 建立 Project/Session/Run/Job/Build/Release/Deployment Repository 和 Service，按真实职责逐步创建。
 - [ ] 建立 SQLite Job Worker、任务领取、心跳/超时、完成、失败和重试的最小机制。
 - [ ] 增加 `disabled/local/http` 三种 AgentHub 集成配置和 `AgentHubClient` 接口。
 
 ### 3.3 AppFactory 基础页面
 
-- [ ] 独立顶部导航与产品标识，提供“返回 AgentHub”。
-- [ ] 项目首页：最近项目、新建应用、最近运行/发布。
-- [ ] 新建项目：名称、描述、默认 Skill/Profile、AgentHub 集成状态。
-- [ ] 项目详情基础壳：对话、文件/日志、预览三大工作区。
+- [x] 独立顶部导航与产品标识，提供“返回 AgentHub”。
+- [x] 项目首页：最近项目、新建应用、最近运行/发布（运行/发布面板待后续接入）。
+- [x] 新建项目：名称、描述、默认 Skill/Profile、AgentHub 集成状态。
+- [x] 项目详情基础壳：对话、文件/日志、预览三大工作区。
 - [ ] 完成加载、空状态、错误状态和响应式基础。
 
 ### 阶段 3 验收
@@ -283,10 +283,10 @@
 ## 会话交接记录（每次结束前更新）
 
 - 日期：`2026-08-29`
-- 当前阶段：`阶段 2`
-- 本次完成：`阶段 1 正式化；阶段 2 Capability Registry 列表/详情接口与统一 seed`
+- 当前阶段：`阶段 3`
+- 本次完成：`阶段 2 能力 Registry 列表/详情；阶段 3 AppFactory 独立壳、项目库与创建 API`
 - 修改的关键文件：`features/apps/server.ts`、`features/workflows/server.ts`、`app/api/agenthub/v1/*`、`components/apps/*`、`components/workflows/*`
 - 已执行验证：`npm run typecheck`、`npm run build`、应用/业务流 API 创建与归档冒烟；浏览器服务不可用
-- 当前未完成：`阶段 2 能力执行适配、外部密钥治理及 AppFactory 后续阶段；现有 lint 既存错误`
+- 当前未完成：`阶段 2 能力执行适配；阶段 3 其余实体/Worker/详情数据；AppFactory 后续阶段；现有 lint 既存错误`
 - 阻塞/风险：`无`
-- 下一步唯一动作：`建立 Capability Registry 与 AgentHub v1 能力接口`
+- 下一步唯一动作：`补齐 AppFactory sessions/runs/jobs 等最小实体与 AgentHubClient 模式配置`
