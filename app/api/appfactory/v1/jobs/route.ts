@@ -1,0 +1,4 @@
+import { z } from "zod"; import { apiError,apiOk } from "@/lib/server/api-response"; import { createJob,getAppFactoryDatabase } from "@/app_factory/server/database";
+export const runtime="nodejs"; const schema=z.object({projectId:z.string().min(1),kind:z.string().min(1),payload:z.unknown().optional()});
+export function GET(request:Request){const projectId=new URL(request.url).searchParams.get("projectId");const rows=projectId?getAppFactoryDatabase().prepare("SELECT * FROM jobs WHERE project_id=? ORDER BY created_at DESC").all(projectId):getAppFactoryDatabase().prepare("SELECT * FROM jobs ORDER BY created_at DESC").all();return apiOk(rows);}
+export async function POST(r:Request){const p=schema.safeParse(await r.json());if(!p.success)return apiError("任务字段校验失败",422,p.error.flatten());return apiOk(createJob(p.data),{status:201});}

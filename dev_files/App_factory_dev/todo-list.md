@@ -130,10 +130,10 @@
 ### 3.2 AppFactory 数据与服务
 
 - [x] 建立 AppFactory SQLite、migration 和幂等 seed（项目表已建立，其他表按阶段增加）。
-- [~] 建立 `projects`、`sessions`、`runs`、`jobs`、`builds`、`releases`、`deployments`、`capability_bindings` 最小表。
+- [x] 建立 `projects`、`sessions`、`runs`、`jobs`、`builds`、`releases`、`deployments`、`capability_bindings` 最小表。
 - [ ] 建立 Project/Session/Run/Job/Build/Release/Deployment Repository 和 Service，按真实职责逐步创建。
-- [ ] 建立 SQLite Job Worker、任务领取、心跳/超时、完成、失败和重试的最小机制。
-- [ ] 增加 `disabled/local/http` 三种 AgentHub 集成配置和 `AgentHubClient` 接口。
+- [~] 建立 SQLite Job Worker、任务领取、心跳/超时、完成、失败和重试的最小机制。
+- [x] 增加 `disabled/local/http` 三种 AgentHub 集成配置和 `AgentHubClient` 接口。
 
 ### 3.3 AppFactory 基础页面
 
@@ -287,6 +287,6 @@
 - 本次完成：`阶段 2 能力 Registry 列表/详情；阶段 3 AppFactory 独立壳、项目库与创建 API`
 - 修改的关键文件：`features/apps/server.ts`、`features/workflows/server.ts`、`app/api/agenthub/v1/*`、`components/apps/*`、`components/workflows/*`
 - 已执行验证：`npm run typecheck`、`npm run build`、应用/业务流 API 创建与归档冒烟；浏览器服务不可用
-- 当前未完成：`阶段 2 能力执行适配；阶段 3 其余实体/Worker/详情数据；AppFactory 后续阶段；现有 lint 既存错误`
+- 当前未完成：`阶段 2 能力执行适配；阶段 3 Job Worker 与详情数据；AppFactory 后续阶段；现有 lint 既存错误`
 - 阻塞/风险：`无`
-- 下一步唯一动作：`补齐 AppFactory sessions/runs/jobs 等最小实体与 AgentHubClient 模式配置`
+- 下一步唯一动作：`实现 SQLite Job Worker 的领取、完成、失败与超时恢复`
