@@ -8,7 +8,7 @@
 - 当前阶段：`阶段 0：基线、边界与基础设施`
 - 当前目标：`完成 Application Registry 的服务端持久化与前端接入`
 - 最近完成：`阶段 0 基线与 AgentHub SQLite 基础`
-- 最近验证：`Node v25.3.0；Next.js 16.3.3；typecheck/build 通过；AgentHub migration 可重复运行并保留数据；现有 lint 有 13 个既存错误`
+- 最近验证：`Next.js 16.3.3；typecheck/build 通过；应用 API 返回 18 条 seed 记录；非法 entryUrl 返回 422；现有 lint 有 13 个既存错误`
 - 阻塞项：`无`
 - 下一步：`补齐应用编辑体验与 API 错误/空态验证，再进入 Workflow Registry`
 
@@ -284,9 +284,9 @@
 
 - 日期：`2026-08-29`
 - 当前阶段：`阶段 1`
-- 本次完成：`阶段 0 基线、Next.js 升级、AgentHub SQLite 基础`
-- 修改的关键文件：`lib/agenthub/database.ts`、`lib/server/api-response.ts`、`lib/server/request-context.ts`、`scripts/agenthub-db.mjs`、`.gitignore`、`package.json`
-- 已执行验证：`npm run typecheck`、`npm run build`、migration 脚本重复运行、SQLite 表检查；浏览器服务不可用，使用 curl 冒烟
-- 当前未完成：`阶段 1 及后续任务；现有 lint 既存错误；开发服务器既有实例 workbench 500`
+- 本次完成：`阶段 0 基线与基础设施；Application Registry 服务端 API 与应用中心读取/创建/归档接入`
+- 修改的关键文件：`lib/agenthub/database.ts`、`features/apps/server.ts`、`app/api/agenthub/v1/applications/*`、`components/apps/apps-page-client.tsx`
+- 已执行验证：`npm run typecheck`、`npm run build`、`GET /api/agenthub/v1/applications=200（18 条）`、非法请求 `422`
+- 当前未完成：`应用编辑界面与阶段 1.1 剩余体验验证；Workflow Registry 及后续阶段；现有 lint 既存错误；浏览器服务不可用`
 - 阻塞/风险：`无`
-- 下一步唯一动作：`实现 Application Registry 服务端 API 与应用中心真实数据读取`
+- 下一步唯一动作：`补齐应用编辑界面并验证应用中心空态/错误态`
