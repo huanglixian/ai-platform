@@ -1,7 +1,12 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { FileTreeNode } from "@/app/appfactory/_lib/project-ui";
+import {
+  formatRunElapsed,
+  getRunStatusText,
+  type RunFeedback,
+} from "@/app/appfactory/_lib/run-state";
 
 export type WorkspaceEvent = { type: string; content: string };
 
@@ -65,6 +70,7 @@ export function ProjectFileTree({
 export function ChatPanel({
   events,
   busy,
+  activeRun,
   prompt,
   sessionReady,
   model,
@@ -72,9 +78,11 @@ export function ChatPanel({
   onPromptChange,
   onSend,
   onStop,
+  onRetry,
 }: {
   events: WorkspaceEvent[];
   busy: boolean;
+  activeRun: RunFeedback | null;
   prompt: string;
   sessionReady: boolean;
   model: string;
@@ -82,10 +90,29 @@ export function ChatPanel({
   onPromptChange: (value: string) => void;
   onSend: () => void;
   onStop: () => void;
+  onRetry: () => void;
 }) {
+  const [now, setNow] = useState(() => Date.now());
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!activeRun || activeRun.status !== "running") return;
+    const timer = window.setInterval(() => setNow(Date.now()), 1_000);
+    return () => window.clearInterval(timer);
+  }, [activeRun]);
+
+  useEffect(() => {
+    const container = scrollRef.current;
+    if (!container) return;
+    container.scrollTo({ top: container.scrollHeight, behavior: "smooth" });
+  }, [activeRun, events]);
+
   return (
     <section className={`${className ?? ""} min-w-0 flex-1 flex-col bg-white`}>
-      <div className="min-h-0 flex-1 overflow-auto px-4 py-5 sm:px-7 lg:px-10">
+      <div
+        ref={scrollRef}
+        className="min-h-0 flex-1 overflow-auto px-4 py-5 sm:px-7 lg:px-10"
+      >
         <div className="mx-auto max-w-3xl">
           <div className="mb-6 flex items-center gap-3">
             <div className="grid h-9 w-9 place-items-center rounded-full bg-[#eef5fd] text-[#0368b3]">
@@ -127,6 +154,70 @@ export function ChatPanel({
               ))}
             </div>
           )}
+          {activeRun && (
+            <div
+              aria-live="polite"
+              role="status"
+              className={`mt-4 rounded-xl border px-4 py-3 shadow-[0_2px_6px_rgba(15,23,42,.03)] ${activeRun.status === "running" ? "border-[#bfd7f2] bg-[#f7fbff]" : activeRun.status === "failed" ? "border-[#f3c6c2] bg-[#fff5f4]" : "border-[#d4dde8] bg-[#f6f8fb]"}`}
+            >
+              <div className="flex items-start gap-3">
+                <span
+                  className={`mt-1 grid h-7 w-7 shrink-0 place-items-center rounded-full text-xs ${activeRun.status === "running" ? "bg-[#e4f0fc] text-[#0368b3]" : activeRun.status === "failed" ? "bg-[#fce4e1] text-[#b9382f]" : "bg-[#e8edf3] text-[#667085]"}`}
+                >
+                  {activeRun.status === "running" ? (
+                    <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-current" />
+                  ) : activeRun.status === "failed" ? (
+                    "!"
+                  ) : (
+                    "✓"
+                  )}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <p className="text-xs font-semibold text-[#1a4d87]">
+                      {activeRun.status === "running"
+                        ? "Pi 正在处理你的需求"
+                        : activeRun.status === "failed"
+                          ? "Pi 执行失败"
+                          : "任务已停止"}
+                    </p>
+                    {activeRun.status === "running" && (
+                      <span className="font-mono text-[11px] text-[#6f96c4]">
+                        {formatRunElapsed(activeRun, now)}
+                      </span>
+                    )}
+                  </div>
+                  <p className="mt-1 text-[11px] leading-5 text-[#667085]">
+                    {getRunStatusText(activeRun)}
+                  </p>
+                  {activeRun.status === "running" && (
+                    <p className="mt-1 truncate text-[10px] text-[#98a2b3]">
+                      “{activeRun.prompt}”
+                    </p>
+                  )}
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {activeRun.status === "running" ? (
+                      <button
+                        type="button"
+                        onClick={onStop}
+                        className="rounded-md border border-[#e5b2ad] px-2.5 py-1.5 text-[10px] font-medium text-[#b9382f] hover:bg-[#fff1ef]"
+                      >
+                        停止任务
+                      </button>
+                    ) : activeRun.status === "failed" ? (
+                      <button
+                        type="button"
+                        onClick={onRetry}
+                        className="rounded-md border border-[#bfd7f2] px-2.5 py-1.5 text-[10px] font-medium text-[#0368b3] hover:bg-[#eef5fd]"
+                      >
+                        重新执行
+                      </button>
+                    ) : null}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
       <div className="border-t border-[#edf1f5] bg-white px-4 py-3 sm:px-7 lg:px-10">
@@ -140,7 +231,7 @@ export function ChatPanel({
                 onSend();
               }
             }}
-            placeholder="告诉我你想创建、修改或优化什么…"
+            placeholder={busy ? "Pi 正在处理，可点击停止任务…" : "告诉我你想创建、修改或优化什么…"}
             className="min-h-11 min-w-0 flex-1 resize-none border-0 px-2 py-2 text-sm text-[#262626] outline-none placeholder:text-[#98a2b3]"
             disabled={!sessionReady || busy}
           />

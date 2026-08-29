@@ -13,6 +13,7 @@ import {
   workspaceEventLabel,
   type WorkspaceEvent,
 } from "@/app/appfactory/_components/workspace-panels";
+import type { RunFeedback } from "@/app/appfactory/_lib/run-state";
 
 type Project = {
   id: string;
@@ -65,6 +66,7 @@ export default function ProjectPage({
   const [mobileView, setMobileView] = useState<"chat" | "files">("chat");
   const [activityOpen, setActivityOpen] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [activeRun, setActiveRun] = useState<RunFeedback | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [lastOperation, setLastOperation] = useState<Operation | null>(null);
@@ -250,11 +252,18 @@ export default function ProjectPage({
     }
   };
   const executePrompt = async (text: string, remember = true) => {
-    if (!session || busy || !text.trim()) return;
-    if (remember) setLastOperation({ kind: "prompt", prompt: text });
+    const submittedPrompt = text.trim();
+    if (!session || busy || !submittedPrompt) return;
+    if (remember) setLastOperation({ kind: "prompt", prompt: submittedPrompt });
     setBusy(true);
     setError("");
-    setEvents((current) => [...current, { type: "user", content: text }]);
+    setPrompt("");
+    setActiveRun({
+      prompt: submittedPrompt,
+      startedAt: Date.now(),
+      status: "running",
+    });
+    setEvents((current) => [...current, { type: "user", content: submittedPrompt }]);
     const controller = new AbortController();
     controllerRef.current = controller;
     try {
@@ -264,7 +273,7 @@ export default function ProjectPage({
           method: "POST",
           signal: controller.signal,
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ prompt: text }),
+          body: JSON.stringify({ prompt: submittedPrompt }),
         },
       );
       const payload = await response.json();
@@ -275,11 +284,16 @@ export default function ProjectPage({
           (event: WorkspaceEvent) => event.type !== "user",
         ),
       ]);
-      setPrompt("");
+      setActiveRun(null);
       await refreshFiles();
     } catch (reason) {
-      if ((reason as { name?: string })?.name !== "AbortError")
+      if ((reason as { name?: string })?.name !== "AbortError") {
+        const message = reason instanceof Error ? reason.message : "Pi 执行失败";
+        setActiveRun((current) =>
+          current ? { ...current, status: "failed", message } : current,
+        );
         setError(reason instanceof Error ? reason.message : "Pi 执行失败");
+      }
     } finally {
       setBusy(false);
       controllerRef.current = null;
@@ -298,6 +312,9 @@ export default function ProjectPage({
         method: "DELETE",
       });
     setBusy(false);
+    setActiveRun((current) =>
+      current ? { ...current, status: "cancelled", message: "已停止当前任务" } : current,
+    );
     setError("已停止当前任务");
   };
   if (loading)
@@ -450,12 +467,14 @@ export default function ProjectPage({
           }
           events={events}
           busy={busy}
+          activeRun={activeRun}
           prompt={prompt}
           sessionReady={Boolean(session)}
           model={runtime.ai?.model || "未配置"}
           onPromptChange={setPrompt}
           onSend={() => void executePrompt(prompt)}
           onStop={stop}
+          onRetry={retry}
         />
       </div>
       {activityOpen && (
