@@ -11,7 +11,7 @@
     "db:agenthub:migrate": "node --experimental-strip-types scripts/agenthub-db.mjs",
     "db:agenthub:seed": "node --experimental-strip-types scripts/agenthub-db.mjs",
     "worker:agenthub": "node -e \"console.log('AgentHub worker is not required yet')\"",
-    "worker:appfactory": "node -e \"console.log('AppFactory worker is not required yet')\""
+    "worker:appfactory": "node --experimental-strip-types scripts/appfactory-worker.mjs"
   },
   "dependencies": {
     "@ai-sdk/openai-compatible": "^2.0.48",
