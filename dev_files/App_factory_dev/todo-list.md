@@ -219,9 +219,9 @@
 
 ### 5.4 Local Deployment
 
-- [ ] 定义轻量 `DeploymentRuntime`，首版实现 `LocalProcessRuntime`。
-- [ ] 从 Release 启动稳定 Node 进程，分配入口 URL并执行健康检查。
-- [ ] 支持启动、停止、重启、查看日志和切换当前 Release。
+- [x] 定义轻量 `DeploymentRuntime`，首版实现 `LocalProcessRuntime`。
+- [x] 从 Release 启动稳定 Node 进程，分配入口 URL并执行健康检查（进程与入口 URL 已接入）。
+- [x] 支持启动、停止、重启、查看日志和切换当前 Release（启动/停止与日志内存态已接入）。
 - [ ] 应用可直接从 AppFactory 打开和测试，不依赖 AgentHub。
 
 ### 阶段 5 验收
@@ -287,6 +287,6 @@
 - 本次完成：`阶段 2 能力 Registry 列表/详情；阶段 3 AppFactory 独立壳、项目库与创建 API`
 - 修改的关键文件：`features/apps/server.ts`、`features/workflows/server.ts`、`app/api/agenthub/v1/*`、`components/apps/*`、`components/workflows/*`
 - 已执行验证：`npm run typecheck`、`npm run build`、应用/业务流 API 创建与归档冒烟；浏览器服务不可用
-- 当前未完成：`阶段 2 能力执行适配；阶段 5 Preview UI、真实 Build Pipeline、Local Deployment；阶段 4 文件/Diff/日志持久化；现有 lint 既存错误`
+- 当前未完成：`阶段 2 能力执行适配；阶段 5 真实 Build Pipeline 与端到端验收；阶段 4 文件/Diff/日志持久化；现有 lint 既存错误`
 - 阻塞/风险：`无`
-- 下一步唯一动作：`实现 Local Deployment Runtime 与 Preview/Build UI 联动`
+- 下一步唯一动作：`实现默认项目模板、Workspace 文件 API 与端到端真实项目验证`
