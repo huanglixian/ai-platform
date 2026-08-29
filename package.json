@@ -6,7 +6,12 @@
     "dev": "next dev --port 19844",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "db:agenthub:migrate": "node --experimental-strip-types scripts/agenthub-db.mjs",
+    "db:agenthub:seed": "node --experimental-strip-types scripts/agenthub-db.mjs",
+    "worker:agenthub": "node -e \"console.log('AgentHub worker is not required yet')\"",
+    "worker:appfactory": "node -e \"console.log('AppFactory worker is not required yet')\""
   },
   "dependencies": {
     "@ai-sdk/openai-compatible": "^2.0.48",
@@ -19,7 +24,7 @@
     "clsx": "^2.1.1",
     "lucide-react": "^1.0.1",
     "mermaid": "^11.15.0",
-    "next": "16.2.1",
+    "next": "16.3.3",
     "proxy-agent": "^5.0.0",
     "react": "19.2.4",
     "react-dom": "19.2.4",
@@ -39,7 +44,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "16.2.1",
+    "eslint-config-next": "16.3.3",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

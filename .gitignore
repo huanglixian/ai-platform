@@ -20,6 +20,17 @@
 # production
 /build
 /storage
+!/storage/
+!/storage/agenthub/
+!/storage/appfactory/
+/storage/**/*.db
+/storage/**/*.db-*
+/storage/**/workspaces/
+/storage/**/sessions/
+/storage/**/builds/
+/storage/**/runtime/
+!/storage/agenthub/.gitkeep
+!/storage/appfactory/.gitkeep
 
 # misc
 .DS_Store
