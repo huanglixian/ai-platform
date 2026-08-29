@@ -7,8 +7,8 @@
 - 总体状态：`进行中`
 - 当前阶段：`阶段 6：能力绑定、AgentHub 注册与最终交付`
 - 当前目标：`完成端到端验收并记录剩余限制`
-- 最近完成：`阶段 2 Capability Registry 执行适配与 invoke；阶段 5 Pipeline/Release/健康检查；阶段 6 外部密钥治理与应用开发入口`
-- 最近验证：`Next.js 16.3.3；typecheck/build 通过；能力 Tool 26 条（2 条可执行 handler）；invoke dry-run/参数校验/禁用/缺失 handler/外部错误/超时均实测；全量 lint 仍受既有源码与 Workspace 构建产物影响`
+- 最近完成：`阶段 2 Capability Registry transport contract 与审计预留；执行适配与 invoke；阶段 5 Pipeline/Release/健康检查；阶段 6 外部密钥治理与应用开发入口`
+- 最近验证：`Next.js 16.3.3；typecheck/build 通过；AgentHub 响应带 v1/request-id/actor headers；审计字段 migration 可重复运行；能力 Tool 26 条（2 条可执行 handler）；invoke 场景均实测；全量 lint 仍受既有源码与 Workspace 构建产物影响`
 - 阻塞项：`无`
 - 下一步：`完成全量验收审计并记录剩余限制`
 
@@ -102,9 +102,9 @@
 
 ### 2.2 AgentHub 对外集成面
 
-- [ ] 固化 `/api/agenthub/v1` 的版本化接口和 Zod transport contract。
+- [x] 固化 `/api/agenthub/v1` 的版本化接口和 Zod transport contract。
 - [ ] 确认 Application Registry API 可供 AppFactory 幂等创建/更新应用。
-- [ ] 为外部调用预留 `request actor` 和审计字段，但不实现鉴权。
+- [x] 为外部调用预留 `request actor` 和审计字段，但不实现鉴权。
 - [x] 增加 `NEXT_PUBLIC_APPFACTORY_URL` 或等价 service-link 配置。
 - [x] 在“配置管理”后增加弱化的“应用开发 ↗”入口；默认 `/appfactory`，未来支持独立域名。
 - [ ] 工作台仍是默认首页，普通 AgentHub 导航和激活状态不回退。
@@ -284,9 +284,9 @@
 
 - 日期：`2026-08-29`
 - 当前阶段：`阶段 6`
-- 本次完成：`阶段 2 Capability Registry 执行适配与 invoke API`
-- 修改的关键文件：`features/capabilities/{server,execution,implementation-registry}.ts`、`features/workbench/{capability-context,chat-service}.ts`、`app/api/agenthub/v1/capabilities/[id]/invoke/route.ts`
-- 已执行验证：`npm run typecheck`、`npm run build`；Tool Registry 返回 26 条且 2 条绑定 handler；dry-run、参数校验、禁用、缺失 handler、外部错误和 100ms 超时均按预期返回
+- 本次完成：`阶段 2 Capability Registry transport contract 与审计字段预留`
+- 修改的关键文件：`lib/agenthub/database.ts`、`lib/server/{api-response,request-context,transport-contract}.ts`
+- 已执行验证：`npm run db:agenthub:migrate` 可重复运行；`npm run typecheck`、`npm run build`；生产 API 响应包含 `v1`、request-id、actor headers
 - 当前未完成：`Pi 真实模型执行、完整 Next.js Build/Standalone、Diff/日志持久化、AgentHub 注册成功路径、浏览器视觉验证；lint 仍有既存错误`
 - 阻塞/风险：`无`
 - 下一步唯一动作：`补齐 Pi 会话持久化、Standalone/Diff/日志后再进行最终验收`

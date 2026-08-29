@@ -52,6 +52,15 @@ const migrations = [
     );`,
   },
   { id: "002_workflow_category", sql: "ALTER TABLE workflows ADD COLUMN category TEXT NOT NULL DEFAULT '业务审批';" },
+  {
+    id: "003_audit_actor",
+    sql: `ALTER TABLE applications ADD COLUMN created_by TEXT NOT NULL DEFAULT 'local-user';
+ALTER TABLE applications ADD COLUMN updated_by TEXT NOT NULL DEFAULT 'local-user';
+ALTER TABLE workflows ADD COLUMN created_by TEXT NOT NULL DEFAULT 'local-user';
+ALTER TABLE workflows ADD COLUMN updated_by TEXT NOT NULL DEFAULT 'local-user';
+ALTER TABLE capabilities ADD COLUMN created_by TEXT NOT NULL DEFAULT 'system';
+ALTER TABLE capabilities ADD COLUMN updated_by TEXT NOT NULL DEFAULT 'system';`,
+  },
 ];
 
 export function getAgentHubDatabase(): Database.Database {
