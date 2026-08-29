@@ -19,19 +19,32 @@
 
 # production
 /build
-/storage
-!/storage/
+/storage/*
+
+# AgentHub demo database and editable skill packages are versioned assets.
 !/storage/agenthub/
-!/storage/appfactory/
-/storage/**/*.db
-/storage/**/*.db-*
-/storage/**/workspaces/
-/storage/**/sessions/
-/storage/appfactory/pi-sessions/
-/storage/**/builds/
-/storage/**/runtime/
-/storage/appfactory/transcripts/
+!/storage/agenthub/skills/
+!/storage/agenthub/skills/**
+!/storage/agenthub/agenthub.db
+/storage/agenthub/*.db-shm
+/storage/agenthub/*.db-wal
 !/storage/agenthub/.gitkeep
+
+# KnowHub demo snapshot is versioned; SQLite sidecar files remain runtime-only.
+!/storage/knowhub/
+!/storage/knowhub/**
+/storage/knowhub/**/*.db-*
+/storage/knowhub/**/*.sqlite-*
+
+# AppFactory workspaces, sessions, builds and transcripts are local runtime data.
+!/storage/appfactory/
+/storage/appfactory/*
+/storage/appfactory/**/workspaces/
+/storage/appfactory/**/sessions/
+/storage/appfactory/pi-sessions/
+/storage/appfactory/**/builds/
+/storage/appfactory/**/runtime/
+/storage/appfactory/transcripts/
 !/storage/appfactory/.gitkeep
 
 # misc

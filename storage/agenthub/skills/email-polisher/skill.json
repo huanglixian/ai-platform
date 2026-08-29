@@ -1,0 +1,10 @@
+{
+  "id": "email-polisher",
+  "name": "邮件润色与正规化",
+  "description": "将口语化的草稿润色为符合商务规范的正式邮件。",
+  "enabled": true,
+  "category": "办公技能",
+  "owner": "平台示例",
+  "triggers": ["润色邮件", "帮我改下邮件", "邮件润色"],
+  "allowedTools": []
+}

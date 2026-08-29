@@ -1,0 +1,10 @@
+{
+  "id": "meeting-todos",
+  "name": "会议待办提取",
+  "description": "快速提取会议原始录音文本中的核心决议和 To-Do 待办事项。",
+  "enabled": true,
+  "category": "办公技能",
+  "owner": "平台示例",
+  "triggers": ["提取会议待办", "会议纪要提取", "整理会议决议"],
+  "allowedTools": []
+}

@@ -5,7 +5,7 @@ import { z } from "zod";
 
 import type { SkillMetadata, SkillPackage } from "@/features/skills/skill-types";
 
-const skillsRoot = path.join(process.cwd(), "storage", "platform", "skills");
+const skillsRoot = path.join(process.cwd(), "storage", "agenthub", "skills");
 
 const skillMetadataSchema = z.object({
   id: z.string().min(1),

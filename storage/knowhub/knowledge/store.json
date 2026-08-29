@@ -1,0 +1,50 @@
+{
+  "items": [
+    {
+      "id": "knowledge_mnqt7ila",
+      "name": "设计知识库",
+      "summary": "基于默认策略创建的知识库。",
+      "status": "published",
+      "docspaceIds": [
+        "docspace_mnhfeyzy"
+      ],
+      "targetLabel": "设计知识库 / Markdown + Word + Excel 表格 + 文字版 PDF + 图片版 PDF",
+      "preprocessStrategyIds": [
+        "word-doc-to-docx",
+        "word-header-footer-clean",
+        "excel-sheet-split",
+        "excel-header-clean",
+        "pdf-to-markdown",
+        "pdf-to-markdown"
+      ],
+      "chunkingStrategyIds": [
+        "markdown-obsidian-slicer",
+        "chunk-heading",
+        "chunk-table-row",
+        "chunk-heading-window",
+        "chunk-fixed-overlap"
+      ],
+      "extractStrategyIds": [
+        "extract-table-fields",
+        "extract-summary-points"
+      ],
+      "strategyPresetBindings": [
+        {
+          "strategyId": "markdown-obsidian-slicer",
+          "presetId": "markdown-obsidian-slicer__default"
+        }
+      ],
+      "embeddingModel": "BAAI/bge-small-zh-v1.5",
+      "knowledgeTarget": "设计知识库",
+      "lastRunAt": "2026-04-09 13:49",
+      "runCount": 7,
+      "vectorStoreName": "sqlite-vec",
+      "fileCount": 12,
+      "chunkCount": 89,
+      "vectorCount": 89,
+      "lastError": null,
+      "createdAt": "2026-04-09T01:39:43.966Z",
+      "updatedAt": "2026-04-09T05:49:05.139Z"
+    }
+  ]
+}

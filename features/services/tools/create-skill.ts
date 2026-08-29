@@ -5,10 +5,10 @@ import * as path from "path";
 import { generateSkillFlowMermaid } from "./skills-flow";
 
 // 技能存储的基础目录路径
-const SKILLS_BASE_DIR = path.resolve(process.cwd(), "storage/platform/skills");
+const SKILLS_BASE_DIR = path.resolve(process.cwd(), "storage/agenthub/skills");
 
 export const createSkillTool = tool({
-  description: "自动在系统的技能存储目录(storage/platform/skills)中创建一个新的配置型技能包。必须提供技能ID、名称、描述、分类、触发词以及编排指令SKILL.md内容。",
+  description: "自动在系统的技能存储目录(storage/agenthub/skills)中创建一个新的配置型技能包。必须提供技能ID、名称、描述、分类、触发词以及编排指令SKILL.md内容。",
   inputSchema: z.object({
     id: z.string().regex(/^[a-z0-9-]+$/).describe("技能唯一标识，仅限小写英文、数字和短横线，例如：meeting-notes"),
     name: z.string().describe("技能名称，在页面上展示，例如：会议纪要助手"),
@@ -60,11 +60,11 @@ export const createSkillTool = tool({
       return {
         ok: true,
         toolId: "create_skill",
-        message: `成功创建技能 ${name} (${id})！文件已安全写入 storage/platform/skills/${id}/。`,
+        message: `成功创建技能 ${name} (${id})！文件已安全写入 storage/agenthub/skills/${id}/。`,
         data: {
           id,
           name,
-          dir: `storage/platform/skills/${id}/`
+          dir: `storage/agenthub/skills/${id}/`
         }
       };
     } catch (error) {

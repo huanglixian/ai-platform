@@ -1,0 +1,10 @@
+{
+  "id": "layout-corrector",
+  "name": "文档排版纠错",
+  "description": "检查段落层级、标点符号规范，并提供一键排版建议。",
+  "enabled": true,
+  "category": "办公技能",
+  "owner": "平台示例",
+  "triggers": ["排版纠错", "排版建议", "文档排版"],
+  "allowedTools": []
+}

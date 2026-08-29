@@ -1,0 +1,17 @@
+{
+  "id": "contract-review-helper",
+  "name": "合同审核助手",
+  "description": "模拟资深法务专家对合同文本进行条款完整性、风险点识别、违约责任及争议解决等全方位的审核分析。",
+  "enabled": true,
+  "category": "业务技能",
+  "owner": "AI生成",
+  "triggers": [
+    "合同审核",
+    "帮我看看这份合同",
+    "审一下合同",
+    "合同风险检查"
+  ],
+  "allowedTools": [],
+  "requiresSession": false,
+  "completionTools": []
+}

@@ -6,7 +6,7 @@ import { generateText } from "ai";
 
 import { getActiveModelRuntime } from "@/features/models/provider";
 
-const SKILLS_BASE_DIR = path.resolve(process.cwd(), "storage/platform/skills");
+const SKILLS_BASE_DIR = path.resolve(process.cwd(), "storage/agenthub/skills");
 
 // 独立的业务生成函数，可被其他后端 API 或工具导入调用
 export async function generateSkillFlowMermaid(skillId: string): Promise<string> {

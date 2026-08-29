@@ -1,0 +1,14 @@
+{
+  "id": "text-expander",
+  "name": "文字扩写助手",
+  "description": "对用户输入的文本进行内容扩充，保持原段落结构不变，增加细节与描述，使篇幅翻倍，并输出字数统计",
+  "enabled": true,
+  "category": "办公技能",
+  "owner": "AI生成",
+  "triggers": [
+    "扩写这段文字",
+    "帮我扩写一下",
+    "请帮我扩写"
+  ],
+  "allowedTools": []
+}

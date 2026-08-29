@@ -1,0 +1,10 @@
+{
+  "id": "weekly-report",
+  "name": "周报整理助手",
+  "description": "将零散的每日工作记录，自动汇总成规范、结构化的周报。",
+  "enabled": true,
+  "category": "办公技能",
+  "owner": "平台示例",
+  "triggers": ["生成周报", "整理周报", "写个周报"],
+  "allowedTools": []
+}

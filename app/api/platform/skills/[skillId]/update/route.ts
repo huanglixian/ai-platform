@@ -35,7 +35,7 @@ export async function POST(request: Request, context: RouteContext) {
 
   try {
     const payload = updateSkillSchema.parse(await request.json());
-    const skillsRoot = path.join(process.cwd(), "storage", "platform", "skills");
+    const skillsRoot = path.join(process.cwd(), "storage", "agenthub", "skills");
     const targetDir = path.resolve(skillsRoot, skillId);
 
     // 安全检查，防止目录穿越

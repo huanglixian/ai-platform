@@ -1,0 +1,11 @@
+flowchart LR
+    start["开始"] --> request["请求用户提供合同全文"]
+    request --> check_text{"用户提供文本?"}
+    check_text -- "否" --> request
+    check_text -- "是" --> check_format{"是否为图片/PDF?"}
+    check_format -- "是" --> guide["引导粘贴文字"]
+    guide --> request
+    check_format -- "否" --> analyze["多维度全面分析"]
+    analyze --> report["输出结构化审核报告"]
+    report --> disclaimer["添加免责声明"]
+    disclaimer --> finish["结束"]

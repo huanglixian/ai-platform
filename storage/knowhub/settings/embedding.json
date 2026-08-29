@@ -1,0 +1,6 @@
+{
+  "baseUrl": "https://embed.huanglixian.com:1984/v1",
+  "apiKey": "XXX1234567890xxx",
+  "model": "BAAI/bge-small-zh-v1.5",
+  "updatedAt": "2026-04-09T05:34:33.915Z"
+}

@@ -1,0 +1,12 @@
+{
+  "id": "tower-match",
+  "name": "杆塔匹配",
+  "description": "根据输电线路设计条件搜索和匹配可用杆塔方案。",
+  "enabled": true,
+  "category": "业务技能",
+  "owner": "平台示例",
+  "triggers": ["杆塔搜索", "杆塔匹配", "帮我匹配杆塔"],
+  "allowedTools": ["tower.match.search"],
+  "requiresSession": true,
+  "completionTools": ["tower.match.search"]
+}

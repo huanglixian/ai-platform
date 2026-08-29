@@ -1,0 +1,10 @@
+{
+  "id": "typo-corrector",
+  "name": "文档错别字校对",
+  "description": "分析文稿中的错别字与语病，并给出修改建议。",
+  "enabled": true,
+  "category": "办公技能",
+  "owner": "平台示例",
+  "triggers": ["找错别字", "错别字校对", "纠正错别字"],
+  "allowedTools": []
+}

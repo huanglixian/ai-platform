@@ -1,0 +1,16 @@
+{
+  "id": "agreement-interpretation",
+  "name": "协议解读",
+  "description": "智能解读输电线路工程相关的占地、跨越、拆迁及补偿协议规范。",
+  "enabled": true,
+  "category": "业务技能",
+  "owner": "平台示例",
+  "triggers": [
+    "协议解读",
+    "解读协议",
+    "帮我解读协议"
+  ],
+  "allowedTools": [],
+  "requiresSession": false,
+  "completionTools": []
+}

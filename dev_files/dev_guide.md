@@ -16,7 +16,7 @@
 - 样式与 UI：`Tailwind CSS`，全局样式入口是 `app/globals.css`
 - Platform 数据：`workbench` 的知识搜索走真实接口；`tools / services / skills / apps / workflows` 按模块状态分别接真实接口、本地配置或静态模拟数据
 - Platform AI：工作台问答通过 Vercel AI SDK 接入 DeepSeek-V4，当前只做技能、工具和业务 API 推荐
-- Platform Skills：技能中心读取 `storage/platform/skills` 中的配置型技能包，`SKILL.md` 是技能执行核心；支持通过 `requiresSession` 和 `completionTools` 在工作台实现结构化多轮会话锁定与释放。
+- Platform Skills：技能中心读取 `storage/agenthub/skills` 中的配置型技能包，`SKILL.md` 是技能执行核心；支持通过 `requiresSession` 和 `completionTools` 在工作台实现结构化多轮会话锁定与释放。
 - 技能创建规范：见 `dev_files/create_skills_guide.md`
 - 工具/API 注册规范：见 `dev_files/register-tools-guide.md`
 - KnowHub 数据：文档空间、知识库、策略预设、embedding 配置走本地文件持久化；向量数据走 `SQLite + sqlite-vec`
@@ -29,7 +29,7 @@
 - `components` 与 `features`：Platform 页面实现、共享组件和业务逻辑
 - `knowhub/components` 与 `knowhub/features`：KnowHub 页面实现、共享组件和业务逻辑
 - `storage/knowhub`：KnowHub 本地持久化目录
-- `storage/platform/skills`：Platform 配置型技能包目录，每个技能包含 `SKILL.md / skill.json / references`
+- `storage/agenthub/skills`：Platform 配置型技能包目录，每个技能包含 `SKILL.md / skill.json / references`
 - `reference`：外部参考实现与调研素材
 - `dev_files`：项目开发文档与阶段性 checklist
 - `components/ui` 与 `lib`：跨模块基础控件和平台级工具
@@ -196,7 +196,7 @@ Platform 业务数据与工具：
 - 技能运行上下文构建器：`features/skills/runner.ts`
 - 技能路由器：`features/skills/router.ts`
 - 技能流程图 AI 生成工具：`features/services/tools/skills-flow.ts`
-- 配置型技能包目录：`storage/platform/skills/（技能名称）/`（内置 `SKILL.md`，可配置 `allowedTools` 白名单）
+- 配置型技能包目录：`storage/agenthub/skills/（技能名称）/`（内置 `SKILL.md`，可配置 `allowedTools` 白名单）
 - 能力卡片共用类型：`features/capabilities/types.ts`
 - Platform 导航配置：`lib/nav.ts`
 - 通用工具函数：`lib/utils.ts`

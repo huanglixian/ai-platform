@@ -12,7 +12,7 @@ export async function POST(_request: Request, context: RouteContext) {
   const { skillId } = await context.params;
 
   try {
-    const skillsRoot = path.join(process.cwd(), "storage", "platform", "skills");
+    const skillsRoot = path.join(process.cwd(), "storage", "agenthub", "skills");
     const targetDir = path.resolve(skillsRoot, skillId);
 
     // 安全检查，防止目录穿越
@@ -37,4 +37,3 @@ export async function POST(_request: Request, context: RouteContext) {
     );
   }
 }
-

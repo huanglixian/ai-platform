@@ -1,0 +1,10 @@
+{
+  "id": "route-planning",
+  "name": "路径规划",
+  "description": "提供输电线路路径自动规划与辅助设计服务，支持导入 CAD 设计图纸。",
+  "enabled": true,
+  "category": "业务技能",
+  "owner": "平台示例",
+  "triggers": ["路径规划", "规划路径", "线路规划"],
+  "allowedTools": []
+}

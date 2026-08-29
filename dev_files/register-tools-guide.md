@@ -27,7 +27,7 @@
 > Vercel AI SDK 的工具键名中不能包含点号（`.`）。后端在运行时会自动将键名中的点号替换为下划线（`_`）以兼容 SDK，前端展示时会重新转换回点号。
 
 ### 5. 绑定到技能包
-在需要使用该 API 编排的技能包目录下（如 `storage/platform/skills/your-skill/`），更新 `skill.json` 中的 `allowedTools` 数组白名单，将上面注册的键名（如 `"your.service.api"`) 加入其中。
+在需要使用该 API 编排的技能包目录下（如 `storage/agenthub/skills/your-skill/`），更新 `skill.json` 中的 `allowedTools` 数组白名单，将上面注册的键名（如 `"your.service.api"`) 加入其中。
 
 ---
 

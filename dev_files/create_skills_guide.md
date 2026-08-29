@@ -5,7 +5,7 @@
 每个技能是一个独立目录，目录名就是技能 id。示例：
 
 ```txt
-storage/platform/skills/text-summary/
+storage/agenthub/skills/text-summary/
 ├─ SKILL.md
 ├─ skill.json
 └─ references/
@@ -91,7 +91,7 @@ storage/platform/skills/text-summary/
 
 新增技能时：
 
-1. 在 `storage/platform/skills/` 下新建技能目录，例如 `text-summary`。
+1. 在 `storage/agenthub/skills/` 下新建技能目录，例如 `text-summary`。
 2. 写入 `skill.json`。
 3. 写入 `SKILL.md`。
 4. 可选增加 `references/` 文件。
@@ -105,4 +105,4 @@ storage/platform/skills/text-summary/
 - 不确定是否应该触发时，宁愿少写触发语句。
 - 一个技能只做一类明确任务，不要做成万能技能。
 - 技能输出格式必须写在 `SKILL.md`，不要写在 `skill.json`。
-- 当前 `.gitignore` 忽略 `/storage`，本地技能包默认不会随代码提交。
+- `storage/agenthub/skills` 是 AgentHub 的运行时技能目录；内置演示技能随仓库维护，用户创建或修改的技能属于本地运行时数据。

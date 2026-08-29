@@ -1,0 +1,81 @@
+{
+  "items": [
+    {
+      "id": "run_mnr241sf",
+      "knowledgeId": "knowledge_mnqt7ila",
+      "status": "succeeded",
+      "startedAt": "2026-04-09T05:48:58.767Z",
+      "finishedAt": "2026-04-09T05:49:05.139Z",
+      "fileCount": 12,
+      "chunkCount": 89,
+      "vectorCount": 89,
+      "message": "建库完成"
+    },
+    {
+      "id": "run_mnr1p24a",
+      "knowledgeId": "knowledge_mnqt7ila",
+      "status": "succeeded",
+      "startedAt": "2026-04-09T05:37:19.354Z",
+      "finishedAt": "2026-04-09T05:37:26.656Z",
+      "fileCount": 12,
+      "chunkCount": 89,
+      "vectorCount": 89,
+      "message": "建库完成"
+    },
+    {
+      "id": "run_mnr1lqqz",
+      "knowledgeId": "knowledge_mnqt7ila",
+      "status": "failed",
+      "startedAt": "2026-04-09T05:34:44.651Z",
+      "finishedAt": "2026-04-09T05:34:51.664Z",
+      "fileCount": 0,
+      "chunkCount": 0,
+      "vectorCount": 0,
+      "message": "当前向量库维度为 未知，与新的 embedding 维度 512 不一致，请先清理向量库后再重建"
+    },
+    {
+      "id": "run_mnr1k6hu",
+      "knowledgeId": "knowledge_mnqt7ila",
+      "status": "failed",
+      "startedAt": "2026-04-09T05:33:31.746Z",
+      "finishedAt": "2026-04-09T05:33:31.753Z",
+      "fileCount": 0,
+      "chunkCount": 0,
+      "vectorCount": 0,
+      "message": "fetch failed"
+    },
+    {
+      "id": "run_mnqtijkz",
+      "knowledgeId": "knowledge_mnqt7ila",
+      "status": "succeeded",
+      "startedAt": "2026-04-09T01:48:18.467Z",
+      "finishedAt": "2026-04-09T01:48:18.525Z",
+      "fileCount": 12,
+      "chunkCount": 89,
+      "vectorCount": 89,
+      "message": "建库完成"
+    },
+    {
+      "id": "run_mnqtdg3z",
+      "knowledgeId": "knowledge_mnqt7ila",
+      "status": "failed",
+      "startedAt": "2026-04-09T01:44:20.687Z",
+      "finishedAt": "2026-04-09T01:44:20.726Z",
+      "fileCount": 0,
+      "chunkCount": 0,
+      "vectorCount": 0,
+      "message": "Expected integer for INTEGER metadata column token_count, received FLOAT"
+    },
+    {
+      "id": "run_mnqt7j74",
+      "knowledgeId": "knowledge_mnqt7ila",
+      "status": "failed",
+      "startedAt": "2026-04-09T01:39:44.752Z",
+      "finishedAt": "2026-04-09T01:39:44.795Z",
+      "fileCount": 0,
+      "chunkCount": 0,
+      "vectorCount": 0,
+      "message": "__TURBOPACK__import$2e$meta__.resolve is not a function"
+    }
+  ]
+}

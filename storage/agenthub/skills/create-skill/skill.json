@@ -1,0 +1,12 @@
+{
+  "id": "create-skill",
+  "name": "创建技能",
+  "description": "基于自然语言需求自动在本地系统中创建、编写并启用一个新的技能包。",
+  "enabled": true,
+  "category": "办公技能",
+  "owner": "平台示例",
+  "triggers": ["创建技能", "新增技能", "帮我创建技能"],
+  "allowedTools": ["create_skill"],
+  "requiresSession": true,
+  "completionTools": ["create_skill"]
+}

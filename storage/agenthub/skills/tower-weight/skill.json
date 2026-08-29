@@ -1,0 +1,9 @@
+{
+  "id": "tower-weight",
+  "name": "杆塔测重",
+  "description": "根据工况条件推荐杆塔型号，并在已有数据范围内预测和估测不同工况下的杆塔塔重。",
+  "enabled": true,
+  "category": "业务技能",
+  "owner": "平台示例",
+  "triggers": ["杆塔测重", "我要杆塔测重", "杆塔重量预测"]
+}

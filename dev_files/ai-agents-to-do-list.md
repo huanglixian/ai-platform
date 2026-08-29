@@ -126,7 +126,7 @@
 - [x] `features/skills/runner.ts`
   技能运行上下文构建器，负责读取 `SKILL.md` 并返回后续 AI loop 所需的技能说明。
 
-- [x] `storage/platform/skills/`
+- [x] `storage/agenthub/skills/`
   配置型技能包目录，每个技能包含 `SKILL.md / skill.json / references`。
 
 - [x] `app/api/platform/skills/[skillId]/run/route.ts`
@@ -182,10 +182,10 @@
 - [x] `features/services/tool-registry.ts`
   平台业务 API Tools 的汇总注册中心。
 
-- [x] `storage/platform/skills/tower-match/skill.json`
+- [x] `storage/agenthub/skills/tower-match/skill.json`
   杆塔匹配技能元数据，声明 `"allowedTools": ["tower.match.search"]`。
 
-- [x] `storage/platform/skills/tower-match/SKILL.md`
+- [x] `storage/agenthub/skills/tower-match/SKILL.md`
   杆塔匹配技能编排说明，指导大模型如何追问、参数格式及结果归纳。
 
 - [x] `features/workbench/runtime-config-types.ts`

@@ -1,0 +1,9 @@
+{
+  "id": "text-summary",
+  "name": "文本摘要",
+  "description": "将长文本压缩为摘要并提取关键要点。",
+  "enabled": true,
+  "category": "办公技能",
+  "owner": "平台示例",
+  "triggers": ["帮我总结", "提取要点", "整理成摘要", "概括这段内容"]
+}
