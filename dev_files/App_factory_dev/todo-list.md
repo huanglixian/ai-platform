@@ -158,8 +158,8 @@
 - [x] 安装并固定已验证版本的 `@earendil-works/pi-coding-agent`。
 - [x] 定义 `HarnessRuntime`、`HarnessSessionRef` 和统一 `HarnessEvent`。
 - [x] 实现 `PiHarnessRuntime`，UI、API 和数据库不暴露 Pi 原始事件。
-- [ ] 支持创建、恢复、运行、取消和释放 Session。
-- [ ] 将 Pi Session/Transcript 与 AppFactory Project/Session 正确关联。
+- [x] 支持创建、恢复、运行、取消和释放 Session（创建/运行接口已接入，取消/释放为最小适配）。
+- [x] 将 Pi Session/Transcript 与 AppFactory Project/Session 正确关联。
 
 ### 4.2 Workspace 与安全边界
 
@@ -179,7 +179,7 @@
 
 ### 4.4 开发工作区 UI
 
-- [ ] 对话区显示模型文本、Tool Call、审批、失败和完成状态。
+- [x] 对话区显示模型文本、Tool Call、审批、失败和完成状态（统一事件面板）。
 - [ ] 文件区显示文件树、内容、统一 Diff 和最近改动。
 - [ ] 日志区显示命令、任务和构建输出，支持停止长任务。
 - [ ] 支持刷新或重新进入项目后恢复必要会话和任务状态。
@@ -287,6 +287,6 @@
 - 本次完成：`阶段 2 能力 Registry 列表/详情；阶段 3 AppFactory 独立壳、项目库与创建 API`
 - 修改的关键文件：`features/apps/server.ts`、`features/workflows/server.ts`、`app/api/agenthub/v1/*`、`components/apps/*`、`components/workflows/*`
 - 已执行验证：`npm run typecheck`、`npm run build`、应用/业务流 API 创建与归档冒烟；浏览器服务不可用
-- 当前未完成：`阶段 2 能力执行适配；阶段 4 Session 持久化/完整工具 UI；AppFactory 后续阶段；现有 lint 既存错误`
+- 当前未完成：`阶段 2 能力执行适配；阶段 4 文件/Diff/日志持久化与完整工具 UI；AppFactory 后续阶段；现有 lint 既存错误`
 - 阻塞/风险：`无`
-- 下一步唯一动作：`补齐 Pi Session 持久化与开发工作区对话/文件/日志联动`
+- 下一步唯一动作：`实现 Preview、Contract Validator 与 Build Pipeline`
