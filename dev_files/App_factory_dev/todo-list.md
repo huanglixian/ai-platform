@@ -155,18 +155,18 @@
 
 ### 4.1 Harness 抽象
 
-- [ ] 安装并固定已验证版本的 `@earendil-works/pi-coding-agent`。
-- [ ] 定义 `HarnessRuntime`、`HarnessSessionRef` 和统一 `HarnessEvent`。
-- [ ] 实现 `PiHarnessRuntime`，UI、API 和数据库不暴露 Pi 原始事件。
+- [x] 安装并固定已验证版本的 `@earendil-works/pi-coding-agent`。
+- [x] 定义 `HarnessRuntime`、`HarnessSessionRef` 和统一 `HarnessEvent`。
+- [x] 实现 `PiHarnessRuntime`，UI、API 和数据库不暴露 Pi 原始事件。
 - [ ] 支持创建、恢复、运行、取消和释放 Session。
 - [ ] 将 Pi Session/Transcript 与 AppFactory Project/Session 正确关联。
 
 ### 4.2 Workspace 与安全边界
 
-- [ ] 每个项目建立独立 Workspace，所有路径解析必须限制在该根目录。
-- [ ] 文件读、写、编辑、搜索和列表工具只作用于当前 Workspace。
-- [ ] Bash/命令执行固定 cwd，增加超时、输出大小、并发数和环境变量白名单。
-- [ ] 拦截明显危险命令、宿主敏感路径、Docker Socket 和跨 Workspace 访问。
+- [x] 每个项目建立独立 Workspace，所有路径解析必须限制在该根目录。
+- [x] 文件读、写、编辑、搜索和列表工具只作用于当前 Workspace。
+- [x] Bash/命令执行固定 cwd，增加超时、输出大小、并发数和环境变量白名单。
+- [x] 拦截明显危险命令、宿主敏感路径、Docker Socket 和跨 Workspace 访问。
 - [ ] 为未来 Docker Sandbox 保留轻量 Runtime seam，但本轮仅实现可信单实例 Local Workspace。
 
 ### 4.3 Skill 与项目模板
@@ -287,6 +287,6 @@
 - 本次完成：`阶段 2 能力 Registry 列表/详情；阶段 3 AppFactory 独立壳、项目库与创建 API`
 - 修改的关键文件：`features/apps/server.ts`、`features/workflows/server.ts`、`app/api/agenthub/v1/*`、`components/apps/*`、`components/workflows/*`
 - 已执行验证：`npm run typecheck`、`npm run build`、应用/业务流 API 创建与归档冒烟；浏览器服务不可用
-- 当前未完成：`阶段 2 能力执行适配；阶段 3 详情数据与完整验收；AppFactory 后续阶段；现有 lint 既存错误`
+- 当前未完成：`阶段 2 能力执行适配；阶段 4 Session 持久化/完整工具 UI；AppFactory 后续阶段；现有 lint 既存错误`
 - 阻塞/风险：`无`
-- 下一步唯一动作：`接入 Pi Harness 抽象与受控 Workspace 工具`
+- 下一步唯一动作：`补齐 Pi Session 持久化与开发工作区对话/文件/日志联动`
