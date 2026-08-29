@@ -27,7 +27,6 @@ interface Props {
 }
 
 export function WorkflowDesignerClient({ workflowId }: Props) {
-  const [workflows, setWorkflows] = useState<Workflow[]>([]);
   const [currentWorkflow, setCurrentWorkflow] = useState<Workflow | null>(null);
 
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
@@ -42,7 +41,7 @@ export function WorkflowDesignerClient({ workflowId }: Props) {
 
   // 加载数据
   useEffect(() => {
-    fetch(`/api/agenthub/v1/workflows/${workflowId}`).then((r) => r.json()).then((payload) => { const matched = payload.data as Workflow | undefined; if (matched) { setWorkflows([matched]); setCurrentWorkflow(matched); setNodes(matched.nodes as Node[]); setEdges(matched.edges as Edge[]); } });
+    fetch(`/api/agenthub/v1/workflows/${workflowId}`).then((r) => r.json()).then((payload) => { const matched = payload.data as Workflow | undefined; if (matched) { setCurrentWorkflow(matched); setNodes(matched.nodes as Node[]); setEdges(matched.edges as Edge[]); } });
   }, [workflowId, setNodes, setEdges]);
 
   // 自定义节点类型定义

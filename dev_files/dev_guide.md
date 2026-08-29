@@ -392,6 +392,13 @@ KnowHub 业务数据与服务：
 - 共享层放对位置：Platform 共享放 `components/shared`，KnowHub 私有共享放 `knowhub/components/shared`，基础控件放 `components/ui`。
 - KnowHub 保持独立导航、全宽布局、策略中心单一路由和全局策略独立配置入口。
 
+## AppFactory 说明
+
+- AppFactory 路由入口：`app/appfactory`；服务端模块：`app_factory/server`、`app_factory/contracts`、`app_factory/features`。
+- AppFactory API：`app/api/appfactory/v1`，使用独立 `storage/appfactory/appfactory.db` 和项目 Workspace。
+- Preview、Build、Deployment 由 Node 服务端运行时管理；后台任务脚本为 `npm run worker:appfactory`。
+- AppFactory 通过 `AgentHubClient` 的 `disabled/local/http` 模式访问能力和应用注册接口，不直接读写 AgentHub 数据库。
+
 ## dev_guide 编写原则
 
 - 只写当前有效状态，不写变更过程、历史路径或“原来是 A、现在改成 B”。

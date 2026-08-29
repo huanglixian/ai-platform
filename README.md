@@ -34,3 +34,6 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+# AppFactory
+
+访问 `/appfactory` 进入独立应用开发工作区。项目创建后会在 `storage/appfactory/workspaces` 建立隔离目录；后台任务使用 `npm run worker:appfactory` 执行。AppFactory 可通过 `AGENT_HUB_BASE_URL` 使用 AgentHub 的版本化能力与应用接口，也可在 `disabled` 模式下独立运行。

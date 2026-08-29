@@ -255,11 +255,11 @@
 - [ ] 验证 AppFactory 独立模式完整闭环。
 - [ ] 验证 AgentHub 工作台、Skill、应用、业务流和能力中心无回退。
 - [ ] 清理被替代的 localStorage、Mock 调用、硬编码密钥和重复事实源。
-- [ ] 完成错误、加载、空数据、取消、重试和异常恢复状态。
+- [~] 完成错误、加载、空数据、取消、重试和异常恢复状态（核心 API 已覆盖，Pi/进程异常 UI 仍需完善）。
 - [ ] 检查桌面、平板、移动端；工具工作区优先利用视口，不堆大标题和无效卡片。
-- [ ] 全项目通过 lint、typecheck、生产 build 和核心浏览器操作验证。
-- [ ] 更新 `.env.example`、启动/Worker 脚本、部署说明和 `dev_files/dev_guide.md`。
-- [ ] 更新本文件进度摘要，记录已验证范围、已知限制和后续事项。
+- [ ] 全项目通过 lint、typecheck、生产 build 和核心浏览器操作验证（lint 仍有既存错误）。
+- [x] 更新 `.env.example`、启动/Worker 脚本、部署说明和 `dev_files/dev_guide.md`。
+- [x] 更新本文件进度摘要，记录已验证范围、已知限制和后续事项。
 
 ### 阶段 6 验收
 
@@ -283,10 +283,10 @@
 ## 会话交接记录（每次结束前更新）
 
 - 日期：`2026-08-29`
-- 当前阶段：`阶段 3`
-- 本次完成：`阶段 2 能力 Registry 列表/详情；阶段 3 AppFactory 独立壳、项目库与创建 API`
-- 修改的关键文件：`features/apps/server.ts`、`features/workflows/server.ts`、`app/api/agenthub/v1/*`、`components/apps/*`、`components/workflows/*`
-- 已执行验证：`npm run typecheck`、`npm run build`、应用/业务流 API 创建与归档冒烟；浏览器服务不可用
-- 当前未完成：`阶段 2 能力执行适配深度测试；阶段 4 Diff/日志持久化；阶段 5 真实 Build Pipeline 与健康检查；阶段 6 端到端交付硬化；现有 lint 既存错误`
+- 当前阶段：`阶段 6`
+- 本次完成：`阶段 5 状态查询与阶段 6 交付文档、端到端 API 冒烟`
+- 修改的关键文件：`app/api/appfactory/v1/projects/[id]/status`、`app/appfactory/projects/[id]/page.tsx`、`.env.example`、`README.md`、`dev_files/dev_guide.md`
+- 已执行验证：`npm run typecheck`、`npm run build`、项目→Check→Build→Release API 闭环；注册在缺少 AgentHub 地址时按预期返回 502
+- 当前未完成：`Pi 真实模型执行、完整 Next.js Build/Standalone、健康检查、Diff/日志持久化、浏览器视觉验证；lint 仍有既存错误`
 - 阻塞/风险：`无`
-- 下一步唯一动作：`完成端到端闭环验证并清理剩余重复数据源与交付文档`
+- 下一步唯一动作：`补齐 Preview/Deployment 健康检查与真实项目构建，并完成浏览器验证`
