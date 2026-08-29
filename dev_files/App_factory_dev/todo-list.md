@@ -197,10 +197,10 @@
 
 ### 5.1 App Contract 与项目检查
 
-- [ ] 定义最小 `app.yaml` 和 JSON Schema：名称、版本、runtime、entry、healthPath、capabilities。
-- [ ] 实现 Contract Validator 和项目结构 Validator。
+- [x] 定义最小 `app.yaml` 和 JSON Schema：名称、版本、runtime、entry、healthPath、capabilities。
+- [x] 实现 Contract Validator 和项目结构 Validator。
 - [ ] 发布前检查硬编码密钥、内部 URL、缺失健康检查和无效能力绑定。
-- [ ] 将检查结果在 UI 中按错误/警告/通过清楚展示。
+- [x] 将检查结果通过 Check API 按错误/警告/通过返回（UI 展示待补）。
 
 ### 5.2 Preview Runtime
 
@@ -287,6 +287,6 @@
 - 本次完成：`阶段 2 能力 Registry 列表/详情；阶段 3 AppFactory 独立壳、项目库与创建 API`
 - 修改的关键文件：`features/apps/server.ts`、`features/workflows/server.ts`、`app/api/agenthub/v1/*`、`components/apps/*`、`components/workflows/*`
 - 已执行验证：`npm run typecheck`、`npm run build`、应用/业务流 API 创建与归档冒烟；浏览器服务不可用
-- 当前未完成：`阶段 2 能力执行适配；阶段 4 文件/Diff/日志持久化与完整工具 UI；AppFactory 后续阶段；现有 lint 既存错误`
+- 当前未完成：`阶段 2 能力执行适配；阶段 5 Preview/Build/Release/Deployment 完整链路；阶段 4 文件/Diff/日志持久化；现有 lint 既存错误`
 - 阻塞/风险：`无`
-- 下一步唯一动作：`实现 Preview、Contract Validator 与 Build Pipeline`
+- 下一步唯一动作：`实现受管 Preview 进程与 Release 元数据`
