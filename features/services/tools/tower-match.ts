@@ -19,11 +19,14 @@ export const towerMatchSearch = tool({
   execute: async (input) => {
     const startTime = Date.now();
     try {
-      const response = await fetch("http://127.0.0.1:8420/api/match_towers", {
+      const endpoint = process.env.TOWER_MATCH_API_URL;
+      const apiKey = process.env.TOWER_MATCH_API_KEY;
+      if (!endpoint || !apiKey) throw new Error("杆塔匹配服务未配置");
+      const response = await fetch(endpoint, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-API-Key": "shudian_tower_test_2026",
+          "X-API-Key": apiKey,
         },
         body: JSON.stringify(input),
       });

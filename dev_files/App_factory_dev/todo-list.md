@@ -96,7 +96,7 @@
 - [x] 将现有 tools、services、skills 的展示元数据迁入统一 Registry。
 - [ ] 保留代码实现注册表，但仅作为 `handlerKey → implementation` 的执行适配器。
 - [ ] 工作台可从统一 Registry 取得可用能力并继续正常执行现有 Tool。
-- [ ] 外部业务 API 的 URL 和 Key 改由环境变量/Secret Resolver 提供，删除源码明文密钥。
+- [x] 外部业务 API 的 URL 和 Key 改由环境变量/Secret Resolver 提供，删除源码明文密钥。
 - [x] 实现能力列表、详情及必要的 test/invoke API（列表/详情已完成）。
 - [ ] 验证 Schema、禁用状态、缺失 handler、超时和外部错误处理。
 
@@ -105,8 +105,8 @@
 - [ ] 固化 `/api/agenthub/v1` 的版本化接口和 Zod transport contract。
 - [ ] 确认 Application Registry API 可供 AppFactory 幂等创建/更新应用。
 - [ ] 为外部调用预留 `request actor` 和审计字段，但不实现鉴权。
-- [ ] 增加 `NEXT_PUBLIC_APPFACTORY_URL` 或等价 service-link 配置。
-- [ ] 在“配置管理”后增加弱化的“应用开发 ↗”入口；默认 `/appfactory`，未来支持独立域名。
+- [x] 增加 `NEXT_PUBLIC_APPFACTORY_URL` 或等价 service-link 配置。
+- [x] 在“配置管理”后增加弱化的“应用开发 ↗”入口；默认 `/appfactory`，未来支持独立域名。
 - [ ] 工作台仍是默认首页，普通 AgentHub 导航和激活状态不回退。
 
 ### 阶段 2 验收

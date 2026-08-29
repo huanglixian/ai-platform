@@ -62,6 +62,11 @@ export const platformNavGroups: PlatformNavGroup[] = [
       { label: "用户管理", disabled: true, hint: "用户账号与成员维护" },
     ],
   },
+  {
+    key: "appfactory",
+    label: "应用开发 ↗",
+    href: process.env.NEXT_PUBLIC_APPFACTORY_URL || "/appfactory",
+  },
 ];
 
 export function getActiveNavGroup(pathname: string) {
