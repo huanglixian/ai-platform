@@ -211,8 +211,8 @@
 
 ### 5.3 Build 与 Release
 
-- [ ] Job Pipeline 执行依赖准备、Contract Check、Lint、TypeScript、`next build`。
-- [ ] 保存 Build 状态、阶段、日志、耗时、commit/snapshot 信息和错误。
+- [x] Job Pipeline 执行依赖准备、Contract Check、Lint、TypeScript、`next build`（存在 package.json 时执行，缺失时保留 Contract-only 构建）。
+- [x] 保存 Build 状态、阶段、日志、耗时、commit/snapshot 信息和错误（阶段与日志已持久化）。
 - [x] Build 成功后创建不可变 Release 与版本号。
 - [ ] 优先生成并验证 Next.js standalone 或等价稳定产物。
 - [x] 失败 Build 不污染上一稳定 Release。
@@ -287,6 +287,6 @@
 - 本次完成：`阶段 5 状态查询与阶段 6 交付文档、端到端 API 冒烟`
 - 修改的关键文件：`app/api/appfactory/v1/projects/[id]/status`、`app/appfactory/projects/[id]/page.tsx`、`.env.example`、`README.md`、`dev_files/dev_guide.md`
 - 已执行验证：`npm run typecheck`、`npm run build`、项目→Check→Build→Release API 闭环；注册在缺少 AgentHub 地址时按预期返回 502
-- 当前未完成：`Pi 真实模型执行、完整 Next.js Build/Standalone、健康检查、Diff/日志持久化、浏览器视觉验证；lint 仍有既存错误`
+- 当前未完成：`Pi 真实模型执行、完整 Next.js Build/Standalone、Deployment 健康检查、Diff/日志持久化、浏览器视觉验证；lint 仍有既存错误`
 - 阻塞/风险：`无`
-- 下一步唯一动作：`补齐 Preview/Deployment 健康检查与真实项目构建，并完成浏览器验证`
+- 下一步唯一动作：`补齐 Deployment 健康检查、应用打开入口和最终交付审计`
