@@ -396,6 +396,8 @@ KnowHub 业务数据与服务：
 
 - AppFactory 路由入口：`app/appfactory`；服务端模块：`app_factory/server`、`app_factory/contracts`、`app_factory/features`。
 - AppFactory API：`app/api/appfactory/v1`，使用独立 `storage/appfactory/appfactory.db` 和项目 Workspace。
+- AppFactory 文件接口：`app/api/appfactory/v1/projects/[id]/files` 提供 Workspace 文件树、读写、初始快照 Diff 和最近改动查询。
+- Pi Harness：`app_factory/features/pi-harness.ts` 使用非交互 `--print`、受控 Workspace 和 `APPFACTORY_PI_PROVIDER/APPFACTORY_PI_MODEL`；配置 DeepSeek 时复用 `DEEPSEEK_API_KEY`。
 - Preview、Build、Deployment 由 Node 服务端运行时管理；后台任务脚本为 `npm run worker:appfactory`。
 - AppFactory 通过 `AgentHubClient` 的 `disabled/local/http` 模式访问能力和应用注册接口，不直接读写 AgentHub 数据库。
 

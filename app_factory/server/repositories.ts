@@ -2,7 +2,7 @@ import {
   bindCapability, claimJob, createBuild, createDeployment, createJob, createProject,
   createRelease, createRun, createSession, failActiveRun, finishJob, finishRun, getLatestBuild, getLatestDeployment,
   getLatestRelease, getProject, getSession, listJobs, listProjects, listSessions, setSessionStatus, setSessionTranscriptPath,
-  updateBuild,
+  updateBuild, updateDeploymentStatus,
 } from "./database";
 
 export const projectRepository = { list: listProjects, create: createProject, get: getProject };
@@ -11,5 +11,5 @@ export const runRepository = { create: createRun, finish: finishRun, failActive:
 export const jobRepository = { list: listJobs, create: createJob, claim: claimJob, finish: finishJob };
 export const buildRepository = { create: createBuild, latest: getLatestBuild, update: updateBuild };
 export const releaseRepository = { create: createRelease, latest: getLatestRelease };
-export const deploymentRepository = { create: createDeployment, latest: getLatestDeployment };
+export const deploymentRepository = { create: createDeployment, latest: getLatestDeployment, updateStatus: updateDeploymentStatus };
 export const capabilityBindingRepository = { create: bindCapability };

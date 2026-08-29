@@ -17,13 +17,27 @@ import {
 } from "@/features/workbench/api";
 
 type WorkbenchMode = "search" | "chat";
+type JsonRecord = Record<string, unknown>;
+type ToolData = { name: string; args?: unknown; result?: JsonRecord };
+type ParsedPart =
+  | { type: "text"; content: string }
+  | { type: "tool_call"; content: string; data: ToolData }
+  | { type: "tool_result"; content: string; data: ToolData };
+
+function isRecord(value: unknown): value is JsonRecord {
+  return typeof value === "object" && value !== null;
+}
+
+function isToolData(value: unknown): value is ToolData {
+  return isRecord(value) && typeof value.name === "string";
+}
 
 function createMessageId() {
   return `msg-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
 function parseAssistantMessageSafe(content: string) {
-  const parts: Array<{ type: "text" | "tool_call" | "tool_result"; content: string; data?: any }> = [];
+  const parts: ParsedPart[] = [];
   let currentIndex = 0;
 
   while (currentIndex < content.length) {
@@ -103,8 +117,12 @@ function parseAssistantMessageSafe(content: string) {
     const fullMatchText = content.slice(foundIdx, endIdx + 1);
 
     try {
-      const data = JSON.parse(jsonStr);
-      parts.push({ type, content: fullMatchText, data });
+      const data: unknown = JSON.parse(jsonStr);
+      if (isToolData(data)) {
+        parts.push({ type, content: fullMatchText, data });
+      } else {
+        parts.push({ type: "text", content: fullMatchText });
+      }
     } catch {
       parts.push({ type: "text", content: fullMatchText });
     }
@@ -115,9 +133,9 @@ function parseAssistantMessageSafe(content: string) {
   return parts;
 }
 
-function ToolResultView({ name, result }: { name: string; result: any }) {
+function ToolResultView({ name, result }: { name: string; result: JsonRecord | null | undefined }) {
   if (!result || result.success === false) {
-    return <div className="text-[#d32f2f] font-sans">调用失败：{result?.error || "未知接口错误"}</div>;
+    return <div className="text-[#d32f2f] font-sans">调用失败：{String(result?.error || "未知接口错误")}</div>;
   }
 
   const dataList = result.data;
@@ -139,27 +157,31 @@ function ToolResultView({ name, result }: { name: string; result: any }) {
             </tr>
           </thead>
           <tbody>
-            {dataList.map((item: any, idx: number) => (
+            {dataList.map((rawItem, idx: number) => {
+              const item = isRecord(rawItem) ? rawItem : {};
+              const value = (key: string, fallbackKey?: string) => item[key] ?? (fallbackKey ? item[fallbackKey] : undefined);
+              return (
               <tr key={idx} className="border-b border-[#e2eaf2] hover:bg-[#fafcfe] last:border-b-0">
                 <td className="px-3 py-1.5 whitespace-nowrap">{idx + 1}</td>
                 <td className="px-3 py-1.5 font-mono font-bold text-[#2474a6] whitespace-nowrap">
-                  {item.杆塔名称 || item.towerName}
+                  {String(value("杆塔名称", "towerName") ?? "")}
                 </td>
-                <td className="px-3 py-1.5 whitespace-nowrap">{item.杆塔类型 || item.towerType}</td>
+                <td className="px-3 py-1.5 whitespace-nowrap">{String(value("杆塔类型", "towerType") ?? "")}</td>
                 <td className="px-3 py-1.5 whitespace-nowrap">
-                  {item.电压等级 || item.voltageClass}
-                  {String(item.电压等级 || item.voltageClass).toLowerCase().includes("kv") ? "" : "kV"}
+                  {String(value("电压等级", "voltageClass") ?? "")}
+                  {String(value("电压等级", "voltageClass") ?? "").toLowerCase().includes("kv") ? "" : "kV"}
                 </td>
-                <td className="px-3 py-1.5 whitespace-nowrap">{item.杆塔材质 || item.towerMaterial}</td>
-                <td className="px-3 py-1.5 font-mono whitespace-nowrap">{item.呼高 || item.expectedHeight}</td>
+                <td className="px-3 py-1.5 whitespace-nowrap">{String(value("杆塔材质", "towerMaterial") ?? "")}</td>
+                <td className="px-3 py-1.5 font-mono whitespace-nowrap">{String(value("呼高", "expectedHeight") ?? "")}</td>
                 <td className="px-3 py-1.5 font-mono whitespace-nowrap">
-                  {parseFloat(item.总重量 || item.totalWeight || "0").toLocaleString()}
+                  {Number.parseFloat(String(value("总重量", "totalWeight") ?? "0")).toLocaleString()}
                 </td>
                 <td className="px-3 py-1.5 font-mono text-[#2e7d32] whitespace-nowrap">
-                  {parseFloat(item.match_score || item.score || "0").toFixed(4)}
+                  {Number.parseFloat(String(value("match_score", "score") ?? "0")).toFixed(4)}
                 </td>
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -196,14 +218,14 @@ function AssistantMessageContent({ content }: { content: string }) {
       }
     } else if (part.type === "tool_call") {
       const toolId = `${part.data.name}-${toolIndex++}`;
-      let matchedResult: any = null;
+      let matchedResult: JsonRecord | null = null;
 
       // 向后寻找对应配对的 result
       for (let j = i + 1; j < parts.length; j++) {
-        if (parts[j].type === "tool_result" && parts[j].data.name === part.data.name) {
-          matchedResult = parts[j].data.result;
-          parts[j].type = "text";
-          parts[j].content = "";
+        const candidate = parts[j];
+        if (candidate.type === "tool_result" && candidate.data.name === part.data.name) {
+          matchedResult = candidate.data.result ?? null;
+          parts[j] = { type: "text", content: "" };
           break;
         }
       }
@@ -235,22 +257,16 @@ function AssistantMessageContent({ content }: { content: string }) {
   );
 }
 
-function ToolInvocationCard({ name, args, result }: { name: string; args: any; result?: any }) {
-  const [expanded, setExpanded] = useState(false);
+function ToolInvocationCard({ name, args, result }: { name: string; args?: unknown; result?: JsonRecord | null }) {
+  const [expanded, setExpanded] = useState<boolean | null>(null);
   const isPending = !result;
   const isSuccess = result?.success !== false;
-
-  // 当结果返回后，自动展开卡片展示结果
-  useEffect(() => {
-    if (result) {
-      setExpanded(true);
-    }
-  }, [result]);
+  const isExpanded = expanded ?? Boolean(result);
 
   return (
     <div className="my-2.5 overflow-hidden rounded-[10px] border border-[#e2eaf2] bg-[#f7fafd] text-[13px] leading-5 text-title">
       <div 
-        onClick={() => setExpanded(!expanded)}
+        onClick={() => setExpanded(!isExpanded)}
         className="flex cursor-pointer items-center justify-between px-3 py-2 hover:bg-[#eef4fa] transition-colors"
       >
         <div className="flex items-center gap-2">
@@ -267,10 +283,10 @@ function ToolInvocationCard({ name, args, result }: { name: string; args: any; r
           </span>
         </div>
         <span className="text-[11px] text-[#7f8ea3] hover:text-[#2474a6]">
-          {expanded ? "收起 ▴" : "详情 ▾"}
+          {isExpanded ? "收起 ▴" : "详情 ▾"}
         </span>
       </div>
-      {expanded && (
+      {isExpanded && (
         <div className="border-t border-[#e2eaf2] bg-white p-3 text-[11px] text-[#4f5e71]">
           {isPending ? (
             <div>

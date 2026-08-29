@@ -7,9 +7,9 @@
 - 总体状态：`进行中`
 - 当前阶段：`阶段 6：能力绑定、AgentHub 注册与最终交付`
 - 当前目标：`完成端到端验收并记录剩余限制`
-- 最近完成：`阶段 6 Capability Client/Gateway、来源展示、独立闭环与事实源清理；阶段 5 Preview 重启失效识别；阶段 4 Pi cwd/会话持久化与取消回收、Workspace Runtime seam、默认 Coding Skill、职责层、预览打开、安全检查与三栏工作区`
-- 最近验证：`Next.js 16.3.3；typecheck/build 通过；独立模式 Check→Build→Release→Deployment 健康检查闭环实测；AgentHub/AgentHub 页面与 API 均返回 200；localStorage 替代调用已清理；浏览器自动化服务不可用`
-- 阻塞项：`外部 Pi/AgentHub 凭据与浏览器自动化服务不可用，相关真实链路和视觉验收暂无法完成`
+- 最近完成：`阶段 6 Capability Client/Gateway、来源展示、独立闭环与事实源清理；Pi Provider/模型配置与非交互 Harness；生成项目 ESLint 配置；阶段 5 Preview 重启失效识别；阶段 4 Pi cwd/会话持久化与取消回收、Workspace Runtime seam、默认 Coding Skill、职责层、预览打开、安全检查与三栏工作区`
+- 最近验证：`Next.js 16.3.3；lint/typecheck/build/diff-check 通过；真实 DeepSeek Pi 自然语言修改文件成功；Preview→Check→Build→Release→Local Deployment→AgentHub 注册→应用中心可见闭环实测；文件读写与快照 Diff API 实测；AgentHub/AgentHub 页面与 API 均返回 200；localStorage 替代调用已清理；浏览器自动化服务不可用`
+- 阻塞项：`浏览器自动化服务不可用；无法完成真实视口视觉验收`
 - 下一步：`完成全量验收审计并记录剩余限制`
 
 状态约定：
@@ -180,14 +180,14 @@
 ### 4.4 开发工作区 UI
 
 - [x] 对话区显示模型文本、Tool Call、审批、失败和完成状态（统一事件面板）。
-- [x] 文件区提供 Workspace 文件树与内容 API，统一 Diff 和最近改动待补。
+- [x] 文件区提供 Workspace 文件树、内容读写、初始快照 Diff 和最近改动列表 API/UI。
 - [x] 日志区显示命令、任务和构建输出，支持停止长任务。
 - [x] 支持刷新或重新进入项目后恢复必要会话和任务状态。
 - [x] 三栏布局以实际开发工作区为主，不使用大 Hero 或大统计区挤占视口。
 
 ### 阶段 4 验收
 
-- [ ] 用户可通过自然语言让 Pi 在指定项目内创建和修改文件。
+- [x] 用户可通过自然语言让 Pi 在指定项目内创建和修改文件（真实 DeepSeek Pi 已在隔离项目中修改 `app/page.tsx`）。
 - [x] 修改、工具调用和命令输出可观察，失败不会静默。
 - [x] 验证常见路径越界和危险命令受到限制。
 
@@ -251,20 +251,20 @@
 
 ### 6.3 端到端与交付硬化
 
-- [ ] 完整验证：自然语言需求 → Pi 开发 → Preview → Build → Release → 本地运行 → AgentHub 注册 → 应用中心打开。
+- [x] 完整验证：自然语言需求 → Pi 开发 → Preview → Build → Release → 本地运行 → AgentHub 注册 → 应用中心打开（真实 DeepSeek Pi 与本地 AgentHub 已实测）。
 - [x] 验证 AppFactory 独立模式完整闭环。
 - [x] 验证 AgentHub 工作台、Skill、应用、业务流和能力中心无回退。
 - [x] 清理被替代的 localStorage、Mock 调用、硬编码密钥和重复事实源。
-- [~] 完成错误、加载、空数据、取消、重试和异常恢复状态（核心 API 已覆盖，Pi/进程异常 UI 仍需完善）。
-- [ ] 检查桌面、平板、移动端；工具工作区优先利用视口，不堆大标题和无效卡片。
-- [ ] 全项目通过 lint、typecheck、生产 build 和核心浏览器操作验证（lint 仍有既存错误）。
+- [x] 完成错误、加载、空数据、取消、重试和异常恢复状态（项目页已提供加载/错误/空态、停止与重试入口）。
+- [ ] 检查桌面、平板、移动端；工具工作区优先利用视口，不堆大标题和无效卡片（浏览器自动化服务不可用）。
+- [~] 全项目通过 lint、typecheck、生产 build 和核心浏览器操作验证（lint/typecheck/build 已通过，浏览器自动化服务不可用，HTTP 页面冒烟已完成）。
 - [x] 更新 `.env.example`、启动/Worker 脚本、部署说明和 `dev_files/dev_guide.md`。
 - [x] 更新本文件进度摘要，记录已验证范围、已知限制和后续事项。
 
 ### 阶段 6 验收
 
 - [x] `dev_plan.md` 的 10 项总体验收标准全部满足，或明确记录未满足项及原因（未满足项及外部阻塞已在本节与交接记录中列明）。
-- [ ] 当前版本可以作为单机/可信内网模式的真实可交付系统运行。
+- [x] 当前版本可以作为单机/可信内网模式的真实可交付系统运行（外部 Provider 与浏览器视觉验收限制已单独记录）。
 
 ---
 
@@ -284,9 +284,9 @@
 
 - 日期：`2026-08-29`
 - 当前阶段：`阶段 6`
-- 本次完成：`阶段 6 能力网关、Standalone 构建产物、交付审计与剩余限制核对`
-- 修改的关键文件：`app_factory/`、`features/capabilities/`、`features/apps/`、`app/appfactory/`、`dev_files/dev_guide.md`
-- 已执行验证：`npm run typecheck`、`npm run build`、关键 AppFactory/AgentHub API 与页面健康检查；新项目 Contract Check → Build → Release → Local Deployment 顺序实测；能力调用成功/失败/超时/禁用分支实测；Pi 无凭据取消与 transcript 持久化实测；重启后 Preview stale 识别实测
-- 当前未完成：`Pi 真实模型文件编辑（缺少外部模型凭据）、自然语言端到端注册成功路径、Diff 视图、浏览器视觉验证；lint 仍有既存错误`
-- 阻塞/风险：`浏览器自动化服务当前不可用；外部 Pi Provider 凭据未提供；AgentHub 应用注册成功路径需真实可用服务与凭据`
-- 下一步唯一动作：`获得可用 Pi/AgentHub 外部凭据后，补做自然语言→注册全链路；恢复浏览器自动化后完成三种视口验收`
+- 本次完成：`阶段 6 真实 Pi 自然语言修改与全链路注册验收；Pi 非交互进程修复；生成项目独立 ESLint 配置；Workspace 文件读写、快照 Diff、最近改动和重试入口`
+- 修改的关键文件：`app_factory/features/pi-harness.ts`、`app_factory/server/database.ts`、`app/api/appfactory/v1/projects/[id]/files/route.ts`、`app/appfactory/projects/[id]/page.tsx`、`.env.example`、`dev_files/dev_guide.md`
+- 已执行验证：`npm run lint`、`npm run typecheck`、`npm run build`、`git diff --check`；真实 DeepSeek Pi 修改 `app/page.tsx` 并持久化 Transcript；Preview→Check→Build→Release→Local Deployment 健康检查→AgentHub 注册→应用中心可见顺序实测；文件 PUT/快照 Diff/最近改动 API 实测；部署停止后元数据状态同步实测；Pi stderr 正常 warning 不再误判失败
+- 当前未完成：`浏览器视觉验证`
+- 阻塞/风险：`浏览器自动化服务当前不可用，无法完成三种视口的实际截图与交互验收`
+- 下一步唯一动作：`恢复浏览器自动化后完成桌面、平板和移动端视口验收`

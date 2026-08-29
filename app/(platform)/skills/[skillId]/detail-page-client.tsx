@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -115,14 +115,6 @@ export function SkillDetailPageClient({ skill }: SkillDetailPageClientProps) {
   const [analyzeError, setAnalyzeError] = useState("");
   const [flowMermaid, setFlowMermaid] = useState(skill.flowMermaid || "");
   const [hasAttemptedAuto, setHasAttemptedAuto] = useState(false);
-
-  // 自动兜底生成：当首次访问详情页且发现没有流程图时，后台自动静默拉起分析生成，防止 IDE 离线修改断档
-  useEffect(() => {
-    if (!flowMermaid && !analyzing && !analyzeError && !hasAttemptedAuto) {
-      setHasAttemptedAuto(true);
-      void handleAnalyze();
-    }
-  }, [flowMermaid, analyzing, analyzeError, hasAttemptedAuto]);
 
   // 表单及文件状态
   const [name, setName] = useState(skill.name);
@@ -253,7 +245,7 @@ export function SkillDetailPageClient({ skill }: SkillDetailPageClientProps) {
     }
   };
 
-  const handleAnalyze = async () => {
+  const handleAnalyze = useCallback(async () => {
     setAnalyzing(true);
     setAnalyzeError("");
 
@@ -274,7 +266,15 @@ export function SkillDetailPageClient({ skill }: SkillDetailPageClientProps) {
     } finally {
       setAnalyzing(false);
     }
-  };
+  }, [skill.id]);
+
+  // 自动兜底生成：首次访问详情页且没有流程图时静默拉起分析。
+  useEffect(() => {
+    if (!flowMermaid && !analyzing && !analyzeError && !hasAttemptedAuto) {
+      setHasAttemptedAuto(true);
+      void handleAnalyze();
+    }
+  }, [flowMermaid, analyzing, analyzeError, hasAttemptedAuto, handleAnalyze]);
 
   return (
     <div className="w-full max-w-none flex flex-col gap-4">

@@ -1,4 +1,4 @@
-import { streamText, pruneMessages, type ModelMessage } from "ai";
+import { streamText, pruneMessages, stepCountIs, type ModelMessage, type ToolSet } from "ai";
 
 import { getActiveModelRuntime } from "@/features/models/provider";
 import { buildSkillRunContext } from "@/features/skills/runner";
@@ -87,7 +87,7 @@ export async function streamWorkbenchRecommendation(
     if (skillContext.ok) {
       // 根据 allowedTools 动态过滤并挂载本轮可用的 API 工具
       const allowedToolsNames = skillContext.metadata.allowedTools || [];
-      const activeTools: Record<string, any> = {};
+      const activeTools: ToolSet = {};
 
       for (const toolName of allowedToolsNames) {
         const capability = getCapabilityByHandlerKey(toolName);
@@ -104,7 +104,7 @@ export async function streamWorkbenchRecommendation(
 
       // 如果有可用的工具，才挂载 tools 和 maxSteps，否则不传以保障极致的纯文本流式输出响应性能
       const hasTools = Object.keys(activeTools).length > 0;
-      const streamOptions: any = {
+      const streamOptions: Parameters<typeof streamText>[0] = {
         model: modelRuntime.model,
         system: buildSkillExecutionPrompt(skillContext),
         messages: prunedMessages,
@@ -114,7 +114,7 @@ export async function streamWorkbenchRecommendation(
 
       if (hasTools) {
         streamOptions.tools = activeTools;
-        streamOptions.maxSteps = 5;
+        streamOptions.stopWhen = stepCountIs(5);
       }
 
       return {
@@ -140,4 +140,3 @@ export async function streamWorkbenchRecommendation(
     activeSkillId: null,
   };
 }
-

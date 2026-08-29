@@ -46,7 +46,7 @@ export async function generateSkillFlowMermaid(skillId: string): Promise<string>
     providerOptions: modelRuntime.providerOptions,
   });
 
-  let rawText = result.text.trim();
+  const rawText = result.text.trim();
   
   // 提取干净的 Mermaid 代码，防止模型返回多余代码块包裹
   const match = rawText.match(/```mermaid\s*([\s\S]*?)\s*```/) || rawText.match(/```\s*([\s\S]*?)\s*```/);

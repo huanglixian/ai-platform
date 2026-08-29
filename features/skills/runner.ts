@@ -1,5 +1,5 @@
 import { getSkillById } from "@/features/skills/registry";
-import type { SkillRunResult } from "@/features/skills/skill-types";
+import type { SkillMetadata, SkillRunResult } from "@/features/skills/skill-types";
 
 export function buildSkillRunContext(skillId: string): SkillRunResult {
   const skill = getSkillById(skillId);
@@ -20,7 +20,8 @@ export function buildSkillRunContext(skillId: string): SkillRunResult {
     };
   }
 
-  const { baseDir: _baseDir, skillMarkdown, referenceFiles, ...metadata } = skill;
+  const { baseDir, skillMarkdown, referenceFiles, ...metadata } = skill;
+  void baseDir;
 
   return {
     ok: true,
@@ -28,7 +29,7 @@ export function buildSkillRunContext(skillId: string): SkillRunResult {
     skillName: skill.name,
     status: "ready",
     instruction: skillMarkdown,
-    metadata,
+    metadata: metadata as SkillMetadata,
     references: referenceFiles.map((r) => r.name),
   };
 }

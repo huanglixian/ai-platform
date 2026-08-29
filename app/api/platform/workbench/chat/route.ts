@@ -58,7 +58,8 @@ export async function POST(request: NextRequest) {
               controller.enqueue(`\n\n[CALL_TOOL:{"name":"${toolName}","args":${JSON.stringify(chunk.input)}}]\n\n`);
             } else if (chunk.type === "tool-result") {
               const toolName = chunk.toolName.replace(/_/g, ".");
-              const resultVal = (chunk as any).result ?? (chunk as any).output;
+              const resultChunk = chunk as { result?: unknown; output?: unknown };
+              const resultVal = resultChunk.result ?? resultChunk.output;
               controller.enqueue(`\n\n[RESULT_TOOL:{"name":"${toolName}","result":${JSON.stringify(resultVal)}}]\n\n`);
 
               // 检查调用的工具是否是当前技能的完成工具（completionTools）
@@ -68,7 +69,8 @@ export async function POST(request: NextRequest) {
                 result.activeSkillId &&
                 (completionTools.includes(originalToolName) || completionTools.includes(toolName))
               ) {
-                const isOk = resultVal?.ok === true || resultVal?.success === true;
+                const resultRecord = typeof resultVal === "object" && resultVal !== null ? resultVal as Record<string, unknown> : {};
+                const isOk = resultRecord.ok === true || resultRecord.success === true;
                 if (isOk) {
                   currentRuntimeState = {
                     activeSkillId: undefined,
@@ -112,4 +114,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
