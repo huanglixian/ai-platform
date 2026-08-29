@@ -131,7 +131,7 @@
 
 - [x] 建立 AppFactory SQLite、migration 和幂等 seed（项目表已建立，其他表按阶段增加）。
 - [x] 建立 `projects`、`sessions`、`runs`、`jobs`、`builds`、`releases`、`deployments`、`capability_bindings` 最小表。
-- [ ] 建立 Project/Session/Run/Job/Build/Release/Deployment Repository 和 Service，按真实职责逐步创建。
+- [x] 建立 Project/Session/Run/Job/Build/Release/Deployment Repository 和 Service，按真实职责逐步创建。
 - [x] 建立 SQLite Job Worker、任务领取、心跳/超时、完成、失败和重试的最小机制。
 - [x] 增加 `disabled/local/http` 三种 AgentHub 集成配置和 `AgentHubClient` 接口。
 
@@ -141,7 +141,7 @@
 - [x] 项目首页：最近项目、新建应用、最近运行/发布（运行/发布面板待后续接入）。
 - [x] 新建项目：名称、描述、默认 Skill/Profile、AgentHub 集成状态。
 - [x] 项目详情基础壳：对话、文件/日志、预览三大工作区。
-- [ ] 完成加载、空状态、错误状态和响应式基础。
+- [x] 完成加载、空状态、错误状态和响应式基础。
 
 ### 阶段 3 验收
 
@@ -167,13 +167,13 @@
 - [x] 文件读、写、编辑、搜索和列表工具只作用于当前 Workspace。
 - [x] Bash/命令执行固定 cwd，增加超时、输出大小、并发数和环境变量白名单。
 - [x] 拦截明显危险命令、宿主敏感路径、Docker Socket 和跨 Workspace 访问。
-- [ ] 为未来 Docker Sandbox 保留轻量 Runtime seam，但本轮仅实现可信单实例 Local Workspace。
+- [x] 为未来 Docker Sandbox 保留轻量 Runtime seam，但本轮仅实现可信单实例 Local Workspace。
 
 ### 4.3 Skill 与项目模板
 
-- [ ] 基于现有 `nextjs-build` 规则创建 AppFactory 默认 Coding Skill。
-- [ ] 增加 `SKILL.md + references + templates + validators` 的正式包结构。
-- [ ] 支持 references 按需读取，不把所有文档一次塞入上下文。
+- [x] 基于现有 `nextjs-build` 规则创建 AppFactory 默认 Coding Skill。
+- [x] 增加 `SKILL.md + references + templates + validators` 的正式包结构。
+- [x] 支持 references 按需读取，不把所有文档一次塞入上下文。
 - [x] 默认模板使用 Next.js App Router、TypeScript、Tailwind、shadcn/ui 和统一基础主题（已生成可构建的 Next.js App Router 最小项目）。
 - [x] 新项目自动创建 `app.yaml`、`dev_todo.md`、`dev_status.md` 等必要文件。
 
@@ -182,7 +182,7 @@
 - [x] 对话区显示模型文本、Tool Call、审批、失败和完成状态（统一事件面板）。
 - [x] 文件区提供 Workspace 文件树与内容 API，统一 Diff 和最近改动待补。
 - [ ] 日志区显示命令、任务和构建输出，支持停止长任务。
-- [ ] 支持刷新或重新进入项目后恢复必要会话和任务状态。
+- [x] 支持刷新或重新进入项目后恢复必要会话和任务状态。
 - [ ] 三栏布局以实际开发工作区为主，不使用大 Hero 或大统计区挤占视口。
 
 ### 阶段 4 验收
@@ -284,9 +284,9 @@
 
 - 日期：`2026-08-29`
 - 当前阶段：`阶段 6`
-- 本次完成：`阶段 2 对外集成面与 AppFactory 独立性验收`
-- 修改的关键文件：`dev_files/App_factory_dev/todo-list.md`
-- 已执行验证：Application Registry externalId 幂等创建、`/workbench` 默认入口、AppFactory disabled 项目创建/列表持久化均实测
+- 本次完成：`阶段 3 Repository/Service 与阶段 4 Workspace seam、默认 Coding Skill、会话 Run/Transcript 持久化、AppFactory 响应式状态`
+- 修改的关键文件：`app_factory/server/{database,repositories,services,workspace,transcript}.ts`、`app_factory/skills/`、`app_factory/types/harness.ts`、AppFactory API/UI
+- 已执行验证：`npm run typecheck`、`npm run build`；AppFactory 项目/Session/Run/Job/Build/Release/Deployment/Binding 均经独立 Repository/Service 编排；API 错误状态与页面入口实测
 - 当前未完成：`Pi 真实模型执行、完整 Next.js Build/Standalone、Diff/日志持久化、AgentHub 注册成功路径、浏览器视觉验证；lint 仍有既存错误`
 - 阻塞/风险：`无`
 - 下一步唯一动作：`补齐 Pi 会话持久化、Standalone/Diff/日志后再进行最终验收`
