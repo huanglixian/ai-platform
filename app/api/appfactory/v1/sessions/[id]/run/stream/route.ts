@@ -39,6 +39,7 @@ export async function POST(
           data: { runId: run.id, status: "running" },
         }),
       );
+      const heartbeat = setInterval(() => send(": heartbeat\n\n"), 15_000);
 
       try {
         let failed = false;
@@ -71,6 +72,7 @@ export async function POST(
           }),
         );
       } finally {
+        clearInterval(heartbeat);
         if (!disconnected) {
           try {
             controller.close();
