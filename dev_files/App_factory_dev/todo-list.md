@@ -236,9 +236,9 @@
 
 ### 6.1 能力绑定
 
-- [ ] 为 Pi 增加 `capability.search`、`capability.describe`、`capability.bind`、`capability.test`。
-- [ ] `disabled` 模式下清楚提示无 AgentHub 能力，不阻塞普通应用开发。
-- [ ] 绑定结果写入 `app.yaml` 和 `capability_bindings`，不写入真实密钥。
+- [x] 为 Pi 增加 `capability.search`、`capability.describe`、`capability.bind`、`capability.test`（搜索/绑定 API 已接入，describe 复用 AgentHub 详情接口）。
+- [x] `disabled` 模式下清楚提示无 AgentHub 能力，不阻塞普通应用开发。
+- [x] 绑定结果写入 `app.yaml` 和 `capability_bindings`，不写入真实密钥。
 - [ ] 生成应用通过稳定 Client/Gateway 按 Capability ID 调用能力。
 
 ### 6.2 注册 AgentHub
@@ -287,6 +287,6 @@
 - 本次完成：`阶段 2 能力 Registry 列表/详情；阶段 3 AppFactory 独立壳、项目库与创建 API`
 - 修改的关键文件：`features/apps/server.ts`、`features/workflows/server.ts`、`app/api/agenthub/v1/*`、`components/apps/*`、`components/workflows/*`
 - 已执行验证：`npm run typecheck`、`npm run build`、应用/业务流 API 创建与归档冒烟；浏览器服务不可用
-- 当前未完成：`阶段 2 能力执行适配；阶段 4 Diff/日志持久化；阶段 5 真实 Build Pipeline 与端到端验收；现有 lint 既存错误`
+- 当前未完成：`阶段 2 能力执行适配与注册幂等；阶段 4 Diff/日志持久化；阶段 5 真实 Build Pipeline 与端到端验收；现有 lint 既存错误`
 - 阻塞/风险：`无`
-- 下一步唯一动作：`补齐 Preview/Build/Release 状态持久化并进行阶段 5 端到端验证`
+- 下一步唯一动作：`补齐 AgentHub 注册幂等接口并验证 AppFactory 独立模式闭环`
