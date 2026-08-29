@@ -7,8 +7,8 @@
 - 总体状态：`进行中`
 - 当前阶段：`阶段 6：能力绑定、AgentHub 注册与最终交付`
 - 当前目标：`完成端到端验收并记录剩余限制`
-- 最近完成：`阶段 6 Capability Client/Gateway 与 AppFactory 来源展示；阶段 5 Preview 重启失效识别；阶段 4 Pi cwd/会话持久化与取消回收、Workspace Runtime seam、默认 Coding Skill、职责层、预览打开、安全检查与三栏工作区`
-- 最近验证：`Next.js 16.3.3；typecheck/build 通过；Capability Gateway 按绑定 ID 调用且 disabled 明确拒绝；AgentHub Application 返回 appfactory source/url；Preview 重启后返回 stale；浏览器自动化服务不可用`
+- 最近完成：`阶段 6 Capability Client/Gateway、来源展示、独立闭环与事实源清理；阶段 5 Preview 重启失效识别；阶段 4 Pi cwd/会话持久化与取消回收、Workspace Runtime seam、默认 Coding Skill、职责层、预览打开、安全检查与三栏工作区`
+- 最近验证：`Next.js 16.3.3；typecheck/build 通过；独立模式 Check→Build→Release→Deployment 健康检查闭环实测；AgentHub/AgentHub 页面与 API 均返回 200；localStorage 替代调用已清理；浏览器自动化服务不可用`
 - 阻塞项：`无`
 - 下一步：`完成全量验收审计并记录剩余限制`
 
@@ -214,7 +214,7 @@
 - [x] Job Pipeline 执行依赖准备、Contract Check、Lint、TypeScript、`next build`（存在 package.json 时执行，缺失时保留 Contract-only 构建）。
 - [x] 保存 Build 状态、阶段、日志、耗时、commit/snapshot 信息和错误（阶段与日志已持久化）。
 - [x] Build 成功后创建不可变 Release 与版本号。
-- [~] 优先生成并验证 Next.js standalone 或等价稳定产物（标准生产 Build 已验证，standalone 配置待补）。
+- [x] 优先生成并验证 Next.js standalone 或等价稳定产物（Build 阶段自动补充 standalone 配置并持久化）。
 - [x] 失败 Build 不污染上一稳定 Release。
 
 ### 5.4 Local Deployment
@@ -252,9 +252,9 @@
 ### 6.3 端到端与交付硬化
 
 - [ ] 完整验证：自然语言需求 → Pi 开发 → Preview → Build → Release → 本地运行 → AgentHub 注册 → 应用中心打开。
-- [ ] 验证 AppFactory 独立模式完整闭环。
-- [ ] 验证 AgentHub 工作台、Skill、应用、业务流和能力中心无回退。
-- [ ] 清理被替代的 localStorage、Mock 调用、硬编码密钥和重复事实源。
+- [x] 验证 AppFactory 独立模式完整闭环。
+- [x] 验证 AgentHub 工作台、Skill、应用、业务流和能力中心无回退。
+- [x] 清理被替代的 localStorage、Mock 调用、硬编码密钥和重复事实源。
 - [~] 完成错误、加载、空数据、取消、重试和异常恢复状态（核心 API 已覆盖，Pi/进程异常 UI 仍需完善）。
 - [ ] 检查桌面、平板、移动端；工具工作区优先利用视口，不堆大标题和无效卡片。
 - [ ] 全项目通过 lint、typecheck、生产 build 和核心浏览器操作验证（lint 仍有既存错误）。

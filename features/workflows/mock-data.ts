@@ -1,9 +1,5 @@
 import { Workflow, WorkflowCategory, WorkflowNode } from "./types";
 
-const WORKFLOW_STORAGE_KEY = "ai_platform_workflows";
-const WORKFLOW_STORAGE_VERSION_KEY = "ai_platform_workflows_version";
-const WORKFLOW_STORAGE_VERSION = "2026-06-11-workflow-gallery-v1";
-
 function node(
   id: string,
   type: WorkflowNode["type"],
@@ -194,50 +190,3 @@ export const INITIAL_WORKFLOWS: Workflow[] = [
     "2026-06-08T12:00:00Z",
   ),
 ];
-
-function hasValidWorkflowShape(value: unknown): value is Workflow[] {
-  return Array.isArray(value) && value.every((item) => (
-    item &&
-    typeof item === "object" &&
-    "category" in item &&
-    "nodes" in item &&
-    "edges" in item
-  ));
-}
-
-export function getLocalWorkflows(): Workflow[] {
-  if (typeof window === "undefined") return INITIAL_WORKFLOWS;
-
-  const storedVersion = localStorage.getItem(WORKFLOW_STORAGE_VERSION_KEY);
-  if (storedVersion !== WORKFLOW_STORAGE_VERSION) {
-    localStorage.setItem(WORKFLOW_STORAGE_KEY, JSON.stringify(INITIAL_WORKFLOWS));
-    localStorage.setItem(WORKFLOW_STORAGE_VERSION_KEY, WORKFLOW_STORAGE_VERSION);
-    return INITIAL_WORKFLOWS;
-  }
-
-  const stored = localStorage.getItem(WORKFLOW_STORAGE_KEY);
-  if (!stored) {
-    localStorage.setItem(WORKFLOW_STORAGE_KEY, JSON.stringify(INITIAL_WORKFLOWS));
-    localStorage.setItem(WORKFLOW_STORAGE_VERSION_KEY, WORKFLOW_STORAGE_VERSION);
-    return INITIAL_WORKFLOWS;
-  }
-
-  try {
-    const parsed = JSON.parse(stored);
-    if (!hasValidWorkflowShape(parsed)) {
-      throw new Error("Invalid workflow cache shape");
-    }
-    return parsed;
-  } catch (error) {
-    console.error("解析业务流缓存失败，重置为默认值", error);
-    localStorage.setItem(WORKFLOW_STORAGE_KEY, JSON.stringify(INITIAL_WORKFLOWS));
-    localStorage.setItem(WORKFLOW_STORAGE_VERSION_KEY, WORKFLOW_STORAGE_VERSION);
-    return INITIAL_WORKFLOWS;
-  }
-}
-
-export function saveLocalWorkflows(list: Workflow[]): void {
-  if (typeof window === "undefined") return;
-  localStorage.setItem(WORKFLOW_STORAGE_KEY, JSON.stringify(list));
-  localStorage.setItem(WORKFLOW_STORAGE_VERSION_KEY, WORKFLOW_STORAGE_VERSION);
-}

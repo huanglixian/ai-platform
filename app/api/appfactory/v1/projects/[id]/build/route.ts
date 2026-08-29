@@ -21,8 +21,14 @@ export async function POST(_: Request, context: { params: Promise<{ id: string }
   }
   let log = JSON.stringify(checks);
   try {
+    const nextConfigPath = `${project.workspacePath}/next.config.ts`;
+    const hasNextConfig = await fs.access(nextConfigPath).then(() => true).catch(() => false);
+    if (!hasNextConfig) {
+      await fs.writeFile(nextConfigPath, "const nextConfig = { output: \"standalone\" };\nexport default nextConfig;\n", "utf8");
+      log += "\n[config]\n已启用 Next.js standalone 输出";
+    }
     const hasPackage = await fs.access(`${project.workspacePath}/package.json`).then(() => true).catch(() => false);
-    const stages = hasPackage ? [["lint", "npm run lint"], ["typecheck", "npm run typecheck"], ["build", "npm run build"]] as const : [];
+    const stages = hasPackage ? [["lint", "eslint app"], ["typecheck", "npm run typecheck"], ["build", "npm run build"]] as const : [];
     for (const [stage, command] of stages) {
       buildRepository.update(build.id, "running", stage, log);
       const result = await runWorkspaceCommand(project.workspacePath, command, 120_000);

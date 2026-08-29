@@ -1,9 +1,5 @@
 import { PublishedApp } from "./types";
 
-const APP_STORAGE_KEY = "ai_platform_published_apps";
-const APP_STORAGE_VERSION_KEY = "ai_platform_published_apps_version";
-const APP_STORAGE_VERSION = "2026-06-11-app-center-v3";
-
 export const INITIAL_APPS: PublishedApp[] = [
   {
     id: "app-dify-customer-ticket",
@@ -186,38 +182,3 @@ export const INITIAL_APPS: PublishedApp[] = [
     updatedAt: "2026-06-08T12:20:00Z"
   }
 ];
-
-export function getLocalApps(): PublishedApp[] {
-  if (typeof window === "undefined") return INITIAL_APPS;
-  const storedVersion = localStorage.getItem(APP_STORAGE_VERSION_KEY);
-  if (storedVersion !== APP_STORAGE_VERSION) {
-    localStorage.setItem(APP_STORAGE_KEY, JSON.stringify(INITIAL_APPS));
-    localStorage.setItem(APP_STORAGE_VERSION_KEY, APP_STORAGE_VERSION);
-    return INITIAL_APPS;
-  }
-
-  const stored = localStorage.getItem(APP_STORAGE_KEY);
-  if (!stored) {
-    localStorage.setItem(APP_STORAGE_KEY, JSON.stringify(INITIAL_APPS));
-    localStorage.setItem(APP_STORAGE_VERSION_KEY, APP_STORAGE_VERSION);
-    return INITIAL_APPS;
-  }
-  try {
-    const parsed = JSON.parse(stored);
-    if (!Array.isArray(parsed) || parsed.some((item) => item?.appType !== "business" && item?.appType !== "general")) {
-      throw new Error("Parsed data is not an array");
-    }
-    return parsed;
-  } catch (e) {
-    console.error("解析发布应用列表失败，重置为默认值", e);
-    localStorage.setItem(APP_STORAGE_KEY, JSON.stringify(INITIAL_APPS));
-    localStorage.setItem(APP_STORAGE_VERSION_KEY, APP_STORAGE_VERSION);
-    return INITIAL_APPS;
-  }
-}
-
-export function saveLocalApps(list: PublishedApp[]): void {
-  if (typeof window === "undefined") return;
-  localStorage.setItem(APP_STORAGE_KEY, JSON.stringify(list));
-  localStorage.setItem(APP_STORAGE_VERSION_KEY, APP_STORAGE_VERSION);
-}
