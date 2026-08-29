@@ -7,8 +7,8 @@
 - 总体状态：`进行中`
 - 当前阶段：`阶段 6：能力绑定、AgentHub 注册与最终交付`
 - 当前目标：`完成端到端验收并记录剩余限制`
-- 最近完成：`阶段 5 Preview 重启失效识别；阶段 4 Pi cwd/会话持久化与取消回收、Workspace Runtime seam、默认 Coding Skill、职责层、预览打开、发布前安全检查与三栏工作区`
-- 最近验证：`Next.js 16.3.3；typecheck/build 通过；Preview 重启后返回 stale 并可重新启动；Pi 无凭据失败与 DELETE 取消均实测；安全扫描可拦截硬编码密钥；浏览器自动化服务不可用`
+- 最近完成：`阶段 6 Capability Client/Gateway 与 AppFactory 来源展示；阶段 5 Preview 重启失效识别；阶段 4 Pi cwd/会话持久化与取消回收、Workspace Runtime seam、默认 Coding Skill、职责层、预览打开、安全检查与三栏工作区`
+- 最近验证：`Next.js 16.3.3；typecheck/build 通过；Capability Gateway 按绑定 ID 调用且 disabled 明确拒绝；AgentHub Application 返回 appfactory source/url；Preview 重启后返回 stale；浏览器自动化服务不可用`
 - 阻塞项：`无`
 - 下一步：`完成全量验收审计并记录剩余限制`
 
@@ -239,14 +239,14 @@
 - [x] 为 Pi 增加 `capability.search`、`capability.describe`、`capability.bind`、`capability.test`（搜索/绑定 API 已接入，describe 复用 AgentHub 详情接口）。
 - [x] `disabled` 模式下清楚提示无 AgentHub 能力，不阻塞普通应用开发。
 - [x] 绑定结果写入 `app.yaml` 和 `capability_bindings`，不写入真实密钥。
-- [ ] 生成应用通过稳定 Client/Gateway 按 Capability ID 调用能力。
+- [x] 生成应用通过稳定 Client/Gateway 按 Capability ID 调用能力（disabled 模式明确拒绝，local/http 转发至 AgentHub invoke）。
 
 ### 6.2 注册 AgentHub
 
 - [x] 发布 API 支持本地 Release 后注册 AgentHub（UI 操作入口待细化）。
 - [x] 通过 `AgentHubClient` 幂等创建或更新 Application Registry 记录（以 externalId 查重）。
 - [x] 注册内容至少包括 producer、runtime、version、status、entryUrl、description 和 externalId。
-- [ ] AgentHub 应用中心正确显示 AppFactory 来源、版本、状态并可打开应用。
+- [x] AgentHub 应用中心正确显示 AppFactory 来源、版本、状态并可打开应用。
 - [x] AgentHub 不可用时，本地 Release 保持成功，注册请求独立失败可重试，不回滚已构建应用。
 
 ### 6.3 端到端与交付硬化

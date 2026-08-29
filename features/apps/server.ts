@@ -16,7 +16,7 @@ export const applicationInputSchema = z.object({
 });
 
 function rowToApp(row: Record<string, unknown>): PublishedApp {
-  const source = row.producer === "dify" || row.producer === "n8n" ? row.producer : "native";
+  const source = row.producer === "dify" || row.producer === "n8n" || row.producer === "appfactory" ? row.producer : "native";
   return {
     id: String(row.id), name: String(row.name), description: String(row.description ?? ""),
     source, appType: row.kind === "business" ? "business" : "general",

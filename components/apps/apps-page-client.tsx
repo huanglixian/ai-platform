@@ -7,11 +7,12 @@ import { CardPageFrame } from "@/components/shared/card-page-frame";
 import { AppType, PlatformSource, PublishedApp } from "@/features/apps/types";
 
 const ITEM_WIDTH = 300;
-const APP_TABS = ["全部", "原生", "Dify", "n8n"] as const;
+const APP_TABS = ["全部", "原生", "AppFactory", "Dify", "n8n"] as const;
 const APP_GROUP_TABS = APP_TABS.filter((tab) => tab !== "全部");
 
 const sourceLabels: Record<PlatformSource, (typeof APP_GROUP_TABS)[number]> = {
   native: "原生",
+  appfactory: "AppFactory",
   dify: "Dify",
   n8n: "n8n",
 };
@@ -23,6 +24,7 @@ const typeLabels: Record<AppType, string> = {
 
 const sourceStyles: Record<PlatformSource, { bg: string; text: string; label: string }> = {
   native: { bg: "bg-violet-50 border-violet-200", text: "text-violet-700", label: "原生" },
+  appfactory: { bg: "bg-indigo-50 border-indigo-200", text: "text-indigo-700", label: "AppFactory" },
   dify: { bg: "bg-blue-50 border-blue-200", text: "text-blue-700", label: "Dify" },
   n8n: { bg: "bg-orange-50 border-orange-200", text: "text-orange-700", label: "n8n" },
 };

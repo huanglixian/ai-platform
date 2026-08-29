@@ -1,4 +1,4 @@
-export type PlatformSource = 'dify' | 'n8n' | 'native';
+export type PlatformSource = 'dify' | 'n8n' | 'native' | 'appfactory';
 export type AppType = 'business' | 'general';
 
 export interface PublishedApp {
