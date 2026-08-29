@@ -14,6 +14,7 @@ import {
   type WorkspaceEvent,
 } from "@/app/appfactory/_components/workspace-panels";
 import type { RunFeedback } from "@/app/appfactory/_lib/run-state";
+import { parseSseBlock } from "@/app/appfactory/_lib/sse";
 
 type Project = {
   id: string;
@@ -268,7 +269,7 @@ export default function ProjectPage({
     controllerRef.current = controller;
     try {
       const response = await fetch(
-        `/api/appfactory/v1/sessions/${session.id}/run`,
+        `/api/appfactory/v1/sessions/${session.id}/run/stream`,
         {
           method: "POST",
           signal: controller.signal,
@@ -276,15 +277,67 @@ export default function ProjectPage({
           body: JSON.stringify({ prompt: submittedPrompt }),
         },
       );
-      const payload = await response.json();
-      if (!response.ok) throw new Error(errorText(payload, "Pi 执行失败"));
-      setEvents((current) => [
-        ...current,
-        ...(payload.data?.events ?? []).filter(
-          (event: WorkspaceEvent) => event.type !== "user",
-        ),
-      ]);
-      setActiveRun(null);
+      if (!response.ok) {
+        const payload = await response.json();
+        throw new Error(errorText(payload, "Pi 执行失败"));
+      }
+      if (!response.body) throw new Error("Pi 实时连接不可用");
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let terminalStatus: "completed" | "failed" | null = null;
+      const consumeBlock = (block: string) => {
+        const parsed = parseSseBlock(block);
+        if (!parsed || typeof parsed.data !== "object" || !parsed.data) return;
+        if (parsed.event === "run.finished") {
+          const data = parsed.data as { status?: string };
+          terminalStatus = data.status === "failed" ? "failed" : "completed";
+          return;
+        }
+        if (parsed.event === "run.error") {
+          const data = parsed.data as { message?: string };
+          terminalStatus = "failed";
+          const message = data.message || "Pi 实时连接失败";
+          setActiveRun((current) =>
+            current ? { ...current, status: "failed", message } : current,
+          );
+          setError(message);
+          return;
+        }
+        if (parsed.event !== "harness") return;
+        const event = parsed.data as WorkspaceEvent;
+        if (!event.type || typeof event.content !== "string") return;
+        if (event.type !== "user")
+          setEvents((current) => [...current, event]);
+        if (event.type === "completed") terminalStatus = "completed";
+        if (event.type === "error") {
+          terminalStatus = "failed";
+          setActiveRun((current) =>
+            current
+              ? { ...current, status: "failed", message: event.content }
+              : current,
+          );
+          setError(event.content);
+        }
+      };
+      while (true) {
+        const { done, value } = await reader.read();
+        buffer += decoder.decode(value, { stream: !done });
+        const blocks = buffer.split(/\r?\n\r?\n/);
+        buffer = blocks.pop() || "";
+        blocks.forEach(consumeBlock);
+        if (done) break;
+      }
+      if (buffer.trim()) consumeBlock(buffer);
+      if (terminalStatus === "completed") setActiveRun(null);
+      else if (terminalStatus !== "failed") {
+        const message = "实时连接中断，任务结果已保存在活动日志中";
+        setActiveRun((current) =>
+          current ? { ...current, status: "failed", message } : current,
+        );
+        setError(message);
+      }
       await refreshFiles();
     } catch (reason) {
       if ((reason as { name?: string })?.name !== "AbortError") {

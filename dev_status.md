@@ -22,7 +22,7 @@
 - `/api/appfactory/v1/projects`：项目列表和创建。
 - `/api/appfactory/v1/projects/[id]`：项目详情、文件、状态、Preview、Check、Build、Deploy 等操作。
 - `/api/appfactory/v1/runtime/status`：返回 AI Provider/模型、Pi Harness 和默认 Skill 的可用性，不返回密钥。
-- `/api/appfactory/v1/sessions/[id]/run` 与 `/transcript`：Pi 执行和会话记录恢复。
+- `/api/appfactory/v1/sessions/[id]/run` 与 `/transcript`：Pi 执行和会话记录恢复；`/run/stream` 提供同一执行器的 SSE 增量事件。
 - `/api/appfactory/v1/projects/[id]/register`：仅允许当前 Release 已通过健康检查并处于运行状态时注册 AgentHub，使用实际 Deployment URL。
 
 ## 关键边界
@@ -35,6 +35,7 @@
 ## 已验证
 
 - Pi + DeepSeek 真实自然语言请求可完成文件修改，刷新项目后可恢复 transcript。
+- Pi 发送态已支持即时清空输入、运行计时、停止/失败反馈；真实请求已通过 SSE 增量收到文本、完成事件，并按 `runId/sequence` 持久化。
 - Build 子进程使用生产环境，Deployment 健康检查通过后，AgentHub 注册记录使用真实运行地址。
 - 桌面、平板和移动端已通过 Chrome 视觉验收；移动端提供“对话 / 文件”切换，点击文件进入单文件查看器，关闭后返回对话。
 - 项目文件列表已从生成目录噪声收敛为源文件与配置文件。
@@ -42,5 +43,5 @@
 
 ## 已知限制
 
-- Pi 请求当前以同步 HTTP 完成后集中返回事件；实时 SSE/流式增量事件留作后续阶段。
+- Pi SSE 当前由 AppFactory Node Route Handler 直接承载，任务执行仍是单机同步进程；断开连接后服务端继续落 transcript，SQLite Job Worker 化与跨项目任务中心留作后续阶段。
 - 模板中心和全局任务中心尚未开放；当前优先使用项目内的默认起点与活动日志，待出现真实模板和异步任务需求后再增加一级入口。

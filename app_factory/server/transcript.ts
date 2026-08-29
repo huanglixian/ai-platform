@@ -7,6 +7,8 @@ export type TranscriptEvent = {
   type: string;
   content: string;
   timestamp?: string;
+  runId?: string;
+  sequence?: number;
 };
 
 export function parseTranscript(content: string): TranscriptEvent[] {

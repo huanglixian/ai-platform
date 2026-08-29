@@ -7,10 +7,10 @@
 - 总体状态：`进行中`
 - 当前阶段：`阶段 6：能力绑定、AgentHub 注册与最终交付`
 - 当前目标：`完成端到端验收并记录剩余限制`
-- 最近完成：`阶段 6 Capability Client/Gateway、来源展示、独立闭环与事实源清理；Pi Provider/模型配置与非交互 Harness；生成项目 ESLint 配置；Build 生产环境修复、健康部署地址注册与工作区发布入口；阶段 5 Preview 重启失效识别；阶段 4 Pi cwd/会话持久化与取消回收、Workspace Runtime seam、默认 Coding Skill、职责层、预览打开、安全检查与三栏工作区`
-- 最近验证：`Next.js 16.3.3；lint/typecheck/build/diff-check 通过；真实 DeepSeek Pi 自然语言修改文件成功；Preview→Check→Build→Release→Local Deployment→AgentHub 注册→应用中心可见闭环实测；文件读写与快照 Diff API 实测；AgentHub/AgentHub 页面与 API 均返回 200；localStorage 替代调用已清理；Chrome 桌面、平板、移动端视觉验收通过`
+- 最近完成：`阶段 6 Capability Client/Gateway、来源展示、独立闭环与事实源清理；Pi Provider/模型配置与非交互 Harness；生成项目 ESLint 配置；Build 生产环境修复、健康部署地址注册与工作区发布入口；阶段 5 Preview 重启失效识别；阶段 4 Pi cwd/会话持久化与取消回收、Workspace Runtime seam、默认 Coding Skill、职责层、预览打开、安全检查与三栏工作区；Pi 发送态、运行反馈与 SSE 增量事件`
+- 最近验证：`Next.js 16.3.3；lint/typecheck/build/diff-check 通过；真实 DeepSeek Pi 自然语言修改文件成功；Pi SSE started→harness→finished 事件流实测，transcript 按 runId/sequence 持久化；Preview→Check→Build→Release→Local Deployment→AgentHub 注册→应用中心可见闭环实测；文件读写与快照 Diff API 实测；AgentHub/AgentHub 页面与 API 均返回 200；localStorage 替代调用已清理；Chrome 桌面、平板、移动端视觉验收通过`
 - 阻塞项：`无`
-- 下一步：`根据后续反馈继续迭代模板、运行记录和流式事件体验`
+- 下一步：`在真实异步任务需求出现后，将 Pi Run、Build 和 Preview 逐步迁移到 SQLite Job Worker，并再建设全局任务中心；继续按反馈迭代产品体验`
 
 状态约定：
 
@@ -184,6 +184,7 @@
 - [x] 日志区显示命令、任务和构建输出，支持停止长任务。
 - [x] 支持刷新或重新进入项目后恢复必要会话和任务状态。
 - [x] 三栏布局以实际开发工作区为主，不使用大 Hero 或大统计区挤占视口。
+- [x] Pi 发送后立即清空输入并显示运行计时、停止/失败/重试反馈；新增 `/run/stream` SSE 增量事件，前端实时追加 Harness 事件，Transcript 保存 `runId/sequence`。
 
 ### 阶段 4 验收
 
