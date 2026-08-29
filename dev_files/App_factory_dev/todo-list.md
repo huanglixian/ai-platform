@@ -287,6 +287,6 @@
 - 本次完成：`阶段 5 Preview 重启失效识别与恢复语义`
 - 修改的关键文件：`app_factory/server/preview.ts`、`app/appfactory/projects/[id]/page.tsx`、`dev_files/App_factory_dev/todo-list.md`
 - 已执行验证：`npm run typecheck`、`npm run build`；Preview 进程启动/URL 返回/停止以及服务重启后 stale 状态识别均实测
-- 当前未完成：`Pi 真实模型执行（缺少外部模型凭据）、完整 Next.js Build/Standalone、Diff、Preview 重启恢复、AgentHub 注册成功路径、浏览器视觉验证；lint 仍有既存错误`
+- 当前未完成：`Pi 真实模型执行（缺少外部模型凭据）、Diff、AgentHub 注册成功路径、浏览器视觉验证；lint 仍有既存错误`
 - 阻塞/风险：`无`
-- 下一步唯一动作：`补齐 Pi 真实模型闭环、Standalone/Diff、Preview 重启恢复后再进行最终验收`
+- 下一步唯一动作：`补齐 Pi 真实模型闭环、Diff、AgentHub 注册成功路径后再进行最终验收`
