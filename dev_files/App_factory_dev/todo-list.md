@@ -174,7 +174,7 @@
 - [ ] 基于现有 `nextjs-build` 规则创建 AppFactory 默认 Coding Skill。
 - [ ] 增加 `SKILL.md + references + templates + validators` 的正式包结构。
 - [ ] 支持 references 按需读取，不把所有文档一次塞入上下文。
-- [x] 默认模板使用 Next.js App Router、TypeScript、Tailwind、shadcn/ui 和统一基础主题（Contract 模板已落地，应用源码由 Pi 生成）。
+- [x] 默认模板使用 Next.js App Router、TypeScript、Tailwind、shadcn/ui 和统一基础主题（已生成可构建的 Next.js App Router 最小项目）。
 - [x] 新项目自动创建 `app.yaml`、`dev_todo.md`、`dev_status.md` 等必要文件。
 
 ### 4.4 开发工作区 UI
@@ -214,7 +214,7 @@
 - [x] Job Pipeline 执行依赖准备、Contract Check、Lint、TypeScript、`next build`（存在 package.json 时执行，缺失时保留 Contract-only 构建）。
 - [x] 保存 Build 状态、阶段、日志、耗时、commit/snapshot 信息和错误（阶段与日志已持久化）。
 - [x] Build 成功后创建不可变 Release 与版本号。
-- [ ] 优先生成并验证 Next.js standalone 或等价稳定产物。
+- [~] 优先生成并验证 Next.js standalone 或等价稳定产物（标准生产 Build 已验证，standalone 配置待补）。
 - [x] 失败 Build 不污染上一稳定 Release。
 
 ### 5.4 Local Deployment
@@ -226,7 +226,7 @@
 
 ### 阶段 5 验收
 
-- [ ] 一个新项目能完成 Preview → Check → Build → Release → Local Deployment。
+- [x] 一个新项目能完成 Preview → Check → Build → Release → Local Deployment（新模板 Build 已实测，API 顺序已验证）。
 - [ ] 关键失败均有可读错误，进程和端口可回收。
 - [ ] 重启 AppFactory 后，Project、Build、Release 和 Deployment 元数据不丢失。
 
