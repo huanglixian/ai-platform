@@ -1,2 +1,55 @@
 import Link from "next/link";
-export default function AppFactoryLayout({children}:{children:React.ReactNode}){return <div className="min-h-screen bg-[#f4f7fb] text-slate-900"><header className="flex h-14 items-center justify-between border-b border-slate-200 bg-white px-6"><Link href="/appfactory" className="flex items-center gap-2 font-semibold"><span className="grid h-7 w-7 place-items-center rounded-lg bg-indigo-600 text-xs text-white">AF</span><span>AppFactory</span></Link><Link href="/workbench" className="text-xs text-slate-500 hover:text-indigo-600">返回 AgentHub ↗</Link></header>{children}</div>}
+
+import { RuntimeStatusPill } from "@/app/appfactory/_components/runtime-status-pill";
+
+export default function AppFactoryLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="min-h-screen bg-[#f2f4f7] text-[#262626]">
+      <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-[#d4dde8] bg-white/95 px-4 backdrop-blur sm:px-7">
+        <div className="flex items-center gap-7">
+          <Link
+            href="/appfactory"
+            className="flex items-center gap-2.5 font-semibold tracking-tight text-[#1a4d87]"
+          >
+            <span className="grid h-8 w-8 place-items-center rounded-[9px] bg-[linear-gradient(135deg,#0368b3,#2e7dd2)] text-[11px] font-bold text-white shadow-[0_4px_10px_rgba(3,104,179,.22)]">
+              AF
+            </span>
+            <span>AppFactory</span>
+          </Link>
+          <nav className="hidden items-center gap-1 text-[13px] text-[#667085] md:flex">
+            <Link
+              href="/appfactory"
+              className="rounded-md bg-[#eef5fd] px-3 py-1.5 font-medium text-[#1a4d87]"
+            >
+              项目
+            </Link>
+            <span className="rounded-md px-3 py-1.5 text-[#98a2b3]">模板</span>
+            <span className="rounded-md px-3 py-1.5 text-[#98a2b3]">
+              运行记录
+            </span>
+            <Link
+              href="/appfactory/settings"
+              className="rounded-md px-3 py-1.5 text-[#667085] transition hover:bg-[#f6f8fb] hover:text-[#1a4d87]"
+            >
+              设置
+            </Link>
+          </nav>
+        </div>
+        <div className="flex items-center gap-4 text-xs">
+          <RuntimeStatusPill />
+          <Link
+            href="/workbench"
+            className="text-[#667085] transition hover:text-[#0368b3]"
+          >
+            返回 AgentHub ↗
+          </Link>
+        </div>
+      </header>
+      {children}
+    </div>
+  );
+}

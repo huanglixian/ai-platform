@@ -8,9 +8,9 @@
 - 当前阶段：`阶段 6：能力绑定、AgentHub 注册与最终交付`
 - 当前目标：`完成端到端验收并记录剩余限制`
 - 最近完成：`阶段 6 Capability Client/Gateway、来源展示、独立闭环与事实源清理；Pi Provider/模型配置与非交互 Harness；生成项目 ESLint 配置；阶段 5 Preview 重启失效识别；阶段 4 Pi cwd/会话持久化与取消回收、Workspace Runtime seam、默认 Coding Skill、职责层、预览打开、安全检查与三栏工作区`
-- 最近验证：`Next.js 16.3.3；lint/typecheck/build/diff-check 通过；真实 DeepSeek Pi 自然语言修改文件成功；Preview→Check→Build→Release→Local Deployment→AgentHub 注册→应用中心可见闭环实测；文件读写与快照 Diff API 实测；AgentHub/AgentHub 页面与 API 均返回 200；localStorage 替代调用已清理；浏览器自动化服务不可用`
-- 阻塞项：`浏览器自动化服务不可用；无法完成真实视口视觉验收`
-- 下一步：`完成全量验收审计并记录剩余限制`
+- 最近验证：`Next.js 16.3.3；lint/typecheck/build/diff-check 通过；真实 DeepSeek Pi 自然语言修改文件成功；Preview→Check→Build→Release→Local Deployment→AgentHub 注册→应用中心可见闭环实测；文件读写与快照 Diff API 实测；AgentHub/AgentHub 页面与 API 均返回 200；localStorage 替代调用已清理；Chrome 桌面、平板、移动端视觉验收通过`
+- 阻塞项：`无`
+- 下一步：`根据后续反馈继续迭代模板、运行记录和流式事件体验`
 
 状态约定：
 
@@ -256,8 +256,8 @@
 - [x] 验证 AgentHub 工作台、Skill、应用、业务流和能力中心无回退。
 - [x] 清理被替代的 localStorage、Mock 调用、硬编码密钥和重复事实源。
 - [x] 完成错误、加载、空数据、取消、重试和异常恢复状态（项目页已提供加载/错误/空态、停止与重试入口）。
-- [ ] 检查桌面、平板、移动端；工具工作区优先利用视口，不堆大标题和无效卡片（浏览器自动化服务不可用）。
-- [~] 全项目通过 lint、typecheck、生产 build 和核心浏览器操作验证（lint/typecheck/build 已通过，浏览器自动化服务不可用，HTTP 页面冒烟已完成）。
+- [x] 检查桌面、平板、移动端；工具工作区优先利用视口，不堆大标题和无效卡片（Chrome 已完成 1440、1024、390 视口验收，包含文件查看器切换）。
+- [x] 全项目通过 lint、typecheck、生产 build 和核心浏览器操作验证（Chrome 已验证项目中心、新建弹窗、工作区、文件查看、设置和真实 Pi 连接测试）。
 - [x] 更新 `.env.example`、启动/Worker 脚本、部署说明和 `dev_files/dev_guide.md`。
 - [x] 更新本文件进度摘要，记录已验证范围、已知限制和后续事项。
 

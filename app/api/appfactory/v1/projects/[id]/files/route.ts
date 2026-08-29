@@ -2,7 +2,12 @@ import fs from "node:fs/promises";
 import path from "node:path";
 
 import { getProject } from "@/app_factory/server/database";
-import { readWorkspaceFile, resolveWorkspacePath, writeWorkspaceFile } from "@/app_factory/server/workspace";
+import {
+  isWorkspaceEntryVisible,
+  readWorkspaceFile,
+  resolveWorkspacePath,
+  writeWorkspaceFile,
+} from "@/app_factory/server/workspace";
 import { apiError, apiOk } from "@/lib/server/api-response";
 
 export const runtime = "nodejs";
@@ -53,8 +58,8 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
     const entries = await fs.readdir(directory, { withFileTypes: true });
     const output: string[] = [];
     for (const entry of entries) {
-      if (entry.name.startsWith(".")) continue;
       const relativePath = prefix ? `${prefix}/${entry.name}` : entry.name;
+      if (!isWorkspaceEntryVisible(relativePath)) continue;
       if (entry.isDirectory()) output.push(...await walk(resolveWorkspacePath(directory, entry.name), relativePath));
       else output.push(relativePath);
     }
