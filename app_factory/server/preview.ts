@@ -1,0 +1,5 @@
+import { spawn, type ChildProcess } from "node:child_process";
+const processes = new Map<string,{port:number;process:ChildProcess;logs:string[]}>(); let nextPort=3100;
+export function startPreview(projectId:string,cwd:string){const existing=processes.get(projectId);if(existing)return {projectId,port:existing.port,status:"running",logs:existing.logs};const port=nextPort++;const child=spawn("npm",["run","dev","--","--port",String(port)],{cwd,env:{PATH:process.env.PATH??"",NODE_ENV:"development"},stdio:["ignore","pipe","pipe"]});const logs:string[]=[];child.stdout?.on("data",d=>logs.push(d.toString()));child.stderr?.on("data",d=>logs.push(d.toString()));child.on("close",()=>processes.delete(projectId));processes.set(projectId,{port,process:child,logs});return {projectId,port,status:"running",logs};}
+export function stopPreview(projectId:string){const item=processes.get(projectId);if(!item)return false;item.process.kill("SIGTERM");processes.delete(projectId);return true;}
+export function getPreview(projectId:string){const item=processes.get(projectId);return item?{projectId,port:item.port,status:"running",logs:item.logs}:null;}

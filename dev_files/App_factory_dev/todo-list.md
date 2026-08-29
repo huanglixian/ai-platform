@@ -204,18 +204,18 @@
 
 ### 5.2 Preview Runtime
 
-- [ ] 实现端口分配、进程启动、停止、重启、日志和清理。
+- [x] 实现端口分配、进程启动、停止、重启、日志和清理。
 - [ ] 启动受管 Next.js dev process，并在 AppFactory 预览区打开。
-- [ ] 处理启动失败、端口冲突、进程退出和僵尸进程回收。
+- [x] 处理启动失败、端口冲突、进程退出和僵尸进程回收（进程关闭自动清理）。
 - [ ] AppFactory 重启后能识别失效 Preview 并恢复为正确状态。
 
 ### 5.3 Build 与 Release
 
 - [ ] Job Pipeline 执行依赖准备、Contract Check、Lint、TypeScript、`next build`。
 - [ ] 保存 Build 状态、阶段、日志、耗时、commit/snapshot 信息和错误。
-- [ ] Build 成功后创建不可变 Release 与版本号。
+- [x] Build 成功后创建不可变 Release 与版本号。
 - [ ] 优先生成并验证 Next.js standalone 或等价稳定产物。
-- [ ] 失败 Build 不污染上一稳定 Release。
+- [x] 失败 Build 不污染上一稳定 Release。
 
 ### 5.4 Local Deployment
 
@@ -287,6 +287,6 @@
 - 本次完成：`阶段 2 能力 Registry 列表/详情；阶段 3 AppFactory 独立壳、项目库与创建 API`
 - 修改的关键文件：`features/apps/server.ts`、`features/workflows/server.ts`、`app/api/agenthub/v1/*`、`components/apps/*`、`components/workflows/*`
 - 已执行验证：`npm run typecheck`、`npm run build`、应用/业务流 API 创建与归档冒烟；浏览器服务不可用
-- 当前未完成：`阶段 2 能力执行适配；阶段 5 Preview/Build/Release/Deployment 完整链路；阶段 4 文件/Diff/日志持久化；现有 lint 既存错误`
+- 当前未完成：`阶段 2 能力执行适配；阶段 5 Preview UI、真实 Build Pipeline、Local Deployment；阶段 4 文件/Diff/日志持久化；现有 lint 既存错误`
 - 阻塞/风险：`无`
-- 下一步唯一动作：`实现受管 Preview 进程与 Release 元数据`
+- 下一步唯一动作：`实现 Local Deployment Runtime 与 Preview/Build UI 联动`
