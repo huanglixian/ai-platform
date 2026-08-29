@@ -7,8 +7,8 @@
 - 总体状态：`进行中`
 - 当前阶段：`阶段 6：能力绑定、AgentHub 注册与最终交付`
 - 当前目标：`完成端到端验收并记录剩余限制`
-- 最近完成：`阶段 2 Capability Registry transport contract 与审计预留；执行适配与 invoke；阶段 5 Pipeline/Release/健康检查；阶段 6 外部密钥治理与应用开发入口`
-- 最近验证：`Next.js 16.3.3；typecheck/build 通过；AgentHub 响应带 v1/request-id/actor headers；审计字段 migration 可重复运行；能力 Tool 26 条（2 条可执行 handler）；invoke 场景均实测；全量 lint 仍受既有源码与 Workspace 构建产物影响`
+- 最近完成：`阶段 2 对外集成面与独立性验收；Capability Registry transport contract、审计预留与执行适配；阶段 5 Pipeline/Release/健康检查；阶段 6 外部密钥治理与应用开发入口`
+- 最近验证：`Next.js 16.3.3；typecheck/build 通过；Application externalId 幂等创建实测；/workbench 默认入口正常；AgentHub 响应带 v1/request-id/actor headers；AppFactory disabled 项目持久化实测；全量 lint 仍受既有源码与 Workspace 构建产物影响`
 - 阻塞项：`无`
 - 下一步：`完成全量验收审计并记录剩余限制`
 
@@ -103,17 +103,17 @@
 ### 2.2 AgentHub 对外集成面
 
 - [x] 固化 `/api/agenthub/v1` 的版本化接口和 Zod transport contract。
-- [ ] 确认 Application Registry API 可供 AppFactory 幂等创建/更新应用。
+- [x] 确认 Application Registry API 可供 AppFactory 幂等创建/更新应用。
 - [x] 为外部调用预留 `request actor` 和审计字段，但不实现鉴权。
 - [x] 增加 `NEXT_PUBLIC_APPFACTORY_URL` 或等价 service-link 配置。
 - [x] 在“配置管理”后增加弱化的“应用开发 ↗”入口；默认 `/appfactory`，未来支持独立域名。
-- [ ] 工作台仍是默认首页，普通 AgentHub 导航和激活状态不回退。
+- [x] 工作台仍是默认首页，普通 AgentHub 导航和激活状态不回退。
 
 ### 阶段 2 验收
 
 - [x] 能力中心展示和实际执行使用同一 Registry 事实源。
 - [x] AppFactory 所需的能力查询和应用注册接口可独立调用。
-- [ ] AgentHub 不依赖 AppFactory 才能运行。
+- [x] AgentHub 不依赖 AppFactory 才能运行。
 
 ---
 
@@ -125,7 +125,7 @@
 - [x] 新建根目录 `app_factory/`，按 components/features/server/skills/templates/contracts/types 组织（当前先落地 server）。
 - [x] 新建 `/api/appfactory/v1`，不把 AppFactory API 放进 `/api/platform`。
 - [x] 新建 `storage/appfactory`，与 AgentHub、KnowHub 数据完全分离。
-- [ ] AppFactory 不 import AgentHub 业务组件或 Repository；仅允许基础 UI、主题和明确 Client contract。
+- [x] AppFactory 不 import AgentHub 业务组件或 Repository；仅通过独立 AgentHub Client contract 集成。
 
 ### 3.2 AppFactory 数据与服务
 
@@ -145,9 +145,9 @@
 
 ### 阶段 3 验收
 
-- [ ] `/appfactory` 可独立进入、刷新和使用，不套 AgentHub AppShell。
-- [ ] 设置为 `disabled` 时不连接 AgentHub 也能创建和管理项目。
-- [ ] AppFactory 数据在服务重启后保留。
+- [x] `/appfactory` 可独立进入、刷新和使用，不套 AgentHub AppShell。
+- [x] 设置为 `disabled` 时不连接 AgentHub 也能创建和管理项目。
+- [x] AppFactory 数据在服务重启后保留。
 
 ---
 
@@ -284,9 +284,9 @@
 
 - 日期：`2026-08-29`
 - 当前阶段：`阶段 6`
-- 本次完成：`阶段 2 Capability Registry transport contract 与审计字段预留`
-- 修改的关键文件：`lib/agenthub/database.ts`、`lib/server/{api-response,request-context,transport-contract}.ts`
-- 已执行验证：`npm run db:agenthub:migrate` 可重复运行；`npm run typecheck`、`npm run build`；生产 API 响应包含 `v1`、request-id、actor headers
+- 本次完成：`阶段 2 对外集成面与 AppFactory 独立性验收`
+- 修改的关键文件：`dev_files/App_factory_dev/todo-list.md`
+- 已执行验证：Application Registry externalId 幂等创建、`/workbench` 默认入口、AppFactory disabled 项目创建/列表持久化均实测
 - 当前未完成：`Pi 真实模型执行、完整 Next.js Build/Standalone、Diff/日志持久化、AgentHub 注册成功路径、浏览器视觉验证；lint 仍有既存错误`
 - 阻塞/风险：`无`
 - 下一步唯一动作：`补齐 Pi 会话持久化、Standalone/Diff/日志后再进行最终验收`
