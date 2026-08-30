@@ -602,12 +602,9 @@ export default function ProjectPage({
         >
           <div className="border-b border-[#edf1f5] px-3 py-3">
             <div className="flex items-center justify-between gap-2">
-              <div className="min-w-0">
-                <h2 className="text-xs font-semibold text-[#4d4d4d]">对话</h2>
-                <p className="mt-1 truncate text-[10px] text-[#98a2b3]">
-                  {project.description || "和 AI 一起完成这个应用。"}
-                </p>
-              </div>
+              <span className="text-xs font-semibold text-[#4d4d4d]">
+                {sessionLoading ? "正在切换对话…" : `${sessions.length}个对话`}
+              </span>
               <button
                 type="button"
                 onClick={() => void createConversation()}
@@ -617,9 +614,6 @@ export default function ProjectPage({
                 ＋ 新建
               </button>
             </div>
-            <p className="mt-2 text-[10px] text-[#98a2b3]">
-              {sessionLoading ? "正在切换对话…" : `${sessions.length} 个对话`}
-            </p>
           </div>
           <div className="max-h-48 min-h-0 overflow-auto border-b border-[#edf1f5] px-2 py-2">
             {sessions.length ? (

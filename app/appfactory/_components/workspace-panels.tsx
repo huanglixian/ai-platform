@@ -244,6 +244,19 @@ export function ChatPanel({
   }, [activeRun]);
 
   useEffect(() => {
+    if (!sessionReady) return;
+    const container = scrollRef.current;
+    if (!container) return;
+    autoFollowRunRef.current = null;
+    let frame = window.requestAnimationFrame(() => {
+      frame = window.requestAnimationFrame(() => {
+        container.scrollTo({ top: container.scrollHeight, behavior: "auto" });
+      });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [sessionReady]);
+
+  useEffect(() => {
     const container = scrollRef.current;
     if (!container || !activeRun) return;
     const runKey = activeRun.runId || "pending";
