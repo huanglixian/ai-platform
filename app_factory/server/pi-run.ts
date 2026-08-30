@@ -46,6 +46,7 @@ export async function* executePiRun({
   };
 
   try {
+    sessionService.setTitleFromPrompt(session.id, prompt);
     yield await persist({
       type: "user",
       content: prompt,

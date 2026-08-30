@@ -7,8 +7,8 @@
 - 总体状态：`进行中`
 - 当前阶段：`阶段 6：能力绑定、AgentHub 注册与最终交付`
 - 当前目标：`完成端到端验收并记录剩余限制`
-- 最近完成：`阶段 6 Capability Client/Gateway、来源展示、独立闭环与事实源清理；Pi Provider/模型配置与非交互 Harness；生成项目 ESLint 配置；Build 生产环境修复、健康部署地址注册与工作区发布入口；阶段 5 Preview 重启失效识别；阶段 4 Pi cwd/会话持久化与取消回收、Workspace Runtime seam、默认 Coding Skill、职责层、预览打开、安全检查与三栏工作区；Pi 发送态、运行反馈与 SSE 增量事件；Pi JSONL 工具活动时间线、单一运行卡片与 AI Markdown 渲染`
-- 最近验证：`Next.js 16.3.3；23 项 Node 核心测试、lint/typecheck/build/diff-check 通过；真实 DeepSeek Pi 自然语言读取与修改文件、npm run typecheck 活动反馈成功；Pi SSE started→harness→finished 事件流实测，transcript 按 runId/sequence 持久化；多步骤执行过程在同一卡片内部更新，执行准备阶段与完成阶段同时保留，进行中及展开后的完成列表自动跟随最新步骤；无工具步骤的成功问答不再重复显示执行摘要；Markdown 标题、列表、行内代码和代码块在 Chrome 中结构化渲染；旧版 Pi 启动诊断、内部完成标记和孤立遗留结果不再作为聊天消息展示；Preview→Check→Build→Release→Local Deployment→AgentHub 注册→应用中心可见闭环实测；文件读写与快照 Diff API 实测；AgentHub/AgentHub 页面与 API 均返回 200；localStorage 替代调用已清理；Chrome 桌面、平板、移动端视觉验收通过`
+- 最近完成：`阶段 6 Capability Client/Gateway、来源展示、独立闭环与事实源清理；Pi Provider/模型配置与非交互 Harness；生成项目 ESLint 配置；Build 生产环境修复、健康部署地址注册与工作区发布入口；阶段 5 Preview 重启失效识别；阶段 4 Pi cwd/会话持久化与取消回收、Workspace Runtime seam、默认 Coding Skill、职责层、预览打开、安全检查与三栏工作区；Pi 发送态、运行反馈与 SSE 增量事件；Pi JSONL 工具活动时间线、单一运行卡片与 AI Markdown 渲染；项目内 Session 切换/新建、会话标题、Pi 上下文健康状态、服务端并发保护与上下文压缩反馈`
+- 最近验证：`Next.js 16.3.3；27 项 Node 核心测试、lint/typecheck/build/diff-check 通过；真实 DeepSeek Pi 自然语言读取与修改文件、npm run typecheck 活动反馈成功；Pi SSE started→harness→finished 事件流实测，transcript 按 runId/sequence 持久化；多步骤执行过程在同一卡片内部更新，执行准备阶段与完成阶段同时保留，进行中及展开后的完成列表自动跟随最新步骤；无工具步骤的成功问答不再重复显示执行摘要；Markdown 标题、列表、行内代码和代码块在 Chrome 中结构化渲染；旧版 Pi 启动诊断、内部完成标记和孤立遗留结果不再作为聊天消息展示；项目工作区新建对话后上下文隔离、历史 Session 切换后 transcript 恢复、首条需求标题更新、Pi 状态 API 返回 ready、上下文压缩结束事件归一化均已实测；Preview→Check→Build→Release→Local Deployment→AgentHub 注册→应用中心可见闭环实测；文件读写与快照 Diff API 实测；AgentHub/AgentHub 页面与 API 均返回 200；localStorage 替代调用已清理；Chrome 桌面、平板、移动端视觉验收通过`
 - 阻塞项：`无`
 - 下一步：`在真实异步任务需求出现后，将 Pi Run、Build 和 Preview 逐步迁移到 SQLite Job Worker，并再建设全局任务中心；继续按反馈迭代产品体验`
 
@@ -187,6 +187,8 @@
 - [x] Pi 发送后立即清空输入并显示运行计时、停止/失败/重试反馈；新增 `/run/stream` SSE 增量事件，前端实时追加 Harness 事件，Transcript 保存 `runId/sequence`。
 - [x] Pi JSONL 工具事件转换为文件读取/修改、搜索、命令和上下文活动；同一活动跨文本增量归并，AI 回复使用统一 Markdown/GFM 组件渲染。
 - [x] 同一运行的活动收束在单一运行卡片内，卡片内部固定高度滚动步骤；准备调用与最终状态保留在内部时间线并自动跟随最新项；完成/失败历史使用可展开摘要，避免事件插入导致对话区跳跃。
+- [x] 项目工作区支持在文件树上方切换已有 Session 和新建对话；新会话独立绑定 Pi 上下文，首条需求自动生成标题，切换后恢复对应 Transcript。
+- [x] Session 列表返回 Pi 上下文健康状态；同一 Session 的并发 Run 由服务端拒绝；Pi 自动上下文压缩的开始/结束事件转换为可见执行步骤。
 
 ### 阶段 4 验收
 
@@ -285,11 +287,11 @@
 
 ## 会话交接记录（每次结束前更新）
 
-- 日期：`2026-08-29`
+- 日期：`2026-08-30`
 - 当前阶段：`阶段 6`
-- 本次完成：`阶段 6 真实 Pi 自然语言修改与全链路注册验收；Pi 非交互进程修复；生成项目独立 ESLint 配置；Workspace 文件读写、快照 Diff、最近改动和重试入口`
-- 修改的关键文件：`app_factory/features/pi-harness.ts`、`app_factory/server/database.ts`、`app/api/appfactory/v1/projects/[id]/files/route.ts`、`app/appfactory/projects/[id]/page.tsx`、`.env.example`、`dev_files/dev_guide.md`
-- 已执行验证：`npm run lint`、`npm run typecheck`、`npm run build`、`git diff --check`；真实 DeepSeek Pi 修改 `app/page.tsx` 并持久化 Transcript；Preview→Check→Build→Release→Local Deployment 健康检查→AgentHub 注册→应用中心可见顺序实测；文件 PUT/快照 Diff/最近改动 API 实测；部署停止后元数据状态同步实测；Pi stderr 正常 warning 不再误判失败
+- 本次完成：`项目内 Session 切换/新建、首条需求标题、Pi 上下文健康状态、服务端 Session 并发保护、Pi 上下文压缩反馈`
+- 修改的关键文件：`app/appfactory/projects/[id]/page.tsx`、`app_factory/types/session.ts`、`app_factory/server/database.ts`、`app_factory/server/pi-session.ts`、`app_factory/features/pi-events.ts`、`app/api/appfactory/v1/projects/[id]/sessions/route.ts`
+- 已执行验证：`npm run lint`、`npm run typecheck`、`npm run build`、`git diff --check`、27 项 Node 核心测试；浏览器实测新建对话后独立运行、切换旧 Session 恢复 Transcript、首条需求标题更新、Session API 返回 Pi `ready` 状态；Pi 压缩结束事件测试通过
 - 当前未完成：`浏览器视觉验证`
 - 阻塞/风险：`浏览器自动化服务当前不可用，无法完成三种视口的实际截图与交互验收`
 - 下一步唯一动作：`恢复浏览器自动化后完成桌面、平板和移动端视口验收`

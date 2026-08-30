@@ -2,6 +2,7 @@ import { executePiRun } from "@/app_factory/server/pi-run";
 import { runService, sessionService } from "@/app_factory/server/services";
 import { formatSseEvent } from "@/app_factory/server/sse";
 import { apiError } from "@/lib/server/api-response";
+import { SessionBusyError } from "@/app_factory/server/errors";
 
 export const runtime = "nodejs";
 
@@ -18,7 +19,13 @@ export async function POST(
   const { prompt } = (await request.json()) as { prompt?: string };
   if (!prompt?.trim()) return apiError("请输入需求", 422);
 
-  const run = runService.create(session.project_id, id, prompt) as { id: string };
+  let run: { id: string };
+  try {
+    run = runService.create(session.project_id, id, prompt) as { id: string };
+  } catch (error) {
+    if (error instanceof SessionBusyError) return apiError(error.message, 409);
+    throw error;
+  }
   sessionService.setStatus(id, "running");
 
   let disconnected = false;

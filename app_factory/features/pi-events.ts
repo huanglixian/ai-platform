@@ -179,6 +179,18 @@ export function normalizePiEvent(
       activity: { id: "context-compaction", kind: "thinking", status: "started" },
     };
   }
+  if (type === "compaction_end") {
+    return {
+      type: "activity",
+      content: event.aborted === true ? "上下文整理已中止" : "上下文整理完成",
+      timestamp,
+      activity: {
+        id: "context-compaction",
+        kind: "thinking",
+        status: event.aborted === true ? "failed" : "completed",
+      },
+    };
+  }
   if (type === "error") {
     return { type: "error", content: asText(event.message) || "Pi 执行失败", timestamp };
   }

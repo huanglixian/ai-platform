@@ -16,6 +16,12 @@ import {
 import type { RunFeedback } from "@/app/appfactory/_lib/run-state";
 import { parseSseBlock } from "@/app/appfactory/_lib/sse";
 import { mergeWorkspaceEvents } from "@/app/appfactory/_lib/workspace-events";
+import {
+  deriveSessionTitle,
+  getPiSessionStatusLabel,
+  getSessionStatusLabel,
+  type AppFactorySession,
+} from "@/app_factory/types/session";
 
 type Project = {
   id: string;
@@ -53,7 +59,8 @@ export default function ProjectPage({
 }) {
   const [id, setId] = useState("");
   const [project, setProject] = useState<Project | null>(null);
-  const [session, setSession] = useState<{ id: string } | null>(null);
+  const [session, setSession] = useState<AppFactorySession | null>(null);
+  const [sessions, setSessions] = useState<AppFactorySession[]>([]);
   const [runtime, setRuntime] = useState<RuntimeStatus>({});
   const [status, setStatus] = useState<ProjectStatus>({});
   const [prompt, setPrompt] = useState("");
@@ -68,11 +75,13 @@ export default function ProjectPage({
   const [mobileView, setMobileView] = useState<"chat" | "files">("chat");
   const [activityOpen, setActivityOpen] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [sessionLoading, setSessionLoading] = useState(false);
   const [activeRun, setActiveRun] = useState<RunFeedback | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [lastOperation, setLastOperation] = useState<Operation | null>(null);
   const controllerRef = useRef<AbortController | null>(null);
+  const sessionLoadRef = useRef(0);
   const tree = useMemo(
     () => buildFileTree(files, changedFiles),
     [files, changedFiles],
@@ -129,6 +138,93 @@ export default function ProjectPage({
     const payload = await response.json();
     setStatus(payload.data ?? {});
   };
+  const loadSessionTranscript = async (sessionId: string) => {
+    const response = await fetch(
+      `/api/appfactory/v1/sessions/${sessionId}/transcript`,
+    );
+    const payload = await response.json();
+    if (!response.ok) throw new Error(errorText(payload, "对话记录加载失败"));
+    return Array.isArray(payload.data)
+      ? payload.data.filter(
+          (event: unknown): event is WorkspaceEvent =>
+            Boolean(
+              event &&
+                typeof event === "object" &&
+                "type" in event &&
+                "content" in event &&
+                typeof event.type === "string" &&
+                typeof event.content === "string",
+            ),
+        )
+      : [];
+  };
+  const refreshSessions = async (projectId = id) => {
+    if (!projectId) return;
+    const response = await fetch(
+      `/api/appfactory/v1/projects/${projectId}/sessions`,
+    );
+    const payload = await response.json();
+    if (!response.ok) throw new Error(errorText(payload, "对话列表加载失败"));
+    setSessions(
+      Array.isArray(payload.data)
+        ? (payload.data as AppFactorySession[])
+        : [],
+    );
+  };
+  const switchSession = async (nextSession: AppFactorySession) => {
+    if (busy || sessionLoading || nextSession.id === session?.id) return;
+    const requestId = ++sessionLoadRef.current;
+    setSessionLoading(true);
+    setSession(nextSession);
+    setEvents([]);
+    setActiveRun(null);
+    setPrompt("");
+    setLastOperation(null);
+    setError(
+      nextSession.piStatus === "missing"
+        ? "该对话的 Pi 上下文文件缺失，历史记录仍可查看，但下一轮会从新上下文开始。"
+        : "",
+    );
+    try {
+      const nextEvents = await loadSessionTranscript(nextSession.id);
+      if (sessionLoadRef.current === requestId) setEvents(nextEvents);
+    } catch (reason) {
+      if (sessionLoadRef.current === requestId) {
+        setError(reason instanceof Error ? reason.message : "对话记录加载失败");
+      }
+    } finally {
+      if (sessionLoadRef.current === requestId) setSessionLoading(false);
+    }
+  };
+  const createConversation = async () => {
+    if (!id || busy || sessionLoading) return;
+    setSessionLoading(true);
+    setError("");
+    try {
+      const response = await fetch(
+        `/api/appfactory/v1/projects/${id}/sessions`,
+        { method: "POST" },
+      );
+      const payload = await response.json();
+      if (!response.ok || !payload.data)
+        throw new Error(errorText(payload, "新建对话失败"));
+      const nextSession = payload.data as AppFactorySession;
+      sessionLoadRef.current += 1;
+      setSessions((current) => [
+        nextSession,
+        ...current.filter((item) => item.id !== nextSession.id),
+      ]);
+      setSession(nextSession);
+      setEvents([]);
+      setActiveRun(null);
+      setPrompt("");
+      setLastOperation(null);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "新建对话失败");
+    } finally {
+      setSessionLoading(false);
+    }
+  };
   useEffect(() => {
     let active = true;
     params.then(async ({ id: projectId }) => {
@@ -157,34 +253,29 @@ export default function ProjectPage({
         const filesPayload = await filesRes.json();
         const changedPayload = await changedRes.json();
         setProject(projectPayload.data);
+        const listedSessions = Array.isArray(sessionsPayload.data)
+          ? (sessionsPayload.data as AppFactorySession[])
+          : [];
         const currentSession =
-          sessionsPayload.data?.[0] ??
-            (
-              await fetch(`/api/appfactory/v1/projects/${projectId}/sessions`, {
-                method: "POST",
-              }).then((response) => response.json())
-            ).data;
+          listedSessions[0] ??
+          (
+            await fetch(`/api/appfactory/v1/projects/${projectId}/sessions`, {
+              method: "POST",
+            }).then((response) => response.json())
+          ).data;
+        setSessions(
+          currentSession && !listedSessions.some((item) => item.id === currentSession.id)
+            ? [currentSession, ...listedSessions]
+            : listedSessions,
+        );
         setSession(currentSession);
-        if (currentSession?.id) {
-          const transcriptResponse = await fetch(
-            `/api/appfactory/v1/sessions/${currentSession.id}/transcript`,
+        if (currentSession?.piStatus === "missing") {
+          setError(
+            "该对话的 Pi 上下文文件缺失，历史记录仍可查看，但下一轮会从新上下文开始。",
           );
-          const transcriptPayload = await transcriptResponse.json();
-          if (transcriptResponse.ok && Array.isArray(transcriptPayload.data)) {
-            setEvents(
-              transcriptPayload.data.filter(
-                (event: unknown): event is WorkspaceEvent =>
-                  Boolean(
-                    event &&
-                      typeof event === "object" &&
-                      "type" in event &&
-                      "content" in event &&
-                      typeof event.type === "string" &&
-                      typeof event.content === "string",
-                  ),
-              ),
-            );
-          }
+        }
+        if (currentSession?.id) {
+          setEvents(await loadSessionTranscript(currentSession.id));
         }
         setStatus((await statusRes.json()).data ?? {});
         setRuntime((await runtimeRes.json()).data ?? {});
@@ -259,6 +350,20 @@ export default function ProjectPage({
     if (!session || busy || !submittedPrompt) return;
     if (remember) setLastOperation({ kind: "prompt", prompt: submittedPrompt });
     setBusy(true);
+    setSessions((current) =>
+      current.map((item) =>
+        item.id === session.id
+          ? {
+              ...item,
+              status: "running",
+              title:
+                item.title === "新对话"
+                  ? deriveSessionTitle(submittedPrompt)
+                  : item.title,
+            }
+          : item,
+      ),
+    );
     setError("");
     setPrompt("");
     setActiveRun({
@@ -381,6 +486,7 @@ export default function ProjectPage({
       setBusy(false);
       controllerRef.current = null;
       void refreshStatus();
+      void refreshSessions();
     }
   };
   const retry = () => {
@@ -494,16 +600,64 @@ export default function ProjectPage({
         <aside
           className={`w-full shrink-0 border-r border-[#d4dde8] bg-white sm:w-[240px] lg:w-[20%] ${fileOpen || mobileView !== "files" ? "hidden" : "flex"} order-1 flex-col sm:flex`}
         >
-          <div className="border-b border-[#edf1f5] px-4 py-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xs font-semibold text-[#4d4d4d]">当前对话</h2>
-              <span className="text-[10px] text-[#98a2b3]">
-                {session ? "已就绪" : "初始化中"}
-              </span>
+          <div className="border-b border-[#edf1f5] px-3 py-3">
+            <div className="flex items-center justify-between gap-2">
+              <div className="min-w-0">
+                <h2 className="text-xs font-semibold text-[#4d4d4d]">对话</h2>
+                <p className="mt-1 truncate text-[10px] text-[#98a2b3]">
+                  {project.description || "和 AI 一起完成这个应用。"}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => void createConversation()}
+                disabled={busy || sessionLoading}
+                className="shrink-0 rounded-md border border-[#bfd7f2] px-2 py-1.5 text-[10px] font-medium text-[#0368b3] transition hover:bg-[#eef5fd] disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                ＋ 新建
+              </button>
             </div>
-            <p className="mt-2 line-clamp-2 text-[11px] leading-5 text-[#98a2b3]">
-              {project.description || "和 AI 一起完成这个应用。"}
+            <p className="mt-2 text-[10px] text-[#98a2b3]">
+              {sessionLoading ? "正在切换对话…" : `${sessions.length} 个对话`}
             </p>
+          </div>
+          <div className="max-h-48 min-h-0 overflow-auto border-b border-[#edf1f5] px-2 py-2">
+            {sessions.length ? (
+              <div className="space-y-1">
+                {sessions.map((item) => {
+                  const selected = item.id === session?.id;
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => void switchSession(item)}
+                      disabled={busy || sessionLoading}
+                      className={`flex w-full items-start gap-2 rounded-lg px-2.5 py-2 text-left transition ${selected ? "bg-[#eef5fd] text-[#0368b3]" : "text-[#667085] hover:bg-[#f6f8fb]"} disabled:cursor-not-allowed disabled:opacity-60`}
+                    >
+                      <span
+                        className={`mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full ${item.status === "running" ? "animate-pulse bg-[#2e7dd2]" : item.status === "error" ? "bg-[#c94a42]" : selected ? "bg-[#2e7dd2]" : "bg-[#c5cfda]"}`}
+                      />
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-[11px] font-medium">
+                          {item.title || "新对话"}
+                        </span>
+                        <span
+                          className={`mt-0.5 block text-[10px] ${item.piStatus === "missing" ? "text-[#b9382f]" : "text-[#8aa0b6]"}`}
+                        >
+                          {item.piStatus === "missing"
+                            ? getPiSessionStatusLabel(item.piStatus)
+                            : getSessionStatusLabel(item.status)}
+                        </span>
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="px-2 py-3 text-center text-[10px] text-[#98a2b3]">
+                还没有开发对话
+              </p>
+            )}
           </div>
           <div className="min-h-0 flex-1 overflow-auto px-2 py-3">
             <div className="mb-2 flex items-center justify-between px-2">
@@ -552,7 +706,7 @@ export default function ProjectPage({
           busy={busy}
           activeRun={activeRun}
           prompt={prompt}
-          sessionReady={Boolean(session)}
+          sessionReady={Boolean(session) && !sessionLoading}
           model={runtime.ai?.model || "未配置"}
           onPromptChange={setPrompt}
           onSend={() => void executePrompt(prompt)}

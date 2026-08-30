@@ -100,3 +100,25 @@ test("工具更新事件仍显示为进行中", () => {
   assert.equal(event?.content, "正在执行 npm run typecheck");
   assert.equal(event?.activity?.status, "updated");
 });
+
+test("上下文压缩结束事件显示为已完成", () => {
+  assert.deepEqual(
+    normalizePiEvent(
+      {
+        type: "compaction_end",
+        aborted: false,
+      },
+      timestamp,
+    ),
+    {
+      type: "activity",
+      content: "上下文整理完成",
+      timestamp,
+      activity: {
+        id: "context-compaction",
+        kind: "thinking",
+        status: "completed",
+      },
+    },
+  );
+});
