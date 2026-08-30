@@ -360,11 +360,6 @@ export function ChatPanel({
                       {getRunStatusText(activeRun)}
                     </p>
                   )}
-                  {activeRun.status === "running" && (
-                    <p className="mt-1 truncate text-[10px] text-[#98a2b3]">
-                      “{activeRun.prompt}”
-                    </p>
-                  )}
                   <ActivityStepList
                     activities={activeSummary?.activities ?? []}
                     className="mt-3 h-24 overflow-y-auto rounded-lg border border-[#e6edf4] bg-white/70 p-1.5"
