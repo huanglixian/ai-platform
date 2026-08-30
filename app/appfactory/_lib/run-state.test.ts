@@ -15,6 +15,18 @@ test("运行反馈显示真实等待时长", () => {
   assert.equal(getRunStatusText(run), "请求已提交，正在等待模型和工具执行");
 });
 
+test("运行反馈能够显示当前活动", () => {
+  assert.equal(
+    getRunStatusText({
+      prompt: "修改页面",
+      startedAt: 1_000,
+      status: "running",
+      message: "正在修改 app/page.tsx",
+    }),
+    "正在修改 app/page.tsx",
+  );
+});
+
 test("失败和停止状态使用明确文案", () => {
   assert.equal(
     getRunStatusText({

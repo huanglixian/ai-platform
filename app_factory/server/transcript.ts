@@ -1,5 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import type { HarnessActivity } from "@/app_factory/types/harness";
 
 const transcriptRoot = path.join(process.cwd(), "storage", "appfactory", "transcripts");
 
@@ -9,6 +10,8 @@ export type TranscriptEvent = {
   timestamp?: string;
   runId?: string;
   sequence?: number;
+  stream?: "assistant";
+  activity?: HarnessActivity;
 };
 
 export function parseTranscript(content: string): TranscriptEvent[] {

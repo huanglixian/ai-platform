@@ -15,6 +15,7 @@ import {
 } from "@/app/appfactory/_components/workspace-panels";
 import type { RunFeedback } from "@/app/appfactory/_lib/run-state";
 import { parseSseBlock } from "@/app/appfactory/_lib/sse";
+import { mergeWorkspaceEvents } from "@/app/appfactory/_lib/workspace-events";
 
 type Project = {
   id: string;
@@ -76,6 +77,7 @@ export default function ProjectPage({
     () => buildFileTree(files, changedFiles),
     [files, changedFiles],
   );
+  const activityEvents = useMemo(() => mergeWorkspaceEvents(events), [events]);
   const selectFile = async (path: string, reveal = true, projectId = id) => {
     setSelectedFile(path);
     setFileOpen(reveal);
@@ -310,6 +312,15 @@ export default function ProjectPage({
         if (!event.type || typeof event.content !== "string") return;
         if (event.type !== "user")
           setEvents((current) => [...current, event]);
+        if (event.type === "activity") {
+          setActiveRun((current) =>
+            current ? { ...current, message: event.content } : current,
+          );
+        } else if (event.type === "text") {
+          setActiveRun((current) =>
+            current ? { ...current, message: "正在接收 AI 回复" } : current,
+          );
+        }
         if (event.type === "completed") terminalStatus = "completed";
         if (event.type === "error") {
           terminalStatus = "failed";
@@ -416,7 +427,7 @@ export default function ProjectPage({
             onClick={() => setActivityOpen(true)}
             className="h-8 rounded-lg border border-[#d4dde8] px-3 text-xs text-[#667085] hover:border-[#6f96c4] hover:text-[#0368b3]"
           >
-            活动{events.length ? ` ${events.length}` : ""}
+            活动{activityEvents.length ? ` ${activityEvents.length}` : ""}
           </button>
           <button
             type="button"
@@ -563,13 +574,13 @@ export default function ProjectPage({
               </button>
             </div>
             <div className="min-h-0 flex-1 overflow-auto bg-[#0f2032] p-4 font-mono text-[11px] leading-5 text-[#dbe8f5]">
-              {events.length ? (
-                events.map((event, index) => (
+              {activityEvents.length ? (
+                activityEvents.map((event, index) => (
                   <div key={`${event.type}-${index}`} className="mb-3">
                     <span className="text-[#6fafe2]">
                       [{workspaceEventLabel[event.type] || event.type}]
                     </span>{" "}
-                    {event.content}
+                    {event.type === "text" ? "AI 回复已更新（Markdown 已渲染）" : event.content}
                   </div>
                 ))
               ) : (

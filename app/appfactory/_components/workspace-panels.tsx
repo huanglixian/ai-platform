@@ -1,18 +1,25 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { MessageMarkdown } from "@/components/shared/message-markdown";
 import type { FileTreeNode } from "@/app/appfactory/_lib/project-ui";
+import {
+  mergeWorkspaceEvents,
+  type WorkspaceEvent,
+} from "@/app/appfactory/_lib/workspace-events";
+import type { HarnessActivity } from "@/app_factory/types/harness";
 import {
   formatRunElapsed,
   getRunStatusText,
   type RunFeedback,
 } from "@/app/appfactory/_lib/run-state";
 
-export type WorkspaceEvent = { type: string; content: string };
+export type { WorkspaceEvent } from "@/app/appfactory/_lib/workspace-events";
 
 export const workspaceEventLabel: Record<string, string> = {
   user: "你",
   text: "AI 回复",
+  activity: "执行步骤",
   tool: "工具调用",
   error: "错误",
   completed: "已完成",
@@ -67,6 +74,56 @@ export function ProjectFileTree({
   return <>{render(nodes)}</>;
 }
 
+function activityStatusLabel(status: HarnessActivity["status"]) {
+  if (status === "completed") return "完成";
+  if (status === "failed") return "失败";
+  return "进行中";
+}
+
+function activityIcon(kind: HarnessActivity["kind"]) {
+  if (kind === "read") return "↳";
+  if (kind === "search") return "⌕";
+  if (kind === "edit") return "✎";
+  if (kind === "write") return "+";
+  if (kind === "command") return "›_";
+  if (kind === "inspect") return "◌";
+  return "…";
+}
+
+function ActivityEventCard({ event }: { event: WorkspaceEvent }) {
+  const activity = event.activity;
+  if (!activity) return null;
+  const failed = activity.status === "failed";
+  const finished = activity.status === "completed";
+  return (
+    <div
+      aria-live="polite"
+      className={`flex items-start gap-3 rounded-lg border px-3 py-2.5 ${failed ? "border-[#f3c6c2] bg-[#fff8f7]" : finished ? "border-[#e6edf4] bg-[#fbfcfe]" : "border-[#cfe0f2] bg-[#f7fbff]"}`}
+    >
+      <span
+        className={`mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full text-xs font-semibold ${failed ? "bg-[#fce4e1] text-[#b9382f]" : finished ? "bg-[#edf4f8] text-[#5b7793]" : "bg-[#e4f0fc] text-[#0368b3]"}`}
+      >
+        {failed ? "!" : finished ? "✓" : activityIcon(activity.kind)}
+      </span>
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className={`text-xs font-medium ${failed ? "text-[#b9382f]" : "text-[#315d88]"}`}>
+            {event.content}
+          </p>
+          <span className={`text-[10px] ${failed ? "text-[#b9382f]" : "text-[#8aa0b6]"}`}>
+            {activityStatusLabel(activity.status)}
+          </span>
+        </div>
+        {activity.summary && (
+          <p className="mt-1 line-clamp-3 whitespace-pre-wrap break-words font-mono text-[10px] leading-4 text-[#7a8da2]">
+            {activity.summary}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function ChatPanel({
   events,
   busy,
@@ -94,6 +151,7 @@ export function ChatPanel({
 }) {
   const [now, setNow] = useState(() => Date.now());
   const scrollRef = useRef<HTMLDivElement>(null);
+  const displayEvents = useMemo(() => mergeWorkspaceEvents(events), [events]);
 
   useEffect(() => {
     if (!activeRun || activeRun.status !== "running") return;
@@ -129,7 +187,7 @@ export function ChatPanel({
               </p>
             </div>
           </div>
-          {events.length === 0 ? (
+          {displayEvents.length === 0 ? (
             <div className="rounded-xl border border-dashed border-[#d4dde8] bg-[#f6f8fb] p-8 text-sm leading-7 text-[#667085]">
               你可以从一句自然语言开始，例如：
               <br />
@@ -139,19 +197,28 @@ export function ChatPanel({
             </div>
           ) : (
             <div className="space-y-4">
-              {events.map((event, index) => (
-                <div
-                  key={`${event.type}-${index}`}
-                  className={`${event.type === "user" ? "ml-8 bg-[#eef5fd] text-[#1a4d87]" : "mr-8 border border-[#edf1f5] bg-white text-[#4d4d4d]"} rounded-xl px-4 py-3 text-sm leading-6 shadow-[0_2px_6px_rgba(15,23,42,.03)]`}
-                >
-                  <div className="mb-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-[#6f96c4]">
-                    {workspaceEventLabel[event.type] || event.type}
+              {displayEvents.map((event, index) => {
+                if (event.type === "activity") {
+                  return <ActivityEventCard key={`${event.runId || "activity"}-${event.activity?.id || index}`} event={event} />;
+                }
+                return (
+                  <div
+                    key={`${event.runId || event.type}-${event.sequence ?? index}`}
+                    className={`${event.type === "user" ? "ml-8 bg-[#eef5fd] text-[#1a4d87]" : "mr-8 border border-[#edf1f5] bg-white text-[#4d4d4d]"} rounded-xl px-4 py-3 text-sm leading-6 shadow-[0_2px_6px_rgba(15,23,42,.03)]`}
+                  >
+                    <div className="mb-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-[#6f96c4]">
+                      {workspaceEventLabel[event.type] || event.type}
+                    </div>
+                    {event.type === "text" ? (
+                      <MessageMarkdown content={event.content} />
+                    ) : (
+                      <pre className="whitespace-pre-wrap break-words font-sans">
+                        {event.content}
+                      </pre>
+                    )}
                   </div>
-                  <pre className="whitespace-pre-wrap font-sans">
-                    {event.content}
-                  </pre>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
           {activeRun && (

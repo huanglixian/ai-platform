@@ -1,6 +1,7 @@
 import path from "node:path";
 import { spawn, type ChildProcess } from "node:child_process";
 import { loadEnvConfig } from "@next/env";
+import { normalizePiEvent } from "@/app_factory/features/pi-events";
 import type { HarnessEvent, HarnessRuntime, HarnessSessionRef } from "@/app_factory/types/harness";
 
 export class PiHarnessRuntime implements HarnessRuntime {
@@ -14,7 +15,7 @@ export class PiHarnessRuntime implements HarnessRuntime {
     const provider = process.env.APPFACTORY_PI_PROVIDER?.trim() || (process.env.DEEPSEEK_API_KEY ? "deepseek" : "");
     const model = process.env.APPFACTORY_PI_MODEL?.trim() || (provider === "deepseek" ? (process.env.DEEPSEEK_MODEL?.trim() || "deepseek-chat") : "");
     const apiKey = process.env.APPFACTORY_PI_API_KEY?.trim() || (provider === "deepseek" ? process.env.DEEPSEEK_API_KEY?.trim() : "");
-    const args = ["--print", prompt, "--approve", "--session-id", session.id, "--session-dir", path.join(process.cwd(), "storage", "appfactory", "pi-sessions"), "--skill", skillPath];
+    const args = ["--mode", "json", "--approve", "--session-id", session.id, "--session-dir", path.join(process.cwd(), "storage", "appfactory", "pi-sessions"), "--skill", skillPath, prompt];
     if (provider) args.unshift("--provider", provider);
     if (model) args.unshift("--model", model);
     if (apiKey) args.unshift("--api-key", apiKey);
@@ -25,14 +26,56 @@ export class PiHarnessRuntime implements HarnessRuntime {
       let done = false;
       let wake: (() => void) | undefined;
       const push = (event: HarnessEvent) => { queue.push(event); wake?.(); wake = undefined; };
-      child.stdout?.on("data", (chunk) => push({ type: "text", content: chunk.toString(), timestamp: new Date().toISOString() }));
-      // Pi 会把正常启动提示（例如首次创建会话）写入 stderr；只有非零退出才视为执行失败。
-      child.stderr?.on("data", (chunk) => push({ type: "text", content: chunk.toString(), timestamp: new Date().toISOString() }));
-      const completion = new Promise<number | null>((resolve, reject) => { child.once("error", reject); child.once("close", (code) => { done = true; wake?.(); resolve(code); }); });
+      const toolInputs = new Map<string, Record<string, unknown>>();
+      const diagnostics: string[] = [];
+      let stdoutBuffer = "";
+      const consumeLine = (line: string) => {
+        if (!line.trim()) return;
+        try {
+          const raw = JSON.parse(line) as Record<string, unknown>;
+          const rawType = typeof raw.type === "string" ? raw.type : "";
+          if (rawType === "tool_execution_start" && typeof raw.toolCallId === "string") {
+            toolInputs.set(raw.toolCallId, (raw.args as Record<string, unknown>) || {});
+          }
+          const rawToolCallId = typeof raw.toolCallId === "string" ? raw.toolCallId : "";
+          const fallbackInput = rawToolCallId ? toolInputs.get(rawToolCallId) : undefined;
+          const event = normalizePiEvent(raw, new Date().toISOString(), fallbackInput);
+          if (event) push(event);
+          if (rawType === "tool_execution_end" && rawToolCallId) toolInputs.delete(rawToolCallId);
+        } catch {
+          diagnostics.push(line.slice(0, 280));
+        }
+      };
+      child.stdout?.on("data", (chunk) => {
+        stdoutBuffer += chunk.toString();
+        const lines = stdoutBuffer.split(/\r?\n/);
+        stdoutBuffer = lines.pop() || "";
+        lines.forEach(consumeLine);
+      });
+      // Pi JSON 模式的 stdout 是结构化事件；stderr 只保留诊断，不冒充 AI 回复。
+      child.stderr?.on("data", (chunk) => {
+        const diagnostic = chunk.toString().trim();
+        if (diagnostic) diagnostics.push(diagnostic.slice(0, 280));
+      });
+      const completion = new Promise<number | null>((resolve, reject) => {
+        child.once("error", reject);
+        child.once("close", (code) => {
+          if (stdoutBuffer.trim()) {
+            consumeLine(stdoutBuffer);
+            stdoutBuffer = "";
+          }
+          done = true;
+          wake?.();
+          resolve(code);
+        });
+      });
       while (!done || queue.length) { if (!queue.length) await new Promise<void>((resolve) => { wake = resolve; }); while (queue.length) yield queue.shift()!; }
       const code = await completion;
       if (code === 0) yield { type: "completed", content: `${session.id} completed`, timestamp: new Date().toISOString() };
-      else yield { type: "error", content: `Pi 进程退出（code=${code ?? "unknown"}）`, timestamp: new Date().toISOString() };
+      else {
+        const detail = diagnostics.at(-1);
+        yield { type: "error", content: detail || `Pi 进程退出（code=${code ?? "unknown"}）`, timestamp: new Date().toISOString() };
+      }
     } finally { this.children.delete(session.id); }
   }
   async cancel(session: HarnessSessionRef) { this.children.get(session.id)?.kill("SIGTERM"); }

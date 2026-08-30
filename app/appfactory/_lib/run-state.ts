@@ -15,5 +15,5 @@ export function formatRunElapsed(run: RunFeedback, now = Date.now()) {
 export function getRunStatusText(run: RunFeedback) {
   if (run.status === "failed") return run.message || "任务执行失败";
   if (run.status === "cancelled") return "已停止当前任务";
-  return "请求已提交，正在等待模型和工具执行";
+  return run.message || "请求已提交，正在等待模型和工具执行";
 }
