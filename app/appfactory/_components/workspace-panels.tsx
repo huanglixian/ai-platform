@@ -280,7 +280,7 @@ export function ChatPanel({
               </p>
             </div>
           </div>
-          {displayEvents.length === 0 ? (
+          {displayEvents.length === 0 && (
             <div className="rounded-xl border border-dashed border-[#d4dde8] bg-[#f6f8fb] p-8 text-sm leading-7 text-[#667085]">
               你可以从一句自然语言开始，例如：
               <br />
@@ -288,104 +288,103 @@ export function ChatPanel({
                 “创建一个设备巡检看板，包含状态筛选和趋势图。”
               </span>
             </div>
-          ) : (
-            <div className="space-y-4">
-              {displayEvents.map((event, index) => {
-                if (event.type === "completed" && event.runId) {
-                  const summary = runSummaries.find(
-                    (item) => item.runId === event.runId,
-                  );
-                  if (summary && shouldShowRunSummary(summary)) {
-                    return <RunSummaryCard key={`${event.runId}-summary`} summary={summary} />;
-                  }
-                  if (summary) return null;
-                }
-                return (
-                  <div
-                    key={`${event.runId || event.type}-${event.sequence ?? index}`}
-                    className={`${event.type === "user" ? "ml-8 bg-[#eef5fd] text-[#1a4d87]" : "mr-8 border border-[#edf1f5] bg-white text-[#4d4d4d]"} rounded-xl px-4 py-3 text-sm leading-6 shadow-[0_2px_6px_rgba(15,23,42,.03)]`}
-                  >
-                    <div className="mb-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-[#6f96c4]">
-                      {workspaceEventLabel[event.type] || event.type}
-                    </div>
-                    {event.type === "text" ? (
-                      <MessageMarkdown content={event.content} />
-                    ) : (
-                      <pre className="whitespace-pre-wrap break-words font-sans">
-                        {event.content}
-                      </pre>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
           )}
-          {activeRun?.status === "completed" && activeSummary && shouldShowRunSummary(activeSummary) ? (
-            <RunSummaryCard summary={activeSummary} />
-          ) : activeRun && activeRun.status !== "completed" ? (
-            <div
-              aria-live="polite"
-              role="status"
-              className={`mt-4 rounded-xl border px-4 py-3 shadow-[0_2px_6px_rgba(15,23,42,.03)] ${activeRun.status === "running" ? "border-[#bfd7f2] bg-[#f7fbff]" : activeRun.status === "failed" ? "border-[#f3c6c2] bg-[#fff5f4]" : "border-[#d4dde8] bg-[#f6f8fb]"}`}
-            >
-              <div className="min-w-0">
-                <div className="flex items-center gap-2.5">
-                  <span
-                    className={`grid h-7 w-7 shrink-0 place-items-center rounded-full text-xs ${activeRun.status === "running" ? "bg-[#e4f0fc] text-[#0368b3]" : activeRun.status === "failed" ? "bg-[#fce4e1] text-[#b9382f]" : "bg-[#e8edf3] text-[#667085]"}`}
-                  >
-                    {activeRun.status === "running" ? (
-                      <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-current" />
-                    ) : activeRun.status === "failed" ? (
-                      "!"
-                    ) : (
-                      "✓"
-                    )}
-                  </span>
-                  <p className="min-w-0 flex-1 text-xs font-semibold text-[#1a4d87]">
-                    {activeRun.status === "running"
-                      ? "Pi 正在处理你的需求"
-                      : activeRun.status === "failed"
-                        ? "Pi 执行失败"
-                        : "任务已停止"}
-                  </p>
-                  {activeRun.status === "running" && (
-                    <span className="shrink-0 font-mono text-[11px] text-[#6f96c4]">
-                      {formatRunElapsed(activeRun, now)}
-                    </span>
+          <div className="space-y-4">
+            {displayEvents.map((event, index) => {
+              if (event.type === "completed" && event.runId) {
+                const summary = runSummaries.find(
+                  (item) => item.runId === event.runId,
+                );
+                if (summary && shouldShowRunSummary(summary)) {
+                  return <RunSummaryCard key={`${event.runId}-summary`} summary={summary} />;
+                }
+                if (summary) return null;
+              }
+              return (
+                <div
+                  key={`${event.runId || event.type}-${event.sequence ?? index}`}
+                  className={`${event.type === "user" ? "ml-8 bg-[#eef5fd] text-[#1a4d87]" : "mr-8 border border-[#edf1f5] bg-white text-[#4d4d4d]"} rounded-xl px-4 py-3 text-sm leading-6 shadow-[0_2px_6px_rgba(15,23,42,.03)]`}
+                >
+                  <div className="mb-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-[#6f96c4]">
+                    {workspaceEventLabel[event.type] || event.type}
+                  </div>
+                  {event.type === "text" ? (
+                    <MessageMarkdown content={event.content} />
+                  ) : (
+                    <pre className="whitespace-pre-wrap break-words font-sans">
+                      {event.content}
+                    </pre>
                   )}
                 </div>
-                {activeRun.status !== "running" && (
-                  <p className="mt-1 text-[11px] leading-5 text-[#667085]">
-                    {getRunStatusText(activeRun)}
-                  </p>
-                )}
-                <ActivityStepList
-                  activities={activeSummary?.activities ?? []}
-                  className="mt-3 h-24 overflow-y-auto rounded-lg border border-[#e6edf4] bg-white/70 p-1.5"
-                  followLatest
-                />
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {activeRun.status === "running" ? (
-                    <button
-                      type="button"
-                      onClick={onStop}
-                      className="rounded-md border border-[#e5b2ad] px-2.5 py-1.5 text-[10px] font-medium text-[#b9382f] hover:bg-[#fff1ef]"
+              );
+            })}
+            {activeRun?.status === "completed" && activeSummary && shouldShowRunSummary(activeSummary) ? (
+              <RunSummaryCard summary={activeSummary} />
+            ) : activeRun && activeRun.status !== "completed" ? (
+              <div
+                aria-live="polite"
+                role="status"
+                className={`rounded-xl border px-4 py-3 shadow-[0_2px_6px_rgba(15,23,42,.03)] ${activeRun.status === "running" ? "border-[#bfd7f2] bg-[#f7fbff]" : activeRun.status === "failed" ? "border-[#f3c6c2] bg-[#fff5f4]" : "border-[#d4dde8] bg-[#f6f8fb]"}`}
+              >
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2.5">
+                    <span
+                      className={`grid h-7 w-7 shrink-0 place-items-center rounded-full text-xs ${activeRun.status === "running" ? "bg-[#e4f0fc] text-[#0368b3]" : activeRun.status === "failed" ? "bg-[#fce4e1] text-[#b9382f]" : "bg-[#e8edf3] text-[#667085]"}`}
                     >
-                      停止任务
-                    </button>
-                  ) : activeRun.status === "failed" ? (
-                    <button
-                      type="button"
-                      onClick={onRetry}
-                      className="rounded-md border border-[#bfd7f2] px-2.5 py-1.5 text-[10px] font-medium text-[#0368b3] hover:bg-[#eef5fd]"
-                    >
-                      重新执行
-                    </button>
-                  ) : null}
+                      {activeRun.status === "running" ? (
+                        <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-current" />
+                      ) : activeRun.status === "failed" ? (
+                        "!"
+                      ) : (
+                        "✓"
+                      )}
+                    </span>
+                    <p className="min-w-0 flex-1 text-xs font-semibold text-[#1a4d87]">
+                      {activeRun.status === "running"
+                        ? "Pi 正在处理你的需求"
+                        : activeRun.status === "failed"
+                          ? "Pi 执行失败"
+                          : "任务已停止"}
+                    </p>
+                    {activeRun.status === "running" && (
+                      <span className="shrink-0 font-mono text-[11px] text-[#6f96c4]">
+                        {formatRunElapsed(activeRun, now)}
+                      </span>
+                    )}
+                  </div>
+                  {activeRun.status !== "running" && (
+                    <p className="mt-1 text-[11px] leading-5 text-[#667085]">
+                      {getRunStatusText(activeRun)}
+                    </p>
+                  )}
+                  <ActivityStepList
+                    activities={activeSummary?.activities ?? []}
+                    className="mt-3 h-24 overflow-y-auto rounded-lg border border-[#e6edf4] bg-white/70 p-1.5"
+                    followLatest
+                  />
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {activeRun.status === "running" ? (
+                      <button
+                        type="button"
+                        onClick={onStop}
+                        className="rounded-md border border-[#e5b2ad] px-2.5 py-1.5 text-[10px] font-medium text-[#b9382f] hover:bg-[#fff1ef]"
+                      >
+                        停止任务
+                      </button>
+                    ) : activeRun.status === "failed" ? (
+                      <button
+                        type="button"
+                        onClick={onRetry}
+                        className="rounded-md border border-[#bfd7f2] px-2.5 py-1.5 text-[10px] font-medium text-[#0368b3] hover:bg-[#eef5fd]"
+                      >
+                        重新执行
+                      </button>
+                    ) : null}
+                  </div>
                 </div>
               </div>
-            </div>
-          ) : null}
+            ) : null}
+          </div>
         </div>
       </div>
       <div className="border-t border-[#edf1f5] bg-white px-4 py-3 sm:px-7 lg:px-10">
