@@ -10,6 +10,17 @@ export type WorkspaceEvent = {
   activity?: HarnessActivity;
 };
 
+export type WorkspaceRunSummary = {
+  runId: string;
+  activities: WorkspaceEvent[];
+  status: "running" | "completed" | "failed";
+  terminalEvent?: WorkspaceEvent;
+};
+
+export function shouldShowRunSummary(summary: WorkspaceRunSummary) {
+  return summary.status === "failed" || summary.activities.length > 0;
+}
+
 /** 将 Pi 的增量事件整理成用户可读的稳定时间线。 */
 export function mergeWorkspaceEvents(events: WorkspaceEvent[]) {
   const next: WorkspaceEvent[] = [];
@@ -54,4 +65,68 @@ export function mergeWorkspaceEvents(events: WorkspaceEvent[]) {
   }
 
   return next;
+}
+
+export function getWorkspaceHistoryEvents(
+  events: WorkspaceEvent[],
+  activeRunId?: string,
+) {
+  const merged = mergeWorkspaceEvents(events);
+  const scopedUserContents = new Set(
+    merged
+      .filter((event) => event.type === "user" && event.runId)
+      .map((event) => event.content.trim()),
+  );
+  let hasLegacyUser = false;
+  return merged.filter((event) => {
+    if (isLegacySystemEvent(event)) return false;
+    if (event.type === "user" && !event.runId) {
+      hasLegacyUser = true;
+      if (scopedUserContents.has(event.content.trim())) return false;
+    }
+    if (event.type === "text" && !event.runId && !hasLegacyUser) return false;
+    if (event.type === "activity") return false;
+    if (
+      activeRunId &&
+      event.runId === activeRunId &&
+      (event.type === "completed" || event.type === "error")
+    ) {
+      return false;
+    }
+    return true;
+  });
+}
+
+function isLegacySystemEvent(event: WorkspaceEvent) {
+  const content = event.content.trim();
+  if (event.type === "completed" && !event.runId) return true;
+  if (event.type !== "text" || event.runId) return false;
+  return (
+    content === "LLM 连接成功" ||
+    /^Warning: No project session found with id .+; creating a new session with that id\.$/.test(
+      content,
+    )
+  );
+}
+
+export function buildWorkspaceRunSummaries(events: WorkspaceEvent[]) {
+  const summaries = new Map<string, WorkspaceRunSummary>();
+  for (const event of mergeWorkspaceEvents(events)) {
+    if (!event.runId) continue;
+    let summary = summaries.get(event.runId);
+    if (!summary) {
+      summary = { runId: event.runId, activities: [], status: "running" };
+      summaries.set(event.runId, summary);
+    }
+    if (event.type === "activity") summary.activities.push(event);
+    if (event.type === "completed") {
+      summary.status = "completed";
+      summary.terminalEvent = event;
+    }
+    if (event.type === "error") {
+      summary.status = "failed";
+      summary.terminalEvent = event;
+    }
+  }
+  return [...summaries.values()];
 }

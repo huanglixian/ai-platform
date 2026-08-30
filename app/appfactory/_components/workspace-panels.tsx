@@ -4,8 +4,11 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { MessageMarkdown } from "@/components/shared/message-markdown";
 import type { FileTreeNode } from "@/app/appfactory/_lib/project-ui";
 import {
-  mergeWorkspaceEvents,
+  buildWorkspaceRunSummaries,
+  getWorkspaceHistoryEvents,
+  shouldShowRunSummary,
   type WorkspaceEvent,
+  type WorkspaceRunSummary,
 } from "@/app/appfactory/_lib/workspace-events";
 import type { HarnessActivity } from "@/app_factory/types/harness";
 import {
@@ -90,37 +93,91 @@ function activityIcon(kind: HarnessActivity["kind"]) {
   return "…";
 }
 
-function ActivityEventCard({ event }: { event: WorkspaceEvent }) {
+function ActivityStepRow({ event }: { event: WorkspaceEvent }) {
   const activity = event.activity;
   if (!activity) return null;
   const failed = activity.status === "failed";
   const finished = activity.status === "completed";
   return (
     <div
-      aria-live="polite"
-      className={`flex items-start gap-3 rounded-lg border px-3 py-2.5 ${failed ? "border-[#f3c6c2] bg-[#fff8f7]" : finished ? "border-[#e6edf4] bg-[#fbfcfe]" : "border-[#cfe0f2] bg-[#f7fbff]"}`}
+      className={`flex items-center gap-2 rounded-md px-2 py-1.5 ${failed ? "bg-[#fff8f7]" : finished ? "bg-[#fbfcfe]" : "bg-[#f7fbff]"}`}
     >
       <span
-        className={`mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full text-xs font-semibold ${failed ? "bg-[#fce4e1] text-[#b9382f]" : finished ? "bg-[#edf4f8] text-[#5b7793]" : "bg-[#e4f0fc] text-[#0368b3]"}`}
+        className={`grid h-5 w-5 shrink-0 place-items-center rounded-full text-[10px] font-semibold ${failed ? "bg-[#fce4e1] text-[#b9382f]" : finished ? "bg-[#edf4f8] text-[#5b7793]" : "bg-[#e4f0fc] text-[#0368b3]"}`}
       >
         {failed ? "!" : finished ? "✓" : activityIcon(activity.kind)}
       </span>
-      <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className={`text-xs font-medium ${failed ? "text-[#b9382f]" : "text-[#315d88]"}`}>
-            {event.content}
-          </p>
-          <span className={`text-[10px] ${failed ? "text-[#b9382f]" : "text-[#8aa0b6]"}`}>
-            {activityStatusLabel(activity.status)}
-          </span>
+      <span className={`min-w-0 flex-1 truncate text-[11px] ${failed ? "text-[#b9382f]" : "text-[#315d88]"}`}>
+        {event.content}
+      </span>
+      <span className={`shrink-0 text-[10px] ${failed ? "text-[#b9382f]" : "text-[#8aa0b6]"}`}>
+        {activityStatusLabel(activity.status)}
+      </span>
+    </div>
+  );
+}
+
+function ActivityStepList({
+  activities,
+  className,
+}: {
+  activities: WorkspaceEvent[];
+  className: string;
+}) {
+  return (
+    <div className={className}>
+      {activities.length ? (
+        <div className="space-y-1">
+          {activities.map((event, index) => (
+            <ActivityStepRow
+              key={`${event.activity?.id || "step"}-${index}`}
+              event={event}
+            />
+          ))}
         </div>
-        {activity.summary && (
-          <p className="mt-1 line-clamp-3 whitespace-pre-wrap break-words font-mono text-[10px] leading-4 text-[#7a8da2]">
-            {activity.summary}
+      ) : (
+        <p className="px-2 py-2 text-[11px] text-[#8aa0b6]">等待 Pi 返回第一步…</p>
+      )}
+    </div>
+  );
+}
+
+function RunSummaryCard({ summary }: { summary: WorkspaceRunSummary }) {
+  const failed = summary.status === "failed";
+  return (
+    <details className={`rounded-xl border px-4 py-3 shadow-[0_2px_6px_rgba(15,23,42,.03)] ${failed ? "border-[#f3c6c2] bg-[#fff8f7]" : "border-[#d4dde8] bg-[#fbfcfe]"}`}>
+      <summary className="flex cursor-pointer list-none items-center gap-3">
+        <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-full text-xs font-semibold ${failed ? "bg-[#fce4e1] text-[#b9382f]" : "bg-[#edf4f8] text-[#5b7793]"}`}>
+          {failed ? "!" : "✓"}
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className={`block text-xs font-semibold ${failed ? "text-[#b9382f]" : "text-[#315d88]"}`}>
+            {failed ? "任务执行失败" : "任务已完成"}
+          </span>
+          <span className="mt-1 block text-[10px] text-[#8aa0b6]">
+            {summary.activities.length
+              ? `${summary.activities.length} 个执行步骤`
+              : "无工具步骤"}
+          </span>
+        </span>
+        <span className="shrink-0 text-[10px] text-[#6f96c4]">查看执行过程</span>
+      </summary>
+      <div className="mt-3 border-t border-[#e6edf4] pt-2">
+        {summary.activities.length ? (
+          <ActivityStepList
+            activities={summary.activities}
+            className="space-y-1"
+          />
+        ) : (
+          <p className="text-[11px] text-[#7a8da2]">{summary.terminalEvent?.content || "任务已结束"}</p>
+        )}
+        {failed && summary.terminalEvent?.content && (
+          <p className="mt-2 whitespace-pre-wrap break-words text-[11px] text-[#b9382f]">
+            {summary.terminalEvent.content}
           </p>
         )}
       </div>
-    </div>
+    </details>
   );
 }
 
@@ -151,7 +208,19 @@ export function ChatPanel({
 }) {
   const [now, setNow] = useState(() => Date.now());
   const scrollRef = useRef<HTMLDivElement>(null);
-  const displayEvents = useMemo(() => mergeWorkspaceEvents(events), [events]);
+  const autoFollowRunRef = useRef<string | null>(null);
+  const runSummaries = useMemo(() => buildWorkspaceRunSummaries(events), [events]);
+  const activeSummary = useMemo(
+    () =>
+      activeRun?.runId
+        ? runSummaries.find((summary) => summary.runId === activeRun.runId)
+        : undefined,
+    [activeRun, runSummaries],
+  );
+  const displayEvents = useMemo(
+    () => getWorkspaceHistoryEvents(events, activeRun?.runId),
+    [activeRun, events],
+  );
 
   useEffect(() => {
     if (!activeRun || activeRun.status !== "running") return;
@@ -161,7 +230,16 @@ export function ChatPanel({
 
   useEffect(() => {
     const container = scrollRef.current;
-    if (!container) return;
+    if (!container || !activeRun) return;
+    const runKey = activeRun.runId || "pending";
+    if (activeRun.status === "running" && autoFollowRunRef.current !== runKey) {
+      autoFollowRunRef.current = runKey;
+      container.scrollTo({ top: container.scrollHeight, behavior: "smooth" });
+      return;
+    }
+    const nearBottom =
+      container.scrollHeight - container.scrollTop - container.clientHeight < 180;
+    if (!nearBottom) return;
     container.scrollTo({ top: container.scrollHeight, behavior: "smooth" });
   }, [activeRun, events]);
 
@@ -198,8 +276,14 @@ export function ChatPanel({
           ) : (
             <div className="space-y-4">
               {displayEvents.map((event, index) => {
-                if (event.type === "activity") {
-                  return <ActivityEventCard key={`${event.runId || "activity"}-${event.activity?.id || index}`} event={event} />;
+                if (event.type === "completed" && event.runId) {
+                  const summary = runSummaries.find(
+                    (item) => item.runId === event.runId,
+                  );
+                  if (summary && shouldShowRunSummary(summary)) {
+                    return <RunSummaryCard key={`${event.runId}-summary`} summary={summary} />;
+                  }
+                  if (summary) return null;
                 }
                 return (
                   <div
@@ -221,7 +305,9 @@ export function ChatPanel({
               })}
             </div>
           )}
-          {activeRun && (
+          {activeRun?.status === "completed" && activeSummary && shouldShowRunSummary(activeSummary) ? (
+            <RunSummaryCard summary={activeSummary} />
+          ) : activeRun && activeRun.status !== "completed" ? (
             <div
               aria-live="polite"
               role="status"
@@ -262,6 +348,10 @@ export function ChatPanel({
                       “{activeRun.prompt}”
                     </p>
                   )}
+                  <ActivityStepList
+                    activities={activeSummary?.activities ?? []}
+                    className="mt-3 h-24 overflow-y-auto rounded-lg border border-[#e6edf4] bg-white/70 p-1.5"
+                  />
                   <div className="mt-3 flex flex-wrap gap-2">
                     {activeRun.status === "running" ? (
                       <button
@@ -284,7 +374,7 @@ export function ChatPanel({
                 </div>
               </div>
             </div>
-          )}
+          ) : null}
         </div>
       </div>
       <div className="border-t border-[#edf1f5] bg-white px-4 py-3 sm:px-7 lg:px-10">

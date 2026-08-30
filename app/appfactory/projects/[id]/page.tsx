@@ -292,6 +292,15 @@ export default function ProjectPage({
       const consumeBlock = (block: string) => {
         const parsed = parseSseBlock(block);
         if (!parsed || typeof parsed.data !== "object" || !parsed.data) return;
+        if (parsed.event === "run.started") {
+          const data = parsed.data as { runId?: string };
+          if (data.runId) {
+            setActiveRun((current) =>
+              current ? { ...current, runId: data.runId } : current,
+            );
+          }
+          return;
+        }
         if (parsed.event === "run.finished") {
           const data = parsed.data as { status?: string };
           terminalStatus = data.status === "failed" ? "failed" : "completed";
@@ -341,7 +350,17 @@ export default function ProjectPage({
         if (done) break;
       }
       if (buffer.trim()) consumeBlock(buffer);
-      if (terminalStatus === "completed") setActiveRun(null);
+      if (terminalStatus === "completed") {
+        setActiveRun((current) =>
+          current
+            ? {
+                ...current,
+                status: "completed",
+                message: "执行结果已保存",
+              }
+            : current,
+        );
+      }
       else if (terminalStatus !== "failed") {
         const message = "实时连接中断，任务结果已保存在活动日志中";
         setActiveRun((current) =>

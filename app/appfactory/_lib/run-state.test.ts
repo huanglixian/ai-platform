@@ -46,3 +46,14 @@ test("失败和停止状态使用明确文案", () => {
     "已停止当前任务",
   );
 });
+
+test("完成状态可以保留在同一张运行卡片中", () => {
+  assert.equal(
+    getRunStatusText({
+      prompt: "完成任务",
+      startedAt: 1_000,
+      status: "completed",
+    }),
+    "任务已完成",
+  );
+});

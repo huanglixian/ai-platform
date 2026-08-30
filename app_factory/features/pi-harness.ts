@@ -71,7 +71,7 @@ export class PiHarnessRuntime implements HarnessRuntime {
       });
       while (!done || queue.length) { if (!queue.length) await new Promise<void>((resolve) => { wake = resolve; }); while (queue.length) yield queue.shift()!; }
       const code = await completion;
-      if (code === 0) yield { type: "completed", content: `${session.id} completed`, timestamp: new Date().toISOString() };
+      if (code === 0) yield { type: "completed", content: "任务已完成", timestamp: new Date().toISOString() };
       else {
         const detail = diagnostics.at(-1);
         yield { type: "error", content: detail || `Pi 进程退出（code=${code ?? "unknown"}）`, timestamp: new Date().toISOString() };
