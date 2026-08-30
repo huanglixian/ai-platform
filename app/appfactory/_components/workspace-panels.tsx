@@ -6,6 +6,7 @@ import type { FileTreeNode } from "@/app/appfactory/_lib/project-ui";
 import {
   buildWorkspaceRunSummaries,
   getWorkspaceHistoryEvents,
+  getWorkspaceRunStepCount,
   shouldShowRunSummary,
   type WorkspaceEvent,
   type WorkspaceRunSummary,
@@ -120,12 +121,21 @@ function ActivityStepRow({ event }: { event: WorkspaceEvent }) {
 function ActivityStepList({
   activities,
   className,
+  followLatest = false,
 }: {
   activities: WorkspaceEvent[];
   className: string;
+  followLatest?: boolean;
 }) {
+  const listRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!followLatest || !listRef.current) return;
+    listRef.current.scrollTop = listRef.current.scrollHeight;
+  }, [activities, followLatest]);
+
   return (
-    <div className={className}>
+    <div ref={listRef} className={className}>
       {activities.length ? (
         <div className="space-y-1">
           {activities.map((event, index) => (
@@ -144,8 +154,12 @@ function ActivityStepList({
 
 function RunSummaryCard({ summary }: { summary: WorkspaceRunSummary }) {
   const failed = summary.status === "failed";
+  const [open, setOpen] = useState(false);
   return (
-    <details className={`rounded-xl border px-4 py-3 shadow-[0_2px_6px_rgba(15,23,42,.03)] ${failed ? "border-[#f3c6c2] bg-[#fff8f7]" : "border-[#d4dde8] bg-[#fbfcfe]"}`}>
+    <details
+      onToggle={(event) => setOpen(event.currentTarget.open)}
+      className={`rounded-xl border px-4 py-3 shadow-[0_2px_6px_rgba(15,23,42,.03)] ${failed ? "border-[#f3c6c2] bg-[#fff8f7]" : "border-[#d4dde8] bg-[#fbfcfe]"}`}
+    >
       <summary className="flex cursor-pointer list-none items-center gap-3">
         <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-full text-xs font-semibold ${failed ? "bg-[#fce4e1] text-[#b9382f]" : "bg-[#edf4f8] text-[#5b7793]"}`}>
           {failed ? "!" : "✓"}
@@ -156,7 +170,7 @@ function RunSummaryCard({ summary }: { summary: WorkspaceRunSummary }) {
           </span>
           <span className="mt-1 block text-[10px] text-[#8aa0b6]">
             {summary.activities.length
-              ? `${summary.activities.length} 个执行步骤`
+              ? `${getWorkspaceRunStepCount(summary)} 个执行步骤`
               : "无工具步骤"}
           </span>
         </span>
@@ -166,7 +180,8 @@ function RunSummaryCard({ summary }: { summary: WorkspaceRunSummary }) {
         {summary.activities.length ? (
           <ActivityStepList
             activities={summary.activities}
-            className="space-y-1"
+            className="max-h-28 space-y-1 overflow-y-auto"
+            followLatest={open}
           />
         ) : (
           <p className="text-[11px] text-[#7a8da2]">{summary.terminalEvent?.content || "任务已结束"}</p>
@@ -340,9 +355,11 @@ export function ChatPanel({
                       </span>
                     )}
                   </div>
-                  <p className="mt-1 text-[11px] leading-5 text-[#667085]">
-                    {getRunStatusText(activeRun)}
-                  </p>
+                  {activeRun.status !== "running" && (
+                    <p className="mt-1 text-[11px] leading-5 text-[#667085]">
+                      {getRunStatusText(activeRun)}
+                    </p>
+                  )}
                   {activeRun.status === "running" && (
                     <p className="mt-1 truncate text-[10px] text-[#98a2b3]">
                       “{activeRun.prompt}”
@@ -351,6 +368,7 @@ export function ChatPanel({
                   <ActivityStepList
                     activities={activeSummary?.activities ?? []}
                     className="mt-3 h-24 overflow-y-auto rounded-lg border border-[#e6edf4] bg-white/70 p-1.5"
+                    followLatest
                   />
                   <div className="mt-3 flex flex-wrap gap-2">
                     {activeRun.status === "running" ? (

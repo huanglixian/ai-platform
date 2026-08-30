@@ -3,7 +3,7 @@ import test from "node:test";
 
 // Node 的原生 TypeScript runner 需要显式扩展名，生产编译不参与该导入。
 // @ts-expect-error TS 配置保持 Next.js 默认，不开启 TS 扩展名导入。
-import { buildWorkspaceRunSummaries, getWorkspaceHistoryEvents, mergeWorkspaceEvents, shouldShowRunSummary, type WorkspaceEvent } from "./workspace-events.ts";
+import { buildWorkspaceRunSummaries, getWorkspaceHistoryEvents, getWorkspaceRunStepCount, mergeWorkspaceEvents, shouldShowRunSummary, type WorkspaceEvent } from "./workspace-events.ts";
 
 test("同一工具活动跨越文本输出时仍合并为一个完成步骤", () => {
   const events: WorkspaceEvent[] = [
@@ -34,6 +34,62 @@ test("同一工具活动跨越文本输出时仍合并为一个完成步骤", ()
     },
     { type: "text", content: "我已读取文件", runId: "run-1", sequence: 2 },
   ]);
+});
+
+test("工具准备调用保留在同一运行的执行过程列表中", () => {
+  const merged = mergeWorkspaceEvents([
+    {
+      type: "activity",
+      content: "准备调用 write",
+      runId: "run-prepare",
+      sequence: 1,
+      activity: {
+        id: "call-write",
+        kind: "write",
+        status: "started",
+        toolName: "write",
+      },
+    },
+    {
+      type: "activity",
+      content: "正在创建 app/about/page.tsx",
+      runId: "run-prepare",
+      sequence: 2,
+      activity: {
+        id: "call-write",
+        kind: "write",
+        status: "started",
+        toolName: "write",
+        path: "app/about/page.tsx",
+      },
+    },
+    {
+      type: "activity",
+      content: "已创建 app/about/page.tsx",
+      runId: "run-prepare",
+      sequence: 3,
+      activity: {
+        id: "call-write",
+        kind: "write",
+        status: "completed",
+        toolName: "write",
+        path: "app/about/page.tsx",
+      },
+    },
+  ]);
+
+  assert.deepEqual(merged.map((event) => event.content), [
+    "准备调用 write",
+    "已创建 app/about/page.tsx",
+  ]);
+  assert.equal(
+    getWorkspaceRunStepCount({
+      runId: "run-prepare",
+      activities: merged,
+      status: "completed",
+    }),
+    1,
+  );
 });
 
 test("同一运行的工具步骤聚合为一张运行摘要卡", () => {

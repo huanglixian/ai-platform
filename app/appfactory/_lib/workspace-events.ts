@@ -21,10 +21,15 @@ export function shouldShowRunSummary(summary: WorkspaceRunSummary) {
   return summary.status === "failed" || summary.activities.length > 0;
 }
 
+export function getWorkspaceRunStepCount(summary: WorkspaceRunSummary) {
+  return summary.activities.filter((event) => !isPreparationActivity(event)).length;
+}
+
 /** 将 Pi 的增量事件整理成用户可读的稳定时间线。 */
 export function mergeWorkspaceEvents(events: WorkspaceEvent[]) {
   const next: WorkspaceEvent[] = [];
   const activityIndices = new Map<string, number>();
+  const preparationIndices = new Map<string, number>();
 
   for (const event of events) {
     const activityKey =
@@ -33,6 +38,16 @@ export function mergeWorkspaceEvents(events: WorkspaceEvent[]) {
         : undefined;
 
     if (activityKey) {
+      if (isPreparationActivity(event)) {
+        const existingPreparationIndex = preparationIndices.get(activityKey);
+        if (existingPreparationIndex !== undefined) {
+          next[existingPreparationIndex] = event;
+        } else {
+          preparationIndices.set(activityKey, next.length);
+          next.push(event);
+        }
+        continue;
+      }
       const existingIndex = activityIndices.get(activityKey);
       if (existingIndex !== undefined) {
         const previous = next[existingIndex];
@@ -65,6 +80,10 @@ export function mergeWorkspaceEvents(events: WorkspaceEvent[]) {
   }
 
   return next;
+}
+
+function isPreparationActivity(event: WorkspaceEvent) {
+  return event.type === "activity" && event.content.startsWith("准备调用 ");
 }
 
 export function getWorkspaceHistoryEvents(
