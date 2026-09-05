@@ -86,7 +86,7 @@
 - [x] `lib/nav.ts`
   删除工作流导航入口；智能体分组只保留技能中心。
 
-- [x] `dev_files/dev_guide.md`
+- [x] `dev_status.md`
   同步 Platform 模块说明、目录结构、主要文件索引和开发展状。
 
 ### 删除文件夹
@@ -293,7 +293,7 @@
 - [ ] `lib/nav.ts`
   在配置管理中新增模型管理入口。
 
-- [ ] `dev_files/dev_guide.md`
+- [ ] `dev_status.md`
   同步模型管理模块说明。
 
 ### 验收标准

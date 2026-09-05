@@ -1,14 +1,14 @@
 # AgentHub 正式化与 AppFactory v1 TODO
 
-> 本文件是 GOAL 开发的实时进度事实源。每次新会话或上下文压缩后先阅读 `dev_files/dev_guide.md`、同目录 `dev_plan.md` 和本文件，然后从“下一步”及第一个未完成任务继续。完成任务后必须立即更新状态和验证结果。
+> 本文件是 GOAL 开发的实时进度事实源。每次新会话或上下文压缩后先阅读根目录 `dev_status.md`、同目录 `dev_plan.md` 和本文件，然后从“下一步”及第一个未完成任务继续。完成任务后必须立即更新状态和验证结果。
 
 ## 进度摘要（持续维护）
 
 - 总体状态：`进行中`
 - 当前阶段：`阶段 6：能力绑定、AgentHub 注册与最终交付`
 - 当前目标：`完成端到端验收并记录剩余限制`
-- 最近完成：`阶段 6 Capability Client/Gateway、来源展示、独立闭环与事实源清理；Pi Provider/模型配置与非交互 Harness；生成项目 ESLint 配置；Build 生产环境修复、健康部署地址注册与工作区发布入口；阶段 5 Preview 重启失效识别；阶段 4 Pi cwd/会话持久化与取消回收、Workspace Runtime seam、默认 Coding Skill、职责层、预览打开、安全检查与三栏工作区；Pi 发送态、运行反馈与 SSE 增量事件；Pi JSONL 工具活动时间线、单一运行卡片与 AI Markdown 渲染；项目内 Session 切换/新建、会话标题、Pi 上下文健康状态、服务端并发保护与上下文压缩反馈`
-- 最近验证：`Next.js 16.3.3；27 项 Node 核心测试、lint/typecheck/build/diff-check 通过；真实 DeepSeek Pi 自然语言读取与修改文件、npm run typecheck 活动反馈成功；Pi SSE started→harness→finished 事件流实测，transcript 按 runId/sequence 持久化；多步骤执行过程在同一卡片内部更新，执行准备阶段与完成阶段同时保留，进行中及展开后的完成列表自动跟随最新步骤；无工具步骤的成功问答不再重复显示执行摘要；Markdown 标题、列表、行内代码和代码块在 Chrome 中结构化渲染；旧版 Pi 启动诊断、内部完成标记和孤立遗留结果不再作为聊天消息展示；项目工作区新建对话后上下文隔离、历史 Session 切换后 transcript 恢复、首条需求标题更新、Pi 状态 API 返回 ready、上下文压缩结束事件归一化均已实测；Preview→Check→Build→Release→Local Deployment→AgentHub 注册→应用中心可见闭环实测；文件读写与快照 Diff API 实测；AgentHub/AgentHub 页面与 API 均返回 200；localStorage 替代调用已清理；Chrome 桌面、平板、移动端视觉验收通过`
+- 最近完成：`阶段 6 Capability Client/Gateway、来源展示、独立闭环与事实源清理；Pi Provider/模型配置与非交互 Harness；生成项目 ESLint 配置；Build 生产环境修复、健康部署地址注册与工作区发布入口；阶段 5 Preview HTTP 就绪检查、IPv4/IPv6 端口冲突处理与遗留 Next.js Preview 恢复；阶段 4 Pi cwd/会话持久化与取消回收、Workspace Runtime seam、默认 Coding Skill、职责层、预览打开、安全检查与三栏工作区；Pi 发送态、运行反馈与 SSE 增量事件；Pi JSONL 工具活动时间线、单一运行卡片与 AI Markdown 渲染；项目内 Session 切换/新建、会话标题、Pi 上下文健康状态、服务端并发保护与上下文压缩反馈`
+- 最近验证：`Next.js 16.3.3；29 项 Node 核心测试、lint/typecheck/build/diff-check 通过；真实 DeepSeek Pi 自然语言读取与修改文件、npm run typecheck 活动反馈成功；Pi SSE started→harness→finished 事件流实测，transcript 按 runId/sequence 持久化；多步骤执行过程在同一卡片内部更新，执行准备阶段与完成阶段同时保留，进行中及展开后的完成列表自动跟随最新步骤；无工具步骤的成功问答不再重复显示执行摘要；Markdown 标题、列表、行内代码和代码块在 Chrome 中结构化渲染；旧版 Pi 启动诊断、内部完成标记和孤立遗留结果不再作为聊天消息展示；项目工作区新建对话后上下文隔离、历史 Session 切换后 transcript 恢复、首条需求标题更新、Pi 状态 API 返回 ready、上下文压缩结束事件归一化均已实测；指定项目 Preview 恢复、停止、重新启动及 API 返回后立即 HTTP 200 已实测；Preview→Check→Build→Release→Local Deployment→AgentHub 注册→应用中心可见闭环实测；文件读写与快照 Diff API 实测；AgentHub/AgentHub 页面与 API 均返回 200；localStorage 替代调用已清理；Chrome 桌面、平板、移动端视觉验收通过`
 - 阻塞项：`无`
 - 下一步：`在真实异步任务需求出现后，将 Pi Run、Build 和 Preview 逐步迁移到 SQLite Job Worker，并再建设全局任务中心；继续按反馈迭代产品体验`
 
@@ -27,7 +27,7 @@
 
 ### 0.1 基线确认
 
-- [x] 阅读 `dev_files/dev_guide.md`、本目录两份文档及现有状态文件。
+- [x] 阅读根目录 `dev_status.md`、本目录两份文档及现有状态文件。
 - [x] 检查 Git 状态、包管理器、Node 版本、环境变量和当前启动方式。
 - [x] 运行并记录现有 `lint`、TypeScript 检查、生产构建及关键页面状态。
 - [x] 核对工作台、Skill、应用中心、业务流、能力中心的当前数据与调用来源。
@@ -211,8 +211,8 @@
 
 - [x] 实现端口分配、进程启动、停止、重启、日志和清理。
 - [x] 启动受管 Next.js dev process，并在 AppFactory 预览区打开。
-- [x] 处理启动失败、端口冲突、进程退出和僵尸进程回收（进程关闭自动清理）。
-- [x] AppFactory 重启后能识别失效 Preview 并恢复为正确状态。
+- [x] 处理启动失败、IPv4/IPv6 端口冲突和进程退出；Preview API 通过 HTTP 就绪检查后才返回地址。
+- [x] AppFactory 热更新或重启后能通过全局进程表及 Next.js dev lock 恢复仍存活的 Preview，并识别其余失效状态。
 
 ### 5.3 Build 与 Release
 
@@ -263,7 +263,7 @@
 - [x] 完成错误、加载、空数据、取消、重试和异常恢复状态（项目页已提供加载/错误/空态、停止与重试入口）。
 - [x] 检查桌面、平板、移动端；工具工作区优先利用视口，不堆大标题和无效卡片（Chrome 已完成 1440、1024、390 视口验收，包含文件查看器切换）。
 - [x] 全项目通过 lint、typecheck、生产 build 和核心浏览器操作验证（Chrome 已验证项目中心、新建弹窗、工作区、文件查看、设置和真实 Pi 连接测试）。
-- [x] 更新 `.env.example`、启动/Worker 脚本、部署说明和 `dev_files/dev_guide.md`。
+- [x] 更新 `.env.example`、启动/Worker 脚本、部署说明和根目录 `dev_status.md`。
 - [x] 更新本文件进度摘要，记录已验证范围、已知限制和后续事项。
 
 ### 阶段 6 验收
@@ -287,11 +287,11 @@
 
 ## 会话交接记录（每次结束前更新）
 
-- 日期：`2026-08-30`
+- 日期：`2026-09-05`
 - 当前阶段：`阶段 6`
-- 本次完成：`项目内 Session 切换/新建、首条需求标题、Pi 上下文健康状态、服务端 Session 并发保护、Pi 上下文压缩反馈`
-- 修改的关键文件：`app/appfactory/projects/[id]/page.tsx`、`app_factory/types/session.ts`、`app_factory/server/database.ts`、`app_factory/server/pi-session.ts`、`app_factory/features/pi-events.ts`、`app/api/appfactory/v1/projects/[id]/sessions/route.ts`
-- 已执行验证：`npm run lint`、`npm run typecheck`、`npm run build`、`git diff --check`、27 项 Node 核心测试；浏览器实测新建对话后独立运行、切换旧 Session 恢复 Transcript、首条需求标题更新、Session API 返回 Pi `ready` 状态；Pi 压缩结束事件测试通过
-- 当前未完成：`浏览器视觉验证`
-- 阻塞/风险：`浏览器自动化服务当前不可用，无法完成三种视口的实际截图与交互验收`
-- 下一步唯一动作：`恢复浏览器自动化后完成桌面、平板和移动端视口验收`
+- 本次完成：`Preview HTTP 就绪检查、IPv4/IPv6 端口探测、热更新进程表保留、Next.js 遗留 Preview 恢复与启动失败日志返回；项目开发状态统一使用 dev_status.md`
+- 修改的关键文件：`app_factory/server/preview.ts`、`app_factory/server/preview-readiness.ts`、`app/api/appfactory/v1/projects/[id]/preview/route.ts`、`app/appfactory/projects/[id]/page.tsx`、`dev_status.md`
+- 已执行验证：`Preview 就绪与端口冲突单元测试；指定项目恢复旧 Preview、停止并重新启动成功；API 返回后立即访问预览首页得到 HTTP 200；全项目检查见本轮最终验证结果`
+- 当前未完成：`无`
+- 阻塞/风险：`无`
+- 下一步唯一动作：`按后续产品反馈继续迭代`

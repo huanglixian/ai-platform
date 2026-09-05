@@ -319,6 +319,12 @@ export default function ProjectPage({
       name === "preview"
         ? window.open("about:blank", "appfactory-preview")
         : null;
+    if (previewWindow) {
+      previewWindow.document.title = "正在启动预览";
+      previewWindow.document.body.style.cssText =
+        "margin:0;display:grid;min-height:100vh;place-items:center;background:#f6f8fb;color:#667085;font:14px system-ui,sans-serif";
+      previewWindow.document.body.textContent = "正在启动应用预览…";
+    }
     const controller = new AbortController();
     controllerRef.current = controller;
     try {

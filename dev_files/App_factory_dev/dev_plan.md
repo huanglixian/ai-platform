@@ -1,6 +1,6 @@
 # AgentHub 正式化与 AppFactory v1 开发介绍
 
-> 本文保存本轮 GOAL 的长期背景、边界和阶段。每次新会话或上下文压缩后，先读 `dev_files/dev_guide.md`，再读本文和同目录 `todo-list.md`；实时进度以 `todo-list.md` 为准。
+> 本文保存本轮 GOAL 的长期背景、边界和阶段。每次新会话或上下文压缩后，先读根目录 `dev_status.md`，再读本文和同目录 `todo-list.md`；实时进度以 `todo-list.md` 为准。
 
 ## 0. 项目概览与改造动因
 
