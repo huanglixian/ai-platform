@@ -28,6 +28,7 @@
 !/storage/agenthub/agenthub.db
 /storage/agenthub/*.db-shm
 /storage/agenthub/*.db-wal
+/storage/agenthub/backup-*.db
 !/storage/agenthub/.gitkeep
 
 # KnowHub demo snapshot is versioned; SQLite sidecar files remain runtime-only.

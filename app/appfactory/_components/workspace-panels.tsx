@@ -20,20 +20,6 @@ import {
 
 export type { WorkspaceEvent } from "@/app/appfactory/_lib/workspace-events";
 
-export const workspaceEventLabel: Record<string, string> = {
-  user: "你",
-  text: "AI 回复",
-  activity: "执行步骤",
-  tool: "工具调用",
-  error: "错误",
-  completed: "已完成",
-  check: "检查",
-  build: "构建",
-  preview: "预览",
-  deploy: "本地发布",
-  register: "发布到 AgentHub",
-};
-
 export function ProjectFileTree({
   nodes,
   selected,
@@ -319,7 +305,7 @@ export function ChatPanel({
                   className={`${event.type === "user" ? "ml-8 bg-[#eef5fd] text-[#1a4d87]" : "mr-8 border border-[#edf1f5] bg-white text-[#4d4d4d]"} rounded-xl px-4 py-3 text-sm leading-6 shadow-[0_2px_6px_rgba(15,23,42,.03)]`}
                 >
                   <div className="mb-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-[#6f96c4]">
-                    {workspaceEventLabel[event.type] || event.type}
+                    {event.type}
                   </div>
                   {event.type === "text" ? (
                     <MessageMarkdown content={event.content} />

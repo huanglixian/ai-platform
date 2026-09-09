@@ -102,13 +102,8 @@ export default function AppFactorySettingsPage() {
 
       <section className="mt-5 rounded-xl border border-[#d6e0eb] bg-white p-5 shadow-[0_4px_10px_rgba(15,23,42,.04)]">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div><h2 className="text-sm font-semibold text-[#1a4d87]">项目级连接</h2><p className="mt-1 text-xs text-[#667085]">新建项目时选择 AgentHub 接入模式；不接入时，AppFactory 仍可独立完成开发、预览和本地发布。</p></div>
+          <div><h2 className="text-sm font-semibold text-[#1a4d87]">发布服务</h2><p className="mt-1 text-xs text-[#667085]">每个项目发布时都会自动注册到应用中心；发布过程由后台 Worker 持续执行。</p></div>
           <button type="button" onClick={() => void loadStatus()} disabled={refreshing} className="h-9 rounded-lg border border-[#bfd7f2] px-3 text-xs font-medium text-[#0368b3] hover:bg-[#eef5fd] disabled:opacity-50">{refreshing ? "检测中…" : "重新检测"}</button>
-        </div>
-        <div className="mt-5 grid gap-3 text-xs sm:grid-cols-3">
-          <div className="rounded-lg bg-[#f6f8fb] px-3 py-3"><p className="font-medium text-[#4d4d4d]">独立模式</p><p className="mt-1 leading-5 text-[#808080]">不连接 AgentHub，适合普通应用开发。</p></div>
-          <div className="rounded-lg bg-[#f6f8fb] px-3 py-3"><p className="font-medium text-[#4d4d4d]">本地 AgentHub</p><p className="mt-1 leading-5 text-[#808080]">调用当前本机已注册的企业能力。</p></div>
-          <div className="rounded-lg bg-[#f6f8fb] px-3 py-3"><p className="font-medium text-[#4d4d4d]">HTTP AgentHub</p><p className="mt-1 leading-5 text-[#808080]">连接配置的独立 AgentHub 服务地址。</p></div>
         </div>
       </section>
     </main>

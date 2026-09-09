@@ -1,7 +1,7 @@
 import { apiError, apiOk } from "@/lib/server/api-response";
 import { getPiSessionStatus } from "@/app_factory/types/session";
 import { piSessionExists } from "@/app_factory/server/pi-session";
-import { projectService, sessionService } from "@/app_factory/server/services";
+import { createSession, getProject, listSessions } from "@/app_factory/server/database";
 
 export const runtime = "nodejs";
 
@@ -38,8 +38,8 @@ export async function GET(
   context: { params: Promise<{ id: string }> },
 ) {
   const { id } = await context.params;
-  if (!projectService.get(id)) return apiError("项目不存在", 404);
-  const sessions = sessionService.list(id) as SessionRow[];
+  if (!getProject(id)) return apiError("项目不存在", 404);
+  const sessions = listSessions(id) as SessionRow[];
   return apiOk(await Promise.all(sessions.map(presentSession)));
 }
 
@@ -48,9 +48,9 @@ export async function POST(
   context: { params: Promise<{ id: string }> },
 ) {
   const { id } = await context.params;
-  if (!projectService.get(id)) return apiError("项目不存在", 404);
+  if (!getProject(id)) return apiError("项目不存在", 404);
   return apiOk(
-    await presentSession(sessionService.create(id) as SessionRow),
+    await presentSession(createSession(id) as SessionRow),
     { status: 201 },
   );
 }

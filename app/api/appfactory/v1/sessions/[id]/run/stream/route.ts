@@ -1,5 +1,5 @@
 import { executePiRun } from "@/app_factory/server/pi-run";
-import { runService, sessionService } from "@/app_factory/server/services";
+import { createRun, getSession, setSessionStatus } from "@/app_factory/server/database";
 import { formatSseEvent } from "@/app_factory/server/sse";
 import { apiError } from "@/lib/server/api-response";
 import { SessionBusyError } from "@/app_factory/server/errors";
@@ -13,7 +13,7 @@ export async function POST(
   context: { params: Promise<{ id: string }> },
 ) {
   const { id } = await context.params;
-  const session = sessionService.get(id);
+  const session = getSession(id);
   if (!session) return apiError("会话不存在", 404);
 
   const { prompt } = (await request.json()) as { prompt?: string };
@@ -21,12 +21,12 @@ export async function POST(
 
   let run: { id: string };
   try {
-    run = runService.create(session.project_id, id, prompt) as { id: string };
+    run = createRun(session.project_id, id, prompt) as { id: string };
   } catch (error) {
     if (error instanceof SessionBusyError) return apiError(error.message, 409);
     throw error;
   }
-  sessionService.setStatus(id, "running");
+  setSessionStatus(id, "running");
 
   let disconnected = false;
   const stream = new ReadableStream<Uint8Array>({

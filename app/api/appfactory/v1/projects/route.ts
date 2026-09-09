@@ -1,3 +1,22 @@
-import { z } from "zod"; import { apiError,apiOk } from "@/lib/server/api-response"; import { projectService } from "@/app_factory/server/services";
-export const runtime="nodejs"; const schema=z.object({name:z.string().trim().min(1).max(120),description:z.string().trim().max(2000).optional(),skillProfile:z.string().trim().max(80).optional(),agentHubMode:z.enum(["disabled","local","http"]).optional()});
-export function GET(){return apiOk(projectService.list());} export async function POST(r:Request){const p=schema.safeParse(await r.json());if(!p.success)return apiError("项目字段校验失败",422,p.error.flatten());return apiOk(projectService.create(p.data),{status:201});}
+import { z } from "zod";
+
+import { createProject, listProjects } from "@/app_factory/server/database";
+import { apiError, apiOk } from "@/lib/server/api-response";
+
+export const runtime = "nodejs";
+
+const schema = z.object({
+  name: z.string().trim().min(1).max(120),
+  description: z.string().trim().max(2000).optional(),
+  skillProfile: z.string().trim().max(80).optional(),
+});
+
+export function GET() {
+  return apiOk(listProjects());
+}
+
+export async function POST(request: Request) {
+  const input = schema.safeParse(await request.json());
+  if (!input.success) return apiError("项目字段校验失败", 422, input.error.flatten());
+  return apiOk(createProject(input.data), { status: 201 });
+}

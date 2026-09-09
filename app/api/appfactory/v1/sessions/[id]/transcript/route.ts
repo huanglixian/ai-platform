@@ -1,4 +1,4 @@
-import { sessionService } from "@/app_factory/server/services";
+import { getSession } from "@/app_factory/server/database";
 import { readTranscript } from "@/app_factory/server/transcript";
 import { apiError, apiOk } from "@/lib/server/api-response";
 
@@ -9,7 +9,7 @@ export async function GET(
   context: { params: Promise<{ id: string }> },
 ) {
   const { id } = await context.params;
-  const session = sessionService.get(id) as
+  const session = getSession(id) as
     | { transcript_path?: string | null }
     | undefined;
   if (!session) return apiError("会话不存在", 404);

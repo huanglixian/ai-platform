@@ -16,13 +16,9 @@ export function getAppFactoryDatabase() {
   db.pragma("foreign_keys = ON");
   db.pragma("busy_timeout = 5000");
   db.exec(`
-    CREATE TABLE IF NOT EXISTS projects (id TEXT PRIMARY KEY, name TEXT NOT NULL, description TEXT NOT NULL DEFAULT '', skill_profile TEXT NOT NULL DEFAULT 'nextjs-build', agenthub_mode TEXT NOT NULL DEFAULT 'disabled', workspace_path TEXT NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL);
+    CREATE TABLE IF NOT EXISTS projects (id TEXT PRIMARY KEY, name TEXT NOT NULL, description TEXT NOT NULL DEFAULT '', skill_profile TEXT NOT NULL DEFAULT 'nextjs-build', workspace_path TEXT NOT NULL, published_port INTEGER, created_at TEXT NOT NULL, updated_at TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS sessions (id TEXT PRIMARY KEY, project_id TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'idle', harness TEXT NOT NULL DEFAULT 'pi', title TEXT NOT NULL DEFAULT '新对话', transcript_path TEXT, created_at TEXT NOT NULL, updated_at TEXT NOT NULL, FOREIGN KEY(project_id) REFERENCES projects(id));
     CREATE TABLE IF NOT EXISTS runs (id TEXT PRIMARY KEY, project_id TEXT NOT NULL, session_id TEXT, status TEXT NOT NULL DEFAULT 'queued', input TEXT NOT NULL DEFAULT '', output TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL, updated_at TEXT NOT NULL, FOREIGN KEY(project_id) REFERENCES projects(id));
-    CREATE TABLE IF NOT EXISTS jobs (id TEXT PRIMARY KEY, project_id TEXT, kind TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'queued', payload_json TEXT NOT NULL DEFAULT '{}', attempts INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL, updated_at TEXT NOT NULL);
-    CREATE TABLE IF NOT EXISTS builds (id TEXT PRIMARY KEY, project_id TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'queued', stage TEXT NOT NULL DEFAULT 'pending', log TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL, updated_at TEXT NOT NULL);
-    CREATE TABLE IF NOT EXISTS releases (id TEXT PRIMARY KEY, project_id TEXT NOT NULL, version TEXT NOT NULL, build_id TEXT NOT NULL, artifact_path TEXT NOT NULL, created_at TEXT NOT NULL);
-    CREATE TABLE IF NOT EXISTS deployments (id TEXT PRIMARY KEY, project_id TEXT NOT NULL, release_id TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'stopped', url TEXT, created_at TEXT NOT NULL, updated_at TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS capability_bindings (id TEXT PRIMARY KEY, project_id TEXT NOT NULL, capability_id TEXT NOT NULL, version TEXT, config_json TEXT NOT NULL DEFAULT '{}', created_at TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS publication_jobs (
       id TEXT PRIMARY KEY,
@@ -90,9 +86,13 @@ export function getAppFactoryDatabase() {
     db.exec("ALTER TABLE sessions ADD COLUMN title TEXT NOT NULL DEFAULT '新对话'");
   }
   const projectColumns = db.prepare("PRAGMA table_info(projects)").all() as { name: string }[];
+  if (projectColumns.some((column) => column.name === "agenthub_mode")) {
+    db.exec("ALTER TABLE projects DROP COLUMN agenthub_mode");
+  }
   if (!projectColumns.some((column) => column.name === "published_port")) {
     db.exec("ALTER TABLE projects ADD COLUMN published_port INTEGER");
   }
+  db.exec("DROP TABLE IF EXISTS jobs; DROP TABLE IF EXISTS builds; DROP TABLE IF EXISTS releases; DROP TABLE IF EXISTS deployments;");
   const publicationDeploymentColumns = db.prepare("PRAGMA table_info(publication_deployments)").all() as { name: string }[];
   if (!publicationDeploymentColumns.some((column) => column.name === "health_path")) {
     db.exec("ALTER TABLE publication_deployments ADD COLUMN health_path TEXT");
@@ -105,9 +105,9 @@ export function getAppFactoryDatabase() {
   return db;
 }
 
-export function listProjects() { return getAppFactoryDatabase().prepare("SELECT id,name,description,skill_profile as skillProfile,agenthub_mode as agentHubMode,workspace_path as workspacePath,created_at as createdAt,updated_at as updatedAt FROM projects ORDER BY updated_at DESC").all(); }
+export function listProjects() { return getAppFactoryDatabase().prepare("SELECT id,name,description,skill_profile as skillProfile,workspace_path as workspacePath,created_at as createdAt,updated_at as updatedAt FROM projects ORDER BY updated_at DESC").all(); }
 
-export function createProject(input: { name: string; description?: string; skillProfile?: string; agentHubMode?: string }) {
+export function createProject(input: { name: string; description?: string; skillProfile?: string }) {
   const id = `project-${crypto.randomUUID()}`;
   const now = new Date().toISOString();
   const workspace = path.join(dir, "workspaces", id);
@@ -122,12 +122,11 @@ export function createProject(input: { name: string; description?: string; skill
   fs.writeFileSync(path.join(workspace, "dev_status.md"), "# 开发状态\n\n- 状态：初始化\n");
   const baselineFiles = ["app.yaml", "app/page.tsx", "package.json", "eslint.config.mjs", "next.config.ts", "tsconfig.json", "dev_todo.md", "dev_status.md"];
   fs.writeFileSync(path.join(workspace, ".appfactory-baseline.json"), JSON.stringify(Object.fromEntries(baselineFiles.map((relative) => [relative, fs.readFileSync(path.join(workspace, relative), "utf8")])), null, 2));
-  getAppFactoryDatabase().prepare("INSERT INTO projects (id,name,description,skill_profile,agenthub_mode,workspace_path,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?)").run(id, input.name, input.description ?? "", input.skillProfile ?? "nextjs-build", input.agentHubMode ?? "disabled", workspace, now, now);
-  return getAppFactoryDatabase().prepare("SELECT id,name,description,skill_profile as skillProfile,agenthub_mode as agentHubMode,workspace_path as workspacePath,created_at as createdAt,updated_at as updatedAt FROM projects WHERE id=?").get(id);
+  getAppFactoryDatabase().prepare("INSERT INTO projects (id,name,description,skill_profile,workspace_path,created_at,updated_at) VALUES (?,?,?,?,?,?,?)").run(id, input.name, input.description ?? "", input.skillProfile ?? "nextjs-build", workspace, now, now);
+  return getAppFactoryDatabase().prepare("SELECT id,name,description,skill_profile as skillProfile,workspace_path as workspacePath,created_at as createdAt,updated_at as updatedAt FROM projects WHERE id=?").get(id);
 }
 
-export function createJob(input: { projectId: string; kind: string; payload?: unknown }) { const id = `job-${crypto.randomUUID()}`; const now = new Date().toISOString(); getAppFactoryDatabase().prepare("INSERT INTO jobs (id,project_id,kind,payload_json,created_at,updated_at) VALUES (?,?,?,?,?,?)").run(id, input.projectId, input.kind, JSON.stringify(input.payload ?? {}), now, now); return getAppFactoryDatabase().prepare("SELECT * FROM jobs WHERE id=?").get(id); }
-export function getProject(id: string) { return getAppFactoryDatabase().prepare("SELECT id,name,description,workspace_path as workspacePath,agenthub_mode as agentHubMode FROM projects WHERE id=?").get(id) as { id: string; name: string; description: string; workspacePath: string; agentHubMode: string } | undefined; }
+export function getProject(id: string) { return getAppFactoryDatabase().prepare("SELECT id,name,description,workspace_path as workspacePath FROM projects WHERE id=?").get(id) as { id: string; name: string; description: string; workspacePath: string } | undefined; }
 export function createSession(projectId: string) { const id = `session-${crypto.randomUUID()}`; const now = new Date().toISOString(); getAppFactoryDatabase().prepare("INSERT INTO sessions (id,project_id,status,harness,title,created_at,updated_at) VALUES (?,?,?,?,?,?,?)").run(id, projectId, "idle", "pi", "新对话", now, now); return getAppFactoryDatabase().prepare("SELECT id,project_id as projectId,status,harness,title,transcript_path as transcriptPath,created_at as createdAt,updated_at as updatedAt FROM sessions WHERE id=?").get(id); }
 export function listSessions(projectId: string) { return getAppFactoryDatabase().prepare("SELECT id,project_id as projectId,status,harness,title,transcript_path as transcriptPath,created_at as createdAt,updated_at as updatedAt FROM sessions WHERE project_id=? ORDER BY updated_at DESC,created_at DESC").all(projectId); }
 export function getSession(id: string) { return getAppFactoryDatabase().prepare("SELECT s.*,p.workspace_path as cwd FROM sessions s JOIN projects p ON p.id=s.project_id WHERE s.id=?").get(id) as { id: string; project_id: string; cwd: string } | undefined; }
@@ -137,16 +136,5 @@ export function failActiveRun(sessionId: string, output = "任务已取消") { c
 export function setSessionStatus(id: string, status: string) { getAppFactoryDatabase().prepare("UPDATE sessions SET status=?,updated_at=? WHERE id=?").run(status, new Date().toISOString(), id); }
 export function setSessionTranscriptPath(id: string, transcriptPath: string) { getAppFactoryDatabase().prepare("UPDATE sessions SET transcript_path=?,updated_at=? WHERE id=?").run(transcriptPath, new Date().toISOString(), id); }
 export function setSessionTitleFromPrompt(id: string, prompt: string) { const title = deriveSessionTitle(prompt); getAppFactoryDatabase().prepare("UPDATE sessions SET title=CASE WHEN title='新对话' THEN ? ELSE title END,updated_at=? WHERE id=?").run(title, new Date().toISOString(), id); }
-export function claimJob() { const database = getAppFactoryDatabase(); const job = database.prepare("SELECT * FROM jobs WHERE status='queued' OR (status='running' AND updated_at < datetime('now','-5 minutes')) ORDER BY created_at LIMIT 1").get() as { id: string } | undefined; if (!job) return null; database.prepare("UPDATE jobs SET status='running',attempts=attempts+1,updated_at=? WHERE id=?").run(new Date().toISOString(), job.id); return database.prepare("SELECT * FROM jobs WHERE id=?").get(job.id); }
-export function finishJob(id: string, status: "completed" | "failed", error?: string) { getAppFactoryDatabase().prepare("UPDATE jobs SET status=?,payload_json=CASE WHEN ? IS NULL THEN payload_json ELSE json_set(payload_json,'$.error',?) END,updated_at=? WHERE id=?").run(status, error ?? null, error ?? null, new Date().toISOString(), id); return getAppFactoryDatabase().prepare("SELECT * FROM jobs WHERE id=?").get(id); }
 export function bindCapability(projectId: string, capabilityId: string, version?: string) { const id = `binding-${crypto.randomUUID()}`; const now = new Date().toISOString(); getAppFactoryDatabase().prepare("INSERT INTO capability_bindings (id,project_id,capability_id,version,created_at) VALUES (?,?,?,?,?)").run(id, projectId, capabilityId, version ?? null, now); return getAppFactoryDatabase().prepare("SELECT * FROM capability_bindings WHERE id=?").get(id); }
 export function listCapabilityBindings(projectId: string) { return getAppFactoryDatabase().prepare("SELECT capability_id as capabilityId,version FROM capability_bindings WHERE project_id=? ORDER BY created_at").all(projectId) as { capabilityId: string; version: string | null }[]; }
-export function updateBuild(id: string, status: string, stage: string, log: string) { getAppFactoryDatabase().prepare("UPDATE builds SET status=?,stage=?,log=?,updated_at=? WHERE id=?").run(status, stage, log, new Date().toISOString(), id); return getAppFactoryDatabase().prepare("SELECT * FROM builds WHERE id=?").get(id); }
-export function createBuild(projectId: string, status = "queued", stage = "pending", log = "") { const id = `build-${crypto.randomUUID()}`; const now = new Date().toISOString(); getAppFactoryDatabase().prepare("INSERT INTO builds (id,project_id,status,stage,log,created_at,updated_at) VALUES (?,?,?,?,?,?,?)").run(id, projectId, status, stage, log, now, now); return getAppFactoryDatabase().prepare("SELECT * FROM builds WHERE id=?").get(id); }
-export function createRelease(projectId: string, buildId: string, version: string, artifactPath: string) { const id = `release-${crypto.randomUUID()}`; getAppFactoryDatabase().prepare("INSERT INTO releases (id,project_id,version,build_id,artifact_path,created_at) VALUES (?,?,?,?,?,?)").run(id, projectId, version, buildId, artifactPath, new Date().toISOString()); return getAppFactoryDatabase().prepare("SELECT * FROM releases WHERE id=?").get(id); }
-export function getLatestBuild(projectId: string) { return getAppFactoryDatabase().prepare("SELECT * FROM builds WHERE project_id=? ORDER BY created_at DESC LIMIT 1").get(projectId) ?? null; }
-export function getLatestRelease(projectId: string) { return getAppFactoryDatabase().prepare("SELECT * FROM releases WHERE project_id=? ORDER BY created_at DESC LIMIT 1").get(projectId) ?? null; }
-export function getLatestDeployment(projectId: string) { return getAppFactoryDatabase().prepare("SELECT * FROM deployments WHERE project_id=? ORDER BY created_at DESC LIMIT 1").get(projectId) ?? null; }
-export function updateDeploymentStatus(projectId: string, status: string) { getAppFactoryDatabase().prepare("UPDATE deployments SET status=?,updated_at=? WHERE project_id=? AND id=(SELECT id FROM deployments WHERE project_id=? ORDER BY created_at DESC LIMIT 1)").run(status, new Date().toISOString(), projectId, projectId); return getLatestDeployment(projectId); }
-export function createDeployment(projectId: string, releaseId: string, status: string, url: string | null) { const id = `deployment-${crypto.randomUUID()}`; const now = new Date().toISOString(); getAppFactoryDatabase().prepare("INSERT INTO deployments (id,project_id,release_id,status,url,created_at,updated_at) VALUES (?,?,?,?,?,?,?)").run(id, projectId, releaseId, status, url, now, now); return getAppFactoryDatabase().prepare("SELECT * FROM deployments WHERE id=?").get(id); }
-export function listJobs(projectId?: string) { return projectId ? getAppFactoryDatabase().prepare("SELECT * FROM jobs WHERE project_id=? ORDER BY created_at DESC").all(projectId) : getAppFactoryDatabase().prepare("SELECT * FROM jobs ORDER BY created_at DESC").all(); }

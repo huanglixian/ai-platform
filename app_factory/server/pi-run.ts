@@ -1,5 +1,10 @@
 import { piHarnessRuntime } from "@/app_factory/features/pi-harness";
-import { runService, sessionService } from "@/app_factory/server/services";
+import {
+  finishRun,
+  setSessionStatus,
+  setSessionTitleFromPrompt,
+  setSessionTranscriptPath,
+} from "@/app_factory/server/database";
 import {
   appendTranscript,
   type TranscriptEvent,
@@ -41,12 +46,12 @@ export async function* executePiRun({
     };
     events.push(next);
     const transcriptPath = await appendTranscript(session.id, next);
-    sessionService.setTranscriptPath(session.id, transcriptPath);
+    setSessionTranscriptPath(session.id, transcriptPath);
     return next;
   };
 
   try {
-    sessionService.setTitleFromPrompt(session.id, prompt);
+    setSessionTitleFromPrompt(session.id, prompt);
     yield await persist({
       type: "user",
       content: prompt,
@@ -64,13 +69,13 @@ export async function* executePiRun({
     }
 
     if (failure) {
-      runService.finish(runId, "failed", failure);
-      sessionService.setStatus(session.id, "error");
+      finishRun(runId, "failed", failure);
+      setSessionStatus(session.id, "error");
       return;
     }
 
-    runService.finish(runId, "completed", JSON.stringify(events));
-    sessionService.setStatus(session.id, "idle");
+    finishRun(runId, "completed", JSON.stringify(events));
+    setSessionStatus(session.id, "idle");
   } catch (error) {
     const message = error instanceof Error ? error.message : "Pi 执行失败";
     const failedEvent = await persist({
@@ -79,7 +84,7 @@ export async function* executePiRun({
       timestamp: new Date().toISOString(),
     });
     yield failedEvent;
-    runService.finish(runId, "failed", message);
-    sessionService.setStatus(session.id, "error");
+    finishRun(runId, "failed", message);
+    setSessionStatus(session.id, "error");
   }
 }
