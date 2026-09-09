@@ -2,22 +2,17 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { usePublicationTaskCenter } from "@/app/appfactory/_components/publication-task-center";
 
 type Project = {
   id: string;
   name: string;
   description: string;
-  agentHubMode: "disabled" | "local" | "http";
   skillProfile?: string;
   updatedAt: string;
 };
-type Filter = "全部" | "开发中" | "已发布" | "异常" | "归档";
-const modeLabel: Record<Project["agentHubMode"], string> = {
-  disabled: "独立模式",
-  local: "AgentHub 本地",
-  http: "AgentHub HTTP",
-};
-const filters: Filter[] = ["全部", "开发中", "已发布", "异常", "归档"];
+type Filter = "全部" | "草稿" | "发布中" | "已发布" | "失败";
+const filters: Filter[] = ["全部", "草稿", "发布中", "已发布", "失败"];
 
 export default function AppFactoryPage() {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -27,11 +22,10 @@ export default function AppFactoryPage() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [skillProfile, setSkillProfile] = useState("nextjs-build");
-  const [agentHubMode, setAgentHubMode] =
-    useState<Project["agentHubMode"]>("disabled");
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState("");
+  const { latestForProject } = usePublicationTaskCenter();
   useEffect(() => {
     fetch("/api/appfactory/v1/projects")
       .then(async (response) => {
@@ -53,17 +47,17 @@ export default function AppFactoryPage() {
     window.addEventListener("keydown", closeOnEscape);
     return () => window.removeEventListener("keydown", closeOnEscape);
   }, [open]);
-  const visibleProjects = useMemo(
-    () =>
-      projects.filter(
-        (project) =>
-          `${project.name} ${project.description}`
-            .toLowerCase()
-            .includes(query.trim().toLowerCase()) &&
-          (filter === "全部" || filter === "开发中"),
-      ),
-    [filter, projects, query],
-  );
+  const statusFor = (project: Project): Exclude<Filter, "全部"> => {
+    const job = latestForProject(project.id);
+    if (!job) return "草稿";
+    if (job.status === "queued" || job.status === "running") return "发布中";
+    if (job.status === "succeeded") return "已发布";
+    return "失败";
+  };
+  const visibleProjects = useMemo(() => projects.filter((project) =>
+    `${project.name} ${project.description}`.toLowerCase().includes(query.trim().toLowerCase()) &&
+    (filter === "全部" || statusFor(project) === filter),
+  ), [filter, projects, query, latestForProject]);
   const create = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!name.trim() || creating) return;
@@ -73,7 +67,7 @@ export default function AppFactoryPage() {
       const response = await fetch("/api/appfactory/v1/projects", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ name, description, skillProfile, agentHubMode }),
+        body: JSON.stringify({ name, description, skillProfile }),
       });
       const payload = await response.json();
       if (!response.ok)
@@ -167,9 +161,9 @@ export default function AppFactoryPage() {
                 <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-[#eef5fd] text-lg">
                   ◈
                 </span>
-                <span className="flex items-center gap-1.5 rounded-full bg-[#eef8f2] px-2.5 py-1 text-[10px] font-medium text-[#1f8a57]">
-                  <span className="h-1.5 w-1.5 rounded-full bg-[#1f8a57]" />
-                  开发中
+                <span className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-medium ${statusFor(project) === "已发布" ? "bg-[#eef8f2] text-[#1f8a57]" : statusFor(project) === "失败" ? "bg-[#fff5f4] text-[#b9382f]" : statusFor(project) === "发布中" ? "bg-[#fff7e8] text-[#b06d13]" : "bg-[#eef5fd] text-[#1a4d87]"}`}>
+                  <span className={`h-1.5 w-1.5 rounded-full bg-current ${statusFor(project) === "发布中" ? "animate-pulse" : ""}`} />
+                  {statusFor(project)}
                 </span>
               </div>
               <h2 className="mt-4 truncate text-[15px] font-semibold text-[#1a4d87] group-hover:text-[#0368b3]">
@@ -180,7 +174,6 @@ export default function AppFactoryPage() {
               </p>
               <div className="mt-5 flex items-center justify-between border-t border-[#edf1f5] pt-3 text-[10px] text-[#98a2b3]">
                 <span>{project.skillProfile || "nextjs-build"}</span>
-                <span>{modeLabel[project.agentHubMode] || "独立模式"}</span>
                 <span>
                   {new Date(project.updatedAt).toLocaleDateString("zh-CN")}
                 </span>
@@ -244,7 +237,7 @@ export default function AppFactoryPage() {
                 className="mt-2 min-h-24 w-full resize-none rounded-lg border border-[#dbe5f0] px-3 py-2 text-sm outline-none focus:border-[#2e7dd2]"
               />
             </label>
-            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <div className="mt-4">
               <label className="text-xs font-medium text-[#4d4d4d]">
                 模板 / Skill
                 <select
@@ -255,26 +248,9 @@ export default function AppFactoryPage() {
                   <option value="nextjs-build">Next.js 应用</option>
                 </select>
               </label>
-              <label className="text-xs font-medium text-[#4d4d4d]">
-                AgentHub 接入
-                <select
-                  value={agentHubMode}
-                  onChange={(event) =>
-                    setAgentHubMode(
-                      event.target.value as Project["agentHubMode"],
-                    )
-                  }
-                  className="mt-2 h-10 w-full rounded-lg border border-[#dbe5f0] bg-white px-3 text-sm outline-none focus:border-[#2e7dd2]"
-                >
-                  <option value="disabled">关闭（独立开发）</option>
-                  <option value="local">本地 AgentHub</option>
-                  <option value="http">HTTP AgentHub</option>
-                </select>
-              </label>
             </div>
             <p className="mt-4 rounded-lg bg-[#f6f8fb] px-3 py-2 text-xs leading-5 text-[#667085]">
-              默认会创建独立 Workspace。接入 AgentHub
-              后，项目可以在开发过程中调用已注册的企业能力。
+              默认会创建独立 Workspace。完成开发后点击“发布”，应用将自动加入应用中心。
             </p>
             <div className="mt-6 flex justify-end gap-2">
               <button

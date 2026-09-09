@@ -35,6 +35,58 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+@keyframes publication-panel-arrive {
+  from { opacity: 0; transform: translate(-50%, calc(-50% + 12px)) scale(.98); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+@keyframes publication-panel-fly {
+  to {
+    opacity: 0;
+    transform: translate(calc(-50% + var(--publication-fly-x)), calc(-50% + var(--publication-fly-y))) scale(.16);
+  }
+}
+
+@keyframes publication-trigger-arrival {
+  0% { transform: scale(1); }
+  42% { transform: scale(1.16); box-shadow: 0 0 0 7px rgba(3,104,179,.13); }
+  100% { transform: scale(1); }
+}
+
+.publication-task-center-trigger {
+  display: inline-flex;
+  height: 30px;
+  align-items: center;
+  gap: .35rem;
+  border: 1px solid #d4dde8;
+  border-radius: .5rem;
+  background: #fff;
+  padding: 0 .6rem;
+  color: #51657d;
+  font-size: 12px;
+  transition: border-color .16s, color .16s, background .16s;
+}
+.publication-task-center-trigger:hover { border-color: #6f96c4; color: #0368b3; background: #f7fbff; }
+.publication-trigger-arrival { animation: publication-trigger-arrival .58s ease-out; }
+.publication-launch-backdrop { position: fixed; inset: 0; z-index: 70; background: rgba(11,53,88,.25); backdrop-filter: blur(3px); }
+.publication-launch-panel {
+  position: fixed; z-index: 71; top: 50%; left: 50%; width: min(440px, calc(100vw - 2rem)); max-height: calc(100dvh - 2rem); overflow: auto;
+  border: 1px solid #cdddec; border-radius: 1rem; background: #fff; padding: 1.25rem; box-shadow: 0 28px 80px rgba(15,35,55,.26);
+  transform: translate(-50%, -50%); animation: publication-panel-arrive .22s ease-out;
+}
+.publication-launch-panel.publication-launch-flying { animation: publication-panel-fly .54s cubic-bezier(.48,0,.75,.28) forwards; }
+.publication-task-center {
+  position: fixed; z-index: 60; right: 1rem; top: 3.75rem; display: flex; width: min(430px, calc(100vw - 2rem)); max-height: min(720px, calc(100dvh - 5rem)); flex-direction: column;
+  overflow: hidden; border: 1px solid #d4dde8; border-radius: .9rem; background: #f8fafc; box-shadow: 0 18px 55px rgba(15,35,55,.18); animation: publication-panel-arrive .18s ease-out;
+}
+.publication-job-details { min-width: 0; }
+@media (max-width: 640px) {
+  .publication-task-center { top: auto; right: 0; bottom: 0; width: 100%; max-height: min(78dvh, 620px); border-radius: 1rem 1rem 0 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .publication-launch-panel, .publication-launch-panel.publication-launch-flying, .publication-task-center, .publication-trigger-arrival { animation: none; }
+}
+
 :root {
   --font-app-sans:
     "HarmonyOS Sans SC", "Alibaba PuHuiTi 3.0", "PingFang SC",

@@ -7,7 +7,7 @@ import { CardPageFrame } from "@/components/shared/card-page-frame";
 import { AppType, PlatformSource, PublishedApp } from "@/features/apps/types";
 
 const ITEM_WIDTH = 300;
-const APP_TABS = ["全部", "原生", "AppFactory", "Dify", "n8n"] as const;
+const APP_TABS = ["全部", "AppFactory", "原生", "Dify", "n8n"] as const;
 const APP_GROUP_TABS = APP_TABS.filter((tab) => tab !== "全部");
 
 const sourceLabels: Record<PlatformSource, (typeof APP_GROUP_TABS)[number]> = {

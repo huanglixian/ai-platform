@@ -38,7 +38,7 @@ export function seedApplications() {
 
 export function listApplications() {
   seedApplications();
-  return (getAgentHubDatabase().prepare("SELECT * FROM applications WHERE status != 'archived' ORDER BY created_at DESC").all() as Record<string, unknown>[]).map(rowToApp);
+  return (getAgentHubDatabase().prepare("SELECT * FROM applications WHERE status != 'archived' ORDER BY CASE WHEN producer='appfactory' THEN 0 ELSE 1 END, created_at DESC").all() as Record<string, unknown>[]).map(rowToApp);
 }
 
 export function createApplication(input: z.infer<typeof applicationInputSchema>) {
