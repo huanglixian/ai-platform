@@ -57,7 +57,7 @@ export function runWorkspaceCommand(
   root: string,
   command: string,
   timeoutMs = 30_000,
-  options: { nodeEnv?: string } = {},
+  options: { nodeEnv?: string; signal?: AbortSignal } = {},
 ) {
   if (/(^|\s)(rm\s+-rf|sudo|mkfs|shutdown|docker\s+run)/i.test(command)) {
     throw new Error("Command rejected by workspace policy");
@@ -76,8 +76,15 @@ export function runWorkspaceCommand(
     });
     let stdout = "";
     let stderr = "";
+    const abort = () => {
+      child.kill("SIGTERM");
+      reject(options.signal?.reason ?? new Error("命令已取消"));
+    };
+    if (options.signal?.aborted) return abort();
+    options.signal?.addEventListener("abort", abort, { once: true });
     const timer = setTimeout(() => {
       child.kill("SIGTERM");
+      options.signal?.removeEventListener("abort", abort);
       reject(new Error("Command timed out"));
     }, timeoutMs);
     child.stdout.on("data", (data) => {
@@ -88,9 +95,13 @@ export function runWorkspaceCommand(
       stderr += data.toString();
       if (stderr.length > 200_000) child.kill("SIGTERM");
     });
-    child.on("error", reject);
+    child.on("error", (error) => {
+      options.signal?.removeEventListener("abort", abort);
+      reject(error);
+    });
     child.on("close", (code) => {
       clearTimeout(timer);
+      options.signal?.removeEventListener("abort", abort);
       resolve({ code, stdout, stderr });
     });
   });

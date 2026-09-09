@@ -24,11 +24,75 @@ export function getAppFactoryDatabase() {
     CREATE TABLE IF NOT EXISTS releases (id TEXT PRIMARY KEY, project_id TEXT NOT NULL, version TEXT NOT NULL, build_id TEXT NOT NULL, artifact_path TEXT NOT NULL, created_at TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS deployments (id TEXT PRIMARY KEY, project_id TEXT NOT NULL, release_id TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'stopped', url TEXT, created_at TEXT NOT NULL, updated_at TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS capability_bindings (id TEXT PRIMARY KEY, project_id TEXT NOT NULL, capability_id TEXT NOT NULL, version TEXT, config_json TEXT NOT NULL DEFAULT '{}', created_at TEXT NOT NULL);
+    CREATE TABLE IF NOT EXISTS publication_jobs (
+      id TEXT PRIMARY KEY,
+      project_id TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'queued',
+      stage TEXT NOT NULL DEFAULT 'queued',
+      step TEXT NOT NULL DEFAULT '等待发布',
+      completed INTEGER NOT NULL DEFAULT 0,
+      total INTEGER NOT NULL DEFAULT 7,
+      error TEXT,
+      attempts INTEGER NOT NULL DEFAULT 0,
+      lease_token TEXT,
+      lease_expires_at INTEGER,
+      release_id TEXT,
+      result_json TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      FOREIGN KEY(project_id) REFERENCES projects(id)
+    );
+    CREATE TABLE IF NOT EXISTS publication_events (
+      id TEXT PRIMARY KEY,
+      job_id TEXT NOT NULL,
+      sequence INTEGER NOT NULL,
+      stage TEXT NOT NULL,
+      level TEXT NOT NULL,
+      message TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      FOREIGN KEY(job_id) REFERENCES publication_jobs(id),
+      UNIQUE(job_id, sequence)
+    );
+    CREATE TABLE IF NOT EXISTS publication_releases (
+      id TEXT PRIMARY KEY,
+      project_id TEXT NOT NULL,
+      job_id TEXT NOT NULL,
+      version INTEGER NOT NULL,
+      artifact_path TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      FOREIGN KEY(project_id) REFERENCES projects(id),
+      FOREIGN KEY(job_id) REFERENCES publication_jobs(id),
+      UNIQUE(project_id, version)
+    );
+    CREATE TABLE IF NOT EXISTS publication_deployments (
+      id TEXT PRIMARY KEY,
+      project_id TEXT NOT NULL,
+      release_id TEXT NOT NULL,
+      status TEXT NOT NULL,
+      port INTEGER NOT NULL,
+      url TEXT NOT NULL,
+      pid INTEGER,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      FOREIGN KEY(project_id) REFERENCES projects(id),
+      FOREIGN KEY(release_id) REFERENCES publication_releases(id)
+    );
+    CREATE UNIQUE INDEX IF NOT EXISTS publication_one_active_per_project
+      ON publication_jobs(project_id) WHERE status IN ('queued', 'running');
+    CREATE INDEX IF NOT EXISTS publication_events_by_job
+      ON publication_events(job_id, sequence);
+    CREATE INDEX IF NOT EXISTS publication_deployments_by_project
+      ON publication_deployments(project_id, created_at DESC);
   `);
   const sessionColumns = db.prepare("PRAGMA table_info(sessions)").all() as { name: string }[];
   if (!sessionColumns.some((column) => column.name === "title")) {
     db.exec("ALTER TABLE sessions ADD COLUMN title TEXT NOT NULL DEFAULT '新对话'");
   }
+  const projectColumns = db.prepare("PRAGMA table_info(projects)").all() as { name: string }[];
+  if (!projectColumns.some((column) => column.name === "published_port")) {
+    db.exec("ALTER TABLE projects ADD COLUMN published_port INTEGER");
+  }
+  db.exec("CREATE UNIQUE INDEX IF NOT EXISTS publication_unique_project_port ON projects(published_port) WHERE published_port IS NOT NULL");
   db.exec("CREATE UNIQUE INDEX IF NOT EXISTS runs_one_active_per_session ON runs(session_id) WHERE status='running'");
   return db;
 }
@@ -44,10 +108,11 @@ export function createProject(input: { name: string; description?: string; skill
   fs.writeFileSync(path.join(workspace, "app/page.tsx"), `export default function Page(){return <main><h1>${input.name}</h1><p>由 AppFactory 创建的 Next.js 应用</p></main>}\n`);
   fs.writeFileSync(path.join(workspace, "package.json"), JSON.stringify({ scripts: { dev: "next dev", build: "next build", start: "next start", lint: "eslint app", typecheck: "tsc --noEmit" }, dependencies: { next: "16.3.3", react: "19.2.4", "react-dom": "19.2.4" }, devDependencies: { eslint: "^9", "eslint-config-next": "16.3.3", typescript: "^5", "@types/node": "^20", "@types/react": "^19", "@types/react-dom": "^19" } }, null, 2));
   fs.writeFileSync(path.join(workspace, "eslint.config.mjs"), `import { defineConfig, globalIgnores } from "eslint/config";\nimport nextVitals from "eslint-config-next/core-web-vitals";\nimport nextTs from "eslint-config-next/typescript";\nexport default defineConfig([...nextVitals, ...nextTs, globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts"])]);\n`);
+  fs.writeFileSync(path.join(workspace, "next.config.ts"), `const nextConfig = { output: "standalone" };\nexport default nextConfig;\n`);
   fs.writeFileSync(path.join(workspace, "tsconfig.json"), JSON.stringify({ compilerOptions: { jsx: "preserve", strict: true, noEmit: true, moduleResolution: "bundler", module: "esnext", target: "es2020", lib: ["dom", "esnext"] }, include: ["app/**/*.tsx"] }, null, 2));
   fs.writeFileSync(path.join(workspace, "dev_todo.md"), "# 开发任务\n\n- [ ] 描述应用需求\n");
   fs.writeFileSync(path.join(workspace, "dev_status.md"), "# 开发状态\n\n- 状态：初始化\n");
-  const baselineFiles = ["app.yaml", "app/page.tsx", "package.json", "eslint.config.mjs", "tsconfig.json", "dev_todo.md", "dev_status.md"];
+  const baselineFiles = ["app.yaml", "app/page.tsx", "package.json", "eslint.config.mjs", "next.config.ts", "tsconfig.json", "dev_todo.md", "dev_status.md"];
   fs.writeFileSync(path.join(workspace, ".appfactory-baseline.json"), JSON.stringify(Object.fromEntries(baselineFiles.map((relative) => [relative, fs.readFileSync(path.join(workspace, relative), "utf8")])), null, 2));
   getAppFactoryDatabase().prepare("INSERT INTO projects (id,name,description,skill_profile,agenthub_mode,workspace_path,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?)").run(id, input.name, input.description ?? "", input.skillProfile ?? "nextjs-build", input.agentHubMode ?? "disabled", workspace, now, now);
   return getAppFactoryDatabase().prepare("SELECT id,name,description,skill_profile as skillProfile,agenthub_mode as agentHubMode,workspace_path as workspacePath,created_at as createdAt,updated_at as updatedAt FROM projects WHERE id=?").get(id);

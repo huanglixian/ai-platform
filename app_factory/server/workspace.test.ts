@@ -22,3 +22,15 @@ test("构建命令可以显式使用生产环境", async () => {
   );
   assert.equal(result.stdout, "production");
 });
+
+test("构建命令可以被发布任务取消", async () => {
+  const controller = new AbortController();
+  const command = runWorkspaceCommand(
+    process.cwd(),
+    "sleep 5",
+    30_000,
+    { signal: controller.signal },
+  );
+  controller.abort(new Error("发布已取消"));
+  await assert.rejects(command, /发布已取消/);
+});
