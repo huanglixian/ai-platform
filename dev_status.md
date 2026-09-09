@@ -28,6 +28,7 @@ scripts/app.ts                  平台与发布 Worker 统一启动器
 
 - 页面：`app/appfactory/page.tsx`、`app/appfactory/projects/[id]/page.tsx`。
 - 对话与文件：`app/appfactory/_components/workspace-panels.tsx`、`app_factory/server/pi-run.ts`。
+- 预览：`app_factory/server/preview.ts` 直接以 Workspace 本地 Next CLI 启动开发服务器，并隔离平台的 Node 启动参数。
 - 数据：`app_factory/server/database.ts` 保存项目、Workspace、Pi Session、transcript 与 runs。
 - 当前状态：项目可创建、预览、以 Pi 修改 Workspace，并恢复会话历史。
 

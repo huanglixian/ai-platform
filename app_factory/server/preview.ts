@@ -53,6 +53,16 @@ function previewUrl(port: number) {
   return `http://localhost:${port}`;
 }
 
+function previewEnvironment(): NodeJS.ProcessEnv {
+  const {
+    NODE_OPTIONS: _nodeOptions,
+    npm_config_node_options: _npmNodeOptions,
+    NPM_CONFIG_NODE_OPTIONS: _npmNodeOptionsUpper,
+    ...environment
+  } = process.env;
+  return { ...environment, NODE_ENV: "development" };
+}
+
 function persistPreview(
   projectId: string,
   port: number,
@@ -156,13 +166,10 @@ export async function startPreview(projectId: string, cwd: string) {
   registry.nextPort = port + 1;
   const logs: string[] = [];
   const readinessController = new AbortController();
-  const child = spawn("npm", ["run", "dev", "--", "--port", String(port)], {
+  const nextCli = path.join(cwd, "node_modules", "next", "dist", "bin", "next");
+  const child = spawn(process.execPath, [nextCli, "dev", "--port", String(port)], {
     cwd,
-    env: {
-      ...process.env,
-      PATH: `${process.cwd()}/node_modules/.bin:${process.env.PATH ?? ""}`,
-      NODE_ENV: "development",
-    },
+    env: previewEnvironment(),
     stdio: ["ignore", "pipe", "pipe"],
   });
   const item: ManagedPreview = {
