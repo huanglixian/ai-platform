@@ -61,6 +61,7 @@ export type PublicationDeployment = {
   status: "running" | "stopped" | "failed";
   port: number;
   url: string;
+  healthPath: string;
   pid: number | null;
   createdAt: string;
   updatedAt: string;

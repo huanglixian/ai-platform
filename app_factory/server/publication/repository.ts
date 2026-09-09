@@ -13,7 +13,7 @@ import type {
   PublicationStatus,
 } from "./types";
 
-type JobRow = {
+export type PublicationJobLease = {
   id: string;
   project_id: string;
   status: PublicationStatus;
@@ -47,12 +47,13 @@ type DeploymentRow = {
   status: PublicationDeployment["status"];
   port: number;
   url: string;
+  health_path: string;
   pid: number | null;
   created_at: string;
   updated_at: string;
 };
 
-function jobDto(row: JobRow): PublicationJob {
+function jobDto(row: PublicationJobLease): PublicationJob {
   return {
     id: row.id,
     projectId: row.project_id,
@@ -89,6 +90,7 @@ function deploymentDto(row: DeploymentRow): PublicationDeployment {
     status: row.status,
     port: row.port,
     url: row.url,
+    healthPath: row.health_path,
     pid: row.pid,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -100,7 +102,7 @@ export function enqueuePublication(projectId: string): PublicationJob {
   return database.transaction(() => {
     const existing = database.prepare(
       "SELECT * FROM publication_jobs WHERE project_id=? AND status IN ('queued','running') ORDER BY created_at DESC LIMIT 1",
-    ).get(projectId) as JobRow | undefined;
+    ).get(projectId) as PublicationJobLease | undefined;
     if (existing) return jobDto(existing);
     const id = `publication-${randomUUID()}`;
     const now = new Date().toISOString();
@@ -113,7 +115,7 @@ export function enqueuePublication(projectId: string): PublicationJob {
 }
 
 export function getPublicationJob(id: string): PublicationJob | null {
-  const row = getAppFactoryDatabase().prepare("SELECT * FROM publication_jobs WHERE id=?").get(id) as JobRow | undefined;
+  const row = getAppFactoryDatabase().prepare("SELECT * FROM publication_jobs WHERE id=?").get(id) as PublicationJobLease | undefined;
   return row ? jobDto(row) : null;
 }
 
@@ -122,7 +124,7 @@ export function listPublicationJobs(projectId?: string): PublicationJob[] {
   const rows = projectId
     ? database.prepare("SELECT * FROM publication_jobs WHERE project_id=? ORDER BY created_at DESC LIMIT 30").all(projectId)
     : database.prepare("SELECT * FROM publication_jobs ORDER BY created_at DESC LIMIT 30").all();
-  return (rows as JobRow[]).map(jobDto);
+  return (rows as PublicationJobLease[]).map(jobDto);
 }
 
 export function appendPublicationEvent(
@@ -149,24 +151,25 @@ export function listPublicationEvents(jobId: string, after = 0): PublicationEven
   ).all(jobId, after) as PublicationEvent[];
 }
 
-export function claimPublicationJob(now = Date.now()): JobRow | null {
+export function claimPublicationJob(now = Date.now()): PublicationJobLease | null {
   const database = getAppFactoryDatabase();
   return database.transaction(() => {
     database.prepare(
       "UPDATE publication_jobs SET status='queued',stage='queued',step='Worker 已重启，等待继续发布',lease_token=NULL,lease_expires_at=NULL,updated_at=? WHERE status='running' AND lease_expires_at<?",
     ).run(new Date(now).toISOString(), now);
-    const job = database.prepare("SELECT * FROM publication_jobs WHERE status='queued' ORDER BY created_at LIMIT 1").get() as JobRow | undefined;
+    const job = database.prepare("SELECT * FROM publication_jobs WHERE status='queued' ORDER BY created_at LIMIT 1").get() as PublicationJobLease | undefined;
     if (!job) return null;
     const leaseToken = randomUUID();
-    database.prepare(
+    const claimed = database.prepare(
       "UPDATE publication_jobs SET status='running',attempts=attempts+1,lease_token=?,lease_expires_at=?,updated_at=? WHERE id=? AND status='queued'",
     ).run(leaseToken, now + 90_000, new Date(now).toISOString(), job.id);
+    if (claimed.changes !== 1) return null;
     return { ...job, status: "running" as const, attempts: job.attempts + 1, lease_token: leaseToken, lease_expires_at: now + 90_000 };
-  })();
+  }).immediate();
 }
 
 export function updatePublicationProgress(
-  job: JobRow,
+  job: PublicationJobLease,
   stage: PublicationStage,
   step: string,
   completed: number,
@@ -178,13 +181,13 @@ export function updatePublicationProgress(
   appendPublicationEvent(job.id, stage, "info", step);
 }
 
-export function heartbeatPublicationJob(job: JobRow) {
+export function heartbeatPublicationJob(job: PublicationJobLease) {
   return getAppFactoryDatabase().prepare(
     "UPDATE publication_jobs SET lease_expires_at=?,updated_at=? WHERE id=? AND status='running' AND lease_token=? AND lease_expires_at>?",
   ).run(Date.now() + 90_000, new Date().toISOString(), job.id, job.lease_token, Date.now()).changes > 0;
 }
 
-export function failPublicationJob(job: JobRow, error: unknown) {
+export function failPublicationJob(job: PublicationJobLease, error: unknown) {
   const message = error instanceof Error ? error.message : String(error);
   getAppFactoryDatabase().prepare(
     "UPDATE publication_jobs SET status='failed',stage='completed',step='发布失败',error=?,lease_token=NULL,lease_expires_at=NULL,updated_at=? WHERE id=? AND status='running' AND lease_token=?",
@@ -192,7 +195,15 @@ export function failPublicationJob(job: JobRow, error: unknown) {
   appendPublicationEvent(job.id, "completed", "error", message.slice(0, 2000));
 }
 
-export function completePublicationJob(job: JobRow, result: PublicationResult) {
+export function requeuePublicationJob(job: PublicationJobLease, step: string) {
+  const updated = getAppFactoryDatabase().prepare(
+    "UPDATE publication_jobs SET status='queued',stage='queued',step=?,lease_token=NULL,lease_expires_at=NULL,updated_at=? WHERE id=? AND status='running' AND lease_token=?",
+  ).run(step, new Date().toISOString(), job.id, job.lease_token);
+  if (updated.changes) appendPublicationEvent(job.id, "queued", "info", step);
+  return updated.changes > 0;
+}
+
+export function completePublicationJob(job: PublicationJobLease, result: PublicationResult) {
   getAppFactoryDatabase().prepare(
     "UPDATE publication_jobs SET status='succeeded',stage='completed',step='发布完成',completed=7,release_id=?,result_json=?,lease_token=NULL,lease_expires_at=NULL,updated_at=? WHERE id=? AND status='running' AND lease_token=?",
   ).run(result.releaseId, JSON.stringify(result), new Date().toISOString(), job.id, job.lease_token);
@@ -207,7 +218,7 @@ export function cancelPublicationJob(id: string): PublicationJob | null {
   return getPublicationJob(id);
 }
 
-export function isPublicationJobActive(job: Pick<JobRow, "id" | "lease_token">) {
+export function isPublicationJobActive(job: Pick<PublicationJobLease, "id" | "lease_token">) {
   return Boolean(getAppFactoryDatabase().prepare(
     "SELECT 1 FROM publication_jobs WHERE id=? AND status='running' AND lease_token=? AND lease_expires_at>?",
   ).get(job.id, job.lease_token, Date.now()));
@@ -256,20 +267,28 @@ export function createPublicationDeployment(
   releaseId: string,
   port: number,
   url: string,
+  healthPath: string,
   pid: number | null,
   status: PublicationDeployment["status"],
 ): PublicationDeployment {
   const id = `publication-deployment-${randomUUID()}`;
   const now = new Date().toISOString();
   getAppFactoryDatabase().prepare(
-    "INSERT INTO publication_deployments(id,project_id,release_id,status,port,url,pid,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?)",
-  ).run(id, projectId, releaseId, status, port, url, pid, now, now);
-  return deploymentDto({ id, project_id: projectId, release_id: releaseId, status, port, url, pid, created_at: now, updated_at: now });
+    "INSERT INTO publication_deployments(id,project_id,release_id,status,port,url,health_path,pid,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?)",
+  ).run(id, projectId, releaseId, status, port, url, healthPath, pid, now, now);
+  return deploymentDto({ id, project_id: projectId, release_id: releaseId, status, port, url, health_path: healthPath, pid, created_at: now, updated_at: now });
 }
 
 export function getLatestPublicationDeployment(projectId: string): PublicationDeployment | null {
   const row = getAppFactoryDatabase().prepare(
     "SELECT * FROM publication_deployments WHERE project_id=? ORDER BY created_at DESC LIMIT 1",
+  ).get(projectId) as DeploymentRow | undefined;
+  return row ? deploymentDto(row) : null;
+}
+
+export function getRunningPublicationDeployment(projectId: string): PublicationDeployment | null {
+  const row = getAppFactoryDatabase().prepare(
+    "SELECT * FROM publication_deployments WHERE project_id=? AND status='running' ORDER BY created_at DESC LIMIT 1",
   ).get(projectId) as DeploymentRow | undefined;
   return row ? deploymentDto(row) : null;
 }

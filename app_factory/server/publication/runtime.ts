@@ -14,6 +14,7 @@ type ManagedRuntime = {
   logs: string[];
   releasePath: string;
   port: number;
+  healthPath: string;
 };
 
 const globalRuntime = globalThis as typeof globalThis & {
@@ -33,6 +34,21 @@ function processIsRunning(pid: number) {
   } catch (error) {
     return (error as NodeJS.ErrnoException).code === "EPERM";
   }
+}
+
+function waitForProcessExit(pid: number, timeoutMs = 5_000) {
+  return new Promise<boolean>((resolve) => {
+    const deadline = Date.now() + timeoutMs;
+    const timer = setInterval(() => {
+      if (!processIsRunning(pid)) {
+        clearInterval(timer);
+        resolve(true);
+      } else if (Date.now() >= deadline) {
+        clearInterval(timer);
+        resolve(false);
+      }
+    }, 50);
+  });
 }
 
 export async function isPortAvailable(port: number) {
@@ -55,10 +71,11 @@ export async function startPublicationRuntime(
   projectId: string,
   releasePath: string,
   port: number,
+  healthPath: string,
 ) {
   const existing = runtimes.get(projectId);
   if (existing) {
-    if (existing.releasePath !== releasePath || existing.port !== port) {
+    if (existing.releasePath !== releasePath || existing.port !== port || existing.healthPath !== healthPath) {
       throw new Error("旧 Release 仍在运行，无法覆盖启动");
     }
     return { pid: existing.process.pid ?? null, url: `http://localhost:${port}`, logs: existing.logs };
@@ -73,38 +90,42 @@ export async function startPublicationRuntime(
   child.stderr?.on("data", (chunk) => appendLog(logs, chunk));
   child.once("error", (error) => appendLog(logs, error.message));
   child.once("close", () => runtimes.delete(projectId));
-  runtimes.set(projectId, { process: child, logs, releasePath, port });
+  runtimes.set(projectId, { process: child, logs, releasePath, port, healthPath });
   try {
-    await waitForHttpReady(`http://127.0.0.1:${port}`, { timeoutMs: 10_000, intervalMs: 250 });
+    await waitForHttpReady(
+      new URL(healthPath, `http://127.0.0.1:${port}`).toString(),
+      { timeoutMs: 10_000, intervalMs: 250 },
+    );
     return { pid: child.pid ?? null, url: `http://localhost:${port}`, logs };
   } catch (error) {
-    if (child.exitCode === null && !child.killed) child.kill("SIGTERM");
-    runtimes.delete(projectId);
+    await stopPublicationRuntime(projectId, child.pid);
     const message = error instanceof Error ? error.message : "运行时启动失败";
     throw new Error(`${message}\n${logs.join("\n")}`.trim());
   }
 }
 
-export function stopPublicationRuntime(projectId: string, pid?: number | null) {
+export async function stopPublicationRuntime(projectId: string, pid?: number | null) {
   const runtime = runtimes.get(projectId);
-  if (runtime) {
-    runtime.process.kill("SIGTERM");
-    runtimes.delete(projectId);
+  const targetPid = runtime?.process.pid ?? pid;
+  if (!targetPid) return false;
+  if (!processIsRunning(targetPid)) {
+    if (runtimes.get(projectId) === runtime) runtimes.delete(projectId);
     return true;
   }
-  if (!pid) return false;
   try {
-    process.kill(pid, "SIGTERM");
-    return true;
+    process.kill(targetPid, "SIGTERM");
   } catch {
     return false;
   }
+  const stopped = await waitForProcessExit(targetPid);
+  if (stopped && runtimes.get(projectId) === runtime) runtimes.delete(projectId);
+  return stopped;
 }
 
 export async function restorePublicationRuntimes() {
   const restored: string[] = [];
   for (const deployment of listRunningPublicationDeployments()) {
-    const url = `http://127.0.0.1:${deployment.port}`;
+    const url = new URL(deployment.healthPath, `http://127.0.0.1:${deployment.port}`).toString();
     if (deployment.pid && processIsRunning(deployment.pid)) {
       try {
         await waitForHttpReady(url, { timeoutMs: 1_000, intervalMs: 100 });
@@ -123,6 +144,7 @@ export async function restorePublicationRuntimes() {
       deployment.projectId,
       release.artifactPath,
       deployment.port,
+      deployment.healthPath,
     );
     updatePublicationDeployment(deployment.id, "running", runtime.pid);
     restored.push(deployment.projectId);

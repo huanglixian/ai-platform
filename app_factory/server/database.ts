@@ -71,6 +71,7 @@ export function getAppFactoryDatabase() {
       status TEXT NOT NULL,
       port INTEGER NOT NULL,
       url TEXT NOT NULL,
+      health_path TEXT NOT NULL,
       pid INTEGER,
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL,
@@ -92,6 +93,13 @@ export function getAppFactoryDatabase() {
   if (!projectColumns.some((column) => column.name === "published_port")) {
     db.exec("ALTER TABLE projects ADD COLUMN published_port INTEGER");
   }
+  const publicationDeploymentColumns = db.prepare("PRAGMA table_info(publication_deployments)").all() as { name: string }[];
+  if (!publicationDeploymentColumns.some((column) => column.name === "health_path")) {
+    db.exec("ALTER TABLE publication_deployments ADD COLUMN health_path TEXT");
+    db.prepare("UPDATE publication_deployments SET health_path='/' WHERE health_path IS NULL").run();
+  }
+  const missingHealthPaths = db.prepare("SELECT COUNT(*) AS count FROM publication_deployments WHERE health_path IS NULL OR health_path='' ").get() as { count: number };
+  if (missingHealthPaths.count) throw new Error("发布部署缺少 healthPath，无法恢复运行时");
   db.exec("CREATE UNIQUE INDEX IF NOT EXISTS publication_unique_project_port ON projects(published_port) WHERE published_port IS NOT NULL");
   db.exec("CREATE UNIQUE INDEX IF NOT EXISTS runs_one_active_per_session ON runs(session_id) WHERE status='running'");
   return db;
@@ -108,7 +116,7 @@ export function createProject(input: { name: string; description?: string; skill
   fs.writeFileSync(path.join(workspace, "app/page.tsx"), `export default function Page(){return <main><h1>${input.name}</h1><p>由 AppFactory 创建的 Next.js 应用</p></main>}\n`);
   fs.writeFileSync(path.join(workspace, "package.json"), JSON.stringify({ scripts: { dev: "next dev", build: "next build", start: "next start", lint: "eslint app", typecheck: "tsc --noEmit" }, dependencies: { next: "16.3.3", react: "19.2.4", "react-dom": "19.2.4" }, devDependencies: { eslint: "^9", "eslint-config-next": "16.3.3", typescript: "^5", "@types/node": "^20", "@types/react": "^19", "@types/react-dom": "^19" } }, null, 2));
   fs.writeFileSync(path.join(workspace, "eslint.config.mjs"), `import { defineConfig, globalIgnores } from "eslint/config";\nimport nextVitals from "eslint-config-next/core-web-vitals";\nimport nextTs from "eslint-config-next/typescript";\nexport default defineConfig([...nextVitals, ...nextTs, globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts"])]);\n`);
-  fs.writeFileSync(path.join(workspace, "next.config.ts"), `const nextConfig = { output: "standalone" };\nexport default nextConfig;\n`);
+  fs.writeFileSync(path.join(workspace, "next.config.ts"), `const nextConfig = { output: "standalone", turbopack: { root: process.cwd() } };\nexport default nextConfig;\n`);
   fs.writeFileSync(path.join(workspace, "tsconfig.json"), JSON.stringify({ compilerOptions: { jsx: "preserve", strict: true, noEmit: true, moduleResolution: "bundler", module: "esnext", target: "es2020", lib: ["dom", "esnext"] }, include: ["app/**/*.tsx"] }, null, 2));
   fs.writeFileSync(path.join(workspace, "dev_todo.md"), "# 开发任务\n\n- [ ] 描述应用需求\n");
   fs.writeFileSync(path.join(workspace, "dev_status.md"), "# 开发状态\n\n- 状态：初始化\n");

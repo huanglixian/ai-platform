@@ -69,6 +69,7 @@ export function runWorkspaceCommand(
   }>((resolve, reject) => {
     const child = spawn("/bin/sh", ["-lc", command], {
       cwd: path.resolve(root),
+      detached: true,
       env: {
         PATH: `${path.join(process.cwd(), "node_modules/.bin")}:${process.env.PATH ?? ""}`,
         NODE_ENV: options.nodeEnv ?? process.env.NODE_ENV ?? "development",
@@ -76,33 +77,61 @@ export function runWorkspaceCommand(
     });
     let stdout = "";
     let stderr = "";
-    const abort = () => {
-      child.kill("SIGTERM");
-      reject(options.signal?.reason ?? new Error("命令已取消"));
+    let terminalError: Error | undefined;
+    let settled = false;
+    const terminateGroup = () => {
+      if (!child.pid) return;
+      try {
+        process.kill(-child.pid, "SIGTERM");
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code !== "ESRCH") throw error;
+      }
     };
-    if (options.signal?.aborted) return abort();
+    const abort = () => {
+      terminalError = options.signal?.reason instanceof Error
+        ? options.signal.reason
+        : new Error("命令已取消");
+      terminateGroup();
+    };
+    const cleanup = () => {
+      clearTimeout(timer);
+      options.signal?.removeEventListener("abort", abort);
+    };
+    const settle = (callback: () => void) => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      callback();
+    };
+    if (options.signal?.aborted) abort();
     options.signal?.addEventListener("abort", abort, { once: true });
     const timer = setTimeout(() => {
-      child.kill("SIGTERM");
-      options.signal?.removeEventListener("abort", abort);
-      reject(new Error("Command timed out"));
+      terminalError = new Error("Command timed out");
+      terminateGroup();
     }, timeoutMs);
     child.stdout.on("data", (data) => {
       stdout += data.toString();
-      if (stdout.length > 200_000) child.kill("SIGTERM");
+      if (stdout.length > 200_000) {
+        terminalError = new Error("Command output exceeded limit");
+        terminateGroup();
+      }
     });
     child.stderr.on("data", (data) => {
       stderr += data.toString();
-      if (stderr.length > 200_000) child.kill("SIGTERM");
+      if (stderr.length > 200_000) {
+        terminalError = new Error("Command output exceeded limit");
+        terminateGroup();
+      }
     });
     child.on("error", (error) => {
-      options.signal?.removeEventListener("abort", abort);
-      reject(error);
+      settle(() => reject(error));
     });
     child.on("close", (code) => {
-      clearTimeout(timer);
-      options.signal?.removeEventListener("abort", abort);
-      resolve({ code, stdout, stderr });
+      if (terminalError) {
+        settle(() => reject(terminalError!));
+        return;
+      }
+      settle(() => resolve({ code, stdout, stderr }));
     });
   });
 }
