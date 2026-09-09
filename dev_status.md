@@ -1,51 +1,53 @@
-# 项目开发状态
+# AI Platform 开发状态
 
-更新时间：2026-09-05
+## 项目概况
 
-## 当前状态
+AI Platform 是单机演示系统。`/workbench` 为 AgentHub 工作台，`/appfactory` 用于以 Pi Harness 协作开发 Next.js 应用，并将可运行的 Release 自动发布到 `/apps` 应用中心。
 
-- AgentHub 继续作为 `/workbench` 首页；KnowHub 本轮未修改业务实现。
-- AppFactory 已形成独立产品壳，数据使用 `storage/appfactory`，通过 AgentHub Client/Gateway 做可选集成。
-- AppFactory 第一版使用 Pi Harness；运行时状态、模型、Harness 和 Coding Skill 状态已在导航、项目页和设置页可见。
+## 技术与运行
 
-## 主要入口
+- 技术栈：Next.js 16 App Router、TypeScript、SQLite、Pi Harness、Next.js standalone runtime。
+- 启动：`npm run dev` 同时启动平台与 AppFactory 发布 Worker；发布不使用 Docker。
+- 环境：`.env.local` 必须设置 `AGENT_HUB_BASE_URL`，单机默认是 `http://localhost:19844`。
+- 数据：AppFactory 的项目、会话、任务与 Release 在 `storage/appfactory`；应用中心数据在 `storage/agenthub/agenthub.db`。
 
-- 项目中心：`app/appfactory/page.tsx`
-- 开发工作区：`app/appfactory/projects/[id]/page.tsx`
-- 设置页：`app/appfactory/settings/page.tsx`
-- 产品布局：`app/appfactory/layout.tsx`
-- 工作区面板：`app/appfactory/_components/workspace-panels.tsx`
-- 项目文件树工具：`app/appfactory/_lib/project-ui.ts`
+## 目录结构
 
-## AppFactory API
+```text
+app/appfactory/                 AppFactory 页面、布局、任务中心
+app/api/appfactory/v1/          项目、Pi 会话、预览与发布 API
+app_factory/server/publication/ 持久任务、Release 构建、运行时恢复
+app_factory/contracts/          app.yaml 校验
+features/apps/                  应用中心查询、排序与注册数据模型
+scripts/app.ts                  平台与发布 Worker 统一启动器
+```
 
-- `/api/appfactory/v1/projects`：项目列表和创建。
-- `/api/appfactory/v1/projects/[id]`：项目详情、文件、状态、Preview、Check、Build、Deploy 等操作。
-- `/api/appfactory/v1/runtime/status`：返回 AI Provider/模型、Pi Harness 和默认 Skill 的可用性，不返回密钥。
-- `/api/appfactory/v1/projects/[id]/sessions`：项目 Session 列表、新建对话和 Pi 上下文健康状态；`/api/appfactory/v1/sessions/[id]/run` 与 `/transcript`：Pi 执行和会话记录恢复；`/run/stream` 提供同一执行器的 SSE 增量事件。
-- `/api/appfactory/v1/projects/[id]/register`：仅允许当前 Release 已通过健康检查并处于运行状态时注册 AgentHub，使用实际 Deployment URL。
+## 功能与代码地图
 
-## 关键边界
+### AppFactory 开发工作区
 
-- Workspace 路径必须限制在项目根目录；文件树和列表会隐藏隐藏目录、`node_modules`、`.next`、`out`、`build`、`.turbo`、`.cache` 等生成内容。
-- Transcript 只允许读取 `storage/appfactory/transcripts` 下的记录。
-- AppFactory 不直接依赖 AgentHub 数据库或业务 Repository；AgentHub 集成通过独立 Client 接口完成。
-- Preview 使用独立窗口打开，开发工作区不嵌入第三栏预览。
-- Preview API 只有在子应用通过 HTTP 就绪检查后才返回运行地址；端口分配同时检查 IPv4/IPv6 占用，Next.js 热更新后通过全局进程表或 `.next/dev/lock` 恢复已有预览。
+- 页面：`app/appfactory/page.tsx`、`app/appfactory/projects/[id]/page.tsx`。
+- 对话与文件：`app/appfactory/_components/workspace-panels.tsx`、`app_factory/server/pi-run.ts`。
+- 数据：`app_factory/server/database.ts` 保存项目、Workspace、Pi Session、transcript 与 runs。
+- 当前状态：项目可创建、预览、以 Pi 修改 Workspace，并恢复会话历史。
 
-## 已验证
+### 一键发布与任务中心
 
-- Pi + DeepSeek 真实自然语言请求可完成文件修改，刷新项目后可恢复 transcript。
-- 项目工作区支持在文件树上方切换已有对话和新建对话；每个 Session 使用独立的 Pi `--session-id`，首条需求生成会话标题，切换后恢复对应 Transcript；服务端限制同一 Session 同时只有一个运行。
-- Pi 发送态已支持即时清空输入、运行计时、停止/失败反馈；真实请求已通过 SSE 增量收到文本、完成事件，并按 `runId/sequence` 持久化。Pi JSONL 工具事件会展示为文件读取/修改、搜索、命令和上下文步骤，同一运行收束在单一运行卡片内，准备调用与最终状态都保留在内部时间线，进行中和展开后的完成列表自动跟随最新步骤；无工具步骤的成功问答不重复显示执行摘要；旧版 Pi 的启动诊断、内部完成标记和孤立遗留结果会在聊天层过滤；AI 回复通过统一 Markdown/GFM 组件渲染。
-- Pi 的 `compaction_start/end` 已转换为“正在整理上下文 / 上下文整理完成”执行步骤；Session 列表可识别 Pi 上下文缺失，并在切换时提示历史记录与模型上下文的差异。
-- Build 子进程使用生产环境，Deployment 健康检查通过后，AgentHub 注册记录使用真实运行地址。
-- 项目 `project-a8023e2f-4a5f-4862-97de-71228c0bdf27` 已实测恢复遗留 Preview、停止后重新启动，并在 API 返回后立即访问预览首页得到 HTTP 200。
-- 桌面、平板和移动端已通过 Chrome 视觉验收；移动端提供“对话 / 文件”切换，点击文件进入单文件查看器，关闭后返回对话。
-- 项目文件列表已从生成目录噪声收敛为源文件与配置文件。
-- Node 核心测试、lint、typecheck、生产 build 和 `git diff --check` 已通过（最终提交前再次执行）。
+- 页面与共享状态：`app/appfactory/_components/publication-task-center.tsx`，由 `app/appfactory/layout.tsx` 提供全局任务中心。
+- API：`projects/[id]/publication` 创建任务；`publication-jobs/**` 提供查询、SSE、取消与重试。
+- 编排：`app_factory/server/publication/worker.ts`。
+- 构建与运行：`release-builder.ts` 构建 immutable standalone Release；`runtime.ts` 在固定端口启动、健康检查并于 Worker 重启时恢复。
+- 当前状态：单一“发布”动作完整执行 `校验 → lint/typecheck/build → 打包 → 启动 → 健康检查 → 应用中心注册`。旧的 Build、Deploy、Register 和通用 Job 机制已移除。
 
-## 已知限制
+### 应用中心
 
-- Pi SSE 当前由 AppFactory Node Route Handler 直接承载，任务执行仍是单机同步进程；断开连接后服务端继续落 transcript，SQLite Job Worker 化与跨项目任务中心留作后续阶段。
-- 模板中心和全局任务中心尚未开放；当前优先使用项目内的默认起点与活动日志，待出现真实模板和异步任务需求后再增加一级入口。
+- 页面：`components/apps/apps-page-client.tsx`。
+- 服务：`features/apps/server.ts`；AppFactory producer 永远在应用列表和分组首位。
+- 当前状态：分组顺序为 `AppFactory → 原生 → Dify → n8n`。AppFactory 卡片仅由发布 Worker 通过 AgentHub API 注册。
+
+## 关键限制
+
+- AppFactory 是单机演示运行时：发布端口从 4100 起分配，不具备多主机调度、认证或公网反向代理能力。
+- `app.yaml` 的 `healthPath` 必须是站内路径，并与 capability bindings 一同参与发布校验。
+- Workspace 文件访问限制在项目根目录；transcript 只从 `storage/appfactory/transcripts` 读取。
+- 发布取消会终止构建进程组；Release 切换失败时会停止新实例并恢复上一个健康 Release。

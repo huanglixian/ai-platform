@@ -1,39 +1,23 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AI Platform
 
-## Getting Started
+面向演示的单机 AI 应用平台：AppFactory 负责创建、开发、预览并一键发布 Next.js 应用；应用中心展示 AppFactory、原生、Dify 和 n8n 应用。
 
-First, run the development server:
+## 运行
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:19844](http://localhost:19844) with your browser to see the result.
+启动器会同时运行平台（`http://localhost:19844`）和 AppFactory 发布 Worker。发布不使用 Docker：Worker 为每个项目构建 Next.js standalone Release，分配本机端口并进行健康检查，成功后注册到应用中心。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+需要在 `.env.local` 配置：
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+AGENT_HUB_BASE_URL=http://localhost:19844
+```
 
-## Learn More
+## AppFactory 发布
 
-To learn more about Next.js, take a look at the following resources:
+在 `/appfactory` 创建或打开项目，开发完成后点击“发布”。发布任务依次校验 `app.yaml`、运行 lint/typecheck/Next.js build、生成独立 Release、启动并健康检查，再注册到应用中心。任务可在顶栏“任务中心”查看、取消和重试；成功任务提供应用入口与应用中心链接。
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-# AppFactory
-
-访问 `/appfactory` 进入独立应用开发工作区。项目创建后会在 `storage/appfactory/workspaces` 建立隔离目录；后台任务使用 `npm run worker:appfactory` 执行。AppFactory 可通过 `AGENT_HUB_BASE_URL` 使用 AgentHub 的版本化能力与应用接口，也可在 `disabled` 模式下独立运行。
+项目 Workspace、Pi 会话与发布任务存放在 `storage/appfactory`；Release 会在 Worker 重启时按持久化部署记录恢复。应用中心的 AppFactory 卡片由发布流程管理，不能通过手工发布表单创建。
