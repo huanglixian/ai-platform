@@ -10,6 +10,7 @@ AI Platform 是单机演示系统。`/workbench` 为 AgentHub 工作台，`/appf
 - 启动：`npm run dev` 同时启动平台与 AppFactory 发布 Worker；发布不使用 Docker。
 - 环境：`.env.local` 必须设置 `AGENT_HUB_BASE_URL`，单机默认是 `http://localhost:19844`。
 - 数据：AppFactory 的项目、会话、任务与 Release 在 `storage/appfactory`；应用中心数据在 `storage/agenthub/agenthub.db`。
+- Pi 会话会保留模型与应用所需环境变量，但会移除平台自身的 Node 启动参数，确保 Workspace 不会错误加载平台脚本。
 
 ## 目录结构
 

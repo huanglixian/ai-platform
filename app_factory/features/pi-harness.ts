@@ -4,6 +4,16 @@ import { loadEnvConfig } from "@next/env";
 import { normalizePiEvent } from "@/app_factory/features/pi-events";
 import type { HarnessEvent, HarnessRuntime, HarnessSessionRef } from "@/app_factory/types/harness";
 
+function piEnvironment(): NodeJS.ProcessEnv {
+  const {
+    NODE_OPTIONS: _nodeOptions,
+    npm_config_node_options: _npmNodeOptions,
+    NPM_CONFIG_NODE_OPTIONS: _npmNodeOptionsUpper,
+    ...environment
+  } = process.env;
+  return environment;
+}
+
 export class PiHarnessRuntime implements HarnessRuntime {
   private readonly children = new Map<string, ChildProcess>();
   async createSession(projectId: string, cwd: string) { return { id: `pi-${crypto.randomUUID()}`, projectId, harness: "pi" as const, cwd }; }
@@ -19,7 +29,7 @@ export class PiHarnessRuntime implements HarnessRuntime {
     if (provider) args.unshift("--provider", provider);
     if (model) args.unshift("--model", model);
     if (apiKey) args.unshift("--api-key", apiKey);
-    const child = spawn(piBin, args, { cwd: session.cwd, env: { ...process.env }, stdio: ["ignore", "pipe", "pipe"] });
+    const child = spawn(piBin, args, { cwd: session.cwd, env: piEnvironment(), stdio: ["ignore", "pipe", "pipe"] });
     this.children.set(session.id, child);
     try {
       const queue: HarnessEvent[] = [];
