@@ -61,6 +61,13 @@ ALTER TABLE workflows ADD COLUMN updated_by TEXT NOT NULL DEFAULT 'local-user';
 ALTER TABLE capabilities ADD COLUMN created_by TEXT NOT NULL DEFAULT 'system';
 ALTER TABLE capabilities ADD COLUMN updated_by TEXT NOT NULL DEFAULT 'system';`,
   },
+  {
+    id: "004_external_app_runtime",
+    sql: `ALTER TABLE applications ADD COLUMN launch_command TEXT;
+ALTER TABLE applications ADD COLUMN launch_pid INTEGER;
+ALTER TABLE applications ADD COLUMN launch_started_at TEXT;
+DELETE FROM applications WHERE producer = 'native' OR id LIKE 'app-native-%';`,
+  },
 ];
 
 export function getAgentHubDatabase(): Database.Database {

@@ -46,20 +46,20 @@ export function CardPageFrame({
   return (
     <div className="flex w-full flex-col gap-4">
       <section className="space-y-3 pl-1.5">
-        <div className="flex items-end gap-2.5">
+        <div className="flex flex-wrap items-end gap-2.5">
           <div className="flex items-end gap-2.5">
             <div className="text-title text-[18px] font-semibold tracking-[-0.02em]">
               {title}
             </div>
-            <div className="text-[12px] font-medium uppercase tracking-[0.08em] text-[#98a2b3]">
-              · {count} Items
+            <div className="text-[12px] font-medium tracking-[0.08em] text-[#98a2b3]">
+              · {count} 个应用
             </div>
           </div>
         </div>
       </section>
       {typeof searchValue === "string" && onSearchChange ? (
         <div className="flex justify-center">
-          <div className="w-[50%] min-w-[280px]">
+          <div className="w-full max-w-2xl">
             <input
               value={searchValue}
               onChange={(event) => onSearchChange(event.target.value)}

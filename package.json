@@ -8,6 +8,7 @@
     "start": "node --experimental-strip-types --import ./scripts/typescript-runtime.ts scripts/app.ts start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
+    "test:external-launcher": "node --test --experimental-strip-types features/apps/external-launcher.test.mjs",
     "db:agenthub:migrate": "node --experimental-strip-types scripts/agenthub-db.mjs",
     "db:agenthub:seed": "node --experimental-strip-types scripts/agenthub-db.mjs",
     "worker:agenthub": "node -e \"console.log('AgentHub worker is not required yet')\"",

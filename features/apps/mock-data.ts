@@ -1,6 +1,17 @@
-import { PublishedApp } from "./types";
+import type { AppType, PlatformSource } from "./types";
 
-export const INITIAL_APPS: PublishedApp[] = [
+type MockApplication = {
+  id: string;
+  name: string;
+  description: string;
+  source: Exclude<PlatformSource, "appfactory" | "external">;
+  appType: AppType;
+  url: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export const INITIAL_APPS: MockApplication[] = [
   {
     id: "app-dify-customer-ticket",
     name: "客户工单摘要分派助手",
@@ -101,84 +112,4 @@ export const INITIAL_APPS: PublishedApp[] = [
     createdAt: "2026-06-08T10:30:00Z",
     updatedAt: "2026-06-08T11:00:00Z"
   },
-  {
-    id: "app-native-safety-audit",
-    name: "现场违章合规审计",
-    description: "上传现场记录和检查照片，识别违章描述、制度依据和整改建议，生成审计结果。",
-    source: "native",
-    appType: "business",
-    url: "/workbench",
-    createdAt: "2026-06-08T10:40:00Z",
-    updatedAt: "2026-06-08T11:10:00Z"
-  },
-  {
-    id: "app-native-tower-defect",
-    name: "输电缺陷照片初筛",
-    description: "面向输电线路巡检照片，对塔材锈蚀、绝缘子破损和异物挂线进行初步筛查。",
-    source: "native",
-    appType: "business",
-    url: "/workbench",
-    createdAt: "2026-06-08T10:50:00Z",
-    updatedAt: "2026-06-08T11:20:00Z"
-  },
-  {
-    id: "app-native-knowledge-search",
-    name: "规程制度检索问答",
-    description: "检索企业规程、制度和技术标准，返回依据片段、适用范围和操作建议。",
-    source: "native",
-    appType: "general",
-    url: "/workbench",
-    createdAt: "2026-06-08T11:00:00Z",
-    updatedAt: "2026-06-08T11:30:00Z"
-  },
-  {
-    id: "app-native-meeting-action",
-    name: "会议纪要待办提取",
-    description: "从会议纪要或转写文本中提取决议事项、责任人、截止时间和风险提醒。",
-    source: "native",
-    appType: "general",
-    url: "/workbench",
-    createdAt: "2026-06-08T11:10:00Z",
-    updatedAt: "2026-06-08T11:40:00Z"
-  },
-  {
-    id: "app-native-asset-ledger",
-    name: "固定资产台账核对",
-    description: "对资产清单、盘点记录和责任部门进行比对，标记账实不符、缺失字段和疑似重复项。",
-    source: "native",
-    appType: "business",
-    url: "/workbench",
-    createdAt: "2026-06-08T11:20:00Z",
-    updatedAt: "2026-06-08T11:50:00Z"
-  },
-  {
-    id: "app-native-risk-register",
-    name: "项目风险登记助手",
-    description: "根据项目周报和问题清单，整理风险项、影响范围、处置措施和责任跟踪状态。",
-    source: "native",
-    appType: "business",
-    url: "/workbench",
-    createdAt: "2026-06-08T11:30:00Z",
-    updatedAt: "2026-06-08T12:00:00Z"
-  },
-  {
-    id: "app-native-training-quiz",
-    name: "安全培训试题生成",
-    description: "根据培训材料生成单选、多选和判断题，并输出答案解析和知识点标签。",
-    source: "native",
-    appType: "general",
-    url: "/workbench",
-    createdAt: "2026-06-08T11:40:00Z",
-    updatedAt: "2026-06-08T12:10:00Z"
-  },
-  {
-    id: "app-native-service-acceptance",
-    name: "服务验收材料检查",
-    description: "检查验收报告、交付清单和附件材料是否完整，输出缺项说明和补正建议。",
-    source: "native",
-    appType: "business",
-    url: "/workbench",
-    createdAt: "2026-06-08T11:50:00Z",
-    updatedAt: "2026-06-08T12:20:00Z"
-  }
 ];

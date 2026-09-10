@@ -2,7 +2,7 @@
 
 ## 项目概况
 
-AI Platform 是单机演示系统。`/workbench` 为 AgentHub 工作台，`/appfactory` 用于以 Pi Harness 协作开发 Next.js 应用，并将可运行的 Release 自动发布到 `/apps` 应用中心。
+AI Platform 是单机演示系统。`/workbench` 为 AgentHub 工作台，`/appfactory` 用于以 Pi Harness 协作开发 Next.js 应用，并将可运行的 Release 自动发布到 `/apps` 应用中心；应用中心也可接入、启动和停止本机外部 Web 应用。
 
 ## 技术与运行
 
@@ -18,7 +18,8 @@ app/appfactory/                 AppFactory 页面、布局、任务中心
 app/api/appfactory/v1/          项目、Pi 会话、预览与发布 API
 app_factory/server/publication/ 持久任务、Release 构建、运行时恢复
 app_factory/contracts/          app.yaml 校验
-features/apps/                  应用中心查询、排序与注册数据模型
+features/apps/                  应用中心数据、外部应用种子与本机启动器
+components/apps/                应用中心列表、接入表单与应用操作抽屉
 scripts/app.ts                  平台与发布 Worker 统一启动器
 ```
 
@@ -42,9 +43,11 @@ scripts/app.ts                  平台与发布 Worker 统一启动器
 
 ### 应用中心
 
-- 页面：`components/apps/apps-page-client.tsx`。
-- 服务：`features/apps/server.ts`；AppFactory producer 永远在应用列表和分组首位。
-- 当前状态：分组顺序为 `AppFactory → 原生 → Dify → n8n`。AppFactory 卡片仅由发布 Worker 通过 AgentHub API 注册。
+- 页面与组件：`components/apps/apps-page-client.tsx`，`components/apps/external-app-form.tsx`，`components/apps/app-action-drawer.tsx`。
+- 服务与数据：`features/apps/server.ts`、`features/apps/external-app-seed.ts`、`features/apps/external-launcher.ts`；应用记录保存在 `storage/agenthub/agenthub.db`。
+- 接口：`/api/agenthub/v1/applications` 继续接收 AppFactory 的发布注册；外部应用的编辑、移除、启动和停止分别使用 `applications/[id]`、`applications/[id]/start`、`applications/[id]/stop`。
+- 当前状态：分组顺序固定为 `AppFactory → 外部应用 → Dify → n8n`。AppFactory 卡片只由发布 Worker 注册，Dify 与 n8n 为演示数据；外部应用预置桌面快捷启动目录中的 12 个独立演示应用，且可手工接入新的本机应用。
+- 运行边界：外部应用使用保存的本机命令启动，不嵌入 iframe；启动完成后由用户通过“打开应用”在新页签访问。平台仅停止自己记录的独立进程组，不会停止已经由其他方式运行的服务。
 
 ## 关键限制
 
