@@ -5,12 +5,10 @@ import { normalizePiEvent } from "@/app_factory/features/pi-events";
 import type { HarnessEvent, HarnessRuntime, HarnessSessionRef } from "@/app_factory/types/harness";
 
 function piEnvironment(): NodeJS.ProcessEnv {
-  const {
-    NODE_OPTIONS: _nodeOptions,
-    npm_config_node_options: _npmNodeOptions,
-    NPM_CONFIG_NODE_OPTIONS: _npmNodeOptionsUpper,
-    ...environment
-  } = process.env;
+  const environment = { ...process.env };
+  delete environment.NODE_OPTIONS;
+  delete environment.npm_config_node_options;
+  delete environment.NPM_CONFIG_NODE_OPTIONS;
   return environment;
 }
 
