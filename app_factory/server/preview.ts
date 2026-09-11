@@ -63,6 +63,7 @@ function previewEnvironment(): NodeJS.ProcessEnv {
   delete environment.NODE_OPTIONS;
   delete environment.npm_config_node_options;
   delete environment.NPM_CONFIG_NODE_OPTIONS;
+  delete environment.TURBOPACK;
   return { ...environment, NODE_ENV: "development" };
 }
 
@@ -214,7 +215,7 @@ export async function startPreview(projectId: string, sourceWorkspacePath: strin
   const logs: string[] = [];
   const readinessController = new AbortController();
   const nextCli = path.join(process.cwd(), "node_modules", "next", "dist", "bin", "next");
-  const child = spawn(process.execPath, [nextCli, "dev", "--port", String(port)], {
+  const child = spawn(process.execPath, [nextCli, "dev", "--webpack", "--port", String(port)], {
     cwd: workspacePath,
     env: previewEnvironment(),
     stdio: ["ignore", "pipe", "pipe"],
