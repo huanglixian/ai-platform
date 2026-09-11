@@ -3,16 +3,16 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "node --experimental-strip-types --import ./scripts/typescript-runtime.ts scripts/app.ts dev",
+    "dev": "node --experimental-strip-types --import ./scripts/typescript-runtime.mts scripts/app.mts dev",
     "build": "next build",
-    "start": "node --experimental-strip-types --import ./scripts/typescript-runtime.ts scripts/app.ts start",
+    "start": "node --experimental-strip-types --import ./scripts/typescript-runtime.mts scripts/app.mts start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test:external-launcher": "node --test --experimental-strip-types features/apps/external-launcher.test.mjs",
     "db:agenthub:migrate": "node --experimental-strip-types scripts/agenthub-db.mjs",
     "db:agenthub:seed": "node --experimental-strip-types scripts/agenthub-db.mjs",
     "worker:agenthub": "node -e \"console.log('AgentHub worker is not required yet')\"",
-    "worker:appfactory": "node --experimental-strip-types --import ./scripts/typescript-runtime.ts scripts/appfactory-worker.ts"
+    "worker:appfactory": "node --experimental-strip-types --import ./scripts/typescript-runtime.mts scripts/appfactory-worker.mts"
   },
   "dependencies": {
     "@ai-sdk/openai-compatible": "^2.0.48",

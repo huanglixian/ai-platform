@@ -1,13 +1,34 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+
+type ModelProfileId = "glm-5.3-flash" | "deepseek-v4-flash";
+type ThinkingLevel = "low" | "high" | "max";
 
 type RuntimeStatus = {
-  ai?: { configured?: boolean; provider?: string | null; model?: string | null };
   harness?: { ready?: boolean; name?: string };
   skill?: { ready?: boolean; name?: string };
 };
+
+type ModelProfile = {
+  id: ModelProfileId;
+  label: string;
+  provider: string;
+  description: string;
+  configured: boolean;
+};
+
+type ModelSettings = {
+  defaultModelProfileId: ModelProfileId;
+  thinkingLevel: ThinkingLevel;
+  profiles: ModelProfile[];
+};
+
+type ModelSettingsForm = Pick<
+  ModelSettings,
+  "defaultModelProfileId" | "thinkingLevel"
+>;
 
 function StatusDot({ ready }: { ready: boolean }) {
   return (
@@ -18,17 +39,47 @@ function StatusDot({ ready }: { ready: boolean }) {
   );
 }
 
+async function getErrorMessage(response: Response) {
+  const payload = (await response.json().catch(() => null)) as {
+    error?: { message?: string };
+  } | null;
+  return payload?.error?.message ?? "请求失败，请稍后重试";
+}
+
 export default function AppFactorySettingsPage() {
   const [status, setStatus] = useState<RuntimeStatus | null>(null);
+  const [settings, setSettings] = useState<ModelSettings | null>(null);
+  const [form, setForm] = useState<ModelSettingsForm | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [saveMessage, setSaveMessage] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
-  const loadStatus = useCallback(async () => {
+  const loadSettings = useCallback(async () => {
     setRefreshing(true);
+    setLoadError(null);
     try {
-      const response = await fetch("/api/appfactory/v1/runtime/status");
-      const payload = (await response.json()) as { data?: RuntimeStatus };
-      setStatus(payload.data ?? {});
+      const [statusResponse, settingsResponse] = await Promise.all([
+        fetch("/api/appfactory/v1/runtime/status"),
+        fetch("/api/appfactory/v1/settings/model"),
+      ]);
+      if (!statusResponse.ok) throw new Error(await getErrorMessage(statusResponse));
+      if (!settingsResponse.ok) throw new Error(await getErrorMessage(settingsResponse));
+
+      const statusPayload = (await statusResponse.json()) as { data?: RuntimeStatus };
+      const settingsPayload = (await settingsResponse.json()) as { data?: ModelSettings };
+      if (!settingsPayload.data) throw new Error("未能读取模型设置");
+
+      setStatus(statusPayload.data ?? {});
+      setSettings(settingsPayload.data);
+      setForm({
+        defaultModelProfileId: settingsPayload.data.defaultModelProfileId,
+        thinkingLevel: settingsPayload.data.thinkingLevel,
+      });
+    } catch (reason) {
+      setLoadError(reason instanceof Error ? reason.message : "读取设置失败，请稍后重试");
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -36,12 +87,57 @@ export default function AppFactorySettingsPage() {
   }, []);
 
   useEffect(() => {
-    void loadStatus();
-  }, [loadStatus]);
+    void loadSettings();
+  }, [loadSettings]);
 
-  const aiReady = Boolean(status?.ai?.configured);
+  const selectedProfile = useMemo(
+    () => settings?.profiles.find((profile) => profile.id === form?.defaultModelProfileId),
+    [form?.defaultModelProfileId, settings?.profiles],
+  );
+  const hasChanges = Boolean(
+    settings &&
+      form &&
+      (settings.defaultModelProfileId !== form.defaultModelProfileId ||
+        settings.thinkingLevel !== form.thinkingLevel),
+  );
   const harnessReady = Boolean(status?.harness?.ready);
   const skillReady = Boolean(status?.skill?.ready);
+
+  const updateForm = (change: Partial<ModelSettingsForm>) => {
+    setForm((current) => (current ? { ...current, ...change } : current));
+    setSaveMessage(null);
+    setSaveError(null);
+  };
+
+  const saveSettings = async () => {
+    if (!form) return;
+
+    setSaving(true);
+    setSaveError(null);
+    setSaveMessage(null);
+    try {
+      const response = await fetch("/api/appfactory/v1/settings/model", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      if (!response.ok) throw new Error(await getErrorMessage(response));
+
+      const payload = (await response.json()) as { data?: ModelSettings };
+      if (!payload.data) throw new Error("模型设置保存失败");
+
+      setSettings(payload.data);
+      setForm({
+        defaultModelProfileId: payload.data.defaultModelProfileId,
+        thinkingLevel: payload.data.thinkingLevel,
+      });
+      setSaveMessage("已保存：模型将用于新建对话，思考程度下次执行生效");
+    } catch (reason) {
+      setSaveError(reason instanceof Error ? reason.message : "保存失败，请稍后重试");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <main className="mx-auto max-w-[1120px] px-4 py-7 sm:px-7 sm:py-9">
@@ -54,7 +150,7 @@ export default function AppFactorySettingsPage() {
             运行环境
           </h1>
           <p className="mt-2 text-sm text-[#667085]">
-            检查 AI、Pi Harness 和默认 Coding Skill。密钥只由服务端环境变量管理。
+            选择新建对话使用的模型，并设置所有对话的思考程度。密钥只由服务端环境变量管理。
           </p>
         </div>
         <Link
@@ -65,22 +161,88 @@ export default function AppFactorySettingsPage() {
         </Link>
       </div>
 
-      <section className="grid gap-4 lg:grid-cols-3">
-        <article className="rounded-xl border border-[#d6e0eb] bg-white p-5 shadow-[0_4px_10px_rgba(15,23,42,.04)]">
-          <div className="flex items-center justify-between">
+      <section className="rounded-xl border border-[#d6e0eb] bg-white p-5 shadow-[0_4px_10px_rgba(15,23,42,.04)] sm:p-6">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
             <div className="flex items-center gap-2">
-              <StatusDot ready={aiReady} />
-              <h2 className="text-sm font-semibold text-[#1a4d87]">AI 模型</h2>
+              <StatusDot ready={Boolean(selectedProfile?.configured)} />
+              <h2 className="text-sm font-semibold text-[#1a4d87]">默认代码模型</h2>
             </div>
-            <span className="text-xs text-[#98a2b3]">{loading ? "检测中" : aiReady ? "已就绪" : "待配置"}</span>
+            <p className="mt-1.5 text-xs leading-5 text-[#667085]">
+              模型默认值仅影响之后新建的对话；已有对话会继续使用创建时的模型，思考程度在下次执行时生效。
+            </p>
           </div>
-          <dl className="mt-5 space-y-3 text-xs">
-            <div className="flex justify-between gap-3"><dt className="text-[#98a2b3]">Provider</dt><dd className="font-medium text-[#4d4d4d]">{status?.ai?.provider ?? "未配置"}</dd></div>
-            <div className="flex justify-between gap-3"><dt className="text-[#98a2b3]">模型</dt><dd className="max-w-[190px] truncate font-medium text-[#4d4d4d]">{status?.ai?.model ?? "未配置"}</dd></div>
-            <div className="flex justify-between gap-3"><dt className="text-[#98a2b3]">凭据</dt><dd className="font-medium text-[#4d4d4d]">{aiReady ? "服务端已配置" : "需要设置 API Key"}</dd></div>
-          </dl>
-        </article>
+          <span
+            className={`rounded-full px-2.5 py-1 text-[11px] font-medium ${
+              selectedProfile?.configured
+                ? "bg-[#eef8f2] text-[#1f8a57]"
+                : "bg-[#fff7e8] text-[#b06d13]"
+            }`}
+          >
+            {loading ? "读取中" : selectedProfile?.configured ? "API Key 已配置" : "待配置 API Key"}
+          </span>
+        </div>
 
+        {loadError ? (
+          <div className="mt-5 rounded-lg border border-[#f0c5c1] bg-[#fff5f4] px-3 py-2 text-xs text-[#b9382f]">
+            {loadError}
+          </div>
+        ) : (
+          <div className="mt-5 grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] md:items-end">
+            <label className="block">
+              <span className="mb-1.5 block text-xs font-medium text-[#4d4d4d]">模型</span>
+              <select
+                value={form?.defaultModelProfileId ?? ""}
+                disabled={loading || !form}
+                onChange={(event) => updateForm({ defaultModelProfileId: event.target.value as ModelProfileId })}
+                className="h-10 w-full rounded-lg border border-[#bfd7f2] bg-white px-3 text-sm text-[#1f2937] outline-none transition focus:border-[#0368b3] focus:ring-2 focus:ring-[#d8eaf9] disabled:cursor-not-allowed disabled:bg-[#f6f8fb] disabled:text-[#98a2b3]"
+              >
+                {settings?.profiles.map((profile) => (
+                  <option key={profile.id} value={profile.id}>
+                    {profile.label} · {profile.provider}{profile.configured ? "" : "（待配置）"}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="block">
+              <span className="mb-1.5 block text-xs font-medium text-[#4d4d4d]">思考程度</span>
+              <select
+                value={form?.thinkingLevel ?? ""}
+                disabled={loading || !form}
+                onChange={(event) => updateForm({ thinkingLevel: event.target.value as ThinkingLevel })}
+                className="h-10 w-full rounded-lg border border-[#bfd7f2] bg-white px-3 text-sm text-[#1f2937] outline-none transition focus:border-[#0368b3] focus:ring-2 focus:ring-[#d8eaf9] disabled:cursor-not-allowed disabled:bg-[#f6f8fb] disabled:text-[#98a2b3]"
+              >
+                <option value="low">低</option>
+                <option value="high">高</option>
+                <option value="max">最大</option>
+              </select>
+            </label>
+            <button
+              type="button"
+              onClick={() => void saveSettings()}
+              disabled={!hasChanges || saving || loading}
+              className="h-10 rounded-lg bg-[#0368b3] px-4 text-xs font-medium text-white transition hover:bg-[#1a4d87] disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              {saving ? "保存中…" : "保存设置"}
+            </button>
+          </div>
+        )}
+
+        {selectedProfile && !loadError ? (
+          <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-[#e8edf3] pt-3 text-xs">
+            <span className="font-medium text-[#4d4d4d]">{selectedProfile.provider}</span>
+            <span className="text-[#667085]">{selectedProfile.description}</span>
+            {!selectedProfile.configured && (
+              <span className="text-[#b06d13]">可保存为默认模型，运行前需配置 API Key。</span>
+            )}
+          </div>
+        ) : null}
+
+        {saveMessage ? <p className="mt-3 text-xs text-[#1f8a57]">{saveMessage}</p> : null}
+        {saveError ? <p className="mt-3 text-xs text-[#b9382f]">{saveError}</p> : null}
+      </section>
+
+      <section className="mt-5 grid gap-4 md:grid-cols-2">
         <article className="rounded-xl border border-[#d6e0eb] bg-white p-5 shadow-[0_4px_10px_rgba(15,23,42,.04)]">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2"><StatusDot ready={harnessReady} /><h2 className="text-sm font-semibold text-[#1a4d87]">Pi Harness</h2></div>
@@ -103,7 +265,7 @@ export default function AppFactorySettingsPage() {
       <section className="mt-5 rounded-xl border border-[#d6e0eb] bg-white p-5 shadow-[0_4px_10px_rgba(15,23,42,.04)]">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div><h2 className="text-sm font-semibold text-[#1a4d87]">发布服务</h2><p className="mt-1 text-xs text-[#667085]">每个项目发布时都会自动注册到应用中心；发布过程由后台 Worker 持续执行。</p></div>
-          <button type="button" onClick={() => void loadStatus()} disabled={refreshing} className="h-9 rounded-lg border border-[#bfd7f2] px-3 text-xs font-medium text-[#0368b3] hover:bg-[#eef5fd] disabled:opacity-50">{refreshing ? "检测中…" : "重新检测"}</button>
+          <button type="button" onClick={() => void loadSettings()} disabled={refreshing || saving} className="h-9 rounded-lg border border-[#bfd7f2] px-3 text-xs font-medium text-[#0368b3] hover:bg-[#eef5fd] disabled:opacity-50">{refreshing ? "检测中…" : "重新检测"}</button>
         </div>
       </section>
     </main>

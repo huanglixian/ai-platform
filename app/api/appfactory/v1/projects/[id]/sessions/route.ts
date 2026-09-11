@@ -1,5 +1,6 @@
 import { apiError, apiOk } from "@/lib/server/api-response";
 import { getPiSessionStatus } from "@/app_factory/types/session";
+import { getModelProfile, type ModelProfileId } from "@/app_factory/server/model-profiles";
 import { piSessionExists } from "@/app_factory/server/pi-session";
 import { createSession, getProject, listSessions } from "@/app_factory/server/database";
 
@@ -11,6 +12,7 @@ type SessionRow = {
   status: string;
   harness: string;
   title: string;
+  modelProfileId: ModelProfileId;
   transcriptPath?: string | null;
   createdAt: string;
   updatedAt: string;
@@ -18,12 +20,16 @@ type SessionRow = {
 
 async function presentSession(session: SessionRow) {
   const hasPiSession = await piSessionExists(session.id);
+  const modelProfile = getModelProfile(session.modelProfileId);
   return {
     id: session.id,
     projectId: session.projectId,
     status: session.status,
     harness: session.harness,
     title: session.title,
+    modelProfileId: modelProfile.id,
+    modelLabel: modelProfile.label,
+    modelProvider: modelProfile.provider,
     createdAt: session.createdAt,
     updatedAt: session.updatedAt,
     piStatus: getPiSessionStatus({

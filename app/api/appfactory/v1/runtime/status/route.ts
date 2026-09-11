@@ -2,20 +2,20 @@ import fs from "node:fs";
 import path from "node:path";
 
 import { loadEnvConfig } from "@next/env";
+import { getAppFactoryModelSettings } from "@/app_factory/server/database";
+import {
+  getModelApiKey,
+  getModelProfile,
+  presentModelProfiles,
+} from "@/app_factory/server/model-profiles";
 import { apiOk } from "@/lib/server/api-response";
 
 export const runtime = "nodejs";
 
 export async function GET() {
   loadEnvConfig(process.cwd());
-  const provider =
-    process.env.APPFACTORY_PI_PROVIDER?.trim() ||
-    (process.env.DEEPSEEK_API_KEY ? "deepseek" : "");
-  const model =
-    process.env.APPFACTORY_PI_MODEL?.trim() ||
-    (provider === "deepseek"
-      ? process.env.DEEPSEEK_MODEL?.trim() || "deepseek-chat"
-      : "");
+  const modelSettings = getAppFactoryModelSettings();
+  const modelProfile = getModelProfile(modelSettings.defaultModelProfileId);
   const skillPath = path.join(
     process.cwd(),
     "app_factory",
@@ -25,13 +25,15 @@ export async function GET() {
   );
   return apiOk({
     ai: {
-      configured: Boolean(
-        provider &&
-        (process.env.APPFACTORY_PI_API_KEY?.trim() ||
-          process.env.DEEPSEEK_API_KEY?.trim()),
-      ),
-      provider: provider || null,
-      model: model || null,
+      configured: Boolean(getModelApiKey(modelProfile)),
+      provider: modelProfile.provider,
+      model: modelProfile.label,
+      thinkingLevel: modelSettings.thinkingLevel,
+    },
+    modelSettings: {
+      defaultModelProfileId: modelSettings.defaultModelProfileId,
+      thinkingLevel: modelSettings.thinkingLevel,
+      profiles: presentModelProfiles(),
     },
     harness: {
       ready: fs.existsSync(

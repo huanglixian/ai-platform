@@ -2,14 +2,14 @@ import { spawn, type ChildProcess } from "node:child_process";
 
 const mode = process.argv[2];
 if (mode !== "dev" && mode !== "start") {
-  throw new Error("使用方式：node scripts/app.ts <dev|start>");
+  throw new Error("使用方式：node scripts/app.mts <dev|start>");
 }
 
-const runtimeArgs = ["--experimental-strip-types", "--import", "./scripts/typescript-runtime.ts"];
+const runtimeArgs = ["--experimental-strip-types", "--import", "./scripts/typescript-runtime.mts"];
 const nextArgs = mode === "dev" ? ["dev", "--port", "19844"] : ["start", "--port", "19844"];
 const definitions = [
   { name: "Next.js", args: [...runtimeArgs, "./node_modules/next/dist/bin/next", ...nextArgs] },
-  { name: "AppFactory Worker", args: [...runtimeArgs, "./scripts/appfactory-worker.ts"] },
+  { name: "AppFactory Worker", args: [...runtimeArgs, "./scripts/appfactory-worker.mts"] },
 ];
 const children: ChildProcess[] = [];
 let stopping = false;

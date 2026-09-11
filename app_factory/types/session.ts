@@ -5,6 +5,9 @@ export type AppFactorySession = {
   status: AppFactorySessionStatus | string;
   harness: "pi" | string;
   title: string;
+  modelProfileId: string;
+  modelLabel: string;
+  modelProvider: string;
   createdAt: string;
   updatedAt: string;
   piStatus?: PiSessionStatus;

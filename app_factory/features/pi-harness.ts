@@ -2,32 +2,65 @@ import path from "node:path";
 import { spawn, type ChildProcess } from "node:child_process";
 import { loadEnvConfig } from "@next/env";
 import { normalizePiEvent } from "@/app_factory/features/pi-events";
-import type { HarnessEvent, HarnessRuntime, HarnessSessionRef } from "@/app_factory/types/harness";
+import { ensurePiAgentConfig } from "@/app_factory/server/pi-agent-config";
+import {
+  getModelApiKey,
+  getModelConfigurationError,
+  getModelProfile,
+} from "@/app_factory/server/model-profiles";
+import type { HarnessEvent, HarnessRunOptions, HarnessRuntime, HarnessSessionRef } from "@/app_factory/types/harness";
 
-function piEnvironment(): NodeJS.ProcessEnv {
+function piEnvironment(options: HarnessRunOptions): NodeJS.ProcessEnv {
   const environment = { ...process.env };
   delete environment.NODE_OPTIONS;
   delete environment.npm_config_node_options;
   delete environment.NPM_CONFIG_NODE_OPTIONS;
+  delete environment.DEEPSEEK_API_KEY;
+  delete environment.APPFACTORY_ZHIPU_API_KEY;
+  delete environment.APPFACTORY_DEEPSEEK_API_KEY;
+  const profile = getModelProfile(options.modelProfileId);
+  const apiKey = getModelApiKey(profile);
+  if (profile.id === "glm-5.3-flash") environment.APPFACTORY_ZHIPU_API_KEY = apiKey;
+  if (profile.id === "deepseek-v4-flash") environment.DEEPSEEK_API_KEY = apiKey;
+  environment.PI_CODING_AGENT_DIR = ensurePiAgentConfig();
   return environment;
+}
+
+export function createPiRunArgs(
+  session: HarnessSessionRef,
+  prompt: string,
+  options: HarnessRunOptions,
+) {
+  const profile = getModelProfile(options.modelProfileId);
+  return [
+    "--provider", profile.piProvider,
+    "--model", profile.model,
+    "--thinking", options.thinkingLevel,
+    "--mode", "json",
+    "--approve",
+    "--session-id", session.id,
+    "--session-dir", path.join(process.cwd(), "storage", "appfactory", "pi-sessions"),
+    "--skill", path.join(process.cwd(), "app_factory", "skills", "nextjs-build"),
+    "--",
+    prompt,
+  ];
 }
 
 export class PiHarnessRuntime implements HarnessRuntime {
   private readonly children = new Map<string, ChildProcess>();
   async createSession(projectId: string, cwd: string) { return { id: `pi-${crypto.randomUUID()}`, projectId, harness: "pi" as const, cwd }; }
-  async *run(session: HarnessSessionRef, prompt: string): AsyncGenerator<HarnessEvent> {
+  async *run(
+    session: HarnessSessionRef,
+    prompt: string,
+    options: HarnessRunOptions,
+  ): AsyncGenerator<HarnessEvent> {
     // Next standalone 进程不一定把项目 env 文件回写到子进程环境，启动 Pi 前显式加载一次。
     loadEnvConfig(process.cwd());
     const piBin = path.join(process.cwd(), "node_modules", ".bin", "pi");
-    const skillPath = path.join(process.cwd(), "app_factory", "skills", "nextjs-build");
-    const provider = process.env.APPFACTORY_PI_PROVIDER?.trim() || (process.env.DEEPSEEK_API_KEY ? "deepseek" : "");
-    const model = process.env.APPFACTORY_PI_MODEL?.trim() || (provider === "deepseek" ? (process.env.DEEPSEEK_MODEL?.trim() || "deepseek-chat") : "");
-    const apiKey = process.env.APPFACTORY_PI_API_KEY?.trim() || (provider === "deepseek" ? process.env.DEEPSEEK_API_KEY?.trim() : "");
-    const args = ["--mode", "json", "--approve", "--session-id", session.id, "--session-dir", path.join(process.cwd(), "storage", "appfactory", "pi-sessions"), "--skill", skillPath, prompt];
-    if (provider) args.unshift("--provider", provider);
-    if (model) args.unshift("--model", model);
-    if (apiKey) args.unshift("--api-key", apiKey);
-    const child = spawn(piBin, args, { cwd: session.cwd, env: piEnvironment(), stdio: ["ignore", "pipe", "pipe"] });
+    const profile = getModelProfile(options.modelProfileId);
+    const configurationError = getModelConfigurationError(profile);
+    if (configurationError) throw new Error(configurationError);
+    const child = spawn(piBin, createPiRunArgs(session, prompt, options), { cwd: session.cwd, env: piEnvironment(options), stdio: ["ignore", "pipe", "pipe"] });
     this.children.set(session.id, child);
     try {
       const queue: HarnessEvent[] = [];

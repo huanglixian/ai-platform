@@ -1,6 +1,8 @@
 import { piHarnessRuntime } from "@/app_factory/features/pi-harness";
+import type { ModelProfileId } from "@/app_factory/server/model-profiles";
 import {
   finishRun,
+  getAppFactoryModelSettings,
   setSessionStatus,
   setSessionTitleFromPrompt,
   setSessionTranscriptPath,
@@ -21,6 +23,7 @@ type PiRunContext = {
     id: string;
     project_id: string;
     cwd: string;
+    model_profile_id: ModelProfileId;
   };
   prompt: string;
 };
@@ -58,10 +61,12 @@ export async function* executePiRun({
       timestamp: new Date().toISOString(),
     });
 
+    const { thinkingLevel } = getAppFactoryModelSettings();
     let failure = "";
     for await (const event of piHarnessRuntime.run(
       { id: session.id, projectId: session.project_id, harness: "pi", cwd: session.cwd },
       prompt,
+      { modelProfileId: session.model_profile_id, thinkingLevel },
     )) {
       const persisted = await persist(event);
       yield persisted;

@@ -33,6 +33,10 @@ type RuntimeStatus = {
     configured?: boolean;
     provider?: string | null;
     model?: string | null;
+    thinkingLevel?: "low" | "high" | "max";
+  };
+  modelSettings?: {
+    profiles?: Array<{ id: string; configured: boolean }>;
   };
   harness?: { ready?: boolean; name?: string };
   skill?: { ready?: boolean };
@@ -486,9 +490,15 @@ export default function ProjectPage({
         {error || "项目不存在"}
       </main>
     );
+  const activeModelConfigured = session
+    ? runtime.modelSettings?.profiles?.find(
+        (profile) => profile.id === session.modelProfileId,
+      )?.configured
+    : runtime.ai?.configured;
   const aiReady = Boolean(
-    runtime.ai?.configured && runtime.harness?.ready && runtime.skill?.ready,
+    activeModelConfigured && runtime.harness?.ready && runtime.skill?.ready,
   );
+  const activeModelLabel = session?.modelLabel || runtime.ai?.model || "未配置模型";
   const publication = latestForProject(id);
   const statusLabel = publication?.status === "running" || publication?.status === "queued"
     ? "发布中"
@@ -525,7 +535,8 @@ export default function ProjectPage({
         </div>
         <div className="flex items-center gap-1.5">
           <span className="hidden text-[10px] text-[#98a2b3] lg:inline">
-            Pi Harness · {runtime.ai?.model || "未配置模型"}
+            Pi Harness · {activeModelLabel}
+            {runtime.ai?.thinkingLevel ? ` · ${runtime.ai.thinkingLevel} 思考` : ""}
           </span>
           <button
             type="button"
@@ -665,7 +676,7 @@ export default function ProjectPage({
           activeRun={activeRun}
           prompt={prompt}
           sessionReady={Boolean(session) && !sessionLoading}
-          model={runtime.ai?.model || "未配置"}
+          model={activeModelLabel}
           onPromptChange={setPrompt}
           onSend={() => void executePrompt(prompt)}
           onStop={stop}

@@ -21,18 +21,19 @@ app_factory/server/publication/ 持久任务、Release 构建、运行时恢复
 app_factory/contracts/          app.yaml 校验
 features/apps/                  应用中心数据、外部应用种子与本机启动器
 components/apps/                应用中心列表、接入表单与应用操作抽屉
-scripts/app.ts                  平台与发布 Worker 统一启动器
+scripts/app.mts                 平台与发布 Worker 统一启动器
 ```
 
 ## 功能与代码地图
 
 ### AppFactory 开发工作区
 
-- 页面：`app/appfactory/page.tsx`、`app/appfactory/projects/[id]/page.tsx`。
+- 页面：`app/appfactory/page.tsx`、`app/appfactory/projects/[id]/page.tsx`、`app/appfactory/settings/page.tsx`。
 - 对话与文件：`app/appfactory/_components/workspace-panels.tsx`、`app_factory/server/pi-run.ts`。
 - 预览：`app_factory/server/preview.ts` 直接以 Workspace 本地 Next CLI 启动开发服务器，并隔离平台的 Node 启动参数。
-- 数据：`app_factory/server/database.ts` 保存项目、Workspace、Pi Session、transcript 与 runs。
-- 当前状态：项目可创建、预览、以 Pi 修改 Workspace，并恢复会话历史。
+- 模型配置：`app_factory/server/model-profiles.ts` 定义 GLM-5.3-Flash 与 DeepSeek V4 Flash；`pi-agent-config.ts` 注册智谱 PaaS Provider；`settings/model` 接口保存默认模型与思考程度。
+- 数据：`app_factory/server/database.ts` 保存项目、Workspace、Pi Session、transcript、runs 和单行模型设置。
+- 当前状态：项目可创建、预览、以 Pi 修改 Workspace，并恢复会话历史。默认 GLM-5.3-Flash；默认模型只应用于新建对话，对话创建后固定模型，`low / high / max` 思考程度为全局设置并在下一次执行生效。
 
 ### 一键发布与任务中心
 
@@ -56,3 +57,4 @@ scripts/app.ts                  平台与发布 Worker 统一启动器
 - `app.yaml` 的 `healthPath` 必须是站内路径，并与 capability bindings 一同参与发布校验。
 - Workspace 文件访问限制在项目根目录；transcript 只从 `storage/appfactory/transcripts` 读取。
 - 发布取消会终止构建进程组；Release 切换失败时会停止新实例并恢复上一个健康 Release。
+- AppFactory 模型密钥使用 `APPFACTORY_ZHIPU_API_KEY` 和 `APPFACTORY_DEEPSEEK_API_KEY`；不得复用 Workbench 的 `DEEPSEEK_*` 或旧 `APPFACTORY_PI_*` 配置。
