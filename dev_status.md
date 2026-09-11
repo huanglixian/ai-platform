@@ -8,6 +8,7 @@ AI Platform 是单机演示系统。`/workbench` 为 AgentHub 工作台，`/appf
 
 - 技术栈：Next.js 16 App Router、TypeScript、SQLite、Pi Harness、Next.js standalone runtime。
 - 启动：`npm run dev` 同时启动平台与 AppFactory 发布 Worker；发布不使用 Docker。
+- 模块：项目以 ESM 模式运行，Node 直接加载 TypeScript 启动脚本时不会重复解析模块格式。
 - 环境：`.env.local` 必须设置 `AGENT_HUB_BASE_URL`，单机默认是 `http://localhost:19844`。
 - 数据：AppFactory 的项目、会话、任务与 Release 在 `storage/appfactory`；应用中心数据在 `storage/agenthub/agenthub.db`。
 - Pi 会话会保留模型与应用所需环境变量，但会移除平台自身的 Node 启动参数，确保 Workspace 不会错误加载平台脚本。
@@ -30,10 +31,10 @@ scripts/app.mts                 平台与发布 Worker 统一启动器
 
 - 页面：`app/appfactory/page.tsx`、`app/appfactory/projects/[id]/page.tsx`、`app/appfactory/settings/page.tsx`。
 - 对话与文件：`app/appfactory/_components/workspace-panels.tsx`、`app_factory/server/pi-run.ts`。
-- 预览：`app_factory/server/preview.ts` 直接以 Workspace 本地 Next CLI 启动开发服务器，并隔离平台的 Node 启动参数。
+- 预览：`app_factory/server/preview.ts` 直接以 Workspace 本地 Next CLI 启动开发服务器，并隔离平台的 Node 启动参数；首次启动及复用中的 Preview 都会等待完整首屏 `GET` 返回后才打开。
 - 模型配置：`app_factory/server/model-profiles.ts` 定义 GLM-5.3-Flash 与 DeepSeek V4 Flash；`pi-agent-config.ts` 注册智谱 PaaS Provider；`settings/model` 接口保存默认模型与思考程度。
 - 数据：`app_factory/server/database.ts` 保存项目、Workspace、Pi Session、transcript、runs 和单行模型设置。
-- 当前状态：项目可创建、预览、以 Pi 修改 Workspace，并恢复会话历史。默认 GLM-5.3-Flash；默认模型只应用于新建对话，对话创建后固定模型，`low / high / max` 思考程度为全局设置并在下一次执行生效。
+- 当前状态：项目可创建、预览、以 Pi 修改 Workspace，并恢复会话历史。默认 GLM-5.3-Flash；默认模型只应用于新建对话，对话创建后固定模型，`low / high / max` 思考程度为全局设置并在下一次执行生效。模型请求失败会将运行与会话标记为失败，不会误报完成。
 
 ### 一键发布与任务中心
 

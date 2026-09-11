@@ -589,6 +589,9 @@ export default function ProjectPage({
                 ＋ 新建
               </button>
             </div>
+            <p className="mt-1 truncate text-[10px] text-[#8aa0b6]">
+              {session ? `当前：${session.modelLabel}（模型固定）` : "新建对话将使用默认模型"}
+            </p>
           </div>
           <div className="max-h-48 min-h-0 overflow-auto border-b border-[#edf1f5] px-2 py-2">
             {sessions.length ? (
@@ -610,12 +613,15 @@ export default function ProjectPage({
                         <span className="block truncate text-[11px] font-medium">
                           {item.title || "新对话"}
                         </span>
-                        <span
-                          className={`mt-0.5 block text-[10px] ${item.piStatus === "missing" ? "text-[#b9382f]" : "text-[#8aa0b6]"}`}
-                        >
-                          {item.piStatus === "missing"
-                            ? getPiSessionStatusLabel(item.piStatus)
-                            : getSessionStatusLabel(item.status)}
+                        <span className="mt-0.5 flex items-center gap-1.5 text-[10px]">
+                          <span className={item.piStatus === "missing" ? "text-[#b9382f]" : "text-[#8aa0b6]"}>
+                            {item.piStatus === "missing"
+                              ? getPiSessionStatusLabel(item.piStatus)
+                              : getSessionStatusLabel(item.status)}
+                          </span>
+                          <span className={`truncate ${selected ? "text-[#0368b3]" : "text-[#6f96c4]"}`}>
+                            {item.modelLabel}
+                          </span>
                         </span>
                       </span>
                     </button>

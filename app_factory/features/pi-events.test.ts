@@ -56,6 +56,26 @@ test("文本增量保留为 Markdown 内容，思考增量不直接泄露", () =
   );
 });
 
+test("模型请求错误会传递给运行链路", () => {
+  assert.deepEqual(
+    normalizePiEvent(
+      {
+        type: "message",
+        assistantMessage: {
+          stopReason: "error",
+          errorMessage: "401: Authentication Fails",
+        },
+      },
+      timestamp,
+    ),
+    {
+      type: "error",
+      content: "401: Authentication Fails",
+      timestamp,
+    },
+  );
+});
+
 test("编辑完成事件带出文件和结果摘要", () => {
   assert.deepEqual(
     normalizePiEvent(

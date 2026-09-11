@@ -114,7 +114,7 @@ export function normalizePiEvent(
     if (updateType === "thinking_start") {
       return {
         type: "activity",
-        content: "正在整理下一步",
+        content: "正在思考并规划下一步",
         timestamp,
         activity: {
           id: `thinking-${String(update.contentIndex ?? 0)}`,
@@ -126,7 +126,7 @@ export function normalizePiEvent(
     if (updateType === "thinking_end") {
       return {
         type: "activity",
-        content: "已完成规划",
+        content: "已完成本轮规划",
         timestamp,
         activity: {
           id: `thinking-${String(update.contentIndex ?? 0)}`,
@@ -151,6 +151,17 @@ export function normalizePiEvent(
       };
     }
     return null;
+  }
+
+  if (type === "message") {
+    const assistantMessage = asRecord(event.assistantMessage);
+    if (asText(assistantMessage.stopReason) === "error") {
+      return {
+        type: "error",
+        content: asText(assistantMessage.errorMessage) || "模型请求失败",
+        timestamp,
+      };
+    }
   }
 
   if (type === "tool_execution_start") return activityEvent(event, timestamp, "started", fallbackInput);

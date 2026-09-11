@@ -46,6 +46,33 @@ test("Preview 只有在 HTTP 服务真正就绪后才返回", async () => {
   }
 });
 
+test("Preview 首屏探测会等待 GET 正文完整返回", async () => {
+  let method = "";
+  let bodyFinished = false;
+  const server = http.createServer((request, response) => {
+    method = request.method ?? "";
+    response.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+    response.write("<main>");
+    setTimeout(() => {
+      bodyFinished = true;
+      response.end("已就绪</main>");
+    }, 30);
+  });
+  const port = await listen(server);
+
+  try {
+    await waitForHttpReady(`http://127.0.0.1:${port}`, {
+      timeoutMs: 1_000,
+      intervalMs: 10,
+      requestMethod: "GET",
+    });
+    assert.equal(method, "GET");
+    assert.equal(bodyFinished, true);
+  } finally {
+    await close(server);
+  }
+});
+
 test("Preview 端口被占用时选择下一个可用端口", async () => {
   const server = http.createServer((_, response) => response.end());
   const occupiedPort = await listen(server, "::");

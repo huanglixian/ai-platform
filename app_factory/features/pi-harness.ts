@@ -65,6 +65,7 @@ export class PiHarnessRuntime implements HarnessRuntime {
     try {
       const queue: HarnessEvent[] = [];
       let done = false;
+      let hasFailure = false;
       let wake: (() => void) | undefined;
       const push = (event: HarnessEvent) => { queue.push(event); wake?.(); wake = undefined; };
       const toolInputs = new Map<string, Record<string, unknown>>();
@@ -81,7 +82,10 @@ export class PiHarnessRuntime implements HarnessRuntime {
           const rawToolCallId = typeof raw.toolCallId === "string" ? raw.toolCallId : "";
           const fallbackInput = rawToolCallId ? toolInputs.get(rawToolCallId) : undefined;
           const event = normalizePiEvent(raw, new Date().toISOString(), fallbackInput);
-          if (event) push(event);
+          if (event) {
+            if (event.type === "error") hasFailure = true;
+            push(event);
+          }
           if (rawType === "tool_execution_end" && rawToolCallId) toolInputs.delete(rawToolCallId);
         } catch {
           diagnostics.push(line.slice(0, 280));
@@ -112,8 +116,9 @@ export class PiHarnessRuntime implements HarnessRuntime {
       });
       while (!done || queue.length) { if (!queue.length) await new Promise<void>((resolve) => { wake = resolve; }); while (queue.length) yield queue.shift()!; }
       const code = await completion;
-      if (code === 0) yield { type: "completed", content: "任务已完成", timestamp: new Date().toISOString() };
-      else {
+      if (code === 0) {
+        if (!hasFailure) yield { type: "completed", content: "任务已完成", timestamp: new Date().toISOString() };
+      } else {
         const detail = diagnostics.at(-1);
         yield { type: "error", content: detail || `Pi 进程退出（code=${code ?? "unknown"}）`, timestamp: new Date().toISOString() };
       }

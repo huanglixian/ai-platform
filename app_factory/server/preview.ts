@@ -124,6 +124,7 @@ async function restoreNextPreview(cwd: string) {
     await waitForHttpReady(`http://127.0.0.1:${lock.port}`, {
       timeoutMs: 1_500,
       intervalMs: 100,
+      requestMethod: "GET",
     });
     return { pid: lock.pid, port: lock.port };
   } catch {
@@ -136,7 +137,14 @@ export async function startPreview(projectId: string, cwd: string) {
   const existing = processes.get(projectId);
   if (existing && ["starting", "running"].includes(existing.status)) {
     try {
-      await existing.ready;
+      if (existing.status === "starting") {
+        await existing.ready;
+      } else {
+        await waitForHttpReady(`http://127.0.0.1:${existing.port}`, {
+          signal: existing.readinessController.signal,
+          requestMethod: "GET",
+        });
+      }
       return presentPreview(projectId, existing);
     } catch (error) {
       const message = error instanceof Error ? error.message : "未知错误";
@@ -181,6 +189,7 @@ export async function startPreview(projectId: string, cwd: string) {
     readinessController,
     ready: waitForHttpReady(`http://127.0.0.1:${port}`, {
       signal: readinessController.signal,
+      requestMethod: "GET",
     }),
   };
 

@@ -340,7 +340,7 @@ export function ChatPanel({
                     </span>
                     <p className="min-w-0 flex-1 text-xs font-semibold text-[#1a4d87]">
                       {activeRun.status === "running"
-                        ? "Pi 正在处理你的需求"
+                        ? "Pi 正在思考、规划并执行"
                         : activeRun.status === "failed"
                           ? "Pi 执行失败"
                           : "任务已停止"}
@@ -397,7 +397,7 @@ export function ChatPanel({
                 onSend();
               }
             }}
-            placeholder={busy ? "Pi 正在处理，可点击停止任务…" : "告诉我你想创建、修改或优化什么…"}
+            placeholder={busy ? "Pi 正在思考并执行，可点击停止任务…" : "告诉我你想创建、修改或优化什么…"}
             className="min-h-11 min-w-0 flex-1 resize-none border-0 px-2 py-2 text-sm text-[#262626] outline-none placeholder:text-[#98a2b3]"
             disabled={!sessionReady || busy}
           />

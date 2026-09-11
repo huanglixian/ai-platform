@@ -4,6 +4,7 @@ type ReadinessOptions = {
   timeoutMs?: number;
   intervalMs?: number;
   signal?: AbortSignal;
+  requestMethod?: "HEAD" | "GET";
 };
 
 function delay(ms: number, signal?: AbortSignal) {
@@ -27,6 +28,7 @@ export async function waitForHttpReady(
     timeoutMs = 20_000,
     intervalMs = 100,
     signal,
+    requestMethod = "HEAD",
   }: ReadinessOptions = {},
 ) {
   const deadline = Date.now() + timeoutMs;
@@ -42,10 +44,13 @@ export async function waitForHttpReady(
     try {
       const response = await fetch(url, {
         cache: "no-store",
-        method: "HEAD",
+        method: requestMethod,
         signal: requestSignal,
       });
-      if (response.ok) return;
+      if (response.ok) {
+        if (requestMethod === "GET") await response.text();
+        return;
+      }
       lastStatus = `HTTP ${response.status}`;
     } catch (error) {
       if (signal?.aborted) throw signal.reason;
