@@ -127,6 +127,12 @@ export function listPublicationJobs(projectId?: string): PublicationJob[] {
   return (rows as PublicationJobLease[]).map(jobDto);
 }
 
+export function hasActivePublicationForProject(projectId: string) {
+  return Boolean(getAppFactoryDatabase().prepare(
+    "SELECT 1 FROM publication_jobs WHERE project_id=? AND status IN ('queued','running') LIMIT 1",
+  ).get(projectId));
+}
+
 export function appendPublicationEvent(
   jobId: string,
   stage: PublicationStage,

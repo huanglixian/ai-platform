@@ -1,4 +1,5 @@
 import { piHarnessRuntime } from "@/app_factory/features/pi-harness";
+import { hasActivePublicationForProject } from "@/app_factory/server/publication/repository";
 import {
   createRun,
   failActiveRun,
@@ -22,6 +23,9 @@ export async function POST(
 
   const { prompt } = (await request.json()) as { prompt?: string };
   if (!prompt?.trim()) return apiError("请输入需求", 422);
+  if (hasActivePublicationForProject(session.project_id)) {
+    return apiError("项目正在发布，发布完成后再继续修改", 409);
+  }
 
   let run: { id: string };
   try {

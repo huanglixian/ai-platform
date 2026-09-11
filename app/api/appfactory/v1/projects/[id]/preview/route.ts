@@ -1,4 +1,4 @@
-import { getProject } from "@/app_factory/server/database";
+import { getProject, hasActiveRunForProject } from "@/app_factory/server/database";
 import {
   getPreview,
   PreviewStartError,
@@ -24,6 +24,7 @@ export async function POST(
   const { id } = await context.params;
   const project = getProject(id);
   if (!project) return apiError("项目不存在", 404);
+  if (hasActiveRunForProject(id)) return apiError("Pi 正在修改项目，完成后再预览", 409);
   try {
     return apiOk(await startPreview(id, project.workspacePath));
   } catch (error) {
@@ -39,7 +40,7 @@ export async function DELETE(
   context: { params: Promise<{ id: string }> },
 ) {
   const { id } = await context.params;
-  return stopPreview(id)
+  return await stopPreview(id)
     ? apiOk({ status: "stopped" })
     : apiError("Preview 未运行", 404);
 }

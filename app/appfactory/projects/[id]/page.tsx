@@ -298,14 +298,14 @@ export default function ProjectPage({
   }, [params]);
   const openPreview = async () => {
     setError("");
-    const previewWindow = window.open("about:blank", "appfactory-preview");
-    if (previewWindow) {
-      previewWindow.document.title = "正在启动预览";
-      previewWindow.document.body.style.cssText =
-        "margin:0;display:grid;min-height:100vh;place-items:center;background:#f6f8fb;color:#667085;font:14px system-ui,sans-serif";
-      previewWindow.document.body.textContent = "正在启动应用预览…";
-    }
+    const previewWindow = window.open("", "_blank");
     try {
+      if (previewWindow) {
+        previewWindow.document.title = "正在启动预览";
+        previewWindow.document.body.style.cssText =
+          "margin:0;display:grid;min-height:100vh;place-items:center;background:#f6f8fb;color:#667085;font:14px system-ui,sans-serif";
+        previewWindow.document.body.textContent = "正在启动应用预览…";
+      }
       const response = await fetch(
         `/api/appfactory/v1/projects/${id}/preview`,
         { method: "POST" },
@@ -541,14 +541,15 @@ export default function ProjectPage({
           <button
             type="button"
             onClick={() => void openPreview()}
-            className="h-8 rounded-lg border border-[#bfd7f2] px-3 text-xs font-medium text-[#0368b3] hover:bg-[#eef5fd]"
+            disabled={busy}
+            className="h-8 rounded-lg border border-[#bfd7f2] px-3 text-xs font-medium text-[#0368b3] hover:bg-[#eef5fd] disabled:opacity-40"
           >
             预览 ↗
           </button>
           <button
             type="button"
             onClick={() => void publish(id).catch((reason: unknown) => setError(reason instanceof Error ? reason.message : "创建发布任务失败"))}
-            disabled={publication?.status === "queued" || publication?.status === "running"}
+            disabled={busy || publication?.status === "queued" || publication?.status === "running"}
             className="h-8 rounded-lg bg-[#0368b3] px-3 text-xs font-medium text-white hover:bg-[#1a4d87] disabled:opacity-40"
           >
             {publication?.status === "queued" || publication?.status === "running" ? "发布中…" : "发布"}

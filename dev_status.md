@@ -31,7 +31,7 @@ scripts/app.mts                 平台与发布 Worker 统一启动器
 
 - 页面：`app/appfactory/page.tsx`、`app/appfactory/projects/[id]/page.tsx`、`app/appfactory/settings/page.tsx`。
 - 对话与文件：`app/appfactory/_components/workspace-panels.tsx`、`app_factory/server/pi-run.ts`。
-- 预览：`app_factory/server/preview.ts` 直接以 Workspace 本地 Next CLI 启动开发服务器，并隔离平台的 Node 启动参数；首次启动及复用中的 Preview 都会等待完整首屏 `GET` 返回后才打开。
+- 预览与发布：`app_factory/server/runtime-workspace.ts` 为 Preview 和 Release 构建准备隔离运行副本；`preview.ts` 只在 Preview 副本中启动 Next，`release-builder.ts` 只在临时构建副本中执行 lint、typecheck 和 build。Pi 可以继续在真实 Workspace 使用 Bash；Pi 运行期间不能 Preview/发布，发布排队或运行期间不能开始 Pi，避免读写同一份源码。
 - 模型配置：`app_factory/server/model-profiles.ts` 定义 GLM-5.3-Flash 与 DeepSeek V4 Flash；`pi-agent-config.ts` 注册智谱 PaaS Provider；`settings/model` 接口保存默认模型与思考程度。
 - 数据：`app_factory/server/database.ts` 保存项目、Workspace、Pi Session、transcript、runs 和单行模型设置。
 - 当前状态：项目可创建、预览、以 Pi 修改 Workspace，并恢复会话历史。默认 GLM-5.3-Flash；默认模型只应用于新建对话，对话创建后固定模型，`low / high / max` 思考程度为全局设置并在下一次执行生效。模型请求失败会将运行与会话标记为失败，不会误报完成。

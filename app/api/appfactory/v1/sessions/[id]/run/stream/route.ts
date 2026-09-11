@@ -1,5 +1,6 @@
 import { executePiRun } from "@/app_factory/server/pi-run";
 import { createRun, getSession, setSessionStatus } from "@/app_factory/server/database";
+import { hasActivePublicationForProject } from "@/app_factory/server/publication/repository";
 import { formatSseEvent } from "@/app_factory/server/sse";
 import { apiError } from "@/lib/server/api-response";
 import { SessionBusyError } from "@/app_factory/server/errors";
@@ -18,6 +19,9 @@ export async function POST(
 
   const { prompt } = (await request.json()) as { prompt?: string };
   if (!prompt?.trim()) return apiError("请输入需求", 422);
+  if (hasActivePublicationForProject(session.project_id)) {
+    return apiError("项目正在发布，发布完成后再继续修改", 409);
+  }
 
   let run: { id: string };
   try {

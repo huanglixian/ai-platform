@@ -6,10 +6,15 @@ import {
   findAvailablePort,
   waitForHttpReady,
 } from "./preview-readiness";
+import {
+  getPreviewWorkspacePath,
+  materializeRuntimeWorkspace,
+} from "./runtime-workspace";
 
 type PreviewStatus = "starting" | "running" | "stale" | "stopped" | "error";
 
 type ManagedPreview = {
+  workspacePath: string;
   port: number;
   pid?: number;
   process?: ChildProcess;
@@ -54,12 +59,10 @@ function previewUrl(port: number) {
 }
 
 function previewEnvironment(): NodeJS.ProcessEnv {
-  const {
-    NODE_OPTIONS: _nodeOptions,
-    npm_config_node_options: _npmNodeOptions,
-    NPM_CONFIG_NODE_OPTIONS: _npmNodeOptionsUpper,
-    ...environment
-  } = process.env;
+  const environment = { ...process.env };
+  delete environment.NODE_OPTIONS;
+  delete environment.npm_config_node_options;
+  delete environment.NPM_CONFIG_NODE_OPTIONS;
   return { ...environment, NODE_ENV: "development" };
 }
 
@@ -106,9 +109,9 @@ function processIsRunning(pid: number) {
   }
 }
 
-async function restoreNextPreview(cwd: string) {
+async function readPreviewLock(workspacePath: string) {
   try {
-    const content = await fs.readFile(path.join(cwd, ".next", "dev", "lock"), "utf8");
+    const content = await fs.readFile(path.join(workspacePath, ".next", "dev", "lock"), "utf8");
     const lock = JSON.parse(content) as { pid?: unknown; port?: unknown };
     if (
       typeof lock.pid !== "number" ||
@@ -121,21 +124,32 @@ async function restoreNextPreview(cwd: string) {
     ) {
       return null;
     }
-    await waitForHttpReady(`http://127.0.0.1:${lock.port}`, {
-      timeoutMs: 1_500,
-      intervalMs: 100,
-      requestMethod: "GET",
-    });
     return { pid: lock.pid, port: lock.port };
   } catch {
     return null;
   }
 }
 
-export async function startPreview(projectId: string, cwd: string) {
+async function restorePreview(workspacePath: string) {
+  const lock = await readPreviewLock(workspacePath);
+  if (!lock) return null;
+  try {
+    await waitForHttpReady(`http://127.0.0.1:${lock.port}`, {
+      timeoutMs: 1_500,
+      intervalMs: 100,
+      requestMethod: "GET",
+    });
+    return lock;
+  } catch {
+    return null;
+  }
+}
+
+export async function startPreview(projectId: string, sourceWorkspacePath: string) {
   ensurePreviewTable();
+  const workspacePath = getPreviewWorkspacePath(projectId);
   const existing = processes.get(projectId);
-  if (existing && ["starting", "running"].includes(existing.status)) {
+  if (existing?.workspacePath === workspacePath && ["starting", "running"].includes(existing.status)) {
     try {
       if (existing.status === "starting") {
         await existing.ready;
@@ -153,13 +167,16 @@ export async function startPreview(projectId: string, cwd: string) {
       ]);
     }
   }
-  if (existing) processes.delete(projectId);
+  if (existing && !await stopPreview(projectId)) {
+    throw new PreviewStartError("现有 Preview 未能停止，请稍后重试", [...existing.logs]);
+  }
 
-  const restored = await restoreNextPreview(cwd);
+  const restored = await restorePreview(workspacePath);
   if (restored) {
     const readinessController = new AbortController();
     const item: ManagedPreview = {
       ...restored,
+      workspacePath,
       logs: [`已恢复现有 Preview 进程（PID ${restored.pid}）`],
       status: "running",
       readinessController,
@@ -170,17 +187,40 @@ export async function startPreview(projectId: string, cwd: string) {
     return presentPreview(projectId, item);
   }
 
+  const staleLock = await readPreviewLock(workspacePath);
+  if (staleLock) {
+    processes.set(projectId, {
+      ...staleLock,
+      workspacePath,
+      logs: [`正在停止未就绪的遗留 Preview 进程（PID ${staleLock.pid}）`],
+      status: "stale",
+      readinessController: new AbortController(),
+      ready: Promise.resolve(),
+    });
+    if (!await stopPreview(projectId)) {
+      throw new PreviewStartError("遗留 Preview 未能停止，请稍后重试", []);
+    }
+  }
+
+  try {
+    await materializeRuntimeWorkspace(sourceWorkspacePath, workspacePath);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "未知错误";
+    throw new PreviewStartError(`Preview 工作区准备失败：${message}`, []);
+  }
+
   const port = await findAvailablePort(registry.nextPort);
   registry.nextPort = port + 1;
   const logs: string[] = [];
   const readinessController = new AbortController();
-  const nextCli = path.join(cwd, "node_modules", "next", "dist", "bin", "next");
+  const nextCli = path.join(process.cwd(), "node_modules", "next", "dist", "bin", "next");
   const child = spawn(process.execPath, [nextCli, "dev", "--port", String(port)], {
-    cwd,
+    cwd: workspacePath,
     env: previewEnvironment(),
     stdio: ["ignore", "pipe", "pipe"],
   });
   const item: ManagedPreview = {
+    workspacePath,
     port,
     pid: child.pid,
     process: child,
@@ -224,17 +264,65 @@ export async function startPreview(projectId: string, cwd: string) {
   }
 }
 
-export function stopPreview(projectId: string) {
+async function waitForProcessExit(pid: number, timeoutMs = 3_000) {
+  const deadline = Date.now() + timeoutMs;
+  while (processIsRunning(pid) && Date.now() < deadline) {
+    await new Promise<void>((resolve) => setTimeout(resolve, 50));
+  }
+  return !processIsRunning(pid);
+}
+
+export async function stopPreview(projectId: string) {
   ensurePreviewTable();
-  const item = processes.get(projectId);
-  if (!item) return false;
+  let item = processes.get(projectId);
+  if (!item) {
+    const workspacePath = getPreviewWorkspacePath(projectId);
+    const lock = await readPreviewLock(workspacePath);
+    if (!lock) return false;
+    item = {
+      ...lock,
+      workspacePath,
+      logs: [`已接管遗留 Preview 进程（PID ${lock.pid}）`],
+      status: "running",
+      readinessController: new AbortController(),
+      ready: Promise.resolve(),
+    };
+    processes.set(projectId, item);
+  }
   item.status = "stopped";
   item.readinessController.abort(new Error("Preview 已停止"));
-  if (item.process) item.process.kill("SIGTERM");
-  else if (item.pid && processIsRunning(item.pid)) process.kill(item.pid, "SIGTERM");
+  const pid = item.process?.pid ?? item.pid;
+  if (pid && processIsRunning(pid)) {
+    try {
+      process.kill(pid, "SIGTERM");
+    } catch {
+      item.status = "error";
+      persistPreview(projectId, item.port, "error");
+      return false;
+    }
+    if (!await waitForProcessExit(pid)) {
+      appendLog(item.logs, `Preview 进程未响应 SIGTERM，正在强制停止（PID ${pid}）`);
+      try {
+        process.kill(pid, "SIGKILL");
+      } catch {
+        item.status = "error";
+        persistPreview(projectId, item.port, "error");
+        return false;
+      }
+      if (!await waitForProcessExit(pid)) {
+        item.status = "error";
+        persistPreview(projectId, item.port, "error");
+        return false;
+      }
+    }
+  }
   processes.delete(projectId);
   persistPreview(projectId, item.port, "stopped");
   return true;
+}
+
+export async function invalidatePreview(projectId: string) {
+  await stopPreview(projectId);
 }
 
 export function getPreview(projectId: string) {

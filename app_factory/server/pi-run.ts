@@ -11,6 +11,7 @@ import {
   appendTranscript,
   type TranscriptEvent,
 } from "@/app_factory/server/transcript";
+import { invalidatePreview } from "@/app_factory/server/preview";
 
 export type PiRunEvent = TranscriptEvent & {
   runId: string;
@@ -91,5 +92,7 @@ export async function* executePiRun({
     yield failedEvent;
     finishRun(runId, "failed", message);
     setSessionStatus(session.id, "error");
+  } finally {
+    await invalidatePreview(session.project_id);
   }
 }
