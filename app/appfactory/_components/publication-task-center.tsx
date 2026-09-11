@@ -273,14 +273,14 @@ export function PublicationTaskCenterProvider({ children }: { children: ReactNod
   const launchJob = jobs.find((job) => job.id === launchJobId);
   return <PublicationContext.Provider value={value}>
     {children}
-    <Dialog.Root open={Boolean(launchJob)} onOpenChange={(open) => { if (!open && !flying) setLaunchJobId(null); }}>
+    {launchJob && <Dialog.Root open onOpenChange={(open) => { if (!open && !flying) setLaunchJobId(null); }}>
       <Dialog.Portal>
         <Dialog.Backdrop className="publication-launch-backdrop" />
-        {launchJob && <Dialog.Popup ref={launchRef} className={`publication-launch-panel ${flying ? "publication-launch-flying" : ""}`}>
+        <Dialog.Popup ref={launchRef} className={`publication-launch-panel ${flying ? "publication-launch-flying" : ""}`}>
           <JobDetails job={launchJob} events={events[launchJob.id] || []} onCancel={() => void act(launchJob.id, "cancel")} onRetry={() => void act(launchJob.id, "retry")} />
-        </Dialog.Popup>}
+        </Dialog.Popup>
       </Dialog.Portal>
-    </Dialog.Root>
+    </Dialog.Root>}
     <Dialog.Root open={centerOpen} onOpenChange={setCenterOpen} modal={false}>
       <Dialog.Portal>
         <Dialog.Popup className="publication-task-center" initialFocus={false}>
