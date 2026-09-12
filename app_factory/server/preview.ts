@@ -13,6 +13,14 @@ import {
 
 type PreviewStatus = "starting" | "running" | "stale" | "stopped" | "error";
 
+type PersistedPreview = {
+  projectId: string;
+  port: number;
+  url: string;
+  status: PreviewStatus;
+  updatedAt: string;
+};
+
 type ManagedPreview = {
   workspacePath: string;
   port: number;
@@ -27,13 +35,17 @@ type ManagedPreview = {
 type PreviewRegistry = {
   processes: Map<string, ManagedPreview>;
   nextPort: number;
+  reclaimer?: NodeJS.Timeout;
 };
+
+const PREVIEW_IDLE_TIMEOUT_MS = 30 * 60 * 1_000;
+const PREVIEW_RECLAIM_INTERVAL_MS = 60 * 1_000;
 
 const globalForPreview = globalThis as typeof globalThis & {
   appFactoryPreviewRegistry?: PreviewRegistry;
 };
-const registry = (globalForPreview.appFactoryPreviewRegistry ??= {
-  processes: new Map(),
+const registry: PreviewRegistry = (globalForPreview.appFactoryPreviewRegistry ??= {
+  processes: new Map<string, ManagedPreview>(),
   nextPort: 3100,
 });
 const processes = registry.processes;
@@ -84,6 +96,35 @@ function persistPreview(
       status,
       new Date().toISOString(),
     );
+}
+
+function getPersistedPreview(projectId: string) {
+  ensurePreviewTable();
+  return getAppFactoryDatabase()
+    .prepare(
+      "SELECT project_id as projectId,port,url,status,updated_at as updatedAt FROM preview_runs WHERE project_id=?",
+    )
+    .get(projectId) as PersistedPreview | undefined;
+}
+
+function listActivePreviewProjectIds(excludedProjectId?: string) {
+  ensurePreviewTable();
+  const query = excludedProjectId
+    ? "SELECT project_id as projectId FROM preview_runs WHERE project_id<>? AND status IN ('starting','running')"
+    : "SELECT project_id as projectId FROM preview_runs WHERE status IN ('starting','running')";
+  return (excludedProjectId
+    ? getAppFactoryDatabase().prepare(query).all(excludedProjectId)
+    : getAppFactoryDatabase().prepare(query).all()) as { projectId: string }[];
+}
+
+function listExpiredPreviewProjectIds() {
+  ensurePreviewTable();
+  const expiresAt = new Date(Date.now() - PREVIEW_IDLE_TIMEOUT_MS).toISOString();
+  return getAppFactoryDatabase()
+    .prepare(
+      "SELECT project_id as projectId FROM preview_runs WHERE status IN ('starting','running') AND updated_at<=?",
+    )
+    .all(expiresAt) as { projectId: string }[];
 }
 
 function presentPreview(projectId: string, item: ManagedPreview) {
@@ -146,8 +187,17 @@ async function restorePreview(workspacePath: string) {
   }
 }
 
+async function stopOtherPreviews(projectId: string) {
+  for (const preview of listActivePreviewProjectIds(projectId)) {
+    if (!await stopPreview(preview.projectId)) {
+      throw new PreviewStartError("现有 Preview 未能停止，请稍后重试", []);
+    }
+  }
+}
+
 export async function startPreview(projectId: string, sourceWorkspacePath: string) {
   ensurePreviewTable();
+  await stopOtherPreviews(projectId);
   const workspacePath = getPreviewWorkspacePath(projectId);
   const existing = processes.get(projectId);
   if (existing?.workspacePath === workspacePath && ["starting", "running"].includes(existing.status)) {
@@ -160,6 +210,7 @@ export async function startPreview(projectId: string, sourceWorkspacePath: strin
           requestMethod: "GET",
         });
       }
+      persistPreview(projectId, existing.port, "running");
       return presentPreview(projectId, existing);
     } catch (error) {
       const message = error instanceof Error ? error.message : "未知错误";
@@ -277,9 +328,14 @@ export async function stopPreview(projectId: string) {
   ensurePreviewTable();
   let item = processes.get(projectId);
   if (!item) {
+    const persisted = getPersistedPreview(projectId);
     const workspacePath = getPreviewWorkspacePath(projectId);
     const lock = await readPreviewLock(workspacePath);
-    if (!lock) return false;
+    if (!lock) {
+      if (!persisted || ["stopped", "error"].includes(persisted.status)) return false;
+      persistPreview(projectId, persisted.port, "stopped");
+      return true;
+    }
     item = {
       ...lock,
       workspacePath,
@@ -330,19 +386,35 @@ export function getPreview(projectId: string) {
   ensurePreviewTable();
   const item = processes.get(projectId);
   if (item) return presentPreview(projectId, item);
-  const persisted = getAppFactoryDatabase()
-    .prepare(
-      "SELECT project_id as projectId,port,url,status FROM preview_runs WHERE project_id=?",
-    )
-    .get(projectId) as
-    | { projectId: string; port: number; url: string; status: PreviewStatus }
-    | undefined;
+  const persisted = getPersistedPreview(projectId);
   if (!persisted) return null;
   return {
-    ...persisted,
+    projectId: persisted.projectId,
+    port: persisted.port,
+    url: persisted.url,
     status: ["starting", "running"].includes(persisted.status)
       ? "stale"
       : persisted.status,
     logs: [],
   };
 }
+
+async function reclaimExpiredPreviews() {
+  for (const preview of listExpiredPreviewProjectIds()) {
+    await stopPreview(preview.projectId);
+  }
+}
+
+function ensurePreviewReclaimer() {
+  if (registry.reclaimer) return;
+  const reclaim = () => {
+    void reclaimExpiredPreviews().catch((error: unknown) => {
+      console.error("AppFactory Preview 自动回收失败", error);
+    });
+  };
+  registry.reclaimer = setInterval(reclaim, PREVIEW_RECLAIM_INTERVAL_MS);
+  registry.reclaimer.unref();
+  reclaim();
+}
+
+ensurePreviewReclaimer();
