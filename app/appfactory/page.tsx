@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { Plus, Search } from "lucide-react";
 import { usePublicationTaskCenter } from "@/app/appfactory/_components/publication-task-center";
 
 type Project = {
@@ -84,54 +85,52 @@ export default function AppFactoryPage() {
     }
   };
   return (
-    <main className="mx-auto max-w-[1360px] px-4 py-7 sm:px-7 sm:py-9">
-      <div className="mb-7 flex flex-wrap items-end justify-between gap-5">
-        <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#0368b3]">
-            AI 应用开发平台
-          </p>
-          <h1 className="mt-2 text-[26px] font-semibold tracking-[-0.03em] text-[#0d0d0d]">
-            我的应用{" "}
-            <span className="ml-2 text-[13px] font-medium tracking-normal text-[#98a2b3]">
-              · {projects.length} 个项目
-            </span>
+    <main className="mx-auto max-w-[1360px] px-4 py-5 sm:px-7 sm:py-6">
+      <header className="mb-3 flex h-10 items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <h1 className="truncate text-[18px] font-semibold tracking-[-0.025em] text-[#0d0d0d] sm:text-[20px]">
+            应用列表
           </h1>
-          <p className="mt-2 text-sm text-[#667085]">
-            从自然语言需求开始，和 AI 一起完成设计、开发与发布。
-          </p>
+          <span className="hidden shrink-0 text-[12px] text-[#98a2b3] sm:inline">
+            共 {projects.length} 个应用
+          </span>
         </div>
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="h-10 rounded-lg bg-[#0368b3] px-5 text-sm font-medium text-white shadow-[0_5px_12px_rgba(3,104,179,.18)] transition hover:bg-[#1a4d87]"
+          className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg bg-[#0368b3] px-3.5 text-sm font-medium text-white shadow-[0_5px_12px_rgba(3,104,179,.18)] transition hover:bg-[#1a4d87]"
         >
-          + 新建项目
+          <Plus size={15} strokeWidth={2.4} aria-hidden="true" />
+          新建项目
         </button>
-      </div>
+      </header>
       {error && (
         <div className="mb-5 rounded-lg border border-[#f3c6c2] bg-[#fff5f4] px-4 py-3 text-sm text-[#b9382f]">
           {error}
         </div>
       )}
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-4 border-b border-[#d4dde8] pb-3">
+      <div className="mb-5 flex flex-col gap-2 rounded-xl border border-[#dbe5f0] bg-[#fbfdff] p-1.5 sm:flex-row sm:items-center">
         <div className="flex flex-wrap gap-2">
           {filters.map((item) => (
             <button
               key={item}
               type="button"
               onClick={() => setFilter(item)}
-              className={`h-8 rounded-full border px-3 text-xs transition ${filter === item ? "border-[#bfd7f2] bg-[#eef5fd] font-medium text-[#1a4d87]" : "border-[#e5ebf2] bg-white text-[#667085] hover:border-[#bfd7f2]"}`}
+              className={`h-7 rounded-md px-2.5 text-xs transition ${filter === item ? "bg-[#e8f3ff] font-medium text-[#1a4d87]" : "text-[#667085] hover:bg-white hover:text-[#1a4d87]"}`}
             >
               {item}
             </button>
           ))}
         </div>
-        <input
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="搜索项目"
-          className="h-9 w-full rounded-lg border border-[#dbe5f0] bg-white px-3 text-sm outline-none transition focus:border-[#6f96c4] sm:w-64"
-        />
+        <label className="flex h-8 w-full items-center gap-2 rounded-lg border border-[#dbe5f0] bg-white px-2.5 text-[#98a2b3] transition focus-within:border-[#6f96c4] focus-within:ring-2 focus-within:ring-[#e8f3ff] sm:ml-auto sm:w-72">
+          <Search size={14} strokeWidth={2} aria-hidden="true" />
+          <input
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="搜索项目"
+            className="min-w-0 flex-1 bg-transparent text-sm text-[#1f2937] outline-none placeholder:text-[#98a2b3]"
+          />
+        </label>
       </div>
       {loading ? (
         <div className="rounded-xl border border-dashed border-[#cfd8e3] bg-white p-16 text-center text-sm text-[#98a2b3]">
@@ -229,15 +228,6 @@ export default function AppFactoryPage() {
                 className="mt-2 h-10 w-full rounded-lg border border-[#dbe5f0] px-3 text-sm outline-none focus:border-[#2e7dd2]"
               />
             </label>
-            <label className="mt-4 block text-xs font-medium text-[#4d4d4d]">
-              项目描述
-              <textarea
-                value={description}
-                onChange={(event) => setDescription(event.target.value)}
-                placeholder="告诉 AI 这个应用要解决什么问题"
-                className="mt-2 min-h-24 w-full resize-none rounded-lg border border-[#dbe5f0] px-3 py-2 text-sm outline-none focus:border-[#2e7dd2]"
-              />
-            </label>
             <div className="mt-4">
               <label className="text-xs font-medium text-[#4d4d4d]">
                 模板 / Skill
@@ -250,6 +240,15 @@ export default function AppFactoryPage() {
                 </select>
               </label>
             </div>
+            <label className="mt-4 block text-xs font-medium text-[#4d4d4d]">
+              项目描述
+              <textarea
+                value={description}
+                onChange={(event) => setDescription(event.target.value)}
+                placeholder="告诉 AI 这个应用要解决什么问题"
+                className="mt-2 min-h-24 w-full resize-none rounded-lg border border-[#dbe5f0] px-3 py-2 text-sm outline-none focus:border-[#2e7dd2]"
+              />
+            </label>
             <p className="mt-4 rounded-lg bg-[#f6f8fb] px-3 py-2 text-xs leading-5 text-[#667085]">
               默认会创建独立 Workspace。完成开发后点击“发布”，应用将自动加入应用中心。
             </p>
