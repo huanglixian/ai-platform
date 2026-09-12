@@ -4,6 +4,7 @@ import path from "node:path";
 import { getAppFactoryDatabase } from "./database";
 import {
   findAvailablePort,
+  isPortAvailable,
   waitForHttpReady,
 } from "./preview-readiness";
 import {
@@ -195,7 +196,18 @@ async function stopOtherPreviews(projectId: string) {
   }
 }
 
-export async function startPreview(projectId: string, sourceWorkspacePath: string) {
+async function selectPreviewPort(preferredPort?: number) {
+  if (preferredPort && await isPortAvailable(preferredPort)) return preferredPort;
+  const port = await findAvailablePort(registry.nextPort);
+  registry.nextPort = port + 1;
+  return port;
+}
+
+export async function startPreview(
+  projectId: string,
+  sourceWorkspacePath: string,
+  preferredPort?: number,
+) {
   ensurePreviewTable();
   await stopOtherPreviews(projectId);
   const workspacePath = getPreviewWorkspacePath(projectId);
@@ -261,8 +273,9 @@ export async function startPreview(projectId: string, sourceWorkspacePath: strin
     throw new PreviewStartError(`Preview 工作区准备失败：${message}`, []);
   }
 
-  const port = await findAvailablePort(registry.nextPort);
-  registry.nextPort = port + 1;
+  const port = await selectPreviewPort(
+    preferredPort ?? getPersistedPreview(projectId)?.port,
+  );
   const logs: string[] = [];
   const readinessController = new AbortController();
   const nextCli = path.join(process.cwd(), "node_modules", "next", "dist", "bin", "next");
@@ -378,8 +391,22 @@ export async function stopPreview(projectId: string) {
   return true;
 }
 
-export async function invalidatePreview(projectId: string) {
-  await stopPreview(projectId);
+export async function restartActivePreview(
+  projectId: string,
+  sourceWorkspacePath: string,
+) {
+  const preview = getPreview(projectId);
+  if (!preview || ["stopped", "error"].includes(preview.status)) return null;
+  if (!await stopPreview(projectId)) {
+    console.error(`AppFactory Preview 重建失败：无法停止 ${projectId}`);
+    return null;
+  }
+  try {
+    return await startPreview(projectId, sourceWorkspacePath, preview.port);
+  } catch (error) {
+    console.error(`AppFactory Preview 重建失败：${projectId}`, error);
+    return null;
+  }
 }
 
 export function getPreview(projectId: string) {

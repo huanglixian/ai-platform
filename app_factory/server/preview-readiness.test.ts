@@ -4,7 +4,7 @@ import test from "node:test";
 
 // Node 的原生 TypeScript runner 需要显式扩展名，生产编译不参与该导入。
 // @ts-expect-error TS 配置保持 Next.js 默认，不开启 TS 扩展名导入。
-import { findAvailablePort, waitForHttpReady } from "./preview-readiness.ts";
+import { findAvailablePort, isPortAvailable, waitForHttpReady } from "./preview-readiness.ts";
 
 function listen(server: http.Server, host = "127.0.0.1") {
   return new Promise<number>((resolve, reject) => {
@@ -78,6 +78,7 @@ test("Preview 端口被占用时选择下一个可用端口", async () => {
   const occupiedPort = await listen(server, "::");
 
   try {
+    assert.equal(await isPortAvailable(occupiedPort), false);
     assert.equal(await findAvailablePort(occupiedPort), occupiedPort + 1);
   } finally {
     await close(server);

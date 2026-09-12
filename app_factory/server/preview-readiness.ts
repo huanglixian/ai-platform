@@ -63,7 +63,7 @@ export async function waitForHttpReady(
   throw new Error(`Preview 启动超时：${lastStatus}`);
 }
 
-function portIsAvailable(port: number) {
+export function isPortAvailable(port: number) {
   return new Promise<boolean>((resolve, reject) => {
     const server = net.createServer();
     server.unref();
@@ -82,7 +82,7 @@ function portIsAvailable(port: number) {
 
 export async function findAvailablePort(startPort: number) {
   for (let port = startPort; port <= 65_535; port += 1) {
-    if (await portIsAvailable(port)) return port;
+    if (await isPortAvailable(port)) return port;
   }
   throw new Error("没有可用的 Preview 端口");
 }

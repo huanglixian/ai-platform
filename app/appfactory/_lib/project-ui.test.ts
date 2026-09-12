@@ -13,7 +13,6 @@ test("文件树按目录聚合并标记被修改的文件", () => {
       type: "folder",
       changed: true,
       children: [
-        { name: "page.tsx", path: "app/page.tsx", type: "file", changed: true },
         {
           name: "ui",
           path: "app/ui",
@@ -21,10 +20,24 @@ test("文件树按目录聚合并标记被修改的文件", () => {
           changed: false,
           children: [{ name: "card.tsx", path: "app/ui/card.tsx", type: "file", changed: false }],
         },
+        { name: "page.tsx", path: "app/page.tsx", type: "file", changed: true },
       ],
     },
     { name: "package.json", path: "package.json", type: "file", changed: false },
   ]);
+});
+
+test("文件树将文件夹置顶，并在同类节点中按名称排序", () => {
+  const tree = buildFileTree([
+    "z-last.ts",
+    "api/z.ts",
+    "README.md",
+    "api/a.ts",
+    "app/page.tsx",
+  ]);
+
+  assert.deepEqual(tree.map((node) => node.name), ["api", "app", "README.md", "z-last.ts"]);
+  assert.deepEqual(tree[0].children?.map((node) => node.name), ["a.ts", "z.ts"]);
 });
 
 test("修改过的文件默认打开变更视图，其他文件默认打开内容视图", () => {

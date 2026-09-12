@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { usePublicationTaskCenter } from "@/app/appfactory/_components/publication-task-center";
 
 type Project = {
@@ -15,6 +16,7 @@ type Filter = "全部" | "草稿" | "发布中" | "已发布" | "失败";
 const filters: Filter[] = ["全部", "草稿", "发布中", "已发布", "失败"];
 
 export default function AppFactoryPage() {
+  const router = useRouter();
   const [projects, setProjects] = useState<Project[]>([]);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<Filter>("全部");
@@ -47,17 +49,17 @@ export default function AppFactoryPage() {
     window.addEventListener("keydown", closeOnEscape);
     return () => window.removeEventListener("keydown", closeOnEscape);
   }, [open]);
-  const statusFor = (project: Project): Exclude<Filter, "全部"> => {
+  const statusFor = useCallback((project: Project): Exclude<Filter, "全部"> => {
     const job = latestForProject(project.id);
     if (!job) return "草稿";
     if (job.status === "queued" || job.status === "running") return "发布中";
     if (job.status === "succeeded") return "已发布";
     return "失败";
-  };
+  }, [latestForProject]);
   const visibleProjects = useMemo(() => projects.filter((project) =>
     `${project.name} ${project.description}`.toLowerCase().includes(query.trim().toLowerCase()) &&
     (filter === "全部" || statusFor(project) === filter),
-  ), [filter, projects, query, latestForProject]);
+  ), [filter, projects, query, statusFor]);
   const create = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!name.trim() || creating) return;
@@ -72,10 +74,9 @@ export default function AppFactoryPage() {
       const payload = await response.json();
       if (!response.ok)
         throw new Error(payload.error?.message || "项目创建失败");
-      setProjects((current) => [payload.data, ...current]);
-      setName("");
-      setDescription("");
-      setOpen(false);
+      const project = payload.data as Project | undefined;
+      if (!project?.id) throw new Error("项目创建成功，但缺少项目标识");
+      router.push(`/appfactory/projects/${encodeURIComponent(project.id)}`);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "项目创建失败");
     } finally {

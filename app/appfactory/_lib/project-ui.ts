@@ -40,6 +40,16 @@ export function buildFileTree(
     });
   }
 
+  const sortNodes = (nodes: FileTreeNode[]) => {
+    nodes.sort((left, right) => {
+      if (left.type !== right.type) return left.type === "folder" ? -1 : 1;
+      return left.name.localeCompare(right.name);
+    });
+    nodes.forEach((node) => {
+      if (node.children) sortNodes(node.children);
+    });
+  };
+  sortNodes(roots);
   return roots;
 }
 
