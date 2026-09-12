@@ -98,13 +98,14 @@ async function publish(job: PublicationJobLease, signal: AbortSignal) {
   ensureActive(job);
 
   updatePublicationProgress(job, "packaging", "正在创建不可变 Release", 4);
-  const release = createPublicationRelease(project.id, job.id, releasePath, appRuntime.id);
   const previousDeployment = getRunningPublicationDeployment(project.id);
   const previousRelease = previousDeployment
     ? getPublicationRelease(previousDeployment.releaseId)
     : null;
-  const port = getPublishedPort(project.id) ?? await allocatePublishedPort();
-  if (!getPublishedPort(project.id)) setPublishedPort(project.id, port);
+  const publishedPort = getPublishedPort(project.id);
+  const port = publishedPort ?? await allocatePublishedPort(project.id);
+  if (publishedPort === null) setPublishedPort(project.id, port);
+  const release = createPublicationRelease(project.id, job.id, releasePath, appRuntime.id);
 
   let newDeployment: PublicationDeployment | null = null;
   let previousStopped = false;

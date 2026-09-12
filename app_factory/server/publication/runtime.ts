@@ -5,6 +5,7 @@ import { waitForHttpReady } from "@/app_factory/server/preview-readiness";
 import {
   getRunningPublicationDeployment,
   getPublicationRelease,
+  isPublishedPortReservedByAnotherProject,
   listRunningPublicationDeployments,
   updatePublicationDeployment,
 } from "./repository";
@@ -63,9 +64,9 @@ export async function isPortAvailable(port: number) {
   });
 }
 
-export async function allocatePublishedPort(start = 4100) {
+export async function allocatePublishedPort(projectId: string, start = 4100) {
   for (let port = start; port < start + 500; port += 1) {
-    if (await isPortAvailable(port)) return port;
+    if (!isPublishedPortReservedByAnotherProject(projectId, port) && await isPortAvailable(port)) return port;
   }
   throw new Error("没有可用的应用发布端口");
 }

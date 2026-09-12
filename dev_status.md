@@ -41,7 +41,7 @@ scripts/app.mts                 平台与发布 Worker 统一启动器
 - 页面与共享状态：`app/appfactory/_components/publication-task-center.tsx`，由 `app/appfactory/layout.tsx` 提供全局任务中心。
 - API：`projects/[id]/publication` 创建任务；`publication-jobs/**` 提供查询、SSE、取消与重试。
 - 编排：`app_factory/server/publication/worker.ts`。
-- 构建与运行：每个运行时负责构建 immutable Release；`runtime.ts` 在固定端口启动、健康检查并于 Worker 重启时恢复。Release 持久保存运行时 ID，确保重启后仍按原技术栈启动。
+- 构建与运行：每个运行时负责构建 immutable Release；首次发布会从 4100 起分配并为项目保留端口，`runtime.ts` 在该固定端口启动、健康检查并于 Worker 重启时恢复。Release 持久保存运行时 ID，确保重启后仍按原技术栈启动。
 - 当前状态：单一“发布”动作完整执行 `校验 → lint/typecheck/build → 打包 → 启动 → 健康检查 → 应用中心注册`。旧的 Build、Deploy、Register 和通用 Job 机制已移除。
 
 ### 应用中心

@@ -261,6 +261,12 @@ export function getPublishedPort(projectId: string): number | null {
   return row?.published_port ?? null;
 }
 
+export function isPublishedPortReservedByAnotherProject(projectId: string, port: number) {
+  return Boolean(getAppFactoryDatabase().prepare(
+    "SELECT 1 FROM projects WHERE published_port=? AND id<>? LIMIT 1",
+  ).get(port, projectId));
+}
+
 export function setPublishedPort(projectId: string, port: number) {
   getAppFactoryDatabase().prepare("UPDATE projects SET published_port=?,updated_at=? WHERE id=?").run(port, new Date().toISOString(), projectId);
 }
