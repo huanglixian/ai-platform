@@ -11,7 +11,15 @@ test("新建数据库使用稳定模型档案 ID", async () => {
   try {
     await fs.symlink(path.join(originalDirectory, "app_factory"), path.join(temporaryDirectory, "app_factory"));
     process.chdir(temporaryDirectory);
-    const { createProject, getAppFactoryDatabase } = await import("./database.ts");
+    const {
+      createProject,
+      createRun,
+      createSession,
+      finishRun,
+      getActiveRunForSession,
+      getAppFactoryDatabase,
+      getRun,
+    } = await import("./database.ts");
     database = getAppFactoryDatabase();
     const columns = database.prepare("PRAGMA table_info(sessions)").all();
     const modelProfileColumn = columns.find((column) => column.name === "model_profile_id");
@@ -33,6 +41,13 @@ test("新建数据库使用稳定模型档案 ID", async () => {
       await fs.readFile(path.join(project.workspacePath, "app.yaml"), "utf8"),
       /runtime: static-web/,
     );
+    const session = createSession(project.id);
+    const run = createRun(project.id, session.id, "创建欢迎页");
+    assert.equal(getActiveRunForSession(session.id)?.id, run.id);
+    assert.equal(getRun(run.id)?.createdAt, run.createdAt);
+    finishRun(run.id, "cancelled", "任务已取消");
+    assert.equal(getActiveRunForSession(session.id), null);
+    assert.equal(getRun(run.id)?.status, "cancelled");
   } finally {
     database?.close();
     process.chdir(originalDirectory);

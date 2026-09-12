@@ -215,11 +215,71 @@ export function updateAppFactoryModelSettings(input: {
 
 export function createSession(projectId: string) { const id = `session-${crypto.randomUUID()}`; const now = new Date().toISOString(); const { defaultModelProfileId } = getAppFactoryModelSettings(); getAppFactoryDatabase().prepare("INSERT INTO sessions (id,project_id,status,harness,title,model_profile_id,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?)").run(id, projectId, "idle", "pi", "新对话", defaultModelProfileId, now, now); return getAppFactoryDatabase().prepare("SELECT id,project_id as projectId,status,harness,title,model_profile_id as modelProfileId,transcript_path as transcriptPath,created_at as createdAt,updated_at as updatedAt FROM sessions WHERE id=?").get(id); }
 export function listSessions(projectId: string) { return getAppFactoryDatabase().prepare("SELECT id,project_id as projectId,status,harness,title,model_profile_id as modelProfileId,transcript_path as transcriptPath,created_at as createdAt,updated_at as updatedAt FROM sessions WHERE project_id=? ORDER BY updated_at DESC,created_at DESC").all(projectId); }
-export function getSession(id: string) { return getAppFactoryDatabase().prepare("SELECT s.*,p.workspace_path as cwd,p.template_id as template_id FROM sessions s JOIN projects p ON p.id=s.project_id WHERE s.id=?").get(id) as { id: string; project_id: string; cwd: string; model_profile_id: ModelProfileId; template_id: AppTemplateId } | undefined; }
-export function createRun(projectId: string, sessionId: string, input: string) { const database = getAppFactoryDatabase(); const active = database.prepare("SELECT id FROM runs WHERE session_id=? AND status='running' LIMIT 1").get(sessionId); if (active) throw new SessionBusyError(); const id = `run-${crypto.randomUUID()}`; const now = new Date().toISOString(); try { database.prepare("INSERT INTO runs (id,project_id,session_id,status,input,created_at,updated_at) VALUES (?,?,?,?,?,?,?)").run(id, projectId, sessionId, "running", input, now, now); } catch (error) { if ((error as { code?: string }).code === "SQLITE_CONSTRAINT_UNIQUE") throw new SessionBusyError(); throw error; } return database.prepare("SELECT * FROM runs WHERE id=?").get(id); }
+export function getSession(id: string) { return getAppFactoryDatabase().prepare("SELECT s.*,p.workspace_path as cwd,p.template_id as template_id FROM sessions s JOIN projects p ON p.id=s.project_id WHERE s.id=?").get(id) as { id: string; project_id: string; cwd: string; model_profile_id: ModelProfileId; template_id: AppTemplateId; transcript_path?: string | null } | undefined; }
+export type AppFactoryRunStatus = "running" | "completed" | "failed" | "cancelled";
+
+export type AppFactoryRun = {
+  id: string;
+  projectId: string;
+  sessionId: string;
+  status: AppFactoryRunStatus;
+  input: string;
+  output: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+type RunRow = {
+  id: string;
+  project_id: string;
+  session_id: string;
+  status: AppFactoryRunStatus;
+  input: string;
+  output: string;
+  created_at: string;
+  updated_at: string;
+};
+
+function presentRun(row: RunRow): AppFactoryRun {
+  return {
+    id: row.id,
+    projectId: row.project_id,
+    sessionId: row.session_id,
+    status: row.status,
+    input: row.input,
+    output: row.output,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+export function createRun(projectId: string, sessionId: string, input: string) {
+  const database = getAppFactoryDatabase();
+  const active = database.prepare("SELECT id FROM runs WHERE session_id=? AND status='running' LIMIT 1").get(sessionId);
+  if (active) throw new SessionBusyError();
+  const id = `run-${crypto.randomUUID()}`;
+  const now = new Date().toISOString();
+  try {
+    database.prepare("INSERT INTO runs (id,project_id,session_id,status,input,created_at,updated_at) VALUES (?,?,?,?,?,?,?)").run(id, projectId, sessionId, "running", input, now, now);
+  } catch (error) {
+    if ((error as { code?: string }).code === "SQLITE_CONSTRAINT_UNIQUE") throw new SessionBusyError();
+    throw error;
+  }
+  return presentRun(database.prepare("SELECT * FROM runs WHERE id=?").get(id) as RunRow);
+}
+
+export function getRun(id: string) {
+  const row = getAppFactoryDatabase().prepare("SELECT * FROM runs WHERE id=?").get(id) as RunRow | undefined;
+  return row ? presentRun(row) : undefined;
+}
+
+export function getActiveRunForSession(sessionId: string) {
+  const row = getAppFactoryDatabase().prepare("SELECT * FROM runs WHERE session_id=? AND status='running' ORDER BY created_at DESC LIMIT 1").get(sessionId) as RunRow | undefined;
+  return row ? presentRun(row) : null;
+}
+
 export function hasActiveRunForProject(projectId: string) { return Boolean(getAppFactoryDatabase().prepare("SELECT 1 FROM runs WHERE project_id=? AND status='running' LIMIT 1").get(projectId)); }
-export function finishRun(id: string, status: "completed" | "failed", output: string) { getAppFactoryDatabase().prepare("UPDATE runs SET status=?,output=?,updated_at=? WHERE id=?").run(status, output, new Date().toISOString(), id); return getAppFactoryDatabase().prepare("SELECT * FROM runs WHERE id=?").get(id); }
-export function failActiveRun(sessionId: string, output = "任务已取消") { const row = getAppFactoryDatabase().prepare("SELECT id FROM runs WHERE session_id=? AND status='running' ORDER BY created_at DESC LIMIT 1").get(sessionId) as { id: string } | undefined; return row ? finishRun(row.id, "failed", output) : null; }
+export function finishRun(id: string, status: Exclude<AppFactoryRunStatus, "running">, output: string) { getAppFactoryDatabase().prepare("UPDATE runs SET status=?,output=?,updated_at=? WHERE id=?").run(status, output, new Date().toISOString(), id); return getRun(id); }
 export function setSessionStatus(id: string, status: string) { getAppFactoryDatabase().prepare("UPDATE sessions SET status=?,updated_at=? WHERE id=?").run(status, new Date().toISOString(), id); }
 export function setSessionTranscriptPath(id: string, transcriptPath: string) { getAppFactoryDatabase().prepare("UPDATE sessions SET transcript_path=?,updated_at=? WHERE id=?").run(transcriptPath, new Date().toISOString(), id); }
 export function setSessionTitleFromPrompt(id: string, prompt: string) { const title = deriveSessionTitle(prompt); getAppFactoryDatabase().prepare("UPDATE sessions SET title=CASE WHEN title='新对话' THEN ? ELSE title END,updated_at=? WHERE id=?").run(title, new Date().toISOString(), id); }

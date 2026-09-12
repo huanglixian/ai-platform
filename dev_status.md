@@ -30,11 +30,11 @@ scripts/app.mts                 平台与发布 Worker 统一启动器
 ### AppFactory 开发工作区
 
 - 页面：`app/appfactory/page.tsx`、`app/appfactory/projects/[id]/page.tsx`、`app/appfactory/settings/page.tsx`。
-- 对话与文件：`app/appfactory/_components/workspace-panels.tsx`、`app_factory/server/pi-run.ts`。
+- 对话与文件：`app/appfactory/projects/[id]/page.tsx`、`app/appfactory/_components/workspace-panels.tsx`、`app_factory/server/pi-run.ts`。`POST sessions/[id]/run` 只创建并启动 Run，`GET sessions/[id]/run` 查询活动任务，`GET runs/[id]/events` 以 SSE 回放并订阅带序号的 transcript；项目页首次进入或重新进入时均可恢复正在执行的任务与实时过程。
 - 项目模板与运行时：`app_factory/template-catalog.ts` 是唯一的项目模板注册入口；每个模板在 `app_factory/templates/` 中同时保存初始 Workspace、Pi 开发说明和按需 reference。`app_factory/runtimes/` 负责模板对应的 Preview、构建和 Release 启动，当前支持 Next.js 与纯 HTML 静态站点。Pi 完成后会以原端口重建已开启的 Preview，使原预览页刷新后显示最新源码；全局仅保留一个 Preview，30 分钟未重新请求预览时自动回收。Pi 可以继续在真实 Workspace 使用 Bash；Pi 运行期间不能 Preview/发布，发布排队或运行期间不能开始 Pi，避免读写同一份源码。
 - 模型配置：`app_factory/server/model-profiles.ts` 定义稳定档案 `zhipu` 与 `deepseek`，实际模型名由 `APPFACTORY_ZHIPU_MODEL`、`APPFACTORY_DEEPSEEK_MODEL` 必填配置；`pi-agent-config.ts` 注册智谱 PaaS Provider；`settings/model` 接口保存默认档案与思考程度。
 - 数据：`app_factory/server/database.ts` 保存项目、Workspace、Pi Session、transcript、runs 和单行模型设置。
-- 当前状态：项目可创建、预览、以 Pi 修改 Workspace，并恢复会话历史。默认档案为 `zhipu`；默认档案只应用于新建对话，对话创建后固定档案，实际模型名每次执行从环境变量读取，`low / high / max` 思考程度为全局设置并在下一次执行生效。模型请求失败会将运行与会话标记为失败，不会误报完成。
+- 当前状态：项目可创建、预览、以 Pi 修改 Workspace，并恢复会话历史及进行中的 Run。默认档案为 `zhipu`；默认档案只应用于新建对话，对话创建后固定档案，实际模型名每次执行从环境变量读取，`low / high / max` 思考程度为全局设置并在下一次执行生效。模型请求失败会将运行与会话标记为失败，不会误报完成。
 
 ### 一键发布与任务中心
 
@@ -55,6 +55,7 @@ scripts/app.mts                 平台与发布 Worker 统一启动器
 ## 关键限制
 
 - AppFactory 是单机演示运行时：发布端口从 4100 起分配，不具备多主机调度、认证或公网反向代理能力。
+- Pi Run 与浏览器连接解耦，离开项目页面不会停止任务；但执行仍由当前平台 Node 进程托管，平台重启或崩溃时不具备独立 Worker 级的任务续跑能力。
 - `app.yaml` 的 `healthPath` 必须是站内路径，并与 capability bindings 一同参与发布校验。
 - Workspace 文件访问限制在项目根目录；transcript 只从 `storage/appfactory/transcripts` 读取。
 - 发布取消会终止构建进程组；Release 切换失败时会停止新实例并恢复上一个健康 Release。

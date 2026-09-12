@@ -14,7 +14,6 @@ import {
 } from "@/app/appfactory/_components/workspace-panels";
 import { usePublicationTaskCenter } from "@/app/appfactory/_components/publication-task-center";
 import type { RunFeedback } from "@/app/appfactory/_lib/run-state";
-import { parseSseBlock } from "@/app/appfactory/_lib/sse";
 import {
   deriveSessionTitle,
   getPiSessionStatusLabel,
@@ -42,10 +41,35 @@ type RuntimeStatus = {
   templates?: Array<{ id: string; ready?: boolean }>;
 };
 type Operation = { kind: "prompt"; prompt: string };
+type AppFactoryRun = {
+  id: string;
+  status: RunFeedback["status"];
+  input: string;
+  createdAt: string;
+};
 const errorText = (
   payload: { error?: { message?: string } },
   fallback: string,
 ) => payload.error?.message || fallback;
+
+function toRunFeedback(run: AppFactoryRun): RunFeedback {
+  return {
+    runId: run.id,
+    prompt: run.input,
+    startedAt: Date.parse(run.createdAt),
+    status: run.status,
+  };
+}
+
+function runCursor(events: WorkspaceEvent[], runId: string) {
+  return events.reduce(
+    (cursor, event) =>
+      event.runId === runId && typeof event.sequence === "number"
+        ? Math.max(cursor, event.sequence)
+        : cursor,
+    -1,
+  );
+}
 
 export default function ProjectPage({
   params,
@@ -73,7 +97,7 @@ export default function ProjectPage({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [lastOperation, setLastOperation] = useState<Operation | null>(null);
-  const controllerRef = useRef<AbortController | null>(null);
+  const eventSourceRef = useRef<EventSource | null>(null);
   const sessionLoadRef = useRef(0);
   const tree = useMemo(
     () => buildFileTree(files, changedFiles),
@@ -159,9 +183,97 @@ export default function ProjectPage({
         : [],
     );
   };
+  const appendRunEvent = (event: WorkspaceEvent) => {
+    setEvents((current) => {
+      const duplicated =
+        event.runId &&
+        typeof event.sequence === "number" &&
+        current.some(
+          (item) =>
+            item.runId === event.runId && item.sequence === event.sequence,
+        );
+      return duplicated ? current : [...current, event];
+    });
+  };
+  const closeRunStream = () => {
+    eventSourceRef.current?.close();
+    eventSourceRef.current = null;
+  };
+  const loadActiveRun = async (sessionId: string) => {
+    const response = await fetch(`/api/appfactory/v1/sessions/${sessionId}/run`);
+    const payload = await response.json();
+    if (!response.ok) throw new Error(errorText(payload, "任务状态加载失败"));
+    const run = payload.data as AppFactoryRun | null;
+    return run?.status === "running" ? run : null;
+  };
+  const watchRun = (run: AppFactoryRun, history: WorkspaceEvent[]) => {
+    closeRunStream();
+    const source = new EventSource(
+      `/api/appfactory/v1/runs/${run.id}/events?after=${runCursor(history, run.id)}`,
+    );
+    eventSourceRef.current = source;
+    source.addEventListener("harness", (raw) => {
+      const event = JSON.parse((raw as MessageEvent<string>).data) as WorkspaceEvent;
+      if (
+        event.runId !== run.id ||
+        typeof event.sequence !== "number" ||
+        !event.type ||
+        typeof event.content !== "string"
+      ) return;
+      appendRunEvent(event);
+      if (event.type === "activity") {
+        setActiveRun((current) =>
+          current?.runId === run.id
+            ? { ...current, message: event.content }
+            : current,
+        );
+      } else if (event.type === "text") {
+        setActiveRun((current) =>
+          current?.runId === run.id
+            ? { ...current, message: "正在接收 AI 回复" }
+            : current,
+        );
+      }
+    });
+    source.addEventListener("run.finished", (raw) => {
+      const data = JSON.parse((raw as MessageEvent<string>).data) as {
+        runId?: string;
+        status?: RunFeedback["status"];
+        message?: string;
+      };
+      if (data.runId !== run.id) return;
+      const status =
+        data.status === "completed" ||
+        data.status === "cancelled" ||
+        data.status === "failed"
+          ? data.status
+          : "failed";
+      source.close();
+      if (eventSourceRef.current === source) eventSourceRef.current = null;
+      setActiveRun((current) =>
+        current?.runId === run.id
+          ? {
+              ...current,
+              status,
+              message:
+                data.message ||
+                (status === "completed" ? "执行结果已保存" : "任务已结束"),
+            }
+          : current,
+      );
+      setBusy(false);
+      if (status === "cancelled") setError("");
+      else if (status === "failed" && data.message) setError(data.message);
+      void refreshFiles().catch((reason) =>
+        setError(reason instanceof Error ? reason.message : "文件列表加载失败"),
+      );
+      void refreshSessions();
+    });
+  };
   const switchSession = async (nextSession: AppFactorySession) => {
     if (busy || sessionLoading || nextSession.id === session?.id) return;
     const requestId = ++sessionLoadRef.current;
+    closeRunStream();
     setSessionLoading(true);
     setSession(nextSession);
     setEvents([]);
@@ -174,8 +286,18 @@ export default function ProjectPage({
         : "",
     );
     try {
-      const nextEvents = await loadSessionTranscript(nextSession.id);
-      if (sessionLoadRef.current === requestId) setEvents(nextEvents);
+      const [nextEvents, nextRun] = await Promise.all([
+        loadSessionTranscript(nextSession.id),
+        loadActiveRun(nextSession.id),
+      ]);
+      if (sessionLoadRef.current === requestId) {
+        setEvents(nextEvents);
+        if (nextRun) {
+          setBusy(true);
+          setActiveRun(toRunFeedback(nextRun));
+          watchRun(nextRun, nextEvents);
+        }
+      }
     } catch (reason) {
       if (sessionLoadRef.current === requestId) {
         setError(reason instanceof Error ? reason.message : "对话记录加载失败");
@@ -204,6 +326,7 @@ export default function ProjectPage({
       ]);
       setSession(nextSession);
       setEvents([]);
+      closeRunStream();
       setActiveRun(null);
       setPrompt("");
       setLastOperation(null);
@@ -261,7 +384,18 @@ export default function ProjectPage({
           );
         }
         if (currentSession?.id) {
-          setEvents(await loadSessionTranscript(currentSession.id));
+          const [currentEvents, currentRun] = await Promise.all([
+            loadSessionTranscript(currentSession.id),
+            loadActiveRun(currentSession.id),
+          ]);
+          if (active) {
+            setEvents(currentEvents);
+            if (currentRun) {
+              setBusy(true);
+              setActiveRun(toRunFeedback(currentRun));
+              watchRun(currentRun, currentEvents);
+            }
+          }
         }
         setRuntime((await runtimeRes.json()).data ?? {});
         const nextFiles = Array.isArray(filesPayload.data)
@@ -292,6 +426,8 @@ export default function ProjectPage({
     });
     return () => {
       active = false;
+      eventSourceRef.current?.close();
+      eventSourceRef.current = null;
     };
     // 初始化只应响应路由参数；内部文件加载器使用解析后的 projectId。
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -340,20 +476,11 @@ export default function ProjectPage({
     );
     setError("");
     setPrompt("");
-    setActiveRun({
-      prompt: submittedPrompt,
-      startedAt: Date.now(),
-      status: "running",
-    });
-    setEvents((current) => [...current, { type: "user", content: submittedPrompt }]);
-    const controller = new AbortController();
-    controllerRef.current = controller;
     try {
       const response = await fetch(
-        `/api/appfactory/v1/sessions/${session.id}/run/stream`,
+        `/api/appfactory/v1/sessions/${session.id}/run`,
         {
           method: "POST",
-          signal: controller.signal,
           headers: { "content-type": "application/json" },
           body: JSON.stringify({ prompt: submittedPrompt }),
         },
@@ -362,103 +489,29 @@ export default function ProjectPage({
         const payload = await response.json();
         throw new Error(errorText(payload, "Pi 执行失败"));
       }
-      if (!response.body) throw new Error("Pi 实时连接不可用");
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = "";
-      let terminalStatus: "completed" | "failed" | null = null;
-      const consumeBlock = (block: string) => {
-        const parsed = parseSseBlock(block);
-        if (!parsed || typeof parsed.data !== "object" || !parsed.data) return;
-        if (parsed.event === "run.started") {
-          const data = parsed.data as { runId?: string };
-          if (data.runId) {
-            setActiveRun((current) =>
-              current ? { ...current, runId: data.runId } : current,
-            );
-          }
-          return;
-        }
-        if (parsed.event === "run.finished") {
-          const data = parsed.data as { status?: string };
-          terminalStatus = data.status === "failed" ? "failed" : "completed";
-          return;
-        }
-        if (parsed.event === "run.error") {
-          const data = parsed.data as { message?: string };
-          terminalStatus = "failed";
-          const message = data.message || "Pi 实时连接失败";
-          setActiveRun((current) =>
-            current ? { ...current, status: "failed", message } : current,
-          );
-          setError(message);
-          return;
-        }
-        if (parsed.event !== "harness") return;
-        const event = parsed.data as WorkspaceEvent;
-        if (!event.type || typeof event.content !== "string") return;
-        if (event.type !== "user")
-          setEvents((current) => [...current, event]);
-        if (event.type === "activity") {
-          setActiveRun((current) =>
-            current ? { ...current, message: event.content } : current,
-          );
-        } else if (event.type === "text") {
-          setActiveRun((current) =>
-            current ? { ...current, message: "正在接收 AI 回复" } : current,
-          );
-        }
-        if (event.type === "completed") terminalStatus = "completed";
-        if (event.type === "error") {
-          terminalStatus = "failed";
-          setActiveRun((current) =>
-            current
-              ? { ...current, status: "failed", message: event.content }
-              : current,
-          );
-          setError(event.content);
-        }
+      const run = (await response.json()).data as AppFactoryRun;
+      if (!run?.id || run.status !== "running") {
+        throw new Error("Pi 任务启动后未返回运行状态");
+      }
+      const nextEvent: WorkspaceEvent = {
+        type: "user",
+        content: submittedPrompt,
+        runId: run.id,
+        sequence: 0,
       };
-      while (true) {
-        const { done, value } = await reader.read();
-        buffer += decoder.decode(value, { stream: !done });
-        const blocks = buffer.split(/\r?\n\r?\n/);
-        buffer = blocks.pop() || "";
-        blocks.forEach(consumeBlock);
-        if (done) break;
-      }
-      if (buffer.trim()) consumeBlock(buffer);
-      if (terminalStatus === "completed") {
-        setActiveRun((current) =>
-          current
-            ? {
-                ...current,
-                status: "completed",
-                message: "执行结果已保存",
-              }
-            : current,
-        );
-      }
-      else if (terminalStatus !== "failed") {
-        const message = "实时连接中断，任务结果已保存在活动日志中";
-        setActiveRun((current) =>
-          current ? { ...current, status: "failed", message } : current,
-        );
-        setError(message);
-      }
-      await refreshFiles();
+      setActiveRun(toRunFeedback(run));
+      appendRunEvent(nextEvent);
+      watchRun(run, [...events, nextEvent]);
     } catch (reason) {
-      if ((reason as { name?: string })?.name !== "AbortError") {
-        const message = reason instanceof Error ? reason.message : "Pi 执行失败";
-        setActiveRun((current) =>
-          current ? { ...current, status: "failed", message } : current,
-        );
-        setError(reason instanceof Error ? reason.message : "Pi 执行失败");
-      }
-    } finally {
+      const message = reason instanceof Error ? reason.message : "Pi 执行失败";
       setBusy(false);
-      controllerRef.current = null;
+      setActiveRun({
+        prompt: submittedPrompt,
+        startedAt: Date.now(),
+        status: "failed",
+        message,
+      });
+      setError(message);
       void refreshSessions();
     }
   };
@@ -466,17 +519,22 @@ export default function ProjectPage({
     if (!lastOperation || busy) return;
     void executePrompt(lastOperation.prompt, false);
   };
-  const stop = () => {
-    controllerRef.current?.abort();
-    if (session)
-      void fetch(`/api/appfactory/v1/sessions/${session.id}/run`, {
+  const stop = async () => {
+    if (!session || !activeRun?.runId) return;
+    setActiveRun((current) =>
+      current ? { ...current, message: "正在停止任务" } : current,
+    );
+    try {
+      const response = await fetch(`/api/appfactory/v1/sessions/${session.id}/run`, {
         method: "DELETE",
       });
-    setBusy(false);
-    setActiveRun((current) =>
-      current ? { ...current, status: "cancelled", message: "已停止当前任务" } : current,
-    );
-    setError("已停止当前任务");
+      if (!response.ok) {
+        const payload = await response.json();
+        throw new Error(errorText(payload, "停止任务失败"));
+      }
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "停止任务失败");
+    }
   };
   if (loading)
     return (
