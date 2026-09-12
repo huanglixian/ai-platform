@@ -3,6 +3,7 @@ import net from "node:net";
 
 import { waitForHttpReady } from "@/app_factory/server/preview-readiness";
 import {
+  getRunningPublicationDeployment,
   getPublicationRelease,
   listRunningPublicationDeployments,
   updatePublicationDeployment,
@@ -124,6 +125,15 @@ export async function stopPublicationRuntime(projectId: string, pid?: number | n
   const stopped = await waitForProcessExit(targetPid);
   if (stopped && runtimes.get(projectId) === runtime) runtimes.delete(projectId);
   return stopped;
+}
+
+export async function stopPublishedApplication(projectId: string) {
+  const deployment = getRunningPublicationDeployment(projectId);
+  if (!deployment) return;
+  if (!await stopPublicationRuntime(projectId, deployment.pid)) {
+    throw new Error("已发布应用未能在 5 秒内停止，无法移除应用中心记录。");
+  }
+  updatePublicationDeployment(deployment.id, "stopped", null);
 }
 
 export async function restorePublicationRuntimes() {

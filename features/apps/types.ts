@@ -1,5 +1,6 @@
 export type PlatformSource = 'appfactory' | 'external' | 'dify' | 'n8n';
 export type AppType = 'business' | 'general';
+export type ExternalLaunchStatus = 'starting' | 'running' | null;
 
 export interface PublishedApp {
   id: string;
@@ -9,9 +10,8 @@ export interface PublishedApp {
   appType: AppType;
   url: string;
   launchCommand: string | null;
-  launchPid: number | null;
-  launchStartedAt: string | null;
-  isManagedRunning: boolean;
+  launchStatus: ExternalLaunchStatus;
+  isRemovable: boolean;
   createdAt: string;
   updatedAt: string;
 }

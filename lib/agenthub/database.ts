@@ -68,6 +68,11 @@ ALTER TABLE applications ADD COLUMN launch_pid INTEGER;
 ALTER TABLE applications ADD COLUMN launch_started_at TEXT;
 DELETE FROM applications WHERE producer = 'native' OR id LIKE 'app-native-%';`,
   },
+  {
+    id: "005_external_launch_status",
+    sql: `ALTER TABLE applications ADD COLUMN launch_status TEXT;
+UPDATE applications SET launch_status='running' WHERE producer='external' AND launch_pid IS NOT NULL;`,
+  },
 ];
 
 export function getAgentHubDatabase(): Database.Database {

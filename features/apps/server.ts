@@ -1,9 +1,11 @@
 import { z } from "zod";
+import { stopPublishedApplication } from "@/app_factory/server/publication/runtime";
+import { hasActivePublicationForProject } from "@/app_factory/server/publication/repository";
 import { getAgentHubDatabase } from "@/lib/agenthub/database";
 import { EXTERNAL_APP_SEEDS } from "./external-app-seed";
 import { isProcessGroupRunning, isUrlReady, startExternalProcess, stopExternalProcess } from "./external-launcher";
 import { INITIAL_APPS } from "./mock-data";
-import type { PlatformSource, PublishedApp } from "./types";
+import type { ExternalLaunchStatus, PlatformSource, PublishedApp } from "./types";
 
 const platformSources = ["appfactory", "external", "dify", "n8n"] as const;
 const platformSourceSchema = z.enum(platformSources);
@@ -41,9 +43,25 @@ export const externalApplicationUpdateSchema = externalApplicationInputSchema.pa
 type ApplicationInput = z.infer<typeof applicationInputSchema>;
 type ExternalApplicationInput = z.infer<typeof externalApplicationInputSchema>;
 
+const seededApplicationIds = new Set([
+  ...INITIAL_APPS.map((app) => app.id),
+  ...EXTERNAL_APP_SEEDS.map((app) => app.id),
+]);
+
+function getLaunchPid(row: Record<string, unknown>) {
+  return typeof row.launch_pid === "number" ? row.launch_pid : null;
+}
+
+function getLaunchStatus(source: PlatformSource, row: Record<string, unknown>): ExternalLaunchStatus {
+  const pid = getLaunchPid(row);
+  if (source !== "external" || pid === null || !isProcessGroupRunning(pid)) return null;
+  return row.launch_status === "starting" || row.launch_status === "running"
+    ? row.launch_status
+    : null;
+}
+
 function rowToApp(row: Record<string, unknown>): PublishedApp {
   const source = platformSourceSchema.parse(row.producer) as PlatformSource;
-  const launchPid = typeof row.launch_pid === "number" ? row.launch_pid : null;
   return {
     id: String(row.id),
     name: String(row.name),
@@ -52,9 +70,8 @@ function rowToApp(row: Record<string, unknown>): PublishedApp {
     appType: row.kind === "business" ? "business" : "general",
     url: String(row.entry_url),
     launchCommand: typeof row.launch_command === "string" ? row.launch_command : null,
-    launchPid,
-    launchStartedAt: typeof row.launch_started_at === "string" ? row.launch_started_at : null,
-    isManagedRunning: source === "external" && launchPid !== null && isProcessGroupRunning(launchPid),
+    launchStatus: getLaunchStatus(source, row),
+    isRemovable: !seededApplicationIds.has(String(row.id)) && (source === "appfactory" || source === "external"),
     createdAt: String(row.created_at),
     updatedAt: String(row.updated_at),
   };
@@ -70,10 +87,21 @@ function getExternalApplicationRow(id: string) {
   return row;
 }
 
-function updateLaunchState(id: string, pid: number | null, startedAt: string | null) {
-  getAgentHubDatabase().prepare(
-    "UPDATE applications SET launch_pid=?, launch_started_at=?, updated_at=? WHERE id=?",
-  ).run(pid, startedAt, new Date().toISOString(), id);
+function updateLaunchState(
+  id: string,
+  pid: number | null,
+  startedAt: string | null,
+  status: ExternalLaunchStatus,
+  expectedPid?: number,
+) {
+  const database = getAgentHubDatabase();
+  const now = new Date().toISOString();
+  const result = expectedPid === undefined
+    ? database.prepare("UPDATE applications SET launch_pid=?, launch_started_at=?, launch_status=?, updated_at=? WHERE id=?")
+      .run(pid, startedAt, status, now, id)
+    : database.prepare("UPDATE applications SET launch_pid=?, launch_started_at=?, launch_status=?, updated_at=? WHERE id=? AND launch_pid=?")
+      .run(pid, startedAt, status, now, id, expectedPid);
+  return result.changes > 0;
 }
 
 export function seedApplications() {
@@ -187,17 +215,23 @@ export async function startExternalApplication(id: string) {
   seedApplications();
   let current = getExternalApplicationRow(id);
   if (!current) return null;
-  const currentPid = typeof current.launch_pid === "number" ? current.launch_pid : null;
+  const currentPid = getLaunchPid(current);
   if (currentPid !== null && !isProcessGroupRunning(currentPid)) {
-    updateLaunchState(id, null, null);
+    updateLaunchState(id, null, null, null, currentPid);
     current = getExternalApplicationRow(id);
     if (!current) return null;
   }
 
   const url = String(current.entry_url);
-  if (await isUrlReady(url)) return getApplication(id);
+  if (await isUrlReady(url)) {
+    const managedPid = getLaunchPid(current);
+    if (managedPid !== null && isProcessGroupRunning(managedPid)) {
+      updateLaunchState(id, managedPid, String(current.launch_started_at ?? new Date().toISOString()), "running", managedPid);
+    }
+    return getApplication(id);
+  }
 
-  const managedPid = typeof current.launch_pid === "number" ? current.launch_pid : null;
+  const managedPid = getLaunchPid(current);
   if (managedPid !== null && isProcessGroupRunning(managedPid)) {
     throw new Error("服务正在启动或尚未就绪，请先停止当前服务后再试。");
   }
@@ -205,28 +239,71 @@ export async function startExternalApplication(id: string) {
   const launchCommand = typeof current.launch_command === "string" ? current.launch_command : "";
   if (!launchCommand) throw new Error("该外部应用没有启动命令。");
 
-  await startExternalProcess({
-    command: launchCommand,
-    url,
-    onSpawn: async (pid) => updateLaunchState(id, pid, new Date().toISOString()),
-  });
-  return getApplication(id);
+  let spawnedPid: number | null = null;
+  try {
+    const launched = await startExternalProcess({
+      command: launchCommand,
+      url,
+      onSpawn: async (pid) => {
+        spawnedPid = pid;
+        updateLaunchState(id, pid, new Date().toISOString(), "starting");
+      },
+    });
+    if (launched.pid !== null) {
+      updateLaunchState(id, launched.pid, new Date().toISOString(), "running", launched.pid);
+    }
+    return getApplication(id);
+  } catch (error) {
+    if (spawnedPid !== null) {
+      try {
+        await stopExternalProcess(spawnedPid);
+      } finally {
+        updateLaunchState(id, null, null, null, spawnedPid);
+      }
+    }
+    throw error;
+  }
 }
 
 export async function stopExternalApplication(id: string) {
   const current = getExternalApplicationRow(id);
   if (!current) return null;
-  const pid = typeof current.launch_pid === "number" ? current.launch_pid : null;
+  const pid = getLaunchPid(current);
   if (pid === null) throw new Error("该服务并非由应用中心启动，无法在这里停止。");
   await stopExternalProcess(pid);
-  updateLaunchState(id, null, null);
+  updateLaunchState(id, null, null, null, pid);
   return getApplication(id);
 }
 
-export async function archiveExternalApplication(id: string) {
-  const current = getExternalApplicationRow(id);
-  if (!current) return false;
-  if (typeof current.launch_pid === "number") await stopExternalApplication(id);
-  const result = getAgentHubDatabase().prepare("UPDATE applications SET status='archived', updated_at=? WHERE id=?").run(new Date().toISOString(), id);
+export async function removeApplication(id: string) {
+  const current = getApplicationRow(id);
+  if (!current || seededApplicationIds.has(id)) return false;
+  const source = platformSourceSchema.parse(current.producer) as PlatformSource;
+  if (source === "external") {
+    const pid = getLaunchPid(current);
+    if (pid !== null) await stopExternalProcess(pid);
+  } else if (source === "appfactory") {
+    const projectId = typeof current.external_id === "string" ? current.external_id : "";
+    if (!projectId) throw new Error("AppFactory 应用缺少关联项目，无法移除。");
+    if (hasActivePublicationForProject(projectId)) {
+      throw new Error("应用正在发布，发布完成后才能移除。");
+    }
+    await stopPublishedApplication(projectId);
+  } else {
+    return false;
+  }
+  const result = getAgentHubDatabase().prepare("DELETE FROM applications WHERE id=?").run(id);
   return result.changes > 0;
+}
+
+export async function stopManagedExternalApplications() {
+  const rows = getAgentHubDatabase().prepare(
+    "SELECT id, launch_pid FROM applications WHERE producer='external' AND launch_pid IS NOT NULL",
+  ).all() as { id: string; launch_pid: number }[];
+  await Promise.all(rows.map(async (row) => {
+    const stopped = await stopExternalProcess(row.launch_pid);
+    if (stopped || !isProcessGroupRunning(row.launch_pid)) {
+      updateLaunchState(row.id, null, null, null, row.launch_pid);
+    }
+  }));
 }

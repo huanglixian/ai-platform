@@ -1,5 +1,5 @@
 import { apiError, apiOk } from "@/lib/server/api-response";
-import { archiveExternalApplication, externalApplicationUpdateSchema, getApplication, updateExternalApplication } from "@/features/apps/server";
+import { externalApplicationUpdateSchema, getApplication, removeApplication, updateExternalApplication } from "@/features/apps/server";
 
 export const runtime = "nodejs";
 
@@ -13,8 +13,12 @@ export async function DELETE(_request: Request, context: { params: Promise<{ id:
   const { id } = await context.params;
   const app = getApplication(id);
   if (!app) return apiError("应用不存在", 404);
-  if (app.source !== "external") return apiError("只有外部应用可以移除", 403);
-  return await archiveExternalApplication(id) ? apiOk({ id, archived: true }) : apiError("应用不存在", 404);
+  if (!app.isRemovable) return apiError("内置应用不能移除", 403);
+  try {
+    return await removeApplication(id) ? apiOk({ id, removed: true }) : apiError("应用不存在", 404);
+  } catch (error) {
+    return apiError(error instanceof Error ? error.message : "移除应用失败", 409);
+  }
 }
 
 export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
