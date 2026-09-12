@@ -285,8 +285,6 @@ export async function removeApplication(id: string) {
       throw new Error("应用正在发布，发布完成后才能移除。");
     }
     await stopPublishedApplication(projectId);
-  } else {
-    return false;
   }
   const result = getAgentHubDatabase().prepare("DELETE FROM applications WHERE id=?").run(id);
   return result.changes > 0;

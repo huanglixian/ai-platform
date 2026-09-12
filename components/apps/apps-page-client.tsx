@@ -130,7 +130,7 @@ export function AppsPageClient() {
   const groupedApps = APP_GROUP_TABS.map((tab) => ({
     key: tab,
     title: tab,
-    children: searchedApps.filter((app) => sourceLabels[app.source] === tab).map((app) => <AppCard key={app.id} app={app} onSelect={handleSelect} onRemove={requestRemove} />),
+    children: searchedApps.filter((app) => sourceLabels[app.source] === tab).map((app) => <AppCard key={app.id} app={app} onSelect={handleSelect} onOpen={handleOpen} onRemove={requestRemove} />),
   })).filter((section) => section.children.length > 0);
 
   if (loading) {
@@ -142,7 +142,7 @@ export function AppsPageClient() {
       {loadError ? <div className="mb-4 flex items-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700"><AlertTriangle size={15} />{loadError}</div> : null}
       {removeError ? <div className="mb-4 flex items-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700"><AlertTriangle size={15} />{removeError}</div> : null}
       <CardPageFrame title="应用中心" count={visibleApps.length} itemWidth={ITEM_WIDTH} actionLabel="接入应用" onActionClick={() => setEditingApp(null)} tabs={[...APP_TABS]} activeTab={activeTab} onTabChange={(tab) => setActiveTab(tab as (typeof APP_TABS)[number])} groupedSections={groupedApps} searchValue={keyword} searchPlaceholder="搜索应用名称、说明、来源或类型" onSearchChange={setKeyword}>
-        {visibleApps.length ? visibleApps.map((app) => <AppCard key={app.id} app={app} onSelect={handleSelect} onRemove={requestRemove} />) : <EmptyApps />}
+        {visibleApps.length ? visibleApps.map((app) => <AppCard key={app.id} app={app} onSelect={handleSelect} onOpen={handleOpen} onRemove={requestRemove} />) : <EmptyApps />}
       </CardPageFrame>
       {editingApp !== undefined ? <ExternalAppForm key={editingApp?.id ?? "new"} app={editingApp} onClose={() => setEditingApp(undefined)} onSaved={handleSaved} /> : null}
       {selectedApp ? <AppActionDrawer app={selectedApp} pendingAction={pendingAction} error={actionError} onClose={() => setSelectedApp(null)} onOpen={handleOpen} onStart={(app) => void handleServiceAction(app, "start")} onStop={(app) => void handleServiceAction(app, "stop")} onEdit={(app) => { setSelectedApp(null); setEditingApp(app); }} onRemove={requestRemove} /> : null}
