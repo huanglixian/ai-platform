@@ -2,7 +2,7 @@ import { spawn } from "node:child_process";
 
 const START_TIMEOUT_MS = 30_000;
 const POLL_INTERVAL_MS = 500;
-const INHERITED_RUNTIME_OPTIONS = ["NODE_OPTIONS", "npm_config_node_options", "TS_NODE_PROJECT"] as const;
+const EXCLUDED_PLATFORM_ENVIRONMENT_KEYS = ["PORT", "NODE_OPTIONS", "npm_config_node_options", "TS_NODE_PROJECT"] as const;
 
 export type ExternalLaunchInput = {
   command: string;
@@ -20,7 +20,7 @@ export class ExternalLaunchError extends Error {
 
 function cleanRuntimeEnvironment() {
   const environment = { ...process.env };
-  for (const key of INHERITED_RUNTIME_OPTIONS) delete environment[key];
+  for (const key of EXCLUDED_PLATFORM_ENVIRONMENT_KEYS) delete environment[key];
   return environment;
 }
 
@@ -49,10 +49,13 @@ export async function isUrlReady(url: string) {
   }
 }
 
-async function waitForUrl(url: string, timeoutMs: number) {
+async function waitForUrl(url: string, timeoutMs: number, pid: number) {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
     if (await isUrlReady(url)) return;
+    if (!isProcessGroupRunning(pid)) {
+      throw new ExternalLaunchError("启动命令已退出，服务没有成功启动。");
+    }
     await pause(POLL_INTERVAL_MS);
   }
   throw new ExternalLaunchError("服务未在规定时间内就绪，请检查启动命令和应用配置。");
@@ -72,14 +75,7 @@ export async function startExternalProcess({ command, url, timeoutMs = START_TIM
 
   await onSpawn?.(processHandle.pid);
 
-  try {
-    await waitForUrl(url, timeoutMs);
-  } catch (error) {
-    if (!isProcessGroupRunning(processHandle.pid)) {
-      throw new ExternalLaunchError("启动命令已退出，服务没有成功启动。");
-    }
-    throw error;
-  }
+  await waitForUrl(url, timeoutMs, processHandle.pid);
 
   return { pid: processHandle.pid, alreadyRunning: false };
 }

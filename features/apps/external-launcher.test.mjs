@@ -30,3 +30,43 @@ test("外部启动器能够等待服务就绪并停止其进程组", async () =>
   await stopExternalProcess(result.pid);
   assert.equal(isProcessGroupRunning(result.pid), false);
 });
+
+test("外部应用不会继承平台的 PORT", async () => {
+  const originalPort = process.env.PORT;
+  const port = await getAvailablePort();
+  const url = `http://127.0.0.1:${port}`;
+  const script = `const { createServer } = require('node:http'); const port = Number(process.env.PORT || ${port}); createServer((_, response) => response.end(String(port))).listen(port, '127.0.0.1')`;
+  let result;
+
+  process.env.PORT = "19844";
+  try {
+    result = await startExternalProcess({
+      command: `${JSON.stringify(process.execPath)} -e ${JSON.stringify(script)}`,
+      url,
+      timeoutMs: 5_000,
+    });
+
+    const response = await fetch(url);
+    assert.equal(await response.text(), String(port));
+  } finally {
+    if (result?.pid) await stopExternalProcess(result.pid);
+    if (originalPort === undefined) delete process.env.PORT;
+    else process.env.PORT = originalPort;
+  }
+});
+
+test("启动命令退出后不会等待完整健康检查超时", async () => {
+  const port = await getAvailablePort();
+  const startedAt = Date.now();
+
+  await assert.rejects(
+    startExternalProcess({
+      command: `${JSON.stringify(process.execPath)} -e ${JSON.stringify("process.exit(1)")}`,
+      url: `http://127.0.0.1:${port}`,
+      timeoutMs: 5_000,
+    }),
+    /启动命令已退出，服务没有成功启动/,
+  );
+
+  assert.ok(Date.now() - startedAt < 2_000);
+});
