@@ -31,7 +31,7 @@ scripts/app.mts                 平台与发布 Worker 统一启动器
 
 - 页面：`app/appfactory/page.tsx`、`app/appfactory/projects/[id]/page.tsx`、`app/appfactory/settings/page.tsx`。
 - 对话与文件：`app/appfactory/_components/workspace-panels.tsx`、`app_factory/server/pi-run.ts`。
-- 预览与发布：`app_factory/server/runtime-workspace.ts` 为 Preview 和 Release 构建准备隔离运行副本；`preview.ts` 只在 Preview 副本中以 Webpack 开发模式启动 Next，且全局仅保留一个 Preview，30 分钟未重新请求预览时自动回收。Pi 完成后会以原端口重建已开启的 Preview，使原预览页刷新后显示最新源码；`release-builder.ts` 只在临时构建副本中执行 lint、typecheck 和 build。Pi 可以继续在真实 Workspace 使用 Bash；Pi 运行期间不能 Preview/发布，发布排队或运行期间不能开始 Pi，避免读写同一份源码。
+- 项目模板与运行时：`app_factory/template-catalog.ts` 是唯一的项目模板注册入口；每个模板在 `app_factory/templates/` 中同时保存初始 Workspace、Pi 开发说明和按需 reference。`app_factory/runtimes/` 负责模板对应的 Preview、构建和 Release 启动，当前支持 Next.js 与纯 HTML 静态站点。Pi 完成后会以原端口重建已开启的 Preview，使原预览页刷新后显示最新源码；全局仅保留一个 Preview，30 分钟未重新请求预览时自动回收。Pi 可以继续在真实 Workspace 使用 Bash；Pi 运行期间不能 Preview/发布，发布排队或运行期间不能开始 Pi，避免读写同一份源码。
 - 模型配置：`app_factory/server/model-profiles.ts` 定义稳定档案 `zhipu` 与 `deepseek`，实际模型名由 `APPFACTORY_ZHIPU_MODEL`、`APPFACTORY_DEEPSEEK_MODEL` 必填配置；`pi-agent-config.ts` 注册智谱 PaaS Provider；`settings/model` 接口保存默认档案与思考程度。
 - 数据：`app_factory/server/database.ts` 保存项目、Workspace、Pi Session、transcript、runs 和单行模型设置。
 - 当前状态：项目可创建、预览、以 Pi 修改 Workspace，并恢复会话历史。默认档案为 `zhipu`；默认档案只应用于新建对话，对话创建后固定档案，实际模型名每次执行从环境变量读取，`low / high / max` 思考程度为全局设置并在下一次执行生效。模型请求失败会将运行与会话标记为失败，不会误报完成。
@@ -41,7 +41,7 @@ scripts/app.mts                 平台与发布 Worker 统一启动器
 - 页面与共享状态：`app/appfactory/_components/publication-task-center.tsx`，由 `app/appfactory/layout.tsx` 提供全局任务中心。
 - API：`projects/[id]/publication` 创建任务；`publication-jobs/**` 提供查询、SSE、取消与重试。
 - 编排：`app_factory/server/publication/worker.ts`。
-- 构建与运行：`release-builder.ts` 构建 immutable standalone Release；`runtime.ts` 在固定端口启动、健康检查并于 Worker 重启时恢复。
+- 构建与运行：每个运行时负责构建 immutable Release；`runtime.ts` 在固定端口启动、健康检查并于 Worker 重启时恢复。Release 持久保存运行时 ID，确保重启后仍按原技术栈启动。
 - 当前状态：单一“发布”动作完整执行 `校验 → lint/typecheck/build → 打包 → 启动 → 健康检查 → 应用中心注册`。旧的 Build、Deploy、Register 和通用 Job 机制已移除。
 
 ### 应用中心

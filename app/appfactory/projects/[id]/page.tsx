@@ -26,7 +26,7 @@ type Project = {
   id: string;
   name: string;
   description: string;
-  skillProfile?: string;
+  template: { id: string; name: string; description: string };
 };
 type RuntimeStatus = {
   ai?: {
@@ -39,7 +39,7 @@ type RuntimeStatus = {
     profiles?: Array<{ id: string; configured: boolean }>;
   };
   harness?: { ready?: boolean; name?: string };
-  skill?: { ready?: boolean };
+  templates?: Array<{ id: string; ready?: boolean }>;
 };
 type Operation = { kind: "prompt"; prompt: string };
 const errorText = (
@@ -496,7 +496,9 @@ export default function ProjectPage({
       )?.configured
     : runtime.ai?.configured;
   const aiReady = Boolean(
-    activeModelConfigured && runtime.harness?.ready && runtime.skill?.ready,
+    activeModelConfigured &&
+      runtime.harness?.ready &&
+      runtime.templates?.some((template) => template.id === project.template.id && template.ready),
   );
   const activeModelLabel = session?.modelLabel || runtime.ai?.model || "未配置模型";
   const publication = latestForProject(id);

@@ -8,7 +8,7 @@ type ThinkingLevel = "low" | "high" | "max";
 
 type RuntimeStatus = {
   harness?: { ready?: boolean; name?: string };
-  skill?: { ready?: boolean; name?: string };
+  templates?: Array<{ id: string; name: string; ready?: boolean }>;
 };
 
 type ModelProfile = {
@@ -102,7 +102,8 @@ export default function AppFactorySettingsPage() {
         settings.thinkingLevel !== form.thinkingLevel),
   );
   const harnessReady = Boolean(status?.harness?.ready);
-  const skillReady = Boolean(status?.skill?.ready);
+  const templates = status?.templates ?? [];
+  const templatesReady = Boolean(templates.length) && templates.every((template) => template.ready);
 
   const updateForm = (change: Partial<ModelSettingsForm>) => {
     setForm((current) => (current ? { ...current, ...change } : current));
@@ -256,11 +257,11 @@ export default function AppFactorySettingsPage() {
 
         <article className="rounded-xl border border-[#d6e0eb] bg-white p-5 shadow-[0_4px_10px_rgba(15,23,42,.04)]">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2"><StatusDot ready={skillReady} /><h2 className="text-sm font-semibold text-[#1a4d87]">默认 Coding Skill</h2></div>
-            <span className="text-xs text-[#98a2b3]">{skillReady ? "已加载" : "缺失"}</span>
+            <div className="flex items-center gap-2"><StatusDot ready={templatesReady} /><h2 className="text-sm font-semibold text-[#1a4d87]">项目模板</h2></div>
+            <span className="text-xs text-[#98a2b3]">{templatesReady ? "已加载" : "缺失"}</span>
           </div>
-          <p className="mt-5 text-sm font-medium text-[#4d4d4d]">{status?.skill?.name ?? "nextjs-build"}</p>
-          <p className="mt-2 text-xs leading-5 text-[#667085]">使用 Next.js App Router、TypeScript、Tailwind CSS 和 shadcn/ui 作为默认开发约定。</p>
+          <p className="mt-5 text-sm font-medium text-[#4d4d4d]">{templates.length ? templates.map((template) => template.name).join("、") : "未加载模板"}</p>
+          <p className="mt-2 text-xs leading-5 text-[#667085]">模板决定项目的初始 Workspace、开发说明和 Preview、发布所使用的运行时。</p>
         </article>
       </section>
 

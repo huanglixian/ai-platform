@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 
 import { getAppFactoryDatabase } from "@/app_factory/server/database";
+import type { RuntimeId } from "@/app_factory/runtimes/types";
 
 import type {
   PublicationDeployment,
@@ -37,6 +38,7 @@ type ReleaseRow = {
   job_id: string;
   version: number;
   artifact_path: string;
+  runtime_id: RuntimeId;
   created_at: string;
 };
 
@@ -78,6 +80,7 @@ function releaseDto(row: ReleaseRow): PublicationRelease {
     jobId: row.job_id,
     version: row.version,
     artifactPath: row.artifact_path,
+    runtimeId: row.runtime_id,
     createdAt: row.created_at,
   };
 }
@@ -230,15 +233,20 @@ export function isPublicationJobActive(job: Pick<PublicationJobLease, "id" | "le
   ).get(job.id, job.lease_token, Date.now()));
 }
 
-export function createPublicationRelease(projectId: string, jobId: string, artifactPath: string): PublicationRelease {
+export function createPublicationRelease(
+  projectId: string,
+  jobId: string,
+  artifactPath: string,
+  runtimeId: RuntimeId,
+): PublicationRelease {
   const database = getAppFactoryDatabase();
   const version = (database.prepare("SELECT COALESCE(MAX(version),0) AS value FROM publication_releases WHERE project_id=?").get(projectId) as { value: number }).value + 1;
   const id = `publication-release-${randomUUID()}`;
   const createdAt = new Date().toISOString();
   database.prepare(
-    "INSERT INTO publication_releases(id,project_id,job_id,version,artifact_path,created_at) VALUES (?,?,?,?,?,?)",
-  ).run(id, projectId, jobId, version, artifactPath, createdAt);
-  return releaseDto({ id, project_id: projectId, job_id: jobId, version, artifact_path: artifactPath, created_at: createdAt });
+    "INSERT INTO publication_releases(id,project_id,job_id,version,artifact_path,runtime_id,created_at) VALUES (?,?,?,?,?,?,?)",
+  ).run(id, projectId, jobId, version, artifactPath, runtimeId, createdAt);
+  return releaseDto({ id, project_id: projectId, job_id: jobId, version, artifact_path: artifactPath, runtime_id: runtimeId, created_at: createdAt });
 }
 
 export function getLatestPublicationRelease(projectId: string): PublicationRelease | null {

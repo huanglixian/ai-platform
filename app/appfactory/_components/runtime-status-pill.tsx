@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 type RuntimeStatus = {
   ai?: { configured?: boolean; provider?: string | null; model?: string | null };
   harness?: { ready?: boolean };
-  skill?: { ready?: boolean };
+  templates?: Array<{ ready?: boolean }>;
 };
 
 export function RuntimeStatusPill() {
@@ -27,7 +27,10 @@ export function RuntimeStatusPill() {
   }, []);
 
   const ready = Boolean(
-    status?.ai?.configured && status.harness?.ready && status.skill?.ready,
+    status?.ai?.configured &&
+      status.harness?.ready &&
+      Boolean(status.templates?.length) &&
+      status.templates?.every((template) => template.ready),
   );
   const label = status === null ? "检测 AI" : ready ? "AI 已连接" : "需要设置";
 
@@ -44,7 +47,7 @@ export function RuntimeStatusPill() {
       title={
         ready
           ? `${status?.ai?.provider ?? "AI"} · ${status?.ai?.model ?? "已配置"}`
-          : "请在项目设置中检查 AI 模型、Pi Harness 和 Coding Skill 配置"
+          : "请在项目设置中检查 AI 模型、Pi Harness 和项目模板配置"
       }
     >
       <span

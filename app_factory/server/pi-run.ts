@@ -12,6 +12,7 @@ import {
   type TranscriptEvent,
 } from "@/app_factory/server/transcript";
 import { restartActivePreview } from "@/app_factory/server/preview";
+import { getAppTemplate, type AppTemplateId } from "@/app_factory/template-catalog";
 
 export type PiRunEvent = TranscriptEvent & {
   runId: string;
@@ -25,6 +26,7 @@ type PiRunContext = {
     project_id: string;
     cwd: string;
     model_profile_id: ModelProfileId;
+    template_id: AppTemplateId;
   };
   prompt: string;
 };
@@ -38,6 +40,7 @@ export async function* executePiRun({
   session,
   prompt,
 }: PiRunContext): AsyncGenerator<PiRunEvent> {
+  const template = getAppTemplate(session.template_id);
   let sequence = 0;
   const events: PiRunEvent[] = [];
 
@@ -67,7 +70,11 @@ export async function* executePiRun({
     for await (const event of piHarnessRuntime.run(
       { id: session.id, projectId: session.project_id, harness: "pi", cwd: session.cwd },
       prompt,
-      { modelProfileId: session.model_profile_id, thinkingLevel },
+      {
+        modelProfileId: session.model_profile_id,
+        thinkingLevel,
+        templateId: template.id,
+      },
     )) {
       const persisted = await persist(event);
       yield persisted;
@@ -93,6 +100,6 @@ export async function* executePiRun({
     finishRun(runId, "failed", message);
     setSessionStatus(session.id, "error");
   } finally {
-    await restartActivePreview(session.project_id, session.cwd);
+    await restartActivePreview(session.project_id, session.cwd, template.runtimeId);
   }
 }

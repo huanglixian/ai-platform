@@ -51,6 +51,7 @@ export type PublicationRelease = {
   jobId: string;
   version: number;
   artifactPath: string;
+  runtimeId: "nextjs" | "static-web";
   createdAt: string;
 };
 

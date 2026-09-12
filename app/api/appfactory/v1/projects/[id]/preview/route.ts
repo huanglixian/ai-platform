@@ -26,7 +26,7 @@ export async function POST(
   if (!project) return apiError("项目不存在", 404);
   if (hasActiveRunForProject(id)) return apiError("Pi 正在修改项目，完成后再预览", 409);
   try {
-    return apiOk(await startPreview(id, project.workspacePath));
+    return apiOk(await startPreview(id, project.workspacePath, project.template.runtimeId));
   } catch (error) {
     if (error instanceof PreviewStartError) {
       return apiError(error.message, 502, { logs: error.logs });

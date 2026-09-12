@@ -10,8 +10,14 @@ type Project = {
   id: string;
   name: string;
   description: string;
-  skillProfile?: string;
+  templateId: string;
+  template: AppTemplate;
   updatedAt: string;
+};
+type AppTemplate = {
+  id: string;
+  name: string;
+  description: string;
 };
 type Filter = "全部" | "草稿" | "发布中" | "已发布" | "失败";
 const filters: Filter[] = ["全部", "草稿", "发布中", "已发布", "失败"];
@@ -24,18 +30,32 @@ export default function AppFactoryPage() {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [skillProfile, setSkillProfile] = useState("nextjs-build");
+  const [templates, setTemplates] = useState<AppTemplate[]>([]);
+  const [templateId, setTemplateId] = useState("");
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState("");
   const { latestForProject } = usePublicationTaskCenter();
   useEffect(() => {
-    fetch("/api/appfactory/v1/projects")
-      .then(async (response) => {
-        const payload = await response.json();
-        if (!response.ok)
-          throw new Error(payload.error?.message || "项目加载失败");
-        setProjects(payload.data ?? []);
+    Promise.all([
+      fetch("/api/appfactory/v1/projects"),
+      fetch("/api/appfactory/v1/templates"),
+    ])
+      .then(async ([projectsResponse, templatesResponse]) => {
+        const [projectsPayload, templatesPayload] = await Promise.all([
+          projectsResponse.json(),
+          templatesResponse.json(),
+        ]);
+        if (!projectsResponse.ok)
+          throw new Error(projectsPayload.error?.message || "项目加载失败");
+        if (!templatesResponse.ok)
+          throw new Error(templatesPayload.error?.message || "模板加载失败");
+        const nextTemplates = Array.isArray(templatesPayload.data)
+          ? templatesPayload.data as AppTemplate[]
+          : [];
+        setProjects(projectsPayload.data ?? []);
+        setTemplates(nextTemplates);
+        setTemplateId((current) => current || nextTemplates[0]?.id || "");
       })
       .catch((reason: unknown) =>
         setError(reason instanceof Error ? reason.message : "项目加载失败"),
@@ -61,6 +81,10 @@ export default function AppFactoryPage() {
     `${project.name} ${project.description}`.toLowerCase().includes(query.trim().toLowerCase()) &&
     (filter === "全部" || statusFor(project) === filter),
   ), [filter, projects, query, statusFor]);
+  const selectedTemplate = useMemo(
+    () => templates.find((template) => template.id === templateId),
+    [templateId, templates],
+  );
   const create = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!name.trim() || creating) return;
@@ -70,7 +94,7 @@ export default function AppFactoryPage() {
       const response = await fetch("/api/appfactory/v1/projects", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ name, description, skillProfile }),
+        body: JSON.stringify({ name, description, templateId }),
       });
       const payload = await response.json();
       if (!response.ok)
@@ -173,7 +197,7 @@ export default function AppFactoryPage() {
                 {project.description || "暂无描述，进入项目开始与 AI 对话。"}
               </p>
               <div className="mt-5 flex items-center justify-between border-t border-[#edf1f5] pt-3 text-[10px] text-[#98a2b3]">
-                <span>{project.skillProfile || "nextjs-build"}</span>
+                <span>{project.template.name}</span>
                 <span>
                   {new Date(project.updatedAt).toLocaleDateString("zh-CN")}
                 </span>
@@ -230,15 +254,24 @@ export default function AppFactoryPage() {
             </label>
             <div className="mt-4">
               <label className="text-xs font-medium text-[#4d4d4d]">
-                模板 / Skill
+                模板
                 <select
-                  value={skillProfile}
-                  onChange={(event) => setSkillProfile(event.target.value)}
+                  value={templateId}
+                  onChange={(event) => setTemplateId(event.target.value)}
                   className="mt-2 h-10 w-full rounded-lg border border-[#dbe5f0] bg-white px-3 text-sm outline-none focus:border-[#2e7dd2]"
                 >
-                  <option value="nextjs-build">Next.js 应用</option>
+                  {templates.map((template) => (
+                    <option key={template.id} value={template.id}>
+                      {template.name}
+                    </option>
+                  ))}
                 </select>
               </label>
+              {selectedTemplate ? (
+                <p className="mt-2 text-xs leading-5 text-[#667085]">
+                  {selectedTemplate.description}
+                </p>
+              ) : null}
             </div>
             <label className="mt-4 block text-xs font-medium text-[#4d4d4d]">
               项目描述
@@ -262,7 +295,7 @@ export default function AppFactoryPage() {
               </button>
               <button
                 type="submit"
-                disabled={creating || !name.trim()}
+                disabled={creating || !name.trim() || !templateId}
                 className="h-9 rounded-lg bg-[#0368b3] px-4 text-sm font-medium text-white hover:bg-[#1a4d87] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {creating ? "创建中…" : "创建项目"}

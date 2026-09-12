@@ -3,6 +3,7 @@ import { spawn, type ChildProcess } from "node:child_process";
 import { loadEnvConfig } from "@next/env";
 import { normalizePiEvent } from "@/app_factory/features/pi-events";
 import { ensurePiAgentConfig } from "@/app_factory/server/pi-agent-config";
+import { getAppTemplate } from "@/app_factory/template-catalog";
 import {
   getModelApiKey,
   getModelConfigurationError,
@@ -32,6 +33,7 @@ export function createPiRunArgs(
   options: HarnessRunOptions,
 ) {
   const profile = getModelProfile(options.modelProfileId);
+  const template = getAppTemplate(options.templateId);
   return [
     "--provider", profile.piProvider,
     "--model", getModelName(profile),
@@ -40,7 +42,7 @@ export function createPiRunArgs(
     "--approve",
     "--session-id", session.id,
     "--session-dir", path.join(process.cwd(), "storage", "appfactory", "pi-sessions"),
-    "--skill", path.join(process.cwd(), "app_factory", "skills", "nextjs-build"),
+    "--skill", template.rootPath,
     "--",
     prompt,
   ];

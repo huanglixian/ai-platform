@@ -11,7 +11,7 @@ test("新建数据库使用稳定模型档案 ID", async () => {
   try {
     await fs.symlink(path.join(originalDirectory, "app_factory"), path.join(temporaryDirectory, "app_factory"));
     process.chdir(temporaryDirectory);
-    const { getAppFactoryDatabase } = await import("./database.ts");
+    const { createProject, getAppFactoryDatabase } = await import("./database.ts");
     database = getAppFactoryDatabase();
     const columns = database.prepare("PRAGMA table_info(sessions)").all();
     const modelProfileColumn = columns.find((column) => column.name === "model_profile_id");
@@ -22,6 +22,16 @@ test("新建数据库使用稳定模型档案 ID", async () => {
     assert.equal(
       database.prepare("SELECT default_model_profile AS profile FROM appfactory_settings WHERE id = 1").get().profile,
       "zhipu",
+    );
+    const project = createProject({
+      name: "纯 HTML 测试项目",
+      templateId: "static-html",
+    });
+    assert.equal(project.templateId, "static-html");
+    assert.equal(project.template.name, "纯 HTML 应用");
+    assert.match(
+      await fs.readFile(path.join(project.workspacePath, "app.yaml"), "utf8"),
+      /runtime: static-web/,
     );
   } finally {
     database?.close();

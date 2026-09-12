@@ -1,0 +1,6 @@
+name: {{APP_NAME_JSON}}
+version: 0.1.0
+runtime: nextjs
+entry: app/page.tsx
+healthPath: /
+capabilities: []

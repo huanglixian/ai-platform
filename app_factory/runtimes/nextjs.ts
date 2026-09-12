@@ -1,31 +1,20 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
+import { getReleaseStagingPath, materializeRuntimeWorkspace } from "@/app_factory/server/runtime-workspace";
 import { runWorkspaceCommand } from "@/app_factory/server/workspace";
-import {
-  getReleaseStagingPath,
-  materializeRuntimeWorkspace,
-} from "@/app_factory/server/runtime-workspace";
 
-export type ReleaseBuildLog = {
-  stage: "lint" | "typecheck" | "build" | "package";
-  output: string;
-};
-
-type BuildOptions = {
-  onLog: (log: ReleaseBuildLog) => void;
-  signal?: AbortSignal;
-};
+import type { AppRuntime, RuntimeBuildOptions } from "./types";
 
 async function copyIfExists(source: string, destination: string) {
   const exists = await fs.access(source).then(() => true).catch(() => false);
   if (exists) await fs.cp(source, destination, { recursive: true });
 }
 
-export async function buildStandaloneRelease(
+async function buildRelease(
   workspacePath: string,
   releasePath: string,
-  options: BuildOptions,
+  options: RuntimeBuildOptions,
 ) {
   const stagingPath = getReleaseStagingPath(releasePath);
   try {
@@ -46,23 +35,43 @@ export async function buildStandaloneRelease(
     }
 
     const standalone = path.join(stagingPath, ".next", "standalone");
-    const hasStandalone = await fs.access(path.join(standalone, "server.js"))
-      .then(() => true)
-      .catch(() => false);
-    if (!hasStandalone) {
-      throw new Error("构建产物缺少 Next.js standalone server.js");
-    }
+    const server = path.join(standalone, "server.js");
+    const exists = await fs.access(server).then(() => true).catch(() => false);
+    if (!exists) throw new Error("构建产物缺少 Next.js standalone server.js");
 
     await fs.mkdir(path.dirname(releasePath), { recursive: true });
     await fs.mkdir(releasePath);
     await fs.cp(standalone, releasePath, { recursive: true });
-    await copyIfExists(
-      path.join(stagingPath, ".next", "static"),
-      path.join(releasePath, ".next", "static"),
-    );
+    await copyIfExists(path.join(stagingPath, ".next", "static"), path.join(releasePath, ".next", "static"));
     await copyIfExists(path.join(stagingPath, "public"), path.join(releasePath, "public"));
     options.onLog({ stage: "package", output: "已生成独立的 Next.js standalone Release" });
   } finally {
     await fs.rm(stagingPath, { recursive: true, force: true });
   }
 }
+
+export const nextjsRuntime: AppRuntime = {
+  id: "nextjs",
+  applicationRuntime: "nextjs",
+  createPreviewCommand(workspacePath, port) {
+    return {
+      executable: process.execPath,
+      args: [
+        path.join(process.cwd(), "node_modules", "next", "dist", "bin", "next"),
+        "dev",
+        "--webpack",
+        "--port",
+        String(port),
+      ],
+      cwd: workspacePath,
+    };
+  },
+  buildRelease,
+  createReleaseCommand(releasePath) {
+    return {
+      executable: process.execPath,
+      args: [path.join(releasePath, "server.js")],
+      cwd: releasePath,
+    };
+  },
+};

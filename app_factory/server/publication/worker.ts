@@ -2,8 +2,9 @@ import path from "node:path";
 
 import { readApplicationManifest, validateProject } from "@/app_factory/contracts/validator";
 import { createAgentHubClient } from "@/app_factory/features/agenthub-client";
+import { getAppRuntime } from "@/app_factory/runtimes";
 import { getProject, listCapabilityBindings } from "@/app_factory/server/database";
-import { buildStandaloneRelease } from "./release-builder";
+import { getAppTemplate } from "@/app_factory/template-catalog";
 import {
   allocatePublishedPort,
   restorePublicationRuntimes,
@@ -47,6 +48,7 @@ async function restorePreviousRuntime(
   const runtime = await startPublicationRuntime(
     deployment.projectId,
     release.artifactPath,
+    release.runtimeId,
     deployment.port,
     deployment.healthPath,
   );
@@ -56,6 +58,8 @@ async function restorePreviousRuntime(
 async function publish(job: PublicationJobLease, signal: AbortSignal) {
   const project = getProject(job.project_id);
   if (!project) throw new Error("项目不存在");
+  const template = getAppTemplate(project.templateId);
+  const appRuntime = getAppRuntime(template.runtimeId);
 
   updatePublicationProgress(job, "validating", "正在校验应用配置与能力绑定", 1);
   const checks = await validateProject(project.workspacePath, {
@@ -66,9 +70,12 @@ async function publish(job: PublicationJobLease, signal: AbortSignal) {
     throw new Error(validationErrors.map((check) => check.message).join("；"));
   }
   const manifest = await readApplicationManifest(project.workspacePath);
+  if (manifest.runtime !== appRuntime.id) {
+    throw new Error("app.yaml 的运行时与项目模板不一致");
+  }
   ensureActive(job);
 
-  updatePublicationProgress(job, "building", "正在执行 lint、typecheck 与 Next.js 构建", 2);
+  updatePublicationProgress(job, "building", `正在构建${template.name}`, 2);
   const releasePath = path.join(
     process.cwd(),
     "storage",
@@ -77,7 +84,7 @@ async function publish(job: PublicationJobLease, signal: AbortSignal) {
     project.id,
     job.id,
   );
-  await buildStandaloneRelease(project.workspacePath, releasePath, {
+  await appRuntime.buildRelease(project.workspacePath, releasePath, {
     signal,
     onLog(log) {
       updatePublicationProgress(
@@ -91,7 +98,7 @@ async function publish(job: PublicationJobLease, signal: AbortSignal) {
   ensureActive(job);
 
   updatePublicationProgress(job, "packaging", "正在创建不可变 Release", 4);
-  const release = createPublicationRelease(project.id, job.id, releasePath);
+  const release = createPublicationRelease(project.id, job.id, releasePath, appRuntime.id);
   const previousDeployment = getRunningPublicationDeployment(project.id);
   const previousRelease = previousDeployment
     ? getPublicationRelease(previousDeployment.releaseId)
@@ -115,6 +122,7 @@ async function publish(job: PublicationJobLease, signal: AbortSignal) {
     const runtime = await startPublicationRuntime(
       project.id,
       release.artifactPath,
+      release.runtimeId,
       port,
       manifest.healthPath,
     );
@@ -136,7 +144,7 @@ async function publish(job: PublicationJobLease, signal: AbortSignal) {
       description: project.description,
       producer: "appfactory",
       kind: "application",
-      runtime: "nextjs",
+      runtime: appRuntime.applicationRuntime,
       status: "active",
       entryUrl: runtime.url,
       version: String(release.version),

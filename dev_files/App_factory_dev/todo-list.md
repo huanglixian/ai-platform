@@ -7,7 +7,7 @@
 - 总体状态：`进行中`
 - 当前阶段：`阶段 6：能力绑定、AgentHub 注册与最终交付`
 - 当前目标：`完成端到端验收并记录剩余限制`
-- 最近完成：`阶段 6 Capability Client/Gateway、来源展示、独立闭环与事实源清理；Pi Provider/模型配置与非交互 Harness；生成项目 ESLint 配置；Build 生产环境修复、健康部署地址注册与工作区发布入口；阶段 5 Preview HTTP 就绪检查、IPv4/IPv6 端口冲突处理与遗留 Next.js Preview 恢复；阶段 4 Pi cwd/会话持久化与取消回收、Workspace Runtime seam、默认 Coding Skill、职责层、预览打开、安全检查与三栏工作区；Pi 发送态、运行反馈与 SSE 增量事件；Pi JSONL 工具活动时间线、单一运行卡片与 AI Markdown 渲染；项目内 Session 切换/新建、会话标题、Pi 上下文健康状态、服务端并发保护与上下文压缩反馈`
+- 最近完成：`阶段 6 Capability Client/Gateway、来源展示、独立闭环与事实源清理；Pi Provider/模型配置与非交互 Harness；生成项目 ESLint 配置；Build 生产环境修复、健康部署地址注册与工作区发布入口；阶段 5 Preview HTTP 就绪检查、IPv4/IPv6 端口冲突处理与遗留 Next.js Preview 恢复；阶段 4 Pi cwd/会话持久化与取消回收、Workspace Runtime seam、项目模板、职责层、预览打开、安全检查与三栏工作区；Pi 发送态、运行反馈与 SSE 增量事件；Pi JSONL 工具活动时间线、单一运行卡片与 AI Markdown 渲染；项目内 Session 切换/新建、会话标题、Pi 上下文健康状态、服务端并发保护与上下文压缩反馈`
 - 最近验证：`Next.js 16.3.3；29 项 Node 核心测试、lint/typecheck/build/diff-check 通过；真实 DeepSeek Pi 自然语言读取与修改文件、npm run typecheck 活动反馈成功；Pi SSE started→harness→finished 事件流实测，transcript 按 runId/sequence 持久化；多步骤执行过程在同一卡片内部更新，执行准备阶段与完成阶段同时保留，进行中及展开后的完成列表自动跟随最新步骤；无工具步骤的成功问答不再重复显示执行摘要；Markdown 标题、列表、行内代码和代码块在 Chrome 中结构化渲染；旧版 Pi 启动诊断、内部完成标记和孤立遗留结果不再作为聊天消息展示；项目工作区新建对话后上下文隔离、历史 Session 切换后 transcript 恢复、首条需求标题更新、Pi 状态 API 返回 ready、上下文压缩结束事件归一化均已实测；指定项目 Preview 恢复、停止、重新启动及 API 返回后立即 HTTP 200 已实测；Preview→Check→Build→Release→Local Deployment→AgentHub 注册→应用中心可见闭环实测；文件读写与快照 Diff API 实测；AgentHub/AgentHub 页面与 API 均返回 200；localStorage 替代调用已清理；Chrome 桌面、平板、移动端视觉验收通过`
 - 阻塞项：`无`
 - 下一步：`在真实异步任务需求出现后，将 Pi Run、Build 和 Preview 逐步迁移到 SQLite Job Worker，并再建设全局任务中心；继续按反馈迭代产品体验`
@@ -169,12 +169,11 @@
 - [x] 拦截明显危险命令、宿主敏感路径、Docker Socket 和跨 Workspace 访问。
 - [x] 为未来 Docker Sandbox 保留轻量 Runtime seam，但本轮仅实现可信单实例 Local Workspace。
 
-### 4.3 Skill 与项目模板
+### 4.3 项目模板
 
-- [x] 基于现有 `nextjs-build` 规则创建 AppFactory 默认 Coding Skill。
-- [x] 增加 `SKILL.md + references + templates + validators` 的正式包结构。
+- [x] 建立项目模板 Catalog；模板包含初始 Workspace、`SKILL.md`、references 与 validators。
 - [x] 支持 references 按需读取，不把所有文档一次塞入上下文。
-- [x] 默认模板使用 Next.js App Router、TypeScript、Tailwind、shadcn/ui 和统一基础主题（已生成可构建的 Next.js App Router 最小项目）。
+- [x] 当前提供 Next.js 与纯 HTML 模板；运行时负责各自的 Preview、构建与发布。
 - [x] 新项目自动创建 `app.yaml`、`dev_todo.md`、`dev_status.md` 等必要文件。
 
 ### 4.4 开发工作区 UI

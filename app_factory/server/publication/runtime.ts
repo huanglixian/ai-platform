@@ -1,6 +1,5 @@
 import { spawn, type ChildProcess } from "node:child_process";
 import net from "node:net";
-import path from "node:path";
 
 import { waitForHttpReady } from "@/app_factory/server/preview-readiness";
 import {
@@ -8,11 +7,14 @@ import {
   listRunningPublicationDeployments,
   updatePublicationDeployment,
 } from "./repository";
+import { getAppRuntime } from "@/app_factory/runtimes";
+import type { RuntimeId } from "@/app_factory/runtimes/types";
 
 type ManagedRuntime = {
   process: ChildProcess;
   logs: string[];
   releasePath: string;
+  runtimeId: RuntimeId;
   port: number;
   healthPath: string;
 };
@@ -70,19 +72,21 @@ export async function allocatePublishedPort(start = 4100) {
 export async function startPublicationRuntime(
   projectId: string,
   releasePath: string,
+  runtimeId: RuntimeId,
   port: number,
   healthPath: string,
 ) {
   const existing = runtimes.get(projectId);
   if (existing) {
-    if (existing.releasePath !== releasePath || existing.port !== port || existing.healthPath !== healthPath) {
+    if (existing.releasePath !== releasePath || existing.runtimeId !== runtimeId || existing.port !== port || existing.healthPath !== healthPath) {
       throw new Error("旧 Release 仍在运行，无法覆盖启动");
     }
     return { pid: existing.process.pid ?? null, url: `http://localhost:${port}`, logs: existing.logs };
   }
   const logs: string[] = [];
-  const child = spawn(process.execPath, [path.join(releasePath, "server.js")], {
-    cwd: releasePath,
+  const command = getAppRuntime(runtimeId).createReleaseCommand(releasePath, port);
+  const child = spawn(command.executable, command.args, {
+    cwd: command.cwd,
     env: { ...process.env, NODE_ENV: "production", PORT: String(port), HOSTNAME: "127.0.0.1" },
     stdio: ["ignore", "pipe", "pipe"],
   });
@@ -90,7 +94,7 @@ export async function startPublicationRuntime(
   child.stderr?.on("data", (chunk) => appendLog(logs, chunk));
   child.once("error", (error) => appendLog(logs, error.message));
   child.once("close", () => runtimes.delete(projectId));
-  runtimes.set(projectId, { process: child, logs, releasePath, port, healthPath });
+  runtimes.set(projectId, { process: child, logs, releasePath, runtimeId, port, healthPath });
   try {
     await waitForHttpReady(
       new URL(healthPath, `http://127.0.0.1:${port}`).toString(),
@@ -143,6 +147,7 @@ export async function restorePublicationRuntimes() {
     const runtime = await startPublicationRuntime(
       deployment.projectId,
       release.artifactPath,
+      release.runtimeId,
       deployment.port,
       deployment.healthPath,
     );

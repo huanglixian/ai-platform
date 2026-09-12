@@ -3,6 +3,7 @@ import path from "node:path";
 
 import { loadEnvConfig } from "@next/env";
 import { getAppFactoryModelSettings } from "@/app_factory/server/database";
+import { listAppTemplates } from "@/app_factory/template-catalog";
 import {
   getModelApiKey,
   getModelProfile,
@@ -16,13 +17,6 @@ export async function GET() {
   loadEnvConfig(process.cwd());
   const modelSettings = getAppFactoryModelSettings();
   const modelProfile = getModelProfile(modelSettings.defaultModelProfileId);
-  const skillPath = path.join(
-    process.cwd(),
-    "app_factory",
-    "skills",
-    "nextjs-build",
-    "SKILL.md",
-  );
   return apiOk({
     ai: {
       configured: Boolean(getModelApiKey(modelProfile)),
@@ -41,6 +35,11 @@ export async function GET() {
       ),
       name: "Pi Harness",
     },
-    skill: { ready: fs.existsSync(skillPath), name: "nextjs-build" },
+    templates: listAppTemplates().map((template) => ({
+      id: template.id,
+      name: template.name,
+      ready: fs.existsSync(path.join(template.rootPath, "SKILL.md")) &&
+        fs.existsSync(path.join(template.rootPath, "scaffold")),
+    })),
   });
 }

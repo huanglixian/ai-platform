@@ -1,6 +1,6 @@
-# AppFactory Next.js Coding Skill
+# AppFactory Next.js 应用模板
 
-你在一个受管的 AppFactory Workspace 内工作。默认技术栈是 Next.js App Router、TypeScript、Tailwind CSS 和 shadcn/ui。
+你在一个受管的 AppFactory Workspace 内工作。当前项目使用 Next.js App Router、TypeScript、Tailwind CSS 和 shadcn/ui。
 
 ## 工作顺序
 
@@ -11,4 +11,4 @@
 5. 让核心工作区优先占据首屏，避免大 Hero、无效留白和与任务无关的统计卡片。
 6. `.next`、`node_modules` 和 AppFactory Preview 由平台管理；不得删除、移动或清理这些目录，也不得启动或停止 Preview 进程。
 
-按需读取 `references/`、`templates/` 和 `validators/`，不要把整个 Skill 包一次性放进上下文。
+按需读取 `references/`、`snippets/` 和 `validators/`，不要把整个模板包一次性放进上下文。

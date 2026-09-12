@@ -197,17 +197,13 @@ AppFactory: projects, sessions, runs, jobs, builds, releases,
 - 第一版实现 `PiHarnessRuntime`，未来可增加 Codex/DeepSeek Adapter。
 - 每个项目使用独立 `cwd`、Session 和 Workspace。
 - 文件、搜索、编辑和命令工具必须限制在当前 Workspace；命令有超时、输出限制和环境变量白名单。
-- 默认 Coding Skill 和 references 由 AppFactory 自己加载。
+- 项目模板和其 references 由 AppFactory 自己加载；Pi 使用模板内的 `SKILL.md` 作为开发说明。
 
-### 5.4 默认生成应用
+### 5.4 项目模板与初始应用
 
-统一沿用：
+每个项目从受控模板创建。模板决定初始 Workspace、Pi 开发说明和运行时；当前提供 Next.js 与纯 HTML 两种模板。
 
-```text
-Next.js App Router + TypeScript + Tailwind CSS + shadcn/ui
-```
-
-基于现有 `nextjs-build` 规则补充 AppFactory 约束：
+所有模板共享以下约束：
 
 - 必须包含 `app.yaml`。
 - 必须通过结构、Contract、Lint、TypeScript 和生产 Build 检查。
@@ -219,10 +215,10 @@ Next.js App Router + TypeScript + Tailwind CSS + shadcn/ui
 
 首版不要求 Docker：
 
-- Preview：受管 Next.js dev process，AppFactory 分配端口、记录日志并嵌入预览区。
-- Build：Contract Check → Lint → TypeScript → `next build`。
+- Preview：由模板运行时启动受管进程，AppFactory 分配端口、记录日志并嵌入预览区。
+- Build：运行时执行必要的构建步骤；Next.js 执行 Contract Check → Lint → TypeScript → `next build`，纯 HTML 直接打包静态文件。
 - Release：保存不可变版本和构建元数据。
-- Local Deployment：优先运行 Next.js standalone 或等价稳定 Node 产物。
+- Local Deployment：按 Release 保存的运行时启动；Next.js 使用 standalone，纯 HTML 使用静态文件服务。
 - 预留轻量 `DeploymentRuntime`，本轮只实现 Local Process Runtime。
 
 ### 5.6 AgentHub 集成

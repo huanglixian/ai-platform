@@ -11,6 +11,8 @@ import {
   getPreviewWorkspacePath,
   materializeRuntimeWorkspace,
 } from "./runtime-workspace";
+import { getAppRuntime } from "@/app_factory/runtimes";
+import type { RuntimeId } from "@/app_factory/runtimes/types";
 
 type PreviewStatus = "starting" | "running" | "stale" | "stopped" | "error";
 
@@ -206,6 +208,7 @@ async function selectPreviewPort(preferredPort?: number) {
 export async function startPreview(
   projectId: string,
   sourceWorkspacePath: string,
+  runtimeId: RuntimeId,
   preferredPort?: number,
 ) {
   ensurePreviewTable();
@@ -278,9 +281,9 @@ export async function startPreview(
   );
   const logs: string[] = [];
   const readinessController = new AbortController();
-  const nextCli = path.join(process.cwd(), "node_modules", "next", "dist", "bin", "next");
-  const child = spawn(process.execPath, [nextCli, "dev", "--webpack", "--port", String(port)], {
-    cwd: workspacePath,
+  const command = getAppRuntime(runtimeId).createPreviewCommand(workspacePath, port);
+  const child = spawn(command.executable, command.args, {
+    cwd: command.cwd,
     env: previewEnvironment(),
     stdio: ["ignore", "pipe", "pipe"],
   });
@@ -394,6 +397,7 @@ export async function stopPreview(projectId: string) {
 export async function restartActivePreview(
   projectId: string,
   sourceWorkspacePath: string,
+  runtimeId: RuntimeId,
 ) {
   const preview = getPreview(projectId);
   if (!preview || ["stopped", "error"].includes(preview.status)) return null;
@@ -402,7 +406,7 @@ export async function restartActivePreview(
     return null;
   }
   try {
-    return await startPreview(projectId, sourceWorkspacePath, preview.port);
+    return await startPreview(projectId, sourceWorkspacePath, runtimeId, preview.port);
   } catch (error) {
     console.error(`AppFactory Preview 重建失败：${projectId}`, error);
     return null;
