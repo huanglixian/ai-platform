@@ -151,7 +151,7 @@ export function AppsPageClient() {
           <Dialog.Backdrop className="fixed inset-0 z-[60] bg-slate-950/35 backdrop-blur-[1px]" />
           <Dialog.Popup className="fixed left-1/2 top-1/2 z-[61] w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl focus:outline-none">
             <Dialog.Title className="text-base font-bold text-title">删除应用</Dialog.Title>
-            <Dialog.Description className="mt-2 text-sm leading-6 text-slate-600">确定删除“{removingApp?.name}”吗？{removingApp?.source === "appfactory" ? "已发布的运行时会停止，但 AppFactory 项目和发布历史会保留。" : "由应用中心启动的服务会一并停止。"}</Dialog.Description>
+            <Dialog.Description className="mt-2 text-sm leading-6 text-slate-600">确定删除“{removingApp?.name}”吗？{removingApp?.source === "appfactory" ? "已发布的运行时会停止，但 AppFactory 项目和发布历史会保留。" : removingApp?.source === "external" ? "由应用中心启动的服务会一并停止。" : "该应用注册记录会从应用中心删除。"}</Dialog.Description>
             {removeError ? <p role="alert" className="mt-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs leading-5 text-rose-700">{removeError}</p> : null}
             <div className="mt-5 flex justify-end gap-2">
               <Dialog.Close disabled={removing} className="inline-flex h-9 items-center justify-center rounded-lg border border-border px-3 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60">取消</Dialog.Close>

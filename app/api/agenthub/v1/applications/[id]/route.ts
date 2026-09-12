@@ -13,7 +13,6 @@ export async function DELETE(_request: Request, context: { params: Promise<{ id:
   const { id } = await context.params;
   const app = getApplication(id);
   if (!app) return apiError("应用不存在", 404);
-  if (!app.isRemovable) return apiError("内置应用不能移除", 403);
   try {
     return await removeApplication(id) ? apiOk({ id, removed: true }) : apiError("应用不存在", 404);
   } catch (error) {

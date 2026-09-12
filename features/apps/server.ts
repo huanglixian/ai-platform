@@ -43,11 +43,6 @@ export const externalApplicationUpdateSchema = externalApplicationInputSchema.pa
 type ApplicationInput = z.infer<typeof applicationInputSchema>;
 type ExternalApplicationInput = z.infer<typeof externalApplicationInputSchema>;
 
-const seededApplicationIds = new Set([
-  ...INITIAL_APPS.map((app) => app.id),
-  ...EXTERNAL_APP_SEEDS.map((app) => app.id),
-]);
-
 function getLaunchPid(row: Record<string, unknown>) {
   return typeof row.launch_pid === "number" ? row.launch_pid : null;
 }
@@ -71,7 +66,6 @@ function rowToApp(row: Record<string, unknown>): PublishedApp {
     url: String(row.entry_url),
     launchCommand: typeof row.launch_command === "string" ? row.launch_command : null,
     launchStatus: getLaunchStatus(source, row),
-    isRemovable: !seededApplicationIds.has(String(row.id)) && (source === "appfactory" || source === "external"),
     createdAt: String(row.created_at),
     updatedAt: String(row.updated_at),
   };
@@ -106,6 +100,7 @@ function updateLaunchState(
 
 export function seedApplications() {
   const db = getAgentHubDatabase();
+  if (db.prepare("SELECT 1 FROM application_seed_state WHERE id=1").get()) return;
   const insertMock = db.prepare(`INSERT OR IGNORE INTO applications
     (id,name,description,producer,kind,runtime,status,entry_url,version,created_at,updated_at)
     VALUES (@id,@name,@description,@producer,@kind,'web','active',@entryUrl,'1.0.0',@createdAt,@updatedAt)`);
@@ -135,6 +130,7 @@ export function seedApplications() {
         updatedAt: now,
       });
     }
+    db.prepare("INSERT INTO application_seed_state(id,seeded_at) VALUES (1,?)").run(now);
   });
   seed();
 }
@@ -277,7 +273,7 @@ export async function stopExternalApplication(id: string) {
 
 export async function removeApplication(id: string) {
   const current = getApplicationRow(id);
-  if (!current || seededApplicationIds.has(id)) return false;
+  if (!current) return false;
   const source = platformSourceSchema.parse(current.producer) as PlatformSource;
   if (source === "external") {
     const pid = getLaunchPid(current);

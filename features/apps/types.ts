@@ -11,7 +11,6 @@ export interface PublishedApp {
   url: string;
   launchCommand: string | null;
   launchStatus: ExternalLaunchStatus;
-  isRemovable: boolean;
   createdAt: string;
   updatedAt: string;
 }

@@ -36,7 +36,7 @@ export function AppCard({ app, onSelect, onRemove }: AppCardProps) {
         <span className="font-semibold text-slate-500">{typeLabels[app.appType]}</span>
         <span>{app.source === "appfactory" ? "已发布" : "查看详情"}</span>
       </div>
-      {app.isRemovable ? <button type="button" onClick={() => onRemove(app)} aria-label={`删除${app.name}`} className="absolute right-3 top-3 z-10 grid h-7 w-7 place-items-center rounded-md border border-slate-200 bg-white/95 text-slate-400 shadow-sm transition-colors hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"><Trash2 size={14} /></button> : null}
+      <button type="button" onClick={() => onRemove(app)} aria-label={`删除${app.name}`} className="absolute right-3 top-3 z-10 grid h-7 w-7 place-items-center rounded-md border border-slate-200 bg-white/95 text-slate-400 shadow-sm transition-colors hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"><Trash2 size={14} /></button>
     </article>
   );
 }

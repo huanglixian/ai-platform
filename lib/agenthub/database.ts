@@ -73,6 +73,13 @@ DELETE FROM applications WHERE producer = 'native' OR id LIKE 'app-native-%';`,
     sql: `ALTER TABLE applications ADD COLUMN launch_status TEXT;
 UPDATE applications SET launch_status='running' WHERE producer='external' AND launch_pid IS NOT NULL;`,
   },
+  {
+    id: "006_application_seed_once",
+    sql: `CREATE TABLE IF NOT EXISTS application_seed_state (
+  id INTEGER PRIMARY KEY CHECK (id = 1),
+  seeded_at TEXT NOT NULL
+);`,
+  },
 ];
 
 export function getAgentHubDatabase(): Database.Database {
