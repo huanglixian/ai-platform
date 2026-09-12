@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-type ModelProfileId = "glm-5.3-flash" | "deepseek-v4-flash";
+type ModelProfileId = "zhipu" | "deepseek";
 type ThinkingLevel = "low" | "high" | "max";
 
 type RuntimeStatus = {
@@ -16,6 +16,7 @@ type ModelProfile = {
   label: string;
   provider: string;
   description: string;
+  model: string;
   configured: boolean;
 };
 
@@ -150,7 +151,7 @@ export default function AppFactorySettingsPage() {
             运行环境
           </h1>
           <p className="mt-2 text-sm text-[#667085]">
-            选择新建对话使用的模型，并设置所有对话的思考程度。密钥只由服务端环境变量管理。
+            选择新建对话使用的模型档案，并设置所有对话的思考程度。模型名和密钥只由服务端环境变量管理。
           </p>
         </div>
         <Link
@@ -166,10 +167,10 @@ export default function AppFactorySettingsPage() {
           <div>
             <div className="flex items-center gap-2">
               <StatusDot ready={Boolean(selectedProfile?.configured)} />
-              <h2 className="text-sm font-semibold text-[#1a4d87]">默认代码模型</h2>
+              <h2 className="text-sm font-semibold text-[#1a4d87]">默认代码模型档案</h2>
             </div>
             <p className="mt-1.5 text-xs leading-5 text-[#667085]">
-              模型默认值仅影响之后新建的对话；已有对话会继续使用创建时的模型，思考程度在下次执行时生效。
+              默认档案仅影响之后新建的对话；已有对话保留创建时的档案，实际模型名每次运行读取环境变量，思考程度在下次执行时生效。
             </p>
           </div>
           <span
@@ -179,7 +180,7 @@ export default function AppFactorySettingsPage() {
                 : "bg-[#fff7e8] text-[#b06d13]"
             }`}
           >
-            {loading ? "读取中" : selectedProfile?.configured ? "API Key 已配置" : "待配置 API Key"}
+            {loading ? "读取中" : selectedProfile?.configured ? "配置完整" : "待配置模型名或 API Key"}
           </span>
         </div>
 
@@ -190,7 +191,7 @@ export default function AppFactorySettingsPage() {
         ) : (
           <div className="mt-5 grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] md:items-end">
             <label className="block">
-              <span className="mb-1.5 block text-xs font-medium text-[#4d4d4d]">模型</span>
+              <span className="mb-1.5 block text-xs font-medium text-[#4d4d4d]">模型档案</span>
               <select
                 value={form?.defaultModelProfileId ?? ""}
                 disabled={loading || !form}
@@ -231,9 +232,10 @@ export default function AppFactorySettingsPage() {
         {selectedProfile && !loadError ? (
           <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-[#e8edf3] pt-3 text-xs">
             <span className="font-medium text-[#4d4d4d]">{selectedProfile.provider}</span>
+            <span className="text-[#667085]">实际模型：{selectedProfile.model || "未配置"}</span>
             <span className="text-[#667085]">{selectedProfile.description}</span>
             {!selectedProfile.configured && (
-              <span className="text-[#b06d13]">可保存为默认模型，运行前需配置 API Key。</span>
+              <span className="text-[#b06d13]">可保存为默认模型，运行前需配置模型名和 API Key。</span>
             )}
           </div>
         ) : null}

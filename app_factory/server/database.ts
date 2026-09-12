@@ -23,8 +23,8 @@ export function getAppFactoryDatabase() {
   db.pragma("busy_timeout = 5000");
   db.exec(`
     CREATE TABLE IF NOT EXISTS projects (id TEXT PRIMARY KEY, name TEXT NOT NULL, description TEXT NOT NULL DEFAULT '', skill_profile TEXT NOT NULL DEFAULT 'nextjs-build', workspace_path TEXT NOT NULL, published_port INTEGER, created_at TEXT NOT NULL, updated_at TEXT NOT NULL);
-    CREATE TABLE IF NOT EXISTS sessions (id TEXT PRIMARY KEY, project_id TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'idle', harness TEXT NOT NULL DEFAULT 'pi', title TEXT NOT NULL DEFAULT '新对话', model_profile_id TEXT NOT NULL DEFAULT 'deepseek-v4-flash', transcript_path TEXT, created_at TEXT NOT NULL, updated_at TEXT NOT NULL, FOREIGN KEY(project_id) REFERENCES projects(id));
-    CREATE TABLE IF NOT EXISTS appfactory_settings (id INTEGER PRIMARY KEY CHECK (id = 1), default_model_profile TEXT NOT NULL DEFAULT 'glm-5.3-flash', thinking_level TEXT NOT NULL DEFAULT 'high', updated_at TEXT NOT NULL);
+    CREATE TABLE IF NOT EXISTS sessions (id TEXT PRIMARY KEY, project_id TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'idle', harness TEXT NOT NULL DEFAULT 'pi', title TEXT NOT NULL DEFAULT '新对话', model_profile_id TEXT NOT NULL DEFAULT 'zhipu', transcript_path TEXT, created_at TEXT NOT NULL, updated_at TEXT NOT NULL, FOREIGN KEY(project_id) REFERENCES projects(id));
+    CREATE TABLE IF NOT EXISTS appfactory_settings (id INTEGER PRIMARY KEY CHECK (id = 1), default_model_profile TEXT NOT NULL DEFAULT 'zhipu', thinking_level TEXT NOT NULL DEFAULT 'high', updated_at TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS runs (id TEXT PRIMARY KEY, project_id TEXT NOT NULL, session_id TEXT, status TEXT NOT NULL DEFAULT 'queued', input TEXT NOT NULL DEFAULT '', output TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL, updated_at TEXT NOT NULL, FOREIGN KEY(project_id) REFERENCES projects(id));
     CREATE TABLE IF NOT EXISTS capability_bindings (id TEXT PRIMARY KEY, project_id TEXT NOT NULL, capability_id TEXT NOT NULL, version TEXT, config_json TEXT NOT NULL DEFAULT '{}', created_at TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS publication_jobs (
@@ -93,7 +93,7 @@ export function getAppFactoryDatabase() {
     db.exec("ALTER TABLE sessions ADD COLUMN title TEXT NOT NULL DEFAULT '新对话'");
   }
   if (!sessionColumns.some((column) => column.name === "model_profile_id")) {
-    db.exec("ALTER TABLE sessions ADD COLUMN model_profile_id TEXT NOT NULL DEFAULT 'deepseek-v4-flash'");
+    db.exec("ALTER TABLE sessions ADD COLUMN model_profile_id TEXT NOT NULL DEFAULT 'zhipu'");
   }
   db.prepare("INSERT OR IGNORE INTO appfactory_settings (id,default_model_profile,thinking_level,updated_at) VALUES (1,?,?,?)").run(
     DEFAULT_MODEL_PROFILE_ID,

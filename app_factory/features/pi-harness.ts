@@ -6,6 +6,7 @@ import { ensurePiAgentConfig } from "@/app_factory/server/pi-agent-config";
 import {
   getModelApiKey,
   getModelConfigurationError,
+  getModelName,
   getModelProfile,
 } from "@/app_factory/server/model-profiles";
 import type { HarnessEvent, HarnessRunOptions, HarnessRuntime, HarnessSessionRef } from "@/app_factory/types/harness";
@@ -20,8 +21,7 @@ function piEnvironment(options: HarnessRunOptions): NodeJS.ProcessEnv {
   delete environment.APPFACTORY_DEEPSEEK_API_KEY;
   const profile = getModelProfile(options.modelProfileId);
   const apiKey = getModelApiKey(profile);
-  if (profile.id === "glm-5.3-flash") environment.APPFACTORY_ZHIPU_API_KEY = apiKey;
-  if (profile.id === "deepseek-v4-flash") environment.DEEPSEEK_API_KEY = apiKey;
+  environment[profile.piApiKeyEnv] = apiKey;
   environment.PI_CODING_AGENT_DIR = ensurePiAgentConfig();
   return environment;
 }
@@ -34,7 +34,7 @@ export function createPiRunArgs(
   const profile = getModelProfile(options.modelProfileId);
   return [
     "--provider", profile.piProvider,
-    "--model", profile.model,
+    "--model", getModelName(profile),
     "--thinking", options.thinkingLevel,
     "--mode", "json",
     "--approve",
