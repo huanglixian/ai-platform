@@ -55,7 +55,6 @@ export const platformNavGroups: PlatformNavGroup[] = [
     key: "settings",
     label: "配置管理",
     items: [
-      { label: "AI 助手", href: "/settings/assistant", hint: "设置未匹配请求的引导说明" },
       { label: "组织管理", disabled: true, hint: "组织结构与协作边界" },
       { label: "角色管理", disabled: true, hint: "角色权限与职责控制" },
       { label: "用户管理", disabled: true, hint: "用户账号与成员维护" },

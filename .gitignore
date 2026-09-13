@@ -21,7 +21,6 @@
 /build
 
 # runtime data
-/storage/
 /data/storage/
 
 # misc

@@ -1,7 +1,5 @@
 import nextEnv from "@next/env";
-import { migrateRuntimeData } from "./migrate-runtime-data.mjs";
 
-await migrateRuntimeData();
 nextEnv.loadEnvConfig(process.cwd());
 
 const { restorePublishedApplications, runPublicationWorkerOnce } = await import(

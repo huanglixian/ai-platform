@@ -4,11 +4,8 @@ const dataRoot = path.join(process.cwd(), "data");
 const storageRoot = path.join(dataRoot, "storage");
 
 export const dataPaths = {
-  root: dataRoot,
   builtin: path.join(dataRoot, "builtin"),
-  settings: path.join(dataRoot, "settings"),
   storage: storageRoot,
-  assistantSettings: path.join(dataRoot, "settings", "assistant.json"),
   builtinSkills: path.join(dataRoot, "builtin", "skills"),
   agentHub: path.join(storageRoot, "agenthub"),
   agentHubSkills: path.join(storageRoot, "agenthub", "skills"),

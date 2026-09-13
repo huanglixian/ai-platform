@@ -4,10 +4,11 @@ import { getActiveModelRuntime } from "@/features/models/provider";
 import { buildSkillRunContext } from "@/features/skills/runner";
 import type { AssistantChatMessage, AssistantRuntimeState } from "./chat-types";
 import { dispatchAssistantRequest, type AssistantDispatchDecision } from "./dispatcher";
-import { getAssistantSettings } from "./settings";
 import { buildSkillExecutionPrompt } from "./skill-execution-prompt";
 import { getCapabilityImplementation } from "@/features/capabilities/implementation-registry";
 import { getCapabilityByHandlerKey } from "@/features/capabilities/server";
+
+const noMatchGuide = "目前似乎没有功能可以直接满足你的需求。你可以浏览平台现有能力，或补充更具体的业务目标。";
 
 function toModelMessages(messages: AssistantChatMessage[]): ModelMessage[] {
   return messages
@@ -130,7 +131,7 @@ export async function streamAssistantResponse(
 
   return {
     type: "no_match" as const,
-    content: getAssistantSettings().unmatchedGuide,
+    content: noMatchGuide,
     outcome: { type: "no_match" as const },
   };
 }

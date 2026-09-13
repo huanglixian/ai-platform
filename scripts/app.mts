@@ -1,5 +1,4 @@
 import { spawn, type ChildProcess } from "node:child_process";
-import { migrateRuntimeData } from "./migrate-runtime-data.mjs";
 
 const mode = process.argv[2];
 if (mode !== "dev" && mode !== "start") {
@@ -52,7 +51,6 @@ function finishIfStopped() {
   process.exitCode = exitCode;
 }
 
-await migrateRuntimeData();
 await stopManagedExternalApplications();
 
 for (const definition of definitions) {
