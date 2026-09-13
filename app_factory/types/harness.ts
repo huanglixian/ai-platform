@@ -32,4 +32,4 @@ import type { AppTemplateId } from "@/app_factory/template-catalog";
 import type {
   ModelProfileId,
   ThinkingLevel,
-} from "@/app_factory/server/model-profiles";
+} from "@/app_factory/types/model";

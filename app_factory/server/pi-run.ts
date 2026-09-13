@@ -167,7 +167,7 @@ export async function* executePiRun({
       return;
     }
 
-    const { thinkingLevel } = getAppFactoryModelSettings();
+    const thinkingLevel = getAppFactoryModelSettings().thinkingLevels[session.model_profile_id];
     let failure = "";
     for await (const event of piHarnessRuntime.run(
       { id: session.id, projectId: session.project_id, harness: "pi", cwd: session.cwd },

@@ -21,6 +21,8 @@ import {
   type AppFactorySession,
 } from "@/app_factory/types/session";
 
+import type { ThinkingLevel, ThinkingLevelsByProfile } from "@/app_factory/types/model";
+
 type Project = {
   id: string;
   name: string;
@@ -32,10 +34,11 @@ type RuntimeStatus = {
     configured?: boolean;
     provider?: string | null;
     model?: string | null;
-    thinkingLevel?: "low" | "high" | "max";
+    thinkingLevel?: ThinkingLevel;
   };
   modelSettings?: {
     profiles?: Array<{ id: string; configured: boolean }>;
+    thinkingLevels?: ThinkingLevelsByProfile;
   };
   harness?: { ready?: boolean; name?: string };
   templates?: Array<{ id: string; ready?: boolean }>;
@@ -559,6 +562,9 @@ export default function ProjectPage({
       runtime.templates?.some((template) => template.id === project.template.id && template.ready),
   );
   const activeModelLabel = session?.modelLabel || runtime.ai?.model || "未配置模型";
+  const activeThinkingLevel = session
+    ? runtime.modelSettings?.thinkingLevels?.[session.modelProfileId as keyof ThinkingLevelsByProfile]
+    : runtime.ai?.thinkingLevel;
   const publication = latestForProject(id);
   const statusLabel = publication?.status === "running" || publication?.status === "queued"
     ? "发布中"
@@ -596,7 +602,7 @@ export default function ProjectPage({
         <div className="flex items-center gap-1.5">
           <span className="hidden text-[10px] text-[#98a2b3] lg:inline">
             Pi Harness · {activeModelLabel}
-            {runtime.ai?.thinkingLevel ? ` · ${runtime.ai.thinkingLevel} 思考` : ""}
+            {activeThinkingLevel ? ` · ${activeThinkingLevel} 思考` : ""}
           </span>
           <button
             type="button"

@@ -1,4 +1,4 @@
-import { loadEnvConfig } from "@next/env";
+import nextEnv from "@next/env";
 
 import {
   getAppFactoryModelSettings,
@@ -6,7 +6,7 @@ import {
 } from "@/app_factory/server/database";
 import {
   isModelProfileId,
-  isThinkingLevel,
+  isThinkingLevelsByProfile,
   presentModelProfiles,
 } from "@/app_factory/server/model-profiles";
 import { apiError, apiOk } from "@/lib/server/api-response";
@@ -17,18 +17,18 @@ function presentSettings() {
   const settings = getAppFactoryModelSettings();
   return {
     defaultModelProfileId: settings.defaultModelProfileId,
-    thinkingLevel: settings.thinkingLevel,
+    thinkingLevels: settings.thinkingLevels,
     profiles: presentModelProfiles(),
   };
 }
 
 export async function GET() {
-  loadEnvConfig(process.cwd());
+  nextEnv.loadEnvConfig(process.cwd());
   return apiOk(presentSettings());
 }
 
 export async function PUT(request: Request) {
-  loadEnvConfig(process.cwd());
+  nextEnv.loadEnvConfig(process.cwd());
   let payload: unknown;
   try {
     payload = await request.json();
@@ -39,10 +39,10 @@ export async function PUT(request: Request) {
     return apiError("设置内容无效", 422);
   }
 
-  const { defaultModelProfileId, thinkingLevel } = payload as Record<string, unknown>;
+  const { defaultModelProfileId, thinkingLevels } = payload as Record<string, unknown>;
   if (!isModelProfileId(defaultModelProfileId)) return apiError("模型选择无效", 422);
-  if (!isThinkingLevel(thinkingLevel)) return apiError("思考程度无效", 422);
+  if (!isThinkingLevelsByProfile(thinkingLevels)) return apiError("思考程度无效，请按各模型档案的可选档位设置", 422);
 
-  updateAppFactoryModelSettings({ defaultModelProfileId, thinkingLevel });
+  updateAppFactoryModelSettings({ defaultModelProfileId, thinkingLevels });
   return apiOk(presentSettings());
 }

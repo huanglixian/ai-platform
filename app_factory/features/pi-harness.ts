@@ -1,6 +1,6 @@
 import path from "node:path";
 import { spawn, type ChildProcess } from "node:child_process";
-import { loadEnvConfig } from "@next/env";
+import nextEnv from "@next/env";
 import { normalizePiEvent } from "@/app_factory/features/pi-events";
 import { ensurePiAgentConfig } from "@/app_factory/server/pi-agent-config";
 import { getAppTemplate } from "@/app_factory/template-catalog";
@@ -10,6 +10,8 @@ import {
   getModelConfigurationError,
   getModelName,
   getModelProfile,
+  MODEL_PROFILE_IDS,
+  isThinkingLevel,
 } from "@/app_factory/server/model-profiles";
 import type { HarnessEvent, HarnessRunOptions, HarnessRuntime, HarnessSessionRef } from "@/app_factory/types/harness";
 
@@ -18,9 +20,11 @@ function piEnvironment(options: HarnessRunOptions): NodeJS.ProcessEnv {
   delete environment.NODE_OPTIONS;
   delete environment.npm_config_node_options;
   delete environment.NPM_CONFIG_NODE_OPTIONS;
-  delete environment.DEEPSEEK_API_KEY;
-  delete environment.APPFACTORY_ZHIPU_API_KEY;
-  delete environment.APPFACTORY_DEEPSEEK_API_KEY;
+  for (const id of MODEL_PROFILE_IDS) {
+    const profile = getModelProfile(id);
+    delete environment[profile.apiKeyEnv];
+    delete environment[profile.piApiKeyEnv];
+  }
   const profile = getModelProfile(options.modelProfileId);
   const apiKey = getModelApiKey(profile);
   environment[profile.piApiKeyEnv] = apiKey;
@@ -35,6 +39,7 @@ export function createPiRunArgs(
 ) {
   const profile = getModelProfile(options.modelProfileId);
   const template = getAppTemplate(options.templateId);
+  if (!isThinkingLevel(profile.id, options.thinkingLevel)) throw new Error(`${profile.label} 不支持 ${options.thinkingLevel} 思考程度`);
   return [
     "--provider", profile.piProvider,
     "--model", getModelName(profile),
@@ -58,7 +63,7 @@ export class PiHarnessRuntime implements HarnessRuntime {
     options: HarnessRunOptions,
   ): AsyncGenerator<HarnessEvent> {
     // Next standalone 进程不一定把项目 env 文件回写到子进程环境，启动 Pi 前显式加载一次。
-    loadEnvConfig(process.cwd());
+    nextEnv.loadEnvConfig(process.cwd());
     const piBin = path.join(process.cwd(), "node_modules", ".bin", "pi");
     const profile = getModelProfile(options.modelProfileId);
     const configurationError = getModelConfigurationError(profile);

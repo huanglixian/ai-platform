@@ -3,33 +3,14 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-type ModelProfileId = "zhipu" | "deepseek";
-type ThinkingLevel = "low" | "high" | "max";
+import type { ModelProfileId, ThinkingLevel, ModelSettings, ModelSettingsInput } from "@/app_factory/types/model";
 
 type RuntimeStatus = {
   harness?: { ready?: boolean; name?: string };
   templates?: Array<{ id: string; name: string; ready?: boolean }>;
 };
 
-type ModelProfile = {
-  id: ModelProfileId;
-  label: string;
-  provider: string;
-  description: string;
-  model: string;
-  configured: boolean;
-};
-
-type ModelSettings = {
-  defaultModelProfileId: ModelProfileId;
-  thinkingLevel: ThinkingLevel;
-  profiles: ModelProfile[];
-};
-
-type ModelSettingsForm = Pick<
-  ModelSettings,
-  "defaultModelProfileId" | "thinkingLevel"
->;
+type ModelSettingsForm = ModelSettingsInput;
 
 function StatusDot({ ready }: { ready: boolean }) {
   return (
@@ -77,7 +58,7 @@ export default function AppFactorySettingsPage() {
       setSettings(settingsPayload.data);
       setForm({
         defaultModelProfileId: settingsPayload.data.defaultModelProfileId,
-        thinkingLevel: settingsPayload.data.thinkingLevel,
+        thinkingLevels: settingsPayload.data.thinkingLevels,
       });
     } catch (reason) {
       setLoadError(reason instanceof Error ? reason.message : "读取设置失败，请稍后重试");
@@ -99,7 +80,7 @@ export default function AppFactorySettingsPage() {
     settings &&
       form &&
       (settings.defaultModelProfileId !== form.defaultModelProfileId ||
-        settings.thinkingLevel !== form.thinkingLevel),
+        settings.profiles.some((profile) => settings.thinkingLevels[profile.id] !== form.thinkingLevels[profile.id])),
   );
   const harnessReady = Boolean(status?.harness?.ready);
   const templates = status?.templates ?? [];
@@ -131,9 +112,9 @@ export default function AppFactorySettingsPage() {
       setSettings(payload.data);
       setForm({
         defaultModelProfileId: payload.data.defaultModelProfileId,
-        thinkingLevel: payload.data.thinkingLevel,
+        thinkingLevels: payload.data.thinkingLevels,
       });
-      setSaveMessage("已保存：模型将用于新建对话，思考程度下次执行生效");
+      setSaveMessage("已保存：默认档案用于新建对话，各档案思考程度下次执行生效");
     } catch (reason) {
       setSaveError(reason instanceof Error ? reason.message : "保存失败，请稍后重试");
     } finally {
@@ -152,7 +133,7 @@ export default function AppFactorySettingsPage() {
             运行环境
           </h1>
           <p className="mt-2 text-sm text-[#667085]">
-            选择新建对话使用的模型档案，并设置所有对话的思考程度。模型名和密钥只由服务端环境变量管理。
+            选择新建对话使用的模型档案，并分别设置各档案的思考程度。模型名、地址和密钥由服务端环境变量管理。
           </p>
         </div>
         <Link
@@ -171,7 +152,7 @@ export default function AppFactorySettingsPage() {
               <h2 className="text-sm font-semibold text-[#1a4d87]">默认代码模型档案</h2>
             </div>
             <p className="mt-1.5 text-xs leading-5 text-[#667085]">
-              默认档案仅影响之后新建的对话；已有对话保留创建时的档案，实际模型名每次运行读取环境变量，思考程度在下次执行时生效。
+              默认档案仅影响新建对话；已有对话保留自己的档案。各档案分别记住思考程度，在对应对话下次执行时生效。环境配置修改后需重启平台。
             </p>
           </div>
           <span
@@ -181,7 +162,7 @@ export default function AppFactorySettingsPage() {
                 : "bg-[#fff7e8] text-[#b06d13]"
             }`}
           >
-            {loading ? "读取中" : selectedProfile?.configured ? "配置完整" : "待配置模型名或 API Key"}
+            {loading ? "读取中" : selectedProfile?.configured ? "配置完整" : "服务端配置不完整或无效"}
           </span>
         </div>
 
@@ -209,14 +190,16 @@ export default function AppFactorySettingsPage() {
             <label className="block">
               <span className="mb-1.5 block text-xs font-medium text-[#4d4d4d]">思考程度</span>
               <select
-                value={form?.thinkingLevel ?? ""}
+                value={form ? form.thinkingLevels[form.defaultModelProfileId] : ""}
                 disabled={loading || !form}
-                onChange={(event) => updateForm({ thinkingLevel: event.target.value as ThinkingLevel })}
+                onChange={(event) => {
+                  if (form) updateForm({ thinkingLevels: { ...form.thinkingLevels, [form.defaultModelProfileId]: event.target.value as ThinkingLevel } });
+                }}
                 className="h-10 w-full rounded-lg border border-[#bfd7f2] bg-white px-3 text-sm text-[#1f2937] outline-none transition focus:border-[#0368b3] focus:ring-2 focus:ring-[#d8eaf9] disabled:cursor-not-allowed disabled:bg-[#f6f8fb] disabled:text-[#98a2b3]"
               >
-                <option value="low">低</option>
-                <option value="high">高</option>
-                <option value="max">最大</option>
+                {selectedProfile?.thinkingLevels.map((level) => (
+                  <option key={level} value={level}>{level}</option>
+                ))}
               </select>
             </label>
             <button
@@ -236,7 +219,7 @@ export default function AppFactorySettingsPage() {
             <span className="text-[#667085]">实际模型：{selectedProfile.model || "未配置"}</span>
             <span className="text-[#667085]">{selectedProfile.description}</span>
             {!selectedProfile.configured && (
-              <span className="text-[#b06d13]">可保存为默认模型，运行前需配置模型名和 API Key。</span>
+              <span className="text-[#b06d13]">可保存为默认模型，运行前需检查模型名、API Key 和服务地址。</span>
             )}
           </div>
         ) : null}

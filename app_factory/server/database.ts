@@ -9,10 +9,13 @@ import {
 import { deriveSessionTitle } from "@/app_factory/types/session";
 import {
   DEFAULT_MODEL_PROFILE_ID,
-  DEFAULT_THINKING_LEVEL,
+  defaultThinkingLevels,
+  isThinkingLevel,
+  isThinkingLevelsByProfile,
+  isModelProfileId,
   type ModelProfileId,
-  type ThinkingLevel,
 } from "./model-profiles";
+import type { ModelSettingsInput } from "../types/model";
 import { SessionBusyError } from "./errors";
 import { dataPaths } from "@/lib/data-paths";
 
@@ -30,7 +33,7 @@ export function getAppFactoryDatabase() {
   db.exec(`
     CREATE TABLE IF NOT EXISTS projects (id TEXT PRIMARY KEY, name TEXT NOT NULL, description TEXT NOT NULL DEFAULT '', template_id TEXT NOT NULL DEFAULT 'nextjs-app', workspace_path TEXT NOT NULL, published_port INTEGER, created_at TEXT NOT NULL, updated_at TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS sessions (id TEXT PRIMARY KEY, project_id TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'idle', harness TEXT NOT NULL DEFAULT 'pi', title TEXT NOT NULL DEFAULT '新对话', model_profile_id TEXT NOT NULL DEFAULT 'zhipu', transcript_path TEXT, created_at TEXT NOT NULL, updated_at TEXT NOT NULL, FOREIGN KEY(project_id) REFERENCES projects(id));
-    CREATE TABLE IF NOT EXISTS appfactory_settings (id INTEGER PRIMARY KEY CHECK (id = 1), default_model_profile TEXT NOT NULL DEFAULT 'zhipu', thinking_level TEXT NOT NULL DEFAULT 'high', updated_at TEXT NOT NULL);
+    CREATE TABLE IF NOT EXISTS appfactory_settings (id INTEGER PRIMARY KEY CHECK (id = 1), default_model_profile TEXT NOT NULL DEFAULT 'zhipu', thinking_levels_json TEXT NOT NULL, updated_at TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS runs (id TEXT PRIMARY KEY, project_id TEXT NOT NULL, session_id TEXT, status TEXT NOT NULL DEFAULT 'queued', input TEXT NOT NULL DEFAULT '', output TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL, updated_at TEXT NOT NULL, FOREIGN KEY(project_id) REFERENCES projects(id));
     CREATE TABLE IF NOT EXISTS capability_bindings (id TEXT PRIMARY KEY, project_id TEXT NOT NULL, capability_id TEXT NOT NULL, version TEXT, config_json TEXT NOT NULL DEFAULT '{}', created_at TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS publication_jobs (
@@ -102,9 +105,22 @@ export function getAppFactoryDatabase() {
   if (!sessionColumns.some((column) => column.name === "model_profile_id")) {
     db.exec("ALTER TABLE sessions ADD COLUMN model_profile_id TEXT NOT NULL DEFAULT 'zhipu'");
   }
-  db.prepare("INSERT OR IGNORE INTO appfactory_settings (id,default_model_profile,thinking_level,updated_at) VALUES (1,?,?,?)").run(
+  db.transaction(() => {
+    const columns = db!.prepare("PRAGMA table_info(appfactory_settings)").all() as { name: string }[];
+    if (!columns.some((column) => column.name === "thinking_levels_json")) {
+      const legacy = db!.prepare("SELECT thinking_level FROM appfactory_settings WHERE id=1").get() as { thinking_level: string } | undefined;
+      const levels = defaultThinkingLevels();
+      for (const id of ["zhipu", "deepseek"] as const) {
+        if (isThinkingLevel(id, legacy?.thinking_level)) levels[id] = legacy.thinking_level;
+      }
+      db!.exec("ALTER TABLE appfactory_settings ADD COLUMN thinking_levels_json TEXT NOT NULL DEFAULT '{}'");
+      db!.prepare("UPDATE appfactory_settings SET thinking_levels_json=?").run(JSON.stringify(levels));
+      db!.exec("ALTER TABLE appfactory_settings DROP COLUMN thinking_level");
+    }
+  }).immediate();
+  db.prepare("INSERT OR IGNORE INTO appfactory_settings (id,default_model_profile,thinking_levels_json,updated_at) VALUES (1,?,?,?)").run(
     DEFAULT_MODEL_PROFILE_ID,
-    DEFAULT_THINKING_LEVEL,
+    JSON.stringify(defaultThinkingLevels()),
     new Date().toISOString(),
   );
   let projectColumns = db.prepare("PRAGMA table_info(projects)").all() as { name: string }[];
@@ -195,22 +211,21 @@ export function createProject(input: { name: string; description?: string; templ
 }
 
 export function getProject(id: string) { return readProject(id); }
-export type AppFactoryModelSettings = {
-  defaultModelProfileId: ModelProfileId;
-  thinkingLevel: ThinkingLevel;
+export type AppFactoryModelSettings = ModelSettingsInput & {
   updatedAt: string;
 };
 
 export function getAppFactoryModelSettings() {
-  return getAppFactoryDatabase().prepare("SELECT default_model_profile as defaultModelProfileId,thinking_level as thinkingLevel,updated_at as updatedAt FROM appfactory_settings WHERE id=1").get() as AppFactoryModelSettings;
+  const row = getAppFactoryDatabase().prepare("SELECT default_model_profile as defaultModelProfileId,thinking_levels_json as thinkingLevelsJson,updated_at as updatedAt FROM appfactory_settings WHERE id=1").get() as { defaultModelProfileId: ModelProfileId; thinkingLevelsJson: string; updatedAt: string };
+  const thinkingLevels: unknown = JSON.parse(row.thinkingLevelsJson);
+  if (!isModelProfileId(row.defaultModelProfileId) || !isThinkingLevelsByProfile(thinkingLevels)) throw new Error("AppFactory 模型设置无效");
+  return { defaultModelProfileId: row.defaultModelProfileId, thinkingLevels, updatedAt: row.updatedAt } satisfies AppFactoryModelSettings;
 }
 
-export function updateAppFactoryModelSettings(input: {
-  defaultModelProfileId: ModelProfileId;
-  thinkingLevel: ThinkingLevel;
-}) {
+export function updateAppFactoryModelSettings(input: ModelSettingsInput) {
+  if (!isModelProfileId(input.defaultModelProfileId) || !isThinkingLevelsByProfile(input.thinkingLevels)) throw new Error("AppFactory 模型设置无效");
   const updatedAt = new Date().toISOString();
-  getAppFactoryDatabase().prepare("UPDATE appfactory_settings SET default_model_profile=?,thinking_level=?,updated_at=? WHERE id=1").run(input.defaultModelProfileId, input.thinkingLevel, updatedAt);
+  getAppFactoryDatabase().prepare("UPDATE appfactory_settings SET default_model_profile=?,thinking_levels_json=?,updated_at=? WHERE id=1").run(input.defaultModelProfileId, JSON.stringify(input.thinkingLevels), updatedAt);
   return getAppFactoryModelSettings();
 }
 

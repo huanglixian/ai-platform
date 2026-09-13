@@ -37,9 +37,9 @@ scripts/app.mts                 平台与发布 Worker 统一启动器
 - 页面：`app/appfactory/page.tsx`、`app/appfactory/projects/[id]/page.tsx`、`app/appfactory/settings/page.tsx`。
 - 对话与文件：`app/appfactory/projects/[id]/page.tsx`、`app/appfactory/_components/workspace-panels.tsx`、`app_factory/server/pi-run.ts`。`POST sessions/[id]/run` 只创建并启动 Run，`GET sessions/[id]/run` 查询活动任务，`GET runs/[id]/events` 以 SSE 回放并订阅带序号的 transcript；项目页首次进入或重新进入时均可恢复正在执行的任务与实时过程。
 - 项目模板与运行时：`app_factory/template-catalog.ts` 是唯一的项目模板注册入口；每个模板在 `app_factory/templates/` 中同时保存初始 Workspace、Pi 开发说明和按需 reference。`app_factory/runtimes/` 负责模板对应的 Preview、构建和 Release 启动，当前支持 Next.js 与纯 HTML 静态站点。Pi 完成后会以原端口重建已开启的 Preview，使原预览页刷新后显示最新源码；全局仅保留一个 Preview，30 分钟未重新请求预览时自动回收。Pi 可以继续在真实 Workspace 使用 Bash；Pi 运行期间不能 Preview/发布，发布排队或运行期间不能开始 Pi，避免读写同一份源码。
-- 模型配置：`app_factory/server/model-profiles.ts` 定义稳定档案 `zhipu` 与 `deepseek`，实际模型名由 `APPFACTORY_ZHIPU_MODEL`、`APPFACTORY_DEEPSEEK_MODEL` 必填配置；`pi-agent-config.ts` 注册智谱 PaaS Provider；`settings/model` 接口保存默认档案与思考程度。
+- 模型配置：`app_factory/server/model-profiles.ts` 定义稳定档案 `zhipu`、`deepseek`、`cockpit` 及各自允许的思考档位；`app_factory/types/model.ts` 提供前后端共享类型。实际模型名由各档案的 `APPFACTORY_*_MODEL` 配置；`pi-agent-config.ts` 注册配置完整的智谱 PaaS Chat Completions 和 Cockpit Responses Provider，DeepSeek 使用 Pi 内置适配。Cockpit 默认部署模型为 `gpt-5.6-terra`，自定义模型描述按其上下文与输出限制配置，替换为其他模型时须核对能力配置。
 - 数据：`app_factory/server/database.ts` 保存项目、Workspace、Pi Session、transcript、runs 和单行模型设置。
-- 当前状态：项目可创建、预览、以 Pi 修改 Workspace，并恢复会话历史及进行中的 Run。默认档案为 `zhipu`；默认档案只应用于新建对话，对话创建后固定档案，实际模型名每次执行从环境变量读取，`low / high / max` 思考程度为全局设置并在下一次执行生效。模型请求失败会将运行与会话标记为失败，不会误报完成。
+- 当前状态：项目可创建、预览、以 Pi 修改 Workspace，并恢复会话历史及进行中的 Run。默认档案为 `zhipu`；默认档案只应用于新建对话，对话创建后固定档案，实际模型名每次执行从环境变量读取，环境文件修改后需重启平台。思考程度按档案保存在单行设置的 `thinking_levels_json`，在对应会话下次执行时生效；智谱和 DeepSeek 开放 `low / high / max`，Cockpit 仅开放 `low / medium / high / xhigh`，各档案初始值为 `high`。设置接口和执行入口均校验档位，项目页按当前会话档案显示思考程度。模型请求失败会将运行与会话标记为失败，不会误报完成。
 
 ### 一键发布与任务中心
 
@@ -71,4 +71,4 @@ scripts/app.mts                 平台与发布 Worker 统一启动器
 - Workspace 文件访问限制在项目根目录；transcript 只从 `data/storage/appfactory/transcripts` 读取。
 - 内置技能位于 `data/builtin/skills`；首次使用技能时仅复制一次到 `data/storage/agenthub/skills`，之后运行目录才是有效技能集，用户对技能的删除或修改不会被内置资源覆盖。
 - 发布取消会终止构建进程组；Release 切换失败时会停止新实例并恢复上一个健康 Release。
-- AppFactory 模型使用 `APPFACTORY_ZHIPU_API_KEY`、`APPFACTORY_ZHIPU_MODEL`、`APPFACTORY_DEEPSEEK_API_KEY` 和 `APPFACTORY_DEEPSEEK_MODEL`；不得复用平台 AI 助手的 `DEEPSEEK_*` 或旧 `APPFACTORY_PI_*` 配置。
+- AppFactory 模型使用各档案专属的 `APPFACTORY_ZHIPU_*`、`APPFACTORY_DEEPSEEK_*`、`APPFACTORY_COCKPIT_*` 环境变量；Cockpit 必须配置 `BASE_URL`、`API_KEY`、`MODEL`。密钥仅保存在服务端环境文件中，生成的 Pi 配置只保存环境变量引用，启动子进程时仅注入所选档案的模型密钥。不得复用平台 AI 助手的 `DEEPSEEK_*` 或旧 `APPFACTORY_PI_*` 配置。

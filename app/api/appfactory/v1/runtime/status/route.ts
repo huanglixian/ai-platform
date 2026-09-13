@@ -1,11 +1,11 @@
 import fs from "node:fs";
 import path from "node:path";
 
-import { loadEnvConfig } from "@next/env";
+import nextEnv from "@next/env";
 import { getAppFactoryModelSettings } from "@/app_factory/server/database";
 import { listAppTemplates } from "@/app_factory/template-catalog";
 import {
-  getModelApiKey,
+  getModelConfigurationError,
   getModelProfile,
   presentModelProfiles,
 } from "@/app_factory/server/model-profiles";
@@ -14,19 +14,19 @@ import { apiOk } from "@/lib/server/api-response";
 export const runtime = "nodejs";
 
 export async function GET() {
-  loadEnvConfig(process.cwd());
+  nextEnv.loadEnvConfig(process.cwd());
   const modelSettings = getAppFactoryModelSettings();
   const modelProfile = getModelProfile(modelSettings.defaultModelProfileId);
   return apiOk({
     ai: {
-      configured: Boolean(getModelApiKey(modelProfile)),
+      configured: !getModelConfigurationError(modelProfile),
       provider: modelProfile.provider,
       model: modelProfile.label,
-      thinkingLevel: modelSettings.thinkingLevel,
+      thinkingLevel: modelSettings.thinkingLevels[modelProfile.id],
     },
     modelSettings: {
       defaultModelProfileId: modelSettings.defaultModelProfileId,
-      thinkingLevel: modelSettings.thinkingLevel,
+      thinkingLevels: modelSettings.thinkingLevels,
       profiles: presentModelProfiles(),
     },
     harness: {

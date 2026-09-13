@@ -1,12 +1,12 @@
-export const MODEL_PROFILE_IDS = [
-  "zhipu",
-  "deepseek",
-] as const;
-
-export const THINKING_LEVELS = ["low", "high", "max"] as const;
-
-export type ModelProfileId = (typeof MODEL_PROFILE_IDS)[number];
-export type ThinkingLevel = (typeof THINKING_LEVELS)[number];
+import {
+  MODEL_PROFILE_IDS,
+  type ModelProfileId,
+  type ThinkingLevel,
+  type ThinkingLevelsByProfile,
+  type ModelProfileSummary,
+} from "../types/model";
+export { MODEL_PROFILE_IDS };
+export type { ModelProfileId, ThinkingLevel } from "../types/model";
 
 export type AppFactoryModelProfile = {
   id: ModelProfileId;
@@ -17,6 +17,8 @@ export type AppFactoryModelProfile = {
   apiKeyEnv: string;
   piApiKeyEnv: string;
   modelEnv: string;
+  baseUrlEnv?: string;
+  thinkingLevels: readonly ThinkingLevel[];
 };
 
 type Environment = Record<string, string | undefined>;
@@ -35,6 +37,7 @@ const modelProfiles: readonly AppFactoryModelProfile[] = [
     apiKeyEnv: "APPFACTORY_ZHIPU_API_KEY",
     piApiKeyEnv: "APPFACTORY_ZHIPU_API_KEY",
     modelEnv: "APPFACTORY_ZHIPU_MODEL",
+    thinkingLevels: ["low", "high", "max"],
   },
   {
     id: "deepseek",
@@ -45,6 +48,19 @@ const modelProfiles: readonly AppFactoryModelProfile[] = [
     apiKeyEnv: "APPFACTORY_DEEPSEEK_API_KEY",
     piApiKeyEnv: "DEEPSEEK_API_KEY",
     modelEnv: "APPFACTORY_DEEPSEEK_MODEL",
+    thinkingLevels: ["low", "high", "max"],
+  },
+  {
+    id: "cockpit",
+    label: "Cockpit Coding",
+    provider: "Cockpit",
+    description: "通过 Cockpit Responses API 使用编码模型。",
+    piProvider: "appfactory-cockpit",
+    apiKeyEnv: "APPFACTORY_COCKPIT_API_KEY",
+    piApiKeyEnv: "APPFACTORY_COCKPIT_API_KEY",
+    modelEnv: "APPFACTORY_COCKPIT_MODEL",
+    baseUrlEnv: "APPFACTORY_COCKPIT_BASE_URL",
+    thinkingLevels: ["low", "medium", "high", "xhigh"],
   },
 ];
 
@@ -52,8 +68,19 @@ export function isModelProfileId(value: unknown): value is ModelProfileId {
   return typeof value === "string" && MODEL_PROFILE_IDS.includes(value as ModelProfileId);
 }
 
-export function isThinkingLevel(value: unknown): value is ThinkingLevel {
-  return typeof value === "string" && THINKING_LEVELS.includes(value as ThinkingLevel);
+export function isThinkingLevel(profileId: ModelProfileId, value: unknown): value is ThinkingLevel {
+  return typeof value === "string" && getModelProfile(profileId).thinkingLevels.includes(value as ThinkingLevel);
+}
+
+export function defaultThinkingLevels(): ThinkingLevelsByProfile {
+  return { zhipu: DEFAULT_THINKING_LEVEL, deepseek: DEFAULT_THINKING_LEVEL, cockpit: DEFAULT_THINKING_LEVEL };
+}
+
+export function isThinkingLevelsByProfile(value: unknown): value is ThinkingLevelsByProfile {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const levels = value as Record<string, unknown>;
+  return Object.keys(levels).length === MODEL_PROFILE_IDS.length &&
+    MODEL_PROFILE_IDS.every((id) => isThinkingLevel(id, levels[id]));
 }
 
 export function getModelProfile(id: ModelProfileId): AppFactoryModelProfile {
@@ -86,16 +113,31 @@ export function getModelConfigurationError(
   if (!getModelName(profile, environment)) {
     return `未配置 ${profile.modelEnv}，无法使用${profile.label}。`;
   }
+  if (profile.baseUrlEnv) {
+    try {
+      const url = new URL(getModelBaseUrl(profile, environment));
+      if (!["http:", "https:"].includes(url.protocol) || url.username || url.password || url.search || url.hash) {
+        throw new Error("无效服务地址");
+      }
+    } catch {
+      return `${profile.baseUrlEnv} 必须配置为不含凭证、查询参数或片段的 HTTP(S) API 地址。`;
+    }
+  }
   return "";
 }
 
-export function presentModelProfiles(environment: Environment = process.env) {
+export function getModelBaseUrl(profile: AppFactoryModelProfile, environment: Environment = process.env) {
+  return profile.baseUrlEnv ? (environment[profile.baseUrlEnv]?.trim() || "").replace(/\/+$/, "") : "";
+}
+
+export function presentModelProfiles(environment: Environment = process.env): ModelProfileSummary[] {
   return modelProfiles.map((profile) => ({
     id: profile.id,
     label: profile.label,
     provider: profile.provider,
     description: profile.description,
     model: getModelName(profile, environment),
-    configured: Boolean(getModelApiKey(profile, environment) && getModelName(profile, environment)),
+    configured: !getModelConfigurationError(profile, environment),
+    thinkingLevels: profile.thinkingLevels,
   }));
 }

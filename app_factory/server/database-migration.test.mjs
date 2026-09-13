@@ -17,6 +17,8 @@ test("旧项目迁移为 Next.js 模板", async () => {
     await fs.mkdir(storagePath, { recursive: true });
     const legacy = new Database(path.join(storagePath, "appfactory.db"));
     legacy.exec("CREATE TABLE projects (id TEXT PRIMARY KEY, name TEXT NOT NULL, description TEXT NOT NULL DEFAULT '', skill_profile TEXT NOT NULL DEFAULT 'nextjs-build', workspace_path TEXT NOT NULL, published_port INTEGER, created_at TEXT NOT NULL, updated_at TEXT NOT NULL)");
+    legacy.exec("CREATE TABLE appfactory_settings (id INTEGER PRIMARY KEY, default_model_profile TEXT NOT NULL, thinking_level TEXT NOT NULL, updated_at TEXT NOT NULL)");
+    legacy.prepare("INSERT INTO appfactory_settings VALUES (1,?,?,?)").run("deepseek", "max", "2026-01-01T00:00:00.000Z");
     legacy.prepare("INSERT INTO projects VALUES (?,?,?,?,?,?,?,?)").run(
       "legacy-project",
       "旧项目",
@@ -30,12 +32,17 @@ test("旧项目迁移为 Next.js 模板", async () => {
     legacy.close();
 
     process.chdir(temporaryDirectory);
-    const { getAppFactoryDatabase, getProject } = await import("./database.ts");
+    const { getAppFactoryDatabase, getProject, getAppFactoryModelSettings } = await import("./database.ts");
     database = getAppFactoryDatabase();
     const columns = database.prepare("PRAGMA table_info(projects)").all();
     assert.equal(columns.some((column) => column.name === "skill_profile"), false);
     assert.equal(columns.some((column) => column.name === "template_id"), true);
     assert.equal(getProject("legacy-project")?.template.id, "nextjs-app");
+    const settings = getAppFactoryModelSettings();
+    assert.equal(settings.defaultModelProfileId, "deepseek");
+    assert.deepEqual(settings.thinkingLevels, { zhipu: "max", deepseek: "max", cockpit: "high" });
+    assert.equal(database.prepare("PRAGMA table_info(appfactory_settings)").all().some((column) => column.name === "thinking_level"), false);
+    assert.deepEqual(getAppFactoryModelSettings(), settings);
   } finally {
     database?.close();
     process.chdir(originalDirectory);
