@@ -10,7 +10,7 @@ AI Platform 是单机演示系统。`/` 是统一首页：初始态在上方提�
 - 启动：`npm run dev` 同时启动平台与 AppFactory 发布 Worker；发布不使用 Docker。
 - 模块：项目以 ESM 模式运行，Node 直接加载 TypeScript 启动脚本时不会重复解析模块格式。
 - 环境：`.env.local` 必须设置 `AGENT_HUB_BASE_URL`，单机默认是 `http://localhost:19844`。
-- 数据：AppFactory 的项目、会话、任务与 Release 在 `storage/appfactory`；应用中心数据在 `storage/agenthub/agenthub.db`。
+- 数据：`data/settings` 是 Git 跟踪的平台配置；`data/builtin` 是 Git 跟踪的内置资源；`data/storage` 是本机运行数据。AppFactory 的项目、会话、任务与 Release 在 `data/storage/appfactory`；应用中心数据在 `data/storage/agenthub/agenthub.db`。启动器会将旧 `storage/agenthub` 与 `storage/appfactory` 一次性迁入新位置，旧 KnowHub 演示快照不会迁入。
 - Pi 会话会保留模型与应用所需环境变量，但会移除平台自身的 Node 启动参数，确保 Workspace 不会错误加载平台脚本。
 
 ## 目录结构
@@ -25,6 +25,9 @@ app_factory/contracts/          app.yaml 校验
 features/platform-home/         首页组合与展示状态
 features/assistant/             AI 助手客户端、会话 UI 与服务端编排
 features/apps/                  应用目录数据、运行时与分组 UI
+data/builtin/                   随 Git 发布的内置技能资源
+data/settings/                  随 Git 管理的平台设置
+data/storage/                   本机数据库、工作区与知识库运行数据（忽略）
 scripts/app.mts                 平台与发布 Worker 统一启动器
 ```
 
@@ -52,11 +55,11 @@ scripts/app.mts                 平台与发布 Worker 统一启动器
 - 页面与组合状态：`app/(platform)/page.tsx`、`features/platform-home/platform-home-page.tsx`。首页仅负责在初始态展示助手输入区和应用分组；对话激活后只显示助手沟通界面。
 - 助手：客户端与 UI 在 `features/assistant/`，提供问答与已发布知识库搜索；问答接口为 `/api/platform/assistant/chat`，知识库搜索复用 KnowHub 检索接口。问答先在应用、已启用技能和可用业务 API 中分流：明确任务执行技能，相关但不足以执行的请求返回推荐卡片，无明显匹配时显示可配置的引导文案及首页、技能中心、业务 API 跳转入口；通用工具不参与推荐。技能执行时只挂载其声明且已注册实现的工具。
 - 应用目录 UI：`features/apps/ui/application-catalog.tsx`。支持来源筛选与关键词搜索，按 `AppFactory → 外部应用 → Dify / n8n` 展示；接入入口仅位于外部应用、Dify、n8n 的分组标题中。
-- 当前状态：助手消息和搜索结果仅保存在浏览器内存中；无匹配引导文案保存在 `agenthub.db` 的 `assistant_settings` 单行配置，可在“配置管理 → AI 助手”编辑；点击“返回首页”会结束当前问答或搜索并恢复应用目录。
+- 当前状态：助手消息和搜索结果仅保存在浏览器内存中；无匹配引导文案保存在 Git 跟踪的 `data/settings/assistant.json`，可在“配置管理 → AI 助手”编辑；点击“返回首页”会结束当前问答或搜索并恢复应用目录。
 
 ### 应用注册与运行
 
-- 服务与数据：`features/apps/server.ts`、`features/apps/external-app-seed.ts`、`features/apps/external-launcher.ts`；应用记录保存在 `storage/agenthub/agenthub.db`。
+- 服务与数据：`features/apps/server.ts`、`features/apps/external-app-seed.ts`、`features/apps/external-launcher.ts`；应用记录保存在 `data/storage/agenthub/agenthub.db`。
 - 接口：`/api/agenthub/v1/applications` 继续接收 AppFactory 的发布注册；所有来源的注册信息编辑与移除使用 `applications/[id]`，外部应用启动和停止使用 `applications/[id]/start`、`applications/[id]/stop`。
 - 当前状态：首页不使用应用详情抽屉。所有卡片都可直接编辑和删除；AppFactory、Dify 与 n8n 卡片点击后直接在新页签打开，外部应用未启动时卡片本体不可点击，启动后可点击直达，并在卡片上直接启动或停止。AppFactory 的运行地址由发布流程维护，首页编辑只修改名称和说明。外部应用、Dify 与 n8n 可从各自分组接入。
 - 删除与运行边界：所有删除操作都会物理删除应用注册；删除外部应用前会停止平台记录的进程组，删除 AppFactory 应用前会停止运行时并标记部署已停止，但保留项目、源码与 Release 历史，之后可再次发布。预置应用仅在数据库首次初始化时写入，之后的删除不会被重新插入。外部应用以 `starting / running / null` 记录平台托管状态；启动器会剥离平台自身的 `PORT` 与 Node 运行参数，让外部应用自行采用启动命令、`.env` 或代码中的端口配置。`scripts/app.mts` 在 Ctrl+C、SIGTERM 或主子进程异常退出时回收所有平台记录的外部进程组，并在平台启动时清理异常退出遗留的进程。平台不会停止已经由其他方式运行的服务。
@@ -66,6 +69,7 @@ scripts/app.mts                 平台与发布 Worker 统一启动器
 - AppFactory 是单机演示运行时：发布端口从 4100 起分配，不具备多主机调度、认证或公网反向代理能力。
 - Pi Run 与浏览器连接解耦，离开项目页面不会停止任务；但执行仍由当前平台 Node 进程托管，平台重启或崩溃时不具备独立 Worker 级的任务续跑能力。
 - `app.yaml` 的 `healthPath` 必须是站内路径，并与 capability bindings 一同参与发布校验。
-- Workspace 文件访问限制在项目根目录；transcript 只从 `storage/appfactory/transcripts` 读取。
+- Workspace 文件访问限制在项目根目录；transcript 只从 `data/storage/appfactory/transcripts` 读取。
+- 内置技能位于 `data/builtin/skills`；首次使用技能时仅复制一次到 `data/storage/agenthub/skills`，之后运行目录才是有效技能集，用户对技能的删除或修改不会被内置资源覆盖。
 - 发布取消会终止构建进程组；Release 切换失败时会停止新实例并恢复上一个健康 Release。
 - AppFactory 模型使用 `APPFACTORY_ZHIPU_API_KEY`、`APPFACTORY_ZHIPU_MODEL`、`APPFACTORY_DEEPSEEK_API_KEY` 和 `APPFACTORY_DEEPSEEK_MODEL`；不得复用平台 AI 助手的 `DEEPSEEK_*` 或旧 `APPFACTORY_PI_*` 配置。

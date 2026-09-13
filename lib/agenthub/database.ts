@@ -2,7 +2,9 @@ import Database from "better-sqlite3";
 import fs from "node:fs";
 import path from "node:path";
 
-const storageDir = path.join(process.cwd(), "storage", "agenthub");
+import { dataPaths } from "@/lib/data-paths";
+
+const storageDir = dataPaths.agentHub;
 const databasePath = path.join(storageDir, "agenthub.db");
 
 let connection: Database.Database | undefined;
@@ -80,14 +82,7 @@ UPDATE applications SET launch_status='running' WHERE producer='external' AND la
   seeded_at TEXT NOT NULL
 );`,
   },
-  {
-    id: "007_assistant_settings",
-    sql: `CREATE TABLE IF NOT EXISTS assistant_settings (
-  id INTEGER PRIMARY KEY CHECK (id = 1),
-  unmatched_guide TEXT NOT NULL,
-  updated_at TEXT NOT NULL
-);`,
-  },
+  { id: "008_remove_assistant_settings", sql: "DROP TABLE IF EXISTS assistant_settings;" },
 ];
 
 export function getAgentHubDatabase(): Database.Database {

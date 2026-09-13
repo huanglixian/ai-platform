@@ -4,8 +4,9 @@ import { promises as fs } from "fs";
 import path from "path";
 
 import type { StrategyPresetStore } from "@/knowhub/features/strategies/types";
+import { dataPaths } from "@/lib/data-paths";
 
-const storageRoot = path.join(process.cwd(), "storage", "knowhub", "strategies");
+const storageRoot = path.join(dataPaths.knowHub, "strategies");
 const storePath = path.join(storageRoot, "presets.json");
 
 async function ensureStorageDir() {

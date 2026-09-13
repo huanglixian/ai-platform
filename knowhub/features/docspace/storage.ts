@@ -5,8 +5,9 @@ import path from "path";
 import { Buffer } from "buffer";
 
 import type { DocSpaceStore, DocSpaceFileSnapshot } from "@/knowhub/features/docspace/types";
+import { dataPaths } from "@/lib/data-paths";
 
-const storageRoot = path.join(process.cwd(), "storage", "knowhub", "docspace");
+const storageRoot = path.join(dataPaths.knowHub, "docspace");
 const hostedRoot = path.join(storageRoot, "hosted");
 const storePath = path.join(storageRoot, "store.json");
 

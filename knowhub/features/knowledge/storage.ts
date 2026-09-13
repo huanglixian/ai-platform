@@ -7,8 +7,9 @@ import type {
   KnowledgeRunStore,
   KnowledgeStore,
 } from "@/knowhub/features/knowledge/types";
+import { dataPaths } from "@/lib/data-paths";
 
-const storageRoot = path.join(process.cwd(), "storage", "knowhub", "knowledge");
+const storageRoot = path.join(dataPaths.knowHub, "knowledge");
 const storePath = path.join(storageRoot, "store.json");
 const runsPath = path.join(storageRoot, "runs.json");
 

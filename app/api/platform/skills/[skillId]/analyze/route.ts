@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import path from "node:path";
 import { generateSkillFlowMermaid } from "@/features/services/tools/skills-flow";
+import { ensureSkillStorage } from "@/features/skills/registry";
+import { dataPaths } from "@/lib/data-paths";
 
 type RouteContext = {
   params: Promise<{
@@ -12,7 +14,8 @@ export async function POST(_request: Request, context: RouteContext) {
   const { skillId } = await context.params;
 
   try {
-    const skillsRoot = path.join(process.cwd(), "storage", "agenthub", "skills");
+    ensureSkillStorage();
+    const skillsRoot = dataPaths.agentHubSkills;
     const targetDir = path.resolve(skillsRoot, skillId);
 
     // 安全检查，防止目录穿越

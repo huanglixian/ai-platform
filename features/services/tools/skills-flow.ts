@@ -5,11 +5,14 @@ import path from "node:path";
 import { generateText } from "ai";
 
 import { getActiveModelRuntime } from "@/features/models/provider";
+import { ensureSkillStorage } from "@/features/skills/registry";
+import { dataPaths } from "@/lib/data-paths";
 
-const SKILLS_BASE_DIR = path.resolve(process.cwd(), "storage/agenthub/skills");
+const SKILLS_BASE_DIR = dataPaths.agentHubSkills;
 
 // 独立的业务生成函数，可被其他后端 API 或工具导入调用
 export async function generateSkillFlowMermaid(skillId: string): Promise<string> {
+  ensureSkillStorage();
   const targetDir = path.resolve(SKILLS_BASE_DIR, skillId);
   const markdownPath = path.join(targetDir, "SKILL.md");
   const mermaidPath = path.join(targetDir, "flow.mermaid");

@@ -4,6 +4,7 @@ import { loadEnvConfig } from "@next/env";
 import { normalizePiEvent } from "@/app_factory/features/pi-events";
 import { ensurePiAgentConfig } from "@/app_factory/server/pi-agent-config";
 import { getAppTemplate } from "@/app_factory/template-catalog";
+import { dataPaths } from "@/lib/data-paths";
 import {
   getModelApiKey,
   getModelConfigurationError,
@@ -41,7 +42,7 @@ export function createPiRunArgs(
     "--mode", "json",
     "--approve",
     "--session-id", session.id,
-    "--session-dir", path.join(process.cwd(), "storage", "appfactory", "pi-sessions"),
+    "--session-dir", dataPaths.appFactoryPiSessions,
     "--skill", template.rootPath,
     "--",
     prompt,

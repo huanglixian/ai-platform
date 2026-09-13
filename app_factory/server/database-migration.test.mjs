@@ -12,7 +12,8 @@ test("旧项目迁移为 Next.js 模板", async () => {
   let database;
   try {
     await fs.symlink(path.join(originalDirectory, "app_factory"), path.join(temporaryDirectory, "app_factory"));
-    const storagePath = path.join(temporaryDirectory, "storage", "appfactory");
+    await fs.symlink(path.join(originalDirectory, "lib"), path.join(temporaryDirectory, "lib"));
+    const storagePath = path.join(temporaryDirectory, "data", "storage", "appfactory");
     await fs.mkdir(storagePath, { recursive: true });
     const legacy = new Database(path.join(storagePath, "appfactory.db"));
     legacy.exec("CREATE TABLE projects (id TEXT PRIMARY KEY, name TEXT NOT NULL, description TEXT NOT NULL DEFAULT '', skill_profile TEXT NOT NULL DEFAULT 'nextjs-build', workspace_path TEXT NOT NULL, published_port INTEGER, created_at TEXT NOT NULL, updated_at TEXT NOT NULL)");

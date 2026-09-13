@@ -10,6 +10,7 @@ test("新建数据库使用稳定模型档案 ID", async () => {
   let database;
   try {
     await fs.symlink(path.join(originalDirectory, "app_factory"), path.join(temporaryDirectory, "app_factory"));
+    await fs.symlink(path.join(originalDirectory, "lib"), path.join(temporaryDirectory, "lib"));
     process.chdir(temporaryDirectory);
     const {
       createProject,

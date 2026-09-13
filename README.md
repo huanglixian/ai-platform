@@ -20,4 +20,4 @@ AGENT_HUB_BASE_URL=http://localhost:19844
 
 在 `/appfactory` 创建或打开项目，开发完成后点击“发布”。发布任务依次校验 `app.yaml`、运行 lint/typecheck/Next.js build、生成独立 Release、启动并健康检查，再注册到应用中心。任务可在顶栏“任务中心”查看、取消和重试；成功任务提供应用入口与应用中心链接。
 
-项目 Workspace、Pi 会话与发布任务存放在 `storage/appfactory`；Release 会在 Worker 重启时按持久化部署记录恢复。应用中心的 AppFactory 卡片由发布流程管理，不能通过手工发布表单创建。
+项目 Workspace、Pi 会话与发布任务存放在 `data/storage/appfactory`；Release 会在 Worker 重启时按持久化部署记录恢复。应用中心的 AppFactory 卡片由发布流程管理，不能通过手工发布表单创建。`data/settings` 是随 Git 管理的平台配置，`data/storage` 是本机运行数据，不应提交。

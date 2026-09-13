@@ -4,6 +4,8 @@ import path from "node:path";
 import { z } from "zod";
 
 import { generateSkillFlowMermaid } from "@/features/services/tools/skills-flow";
+import { ensureSkillStorage } from "@/features/skills/registry";
+import { dataPaths } from "@/lib/data-paths";
 
 const updateSkillSchema = z.object({
   name: z.string().min(1),
@@ -35,7 +37,8 @@ export async function POST(request: Request, context: RouteContext) {
 
   try {
     const payload = updateSkillSchema.parse(await request.json());
-    const skillsRoot = path.join(process.cwd(), "storage", "agenthub", "skills");
+    ensureSkillStorage();
+    const skillsRoot = dataPaths.agentHubSkills;
     const targetDir = path.resolve(skillsRoot, skillId);
 
     // 安全检查，防止目录穿越

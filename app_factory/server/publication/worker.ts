@@ -5,6 +5,7 @@ import { createAgentHubClient } from "@/app_factory/features/agenthub-client";
 import { getAppRuntime } from "@/app_factory/runtimes";
 import { getProject, listCapabilityBindings } from "@/app_factory/server/database";
 import { getAppTemplate } from "@/app_factory/template-catalog";
+import { dataPaths } from "@/lib/data-paths";
 import {
   allocatePublishedPort,
   restorePublicationRuntimes,
@@ -76,14 +77,7 @@ async function publish(job: PublicationJobLease, signal: AbortSignal) {
   ensureActive(job);
 
   updatePublicationProgress(job, "building", `正在构建${template.name}`, 2);
-  const releasePath = path.join(
-    process.cwd(),
-    "storage",
-    "appfactory",
-    "releases",
-    project.id,
-    job.id,
-  );
+  const releasePath = path.join(dataPaths.appFactoryReleases, project.id, job.id);
   await appRuntime.buildRelease(project.workspacePath, releasePath, {
     signal,
     onLog(log) {

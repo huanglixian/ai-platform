@@ -3,9 +3,18 @@ import path from "node:path";
 
 import { z } from "zod";
 
+import { dataPaths } from "@/lib/data-paths";
 import type { SkillMetadata, SkillPackage } from "@/features/skills/skill-types";
 
-const skillsRoot = path.join(process.cwd(), "storage", "agenthub", "skills");
+const skillsRoot = dataPaths.agentHubSkills;
+const bootstrapMarker = path.join(dataPaths.agentHub, ".builtin-skills-initialized");
+
+export function ensureSkillStorage() {
+  fs.mkdirSync(dataPaths.agentHub, { recursive: true });
+  if (fs.existsSync(bootstrapMarker)) return;
+  if (!fs.existsSync(skillsRoot)) fs.cpSync(dataPaths.builtinSkills, skillsRoot, { recursive: true });
+  fs.writeFileSync(bootstrapMarker, "");
+}
 
 const skillMetadataSchema = z.object({
   id: z.string().min(1),
@@ -72,9 +81,7 @@ function readSkillPackage(skillDir: string): SkillPackage | null {
 }
 
 export function listSkills() {
-  if (!fs.existsSync(skillsRoot)) {
-    return [];
-  }
+  ensureSkillStorage();
 
   return fs
     .readdirSync(skillsRoot, { withFileTypes: true })

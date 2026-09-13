@@ -11,8 +11,9 @@ import type {
   VectorSearchResult,
   VectorStoreAdapter,
 } from "@/knowhub/features/vector-store/types";
+import { dataPaths } from "@/lib/data-paths";
 
-const storageRoot = path.join(process.cwd(), "storage", "knowhub", "vector");
+const storageRoot = path.join(dataPaths.knowHub, "vector");
 const databasePath = path.join(storageRoot, "knowhub.sqlite");
 
 type SqliteVecModule = {

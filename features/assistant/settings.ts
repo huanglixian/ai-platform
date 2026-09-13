@@ -1,29 +1,30 @@
-import { getAgentHubDatabase } from "@/lib/agenthub/database";
+import "server-only";
 
-export const defaultUnmatchedGuide = "目前似乎没有功能可以直接满足你的需求。你可以浏览平台现有能力，或补充更具体的业务目标。";
+import fs from "node:fs";
+import path from "node:path";
+
+import { z } from "zod";
+
+import { dataPaths } from "@/lib/data-paths";
 
 export type AssistantSettings = {
   unmatchedGuide: string;
-  updatedAt: string;
 };
 
-function ensureAssistantSettings() {
-  const database = getAgentHubDatabase();
-  database.prepare(`INSERT OR IGNORE INTO assistant_settings (id, unmatched_guide, updated_at) VALUES (1, ?, ?)`)
-    .run(defaultUnmatchedGuide, new Date().toISOString());
-  return database;
-}
+export const assistantSettingsSchema = z.object({
+  unmatchedGuide: z.string().trim().min(1, "请填写无匹配引导文案").max(500, "引导文案不能超过 500 个字符"),
+});
 
 export function getAssistantSettings(): AssistantSettings {
-  const row = ensureAssistantSettings().prepare("SELECT unmatched_guide, updated_at FROM assistant_settings WHERE id=1")
-    .get() as { unmatched_guide: string; updated_at: string };
-  return { unmatchedGuide: row.unmatched_guide, updatedAt: row.updated_at };
+  const content = fs.readFileSync(dataPaths.assistantSettings, "utf8");
+  return assistantSettingsSchema.parse(JSON.parse(content));
 }
 
 export function updateAssistantSettings(unmatchedGuide: string): AssistantSettings {
-  const database = ensureAssistantSettings();
-  const updatedAt = new Date().toISOString();
-  database.prepare("UPDATE assistant_settings SET unmatched_guide=?, updated_at=? WHERE id=1")
-    .run(unmatchedGuide, updatedAt);
-  return { unmatchedGuide, updatedAt };
+  const settings = assistantSettingsSchema.parse({ unmatchedGuide });
+  fs.mkdirSync(path.dirname(dataPaths.assistantSettings), { recursive: true });
+  const temporaryPath = `${dataPaths.assistantSettings}.${process.pid}.tmp`;
+  fs.writeFileSync(temporaryPath, `${JSON.stringify(settings, null, 2)}\n`, "utf8");
+  fs.renameSync(temporaryPath, dataPaths.assistantSettings);
+  return settings;
 }

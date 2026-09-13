@@ -1,8 +1,9 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import type { HarnessActivity } from "@/app_factory/types/harness";
+import { dataPaths } from "@/lib/data-paths";
 
-const transcriptRoot = path.join(process.cwd(), "storage", "appfactory", "transcripts");
+const transcriptRoot = dataPaths.appFactoryTranscripts;
 
 export type TranscriptEvent = {
   type: string;

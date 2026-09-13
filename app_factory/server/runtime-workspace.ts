@@ -1,6 +1,8 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
+import { dataPaths } from "@/lib/data-paths";
+
 const excludedDirectories = new Set([".git", ".next", "node_modules"]);
 const excludedFiles = new Set(["tsconfig.tsbuildinfo"]);
 
@@ -12,7 +14,7 @@ function shouldCopy(sourceRoot: string, entry: string) {
 }
 
 export function getPreviewWorkspacePath(projectId: string) {
-  return path.join(process.cwd(), "storage", "appfactory", "runtime", "previews", projectId);
+  return path.join(dataPaths.appFactoryPreviewWorkspaces, projectId);
 }
 
 export function getReleaseStagingPath(releasePath: string) {

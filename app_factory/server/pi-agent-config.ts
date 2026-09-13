@@ -1,18 +1,13 @@
 import fs from "node:fs";
 import path from "node:path";
-
 import {
   getModelName,
   getModelProfile,
   ZHIPU_PAAS_BASE_URL,
 } from "@/app_factory/server/model-profiles";
+import { dataPaths } from "@/lib/data-paths";
 
-const piAgentDirectory = path.join(
-  process.cwd(),
-  "storage",
-  "appfactory",
-  "pi-agent",
-);
+const piAgentDirectory = dataPaths.appFactoryPiAgent;
 
 export function createPiModelsConfig() {
   const profile = getModelProfile("zhipu");

@@ -1,12 +1,9 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
-const piSessionRoot = path.join(
-  process.cwd(),
-  "storage",
-  "appfactory",
-  "pi-sessions",
-);
+import { dataPaths } from "@/lib/data-paths";
+
+const piSessionRoot = dataPaths.appFactoryPiSessions;
 
 export async function piSessionExists(sessionId: string) {
   let names: string[];

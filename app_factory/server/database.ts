@@ -14,8 +14,9 @@ import {
   type ThinkingLevel,
 } from "./model-profiles";
 import { SessionBusyError } from "./errors";
+import { dataPaths } from "@/lib/data-paths";
 
-const dir = path.join(process.cwd(), "storage", "appfactory");
+const dir = dataPaths.appFactory;
 const file = path.join(dir, "appfactory.db");
 let db: Database.Database | undefined;
 

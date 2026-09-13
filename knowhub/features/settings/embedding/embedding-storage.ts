@@ -4,8 +4,9 @@ import { promises as fs } from "fs";
 import path from "path";
 
 import type { EmbeddingConfigRecord } from "@/knowhub/features/settings/embedding/embedding-types";
+import { dataPaths } from "@/lib/data-paths";
 
-const storageRoot = path.join(process.cwd(), "storage", "knowhub", "settings");
+const storageRoot = path.join(dataPaths.knowHub, "settings");
 const storePath = path.join(storageRoot, "embedding.json");
 
 async function ensureStorageDir() {
