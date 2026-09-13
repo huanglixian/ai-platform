@@ -2,10 +2,9 @@ import { streamText, pruneMessages, stepCountIs, type ModelMessage, type ToolSet
 
 import { getActiveModelRuntime } from "@/features/models/provider";
 import { buildSkillRunContext } from "@/features/skills/runner";
-import { routeSkill } from "@/features/skills/router";
 import type { AssistantChatMessage, AssistantRuntimeState } from "./chat-types";
-import { getAssistantCapabilityContext } from "./capability-context";
-import { buildAssistantRecommendationPrompt } from "./recommendation-prompt";
+import { dispatchAssistantRequest, type AssistantDispatchDecision } from "./dispatcher";
+import { getAssistantSettings } from "./settings";
 import { buildSkillExecutionPrompt } from "./skill-execution-prompt";
 import { getCapabilityImplementation } from "@/features/capabilities/implementation-registry";
 import { getCapabilityByHandlerKey } from "@/features/capabilities/server";
@@ -49,9 +48,7 @@ export async function streamAssistantResponse(
     throw new Error("请输入需要处理的任务。");
   }
 
-  const modelRuntime = getActiveModelRuntime();
-  
-  let decision;
+  let decision: AssistantDispatchDecision;
   if (
     runtimeState?.activeSkillId &&
     runtimeState.skillStatus !== "completed" &&
@@ -60,31 +57,26 @@ export async function streamAssistantResponse(
     decision = {
       action: "use_skill" as const,
       skillId: runtimeState.activeSkillId,
-      reason: "continue active skill session",
     };
   } else {
-    decision = await routeSkill(latestUserMessage);
+    decision = await dispatchAssistantRequest(latestUserMessage);
   }
-
-  // 根据当前是否有激活技能来定向过滤出所需的对话上下文
-  const slicedMessages = getMessagesForContext(
-    messages,
-    decision.skillId || undefined,
-    runtimeState?.startedAtMessageIndex
-  );
-  const modelMessages = toModelMessages(slicedMessages);
-
-  // 对模型输入的消息使用 pruneMessages 进行老旧工具调用与空白内容的剪枝优化，以省 token
-  const prunedMessages = pruneMessages({
-    messages: modelMessages,
-    toolCalls: "before-last-message",
-    emptyMessages: "remove",
-  });
 
   if (decision.action === "use_skill" && decision.skillId) {
     const skillContext = buildSkillRunContext(decision.skillId);
 
     if (skillContext.ok) {
+      const modelMessages = toModelMessages(getMessagesForContext(
+        messages,
+        decision.skillId,
+        runtimeState?.startedAtMessageIndex,
+      ));
+      const prunedMessages = pruneMessages({
+        messages: modelMessages,
+        toolCalls: "before-last-message",
+        emptyMessages: "remove",
+      });
+      const modelRuntime = getActiveModelRuntime();
       // 根据 allowedTools 动态过滤并挂载本轮可用的 API 工具
       const allowedToolsNames = skillContext.metadata.allowedTools || [];
       const activeTools: ToolSet = {};
@@ -118,6 +110,7 @@ export async function streamAssistantResponse(
       }
 
       return {
+        type: "stream" as const,
         stream: streamText(streamOptions),
         skillName: skillContext.skillName,
         activeSkillId: decision.skillId,
@@ -127,16 +120,17 @@ export async function streamAssistantResponse(
     }
   }
 
-  const capabilityContext = getAssistantCapabilityContext(latestUserMessage);
+  if (decision.action === "recommend") {
+    return {
+      type: "recommendation" as const,
+      content: "我找到了可能适合你的平台能力：",
+      outcome: { type: "recommendation" as const, recommendations: decision.recommendations },
+    };
+  }
 
   return {
-    stream: streamText({
-      model: modelRuntime.model,
-      system: buildAssistantRecommendationPrompt(capabilityContext),
-      messages: prunedMessages,
-      temperature: 0.2,
-      providerOptions: modelRuntime.providerOptions,
-    }),
-    activeSkillId: null,
+    type: "no_match" as const,
+    content: getAssistantSettings().unmatchedGuide,
+    outcome: { type: "no_match" as const },
   };
 }

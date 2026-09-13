@@ -27,6 +27,13 @@ export async function POST(request: NextRequest) {
       "Cache-Control": "no-store",
     };
 
+    if (result.type !== "stream") {
+      return NextResponse.json(
+        { content: result.content, outcome: result.outcome },
+        { headers },
+      );
+    }
+
     const responseStream = new ReadableStream<string>({
       async start(controller) {
         if (result.skillName) {

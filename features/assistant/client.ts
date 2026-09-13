@@ -1,4 +1,4 @@
-import type { AssistantChatMessage, AssistantRuntimeState } from "./chat-types";
+import type { AssistantChatMessage, AssistantChatResponse, AssistantRuntimeState } from "./chat-types";
 
 type ApiResponse<T> = T & {
   ok: boolean;
@@ -33,6 +33,12 @@ export async function streamAssistantChat(
     }
   }
 
+  if (response.headers.get("Content-Type")?.includes("application/json")) {
+    const payload = await response.json() as AssistantChatResponse;
+    if (typeof payload.content !== "string") throw new Error("后端返回格式错误");
+    return payload;
+  }
+
   if (!response.body) {
     throw new Error("后端未返回流式响应");
   }
@@ -55,5 +61,5 @@ export async function streamAssistantChat(
     }
   }
 
-  return content;
+  return { content };
 }

@@ -9,6 +9,7 @@ import type { AssistantChatMessage, AssistantRuntimeState } from "../chat-types"
 import { AssistantComposer } from "./assistant-composer";
 import { AssistantConversationShell } from "./assistant-conversation-shell";
 import { AssistantEntry } from "./assistant-entry";
+import { AssistantOutcome } from "./assistant-outcome";
 import { listAssistantKnowledge, searchAssistantKnowledge, type KnowledgeOption } from "../knowledge-client";
 import type { RetrievalSearchResult } from "@/knowhub/features/retrieval/types";
 import { RetrievalResultsPanel } from "@/knowhub/components/retrieval/retrieval-results-panel";
@@ -314,7 +315,7 @@ function ToolInvocationCard({ name, args, result }: { name: string; args?: unkno
   );
 }
 
-function ChatMessageCard({ message }: { message: AssistantChatMessage }) {
+function ChatMessageCard({ message, onReturnHome }: { message: AssistantChatMessage; onReturnHome: () => void }) {
   const isUser = message.role === "user";
 
   return (
@@ -334,7 +335,10 @@ function ChatMessageCard({ message }: { message: AssistantChatMessage }) {
           {message.content}
         </div>
       ) : (
-        <AssistantMessageContent content={message.content} />
+        <>
+          <AssistantMessageContent content={message.content} />
+          {message.outcome ? <AssistantOutcome outcome={message.outcome} onReturnHome={onReturnHome} /> : null}
+        </>
       )}
     </article>
   );
@@ -420,7 +424,7 @@ export function AssistantExperience({ onConversationChange }: AssistantExperienc
 
     try {
       let assistantContent = "";
-      await streamAssistantChat(
+      const response = await streamAssistantChat(
         nextMessages.filter((message) => message.role !== "assistant" || message.content.trim()),
         runtimeState,
         {
@@ -444,6 +448,7 @@ export function AssistantExperience({ onConversationChange }: AssistantExperienc
           },
         },
       );
+      assistantContent = response.content;
 
       // 请求成功结束后，提取 [__STATE__:{...}]
       const stateMatch = assistantContent.match(/\[__STATE__:(\{[\s\S]*?\})\]/);
@@ -466,7 +471,7 @@ export function AssistantExperience({ onConversationChange }: AssistantExperienc
       setChatMessages((current) =>
         current.map((message) =>
           message.id === assistantMessage.id
-            ? { ...message, content: cleanContent }
+            ? { ...message, content: cleanContent, outcome: response.outcome }
             : message,
         ),
       );
@@ -566,7 +571,7 @@ export function AssistantExperience({ onConversationChange }: AssistantExperienc
     >
         <div className="flex flex-col gap-3">
           {chatMessages.map((message) => (
-            <ChatMessageCard key={message.id} message={message} />
+            <ChatMessageCard key={message.id} message={message} onReturnHome={leaveConversation} />
           ))}
         </div>
     </AssistantConversationShell>

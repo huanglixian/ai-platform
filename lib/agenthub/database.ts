@@ -80,6 +80,14 @@ UPDATE applications SET launch_status='running' WHERE producer='external' AND la
   seeded_at TEXT NOT NULL
 );`,
   },
+  {
+    id: "007_assistant_settings",
+    sql: `CREATE TABLE IF NOT EXISTS assistant_settings (
+  id INTEGER PRIMARY KEY CHECK (id = 1),
+  unmatched_guide TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);`,
+  },
 ];
 
 export function getAgentHubDatabase(): Database.Database {

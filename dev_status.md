@@ -50,9 +50,9 @@ scripts/app.mts                 平台与发布 Worker 统一启动器
 ### 统一首页、AI 助手与应用目录
 
 - 页面与组合状态：`app/(platform)/page.tsx`、`features/platform-home/platform-home-page.tsx`。首页仅负责在初始态展示助手输入区和应用分组；对话激活后只显示助手沟通界面。
-- 助手：客户端与 UI 在 `features/assistant/`，提供问答与已发布知识库搜索；问答接口为 `/api/platform/assistant/chat`，知识库搜索复用 KnowHub 检索接口。聊天服务负责技能路由、能力推荐与允许的工具调用。
+- 助手：客户端与 UI 在 `features/assistant/`，提供问答与已发布知识库搜索；问答接口为 `/api/platform/assistant/chat`，知识库搜索复用 KnowHub 检索接口。问答先在应用、已启用技能和可用业务 API 中分流：明确任务执行技能，相关但不足以执行的请求返回推荐卡片，无明显匹配时显示可配置的引导文案及首页、技能中心、业务 API 跳转入口；通用工具不参与推荐。技能执行时只挂载其声明且已注册实现的工具。
 - 应用目录 UI：`features/apps/ui/application-catalog.tsx`。支持来源筛选与关键词搜索，按 `AppFactory → 外部应用 → Dify / n8n` 展示；接入入口仅位于外部应用、Dify、n8n 的分组标题中。
-- 当前状态：助手消息和搜索结果仅保存在浏览器内存中；点击“返回首页”会结束当前问答或搜索并恢复应用目录。
+- 当前状态：助手消息和搜索结果仅保存在浏览器内存中；无匹配引导文案保存在 `agenthub.db` 的 `assistant_settings` 单行配置，可在“配置管理 → AI 助手”编辑；点击“返回首页”会结束当前问答或搜索并恢复应用目录。
 
 ### 应用注册与运行
 
