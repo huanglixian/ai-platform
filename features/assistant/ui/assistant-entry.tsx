@@ -57,16 +57,18 @@ function AssistantEntryContent({
 
   return (
     <section className="relative overflow-hidden rounded-[18px] border border-[#ccd8e4] bg-white shadow-[0_10px_32px_rgba(24,49,78,0.09)]">
-      <div className="relative grid min-h-[222px] lg:grid-cols-[clamp(166px,15vw,205px)_minmax(0,1fr)]">
-        <div className="relative flex flex-col justify-between overflow-hidden border-b border-[#cbdfee] bg-[linear-gradient(145deg,#d5eafa_0%,#e6f2fb_55%,#f3f8fc_100%)] px-5 py-4 lg:border-r lg:border-b-0 lg:px-6 lg:py-5">
-          <div>
+      <div className="relative grid lg:min-h-[222px] lg:grid-cols-[clamp(166px,15vw,205px)_minmax(0,1fr)]">
+        <div className="relative flex items-center gap-3 overflow-hidden border-b border-[#cbdfee] bg-[linear-gradient(145deg,#d5eafa_0%,#e6f2fb_55%,#f3f8fc_100%)] px-4 py-3 lg:flex-col lg:items-stretch lg:justify-between lg:gap-0 lg:border-r lg:border-b-0 lg:px-6 lg:py-5">
+          <div className="flex min-w-0 items-center gap-3 lg:block">
             <div className="grid h-9 w-9 place-items-center rounded-[10px] border border-white/80 bg-gradient-to-br from-[#287ab3] to-[#4d98c7] text-white shadow-[0_4px_12px_rgba(40,122,179,0.16)]"><Sparkles size={17} /></div>
-            <div className="mt-4 text-[16px] font-semibold tracking-[-0.02em] text-[#244e70]">AI 助手</div>
-            <p className="mt-1.5 max-w-[150px] text-[11px] leading-5 text-[#5d7e98]">连接平台能力与业务数据</p>
+            <div className="min-w-0 lg:mt-4">
+              <div className="whitespace-nowrap text-[16px] font-semibold tracking-[-0.02em] text-[#244e70]">AI 助手</div>
+              <p className="mt-1.5 hidden max-w-[150px] text-[11px] leading-5 text-[#5d7e98] lg:block">连接平台能力与业务数据</p>
+            </div>
           </div>
-          <div className="mt-4 text-[10px] font-medium tracking-[0.08em] text-[#718ca2]">INTELLIGENT WORKSPACE</div>
+          <div className="hidden mt-4 text-[10px] font-medium tracking-[0.08em] text-[#718ca2] lg:block">INTELLIGENT WORKSPACE</div>
         </div>
-        <div className="flex min-w-0 flex-col px-5 py-4 sm:px-6 sm:py-5">
+        <div className="flex min-w-0 flex-col px-4 py-3 sm:px-6 sm:py-5">
           <textarea
             value={value}
             onChange={(event) => setValue(event.target.value)}
@@ -85,7 +87,7 @@ function AssistantEntryContent({
             }}
             placeholder={mode === "chat" ? "描述你的目标、已有资料或期望结果…" : "输入问题，搜索知识库中的相关片段…"}
             aria-label="向 AI 助手提问"
-            className="min-h-[114px] w-full flex-1 resize-none rounded-xl border border-[#d4dce5] bg-[#fafbfc] px-4 py-3 text-[14px] leading-6 text-title outline-none transition-colors placeholder:text-[#8492a2] focus:border-[#668fae] focus:bg-white focus:ring-4 focus:ring-[#edf2f7]"
+            className="min-h-[96px] w-full flex-1 resize-none rounded-xl border border-[#d4dce5] bg-[#fafbfc] px-4 py-3 text-[14px] leading-6 text-title outline-none transition-colors placeholder:text-[#8492a2] focus:border-[#668fae] focus:bg-white focus:ring-4 focus:ring-[#edf2f7] sm:min-h-[114px]"
           />
           <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
             <div className="flex min-w-0 flex-1 flex-wrap gap-2">
