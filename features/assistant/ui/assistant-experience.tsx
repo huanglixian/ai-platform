@@ -1,22 +1,15 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { ArrowLeft, Sparkles } from "lucide-react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 
 import { MessageMarkdown } from "@/components/shared/message-markdown";
-import { WorkbenchCommandPanel } from "@/components/workbench/workbench-command-panel";
-import { WorkbenchEmptyState } from "@/components/workbench/workbench-empty-state";
-import { WorkbenchSearchResultPane } from "@/components/workbench/workbench-search-result-pane";
-import { WorkbenchShell } from "@/components/workbench/workbench-shell";
-import {
-  listWorkbenchKnowledgeOptions,
-  searchWorkbenchKnowledge,
-  streamWorkbenchChat,
-  type WorkbenchChatMessage,
-  type WorkbenchKnowledgeOption,
-  type WorkbenchSearchResult,
-} from "@/features/workbench/api";
+import { streamAssistantChat } from "../client";
+import type { AssistantChatMessage, AssistantRuntimeState } from "../chat-types";
+import { AssistantComposer } from "./assistant-composer";
+import { AssistantConversationShell } from "./assistant-conversation-shell";
+import { AssistantEntry } from "./assistant-entry";
 
-type WorkbenchMode = "search" | "chat";
 type JsonRecord = Record<string, unknown>;
 type ToolData = { name: string; args?: unknown; result?: JsonRecord };
 type ParsedPart =
@@ -206,7 +199,7 @@ function AssistantMessageContent({ content }: { content: string }) {
   const parts = parseAssistantMessageSafe(remainingText);
 
   // 聚合配对渲染
-  const renderedElements: React.ReactNode[] = [];
+  const renderedElements: ReactNode[] = [];
   let toolIndex = 0;
 
   for (let i = 0; i < parts.length; i++) {
@@ -318,7 +311,7 @@ function ToolInvocationCard({ name, args, result }: { name: string; args?: unkno
   );
 }
 
-function ChatMessageCard({ message }: { message: WorkbenchChatMessage }) {
+function ChatMessageCard({ message }: { message: AssistantChatMessage }) {
   const isUser = message.role === "user";
 
   return (
@@ -331,7 +324,7 @@ function ChatMessageCard({ message }: { message: WorkbenchChatMessage }) {
       ].join(" ")}
     >
       <div className="mb-1 text-[11px] font-medium text-[#7f8ea3]">
-        {isUser ? "用户" : "工作台 AI"}
+        {isUser ? "我" : "AI 助手"}
       </div>
       {isUser ? (
         <div className="whitespace-pre-wrap text-[13px] leading-6 text-title">
@@ -344,63 +337,18 @@ function ChatMessageCard({ message }: { message: WorkbenchChatMessage }) {
   );
 }
 
-export function WorkbenchPage() {
-  const [mode, setMode] = useState<WorkbenchMode>("chat");
-  const [knowledgeOptions, setKnowledgeOptions] = useState<WorkbenchKnowledgeOption[]>([]);
-  const [knowledgeId, setKnowledgeId] = useState("");
-  const [searchInput, setSearchInput] = useState("");
-  const [searching, setSearching] = useState(false);
-  const [searchStatus, setSearchStatus] = useState("");
-  const [searchError, setSearchError] = useState("");
-  const [searchResult, setSearchResult] = useState<WorkbenchSearchResult | null>(null);
-  const [hasSearched, setHasSearched] = useState(false);
-  const [chatMessages, setChatMessages] = useState<WorkbenchChatMessage[]>([]);
-  const [runtimeState, setRuntimeState] = useState<{
-    activeSkillId?: string;
-    skillStatus: "idle" | "collecting_input" | "running_tool" | "completed" | "failed";
-  }>({ skillStatus: "idle" });
+type AssistantExperienceProps = {
+  onConversationChange: (active: boolean) => void;
+};
+
+export function AssistantExperience({ onConversationChange }: AssistantExperienceProps) {
+  const [chatMessages, setChatMessages] = useState<AssistantChatMessage[]>([]);
+  const [runtimeState, setRuntimeState] = useState<AssistantRuntimeState>({ skillStatus: "idle" });
   const [chatInput, setChatInput] = useState("");
   const [chatSending, setChatSending] = useState(false);
-  const [chatStatus, setChatStatus] = useState("描述任务后，工作台 AI 会生成回复。");
+  const [chatStatus, setChatStatus] = useState("正在理解你的任务");
   const [chatError, setChatError] = useState("");
   const chatScrollRef = useRef<HTMLDivElement | null>(null);
-
-  async function handleSearch(content: string) {
-    const query = content.trim();
-
-    if (!knowledgeId) {
-      setSearchError("请先选择一个知识库");
-      return;
-    }
-
-    if (!query) {
-      setSearchError("请输入检索问题");
-      return;
-    }
-
-    setSearching(true);
-    setHasSearched(true);
-    setSearchError("");
-    setSearchStatus("正在检索相关片段...");
-
-    try {
-      const result = await searchWorkbenchKnowledge({
-        knowledgeId,
-        query,
-      });
-      setSearchResult(result);
-      setSearchInput(query);
-      setSearchStatus(result.items.length ? `已召回 ${result.items.length} 个片段` : "未找到相关片段");
-    } catch (searchLoadError) {
-      setSearchResult(null);
-      setSearchStatus("");
-      setSearchError(
-        searchLoadError instanceof Error ? searchLoadError.message : "检索失败，请重试",
-      );
-    } finally {
-      setSearching(false);
-    }
-  }
 
   async function handleChat(content: string) {
     const query = content.trim();
@@ -409,18 +357,19 @@ export function WorkbenchPage() {
       return;
     }
 
-    const userMessage: WorkbenchChatMessage = {
+    const userMessage: AssistantChatMessage = {
       id: createMessageId(),
       role: "user",
       content: query,
     };
-    const assistantMessage: WorkbenchChatMessage = {
+    const assistantMessage: AssistantChatMessage = {
       id: createMessageId(),
       role: "assistant",
       content: "",
     };
     const nextMessages = [...chatMessages, userMessage, assistantMessage];
 
+    onConversationChange(true);
     setChatMessages(nextMessages);
     setChatInput("");
     setChatSending(true);
@@ -429,7 +378,7 @@ export function WorkbenchPage() {
 
     try {
       let assistantContent = "";
-      await streamWorkbenchChat(
+      await streamAssistantChat(
         nextMessages.filter((message) => message.role !== "assistant" || message.content.trim()),
         runtimeState,
         {
@@ -482,7 +431,7 @@ export function WorkbenchPage() {
 
       setChatStatus("");
     } catch (sendError) {
-      const message = sendError instanceof Error ? sendError.message : "工作台 AI 回复失败";
+      const message = sendError instanceof Error ? sendError.message : "AI 助手回复失败";
       setChatError(message);
       setChatStatus("");
       setChatMessages((current) =>
@@ -497,47 +446,8 @@ export function WorkbenchPage() {
     }
   }
 
-  function handleModeChange(nextMode: WorkbenchMode) {
-    setMode(nextMode);
-    if (nextMode === "chat") {
-      setSearchError("");
-      setSearchStatus("");
-    }
-  }
-
   useEffect(() => {
-    let active = true;
-
-    async function loadKnowledgeOptions() {
-      try {
-        const items = await listWorkbenchKnowledgeOptions();
-
-        if (!active) {
-          return;
-        }
-
-        setKnowledgeOptions(items);
-        setKnowledgeId((current) => current || items[0]?.id || "");
-      } catch (loadError) {
-        if (!active) {
-          return;
-        }
-
-        setSearchError(
-          loadError instanceof Error ? loadError.message : "知识库加载失败",
-        );
-      }
-    }
-
-    void loadKnowledgeOptions();
-
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  useEffect(() => {
-    if (mode !== "chat" || !chatMessages.length) {
+    if (!chatMessages.length) {
       return;
     }
 
@@ -550,113 +460,55 @@ export function WorkbenchPage() {
     });
 
     return () => window.cancelAnimationFrame(frame);
-  }, [mode, chatMessages]);
+  }, [chatMessages]);
 
-  const showChatWorkspace = mode === "chat" && chatMessages.length > 0;
-  const showSearchWorkspace = mode === "search" && hasSearched;
-  const selectedKnowledge =
-    knowledgeOptions.find((item) => item.id === knowledgeId) ?? null;
+  function leaveConversation() {
+    setChatMessages([]);
+    setChatInput("");
+    setChatError("");
+    setChatStatus("正在理解你的任务");
+    setRuntimeState({ skillStatus: "idle" });
+    onConversationChange(false);
+  }
 
-  if (!showChatWorkspace && !showSearchWorkspace) {
+  if (!chatMessages.length) {
     return (
-      <section className="-ml-6 h-[calc(100vh-104px)] min-h-0 w-[calc(100%+1.5rem)] overflow-hidden rounded-[18px] bg-white px-5 py-4 sm:-ml-8 sm:w-[calc(100%+2rem)]">
-        <WorkbenchEmptyState
-          mode={mode}
-          knowledgeId={knowledgeId}
-          knowledgeOptions={knowledgeOptions}
-          sending={mode === "chat" ? chatSending : searching}
-          status={mode === "chat" ? chatStatus : searchStatus}
-          onModeChange={handleModeChange}
-          onKnowledgeChange={setKnowledgeId}
-          onSend={mode === "chat" ? handleChat : handleSearch}
-        />
-      </section>
+      <AssistantEntry sending={chatSending} onSend={handleChat} />
     );
   }
 
-  if (showChatWorkspace) {
-    return (
-      <WorkbenchShell
-        contentRef={chatScrollRef}
-        commandPanel={
-          <WorkbenchCommandPanel
-            value={chatInput}
-            placeholder="继续描述任务，获取工作台 AI 回复"
-            sending={chatSending}
-            status={chatStatus}
-            submitLabel="发送"
-            sendingLabel="生成中..."
-            error={chatError}
-            onChange={setChatInput}
-            onSubmit={handleChat}
-            onClear={() => {
-              setChatMessages([]);
-              setChatError("");
-              setChatStatus("描述任务后，工作台 AI 会生成回复。");
-              setRuntimeState({ skillStatus: "idle" });
-            }}
-          />
-        }
-      >
+  return (
+    <AssistantConversationShell
+      contentRef={chatScrollRef}
+      header={
+        <header className="flex items-center gap-3 px-1 py-1">
+          <div className="grid h-9 w-9 place-items-center rounded-xl bg-[#e9f4fd] text-[#0368b3]"><Sparkles size={17} /></div>
+          <div className="min-w-0">
+            <div className="text-[14px] font-semibold text-title">AI 助手</div>
+            <div className="text-[11px] text-[#7890a8]">理解任务并协助连接平台能力</div>
+          </div>
+          <button type="button" onClick={leaveConversation} className="ml-auto inline-flex h-8 items-center gap-1.5 rounded-lg border border-[#dce7f1] px-3 text-[12px] font-medium text-[#617a91] transition-colors hover:border-[#b8d1e9] hover:bg-[#f7fbfe] hover:text-[#1a5c96]"><ArrowLeft size={14} />返回首页</button>
+        </header>
+      }
+      commandPanel={
+        <AssistantComposer
+          value={chatInput}
+          placeholder="继续描述任务…"
+          sending={chatSending}
+          status={chatStatus}
+          submitLabel="发送"
+          sendingLabel="生成中..."
+          error={chatError}
+          onChange={setChatInput}
+          onSubmit={handleChat}
+        />
+      }
+    >
         <div className="flex flex-col gap-3">
           {chatMessages.map((message) => (
             <ChatMessageCard key={message.id} message={message} />
           ))}
         </div>
-      </WorkbenchShell>
-    );
-  }
-
-  return (
-    <WorkbenchShell
-      commandPanel={
-        <WorkbenchCommandPanel
-          value={searchInput}
-          placeholder="输入问题，搜索知识库中的相关片段"
-          sending={searching}
-          status={searchStatus || "通过问题召回相关片段和文档索引"}
-          submitLabel="搜索"
-          sendingLabel="搜索中..."
-          error={searchError}
-          meta={
-            <>
-              <select
-                value={knowledgeId}
-                onChange={(event) => setKnowledgeId(event.target.value)}
-                className="h-[32px] min-w-[220px] rounded-[8px] border border-[#dbe5f0] bg-white px-2.5 text-[12px] text-title outline-none transition-colors focus:border-[#6f96c4]"
-              >
-                <option value="">请选择知识库</option>
-                {knowledgeOptions.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.name}
-                  </option>
-                ))}
-              </select>
-              <div className="min-w-0 flex-1 truncate">
-                {searchStatus || "通过问题召回相关片段和文档索引"}
-              </div>
-            </>
-          }
-          onChange={setSearchInput}
-          onSubmit={handleSearch}
-          onClear={() => {
-            setSearchInput("");
-            setSearchResult(null);
-            setSearchError("");
-            setSearchStatus("");
-            setHasSearched(false);
-          }}
-        />
-      }
-    >
-      <WorkbenchSearchResultPane
-        searching={searching}
-        query={searchResult?.query || ""}
-        knowledgeName={selectedKnowledge?.name || ""}
-        hasSearched={hasSearched}
-        error={searchError}
-        items={searchResult?.items ?? []}
-      />
-    </WorkbenchShell>
+    </AssistantConversationShell>
   );
 }

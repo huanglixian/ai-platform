@@ -119,7 +119,7 @@ export function KnowHubRetrievalPage() {
           检索验证
         </div>
         <div className="mt-1 text-[13px] leading-6 text-[#667085]">
-          这里直接验证知识库的向量召回效果，后续 Workbench 搜索模式会复用同一条检索 API。
+          这里直接验证知识库的向量召回效果，其他上层交互可复用同一条检索 API。
         </div>
 
         <div className="mt-4 grid gap-3 xl:grid-cols-[260px_minmax(0,1fr)_120px]">

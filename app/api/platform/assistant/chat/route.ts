@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createTextStreamResponse } from "ai";
 import { z } from "zod";
 
-import { streamWorkbenchRecommendation } from "@/features/workbench/chat-service";
+import { streamAssistantResponse } from "@/features/assistant/chat-service";
 
 const chatMessageSchema = z.object({
   id: z.string().optional(),
@@ -22,7 +22,7 @@ const chatRequestSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     const payload = chatRequestSchema.parse(await request.json());
-    const result = await streamWorkbenchRecommendation(payload.messages, payload.runtimeState);
+    const result = await streamAssistantResponse(payload.messages, payload.runtimeState);
     const headers = {
       "Cache-Control": "no-store",
     };
@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
       textStream: responseStream,
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "工作台 AI 回复失败";
+    const message = error instanceof Error ? error.message : "AI 助手回复失败";
 
     return NextResponse.json(
       {

@@ -3,14 +3,14 @@ import { streamText, pruneMessages, stepCountIs, type ModelMessage, type ToolSet
 import { getActiveModelRuntime } from "@/features/models/provider";
 import { buildSkillRunContext } from "@/features/skills/runner";
 import { routeSkill } from "@/features/skills/router";
-import type { WorkbenchChatMessage, WorkbenchRuntimeState } from "@/features/workbench/chat-types";
-import { getWorkbenchCapabilityContext } from "@/features/workbench/capability-context";
-import { buildWorkbenchRecommendationPrompt } from "@/features/workbench/recommendation-prompt";
-import { buildSkillExecutionPrompt } from "@/features/workbench/skill-execution-prompt";
+import type { AssistantChatMessage, AssistantRuntimeState } from "./chat-types";
+import { getAssistantCapabilityContext } from "./capability-context";
+import { buildAssistantRecommendationPrompt } from "./recommendation-prompt";
+import { buildSkillExecutionPrompt } from "./skill-execution-prompt";
 import { getCapabilityImplementation } from "@/features/capabilities/implementation-registry";
 import { getCapabilityByHandlerKey } from "@/features/capabilities/server";
 
-function toModelMessages(messages: WorkbenchChatMessage[]): ModelMessage[] {
+function toModelMessages(messages: AssistantChatMessage[]): ModelMessage[] {
   return messages
     .filter((message) => message.content.trim())
     .map((message) => ({
@@ -19,15 +19,15 @@ function toModelMessages(messages: WorkbenchChatMessage[]): ModelMessage[] {
     }));
 }
 
-function getLatestUserMessage(messages: WorkbenchChatMessage[]) {
+function getLatestUserMessage(messages: AssistantChatMessage[]) {
   return [...messages].reverse().find((message) => message.role === "user")?.content.trim() || "";
 }
 
 function getMessagesForContext(
-  messages: WorkbenchChatMessage[],
+  messages: AssistantChatMessage[],
   activeSkillId?: string,
   startedAtMessageIndex?: number
-): WorkbenchChatMessage[] {
+): AssistantChatMessage[] {
   if (
     activeSkillId &&
     startedAtMessageIndex !== undefined &&
@@ -39,9 +39,9 @@ function getMessagesForContext(
   return messages.slice(-5);
 }
 
-export async function streamWorkbenchRecommendation(
-  messages: WorkbenchChatMessage[],
-  runtimeState?: WorkbenchRuntimeState
+export async function streamAssistantResponse(
+  messages: AssistantChatMessage[],
+  runtimeState?: AssistantRuntimeState
 ) {
   const latestUserMessage = getLatestUserMessage(messages);
 
@@ -127,12 +127,12 @@ export async function streamWorkbenchRecommendation(
     }
   }
 
-  const capabilityContext = getWorkbenchCapabilityContext(latestUserMessage);
+  const capabilityContext = getAssistantCapabilityContext(latestUserMessage);
 
   return {
     stream: streamText({
       model: modelRuntime.model,
-      system: buildWorkbenchRecommendationPrompt(capabilityContext),
+      system: buildAssistantRecommendationPrompt(capabilityContext),
       messages: prunedMessages,
       temperature: 0.2,
       providerOptions: modelRuntime.providerOptions,

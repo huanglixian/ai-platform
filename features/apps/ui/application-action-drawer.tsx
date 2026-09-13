@@ -3,7 +3,7 @@
 import { Dialog } from "@base-ui/react/dialog";
 import { ExternalLink, LoaderCircle, Pencil, Play, Square, Trash2, X } from "lucide-react";
 import type { PublishedApp } from "@/features/apps/types";
-import { sourceStyles, typeLabels } from "./app-presentation";
+import { sourceStyles, typeLabels } from "./application-presentation";
 
 type AppActionDrawerProps = {
   app: PublishedApp;

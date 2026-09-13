@@ -15,13 +15,8 @@ export type PlatformNavGroup = {
 export const platformNavGroups: PlatformNavGroup[] = [
   {
     key: "home",
-    label: "工作台",
-    href: "/workbench",
-  },
-  {
-    key: "apps",
-    label: "应用中心",
-    href: "/apps",
+    label: "首页",
+    href: "/",
   },
   {
     key: "workflows",
@@ -70,16 +65,8 @@ export const platformNavGroups: PlatformNavGroup[] = [
 ];
 
 export function getActiveNavGroup(pathname: string) {
-  if (
-    pathname === "/" ||
-    pathname === "/workbench" ||
-    pathname.startsWith("/workbench/")
-  ) {
+  if (pathname === "/") {
     return "home";
-  }
-
-  if (pathname === "/apps" || pathname.startsWith("/apps/")) {
-    return "apps";
   }
 
   if (pathname === "/workflows" || pathname.startsWith("/workflows/")) {

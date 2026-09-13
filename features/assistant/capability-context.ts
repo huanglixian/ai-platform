@@ -1,5 +1,5 @@
 import { listCapabilities } from "@/features/capabilities/server";
-import type { WorkbenchCapabilitySummary } from "@/features/workbench/chat-types";
+import type { AssistantCapabilitySummary } from "./chat-types";
 
 const maxItemsPerKind = 10;
 
@@ -7,7 +7,7 @@ function normalizeText(value: string) {
   return value.toLowerCase().replace(/\s+/g, "");
 }
 
-function scoreCapability(item: WorkbenchCapabilitySummary, query: string) {
+function scoreCapability(item: AssistantCapabilitySummary, query: string) {
   const normalizedQuery = normalizeText(query);
   const haystack = normalizeText(
     [item.name, item.description, item.category, item.invokeType].join(" "),
@@ -27,7 +27,7 @@ function scoreCapability(item: WorkbenchCapabilitySummary, query: string) {
   return score;
 }
 
-function toContextBlock(title: string, items: WorkbenchCapabilitySummary[]) {
+function toContextBlock(title: string, items: AssistantCapabilitySummary[]) {
   if (!items.length) {
     return `${title}：无匹配候选`;
   }
@@ -45,8 +45,8 @@ function toContextBlock(title: string, items: WorkbenchCapabilitySummary[]) {
   return `${title}：\n${lines.join("\n")}`;
 }
 
-export function getWorkbenchCapabilityContext(query: string) {
-  const capabilities: WorkbenchCapabilitySummary[] = listCapabilities()
+export function getAssistantCapabilityContext(query: string) {
+  const capabilities: AssistantCapabilitySummary[] = listCapabilities()
     .filter((item) => item.status === "active" && item.availability === "available")
     .map((item) => ({
       id: item.id,
@@ -64,7 +64,7 @@ export function getWorkbenchCapabilityContext(query: string) {
     services: capabilities.filter((item) => item.kind === "service"),
   };
 
-  const pick = (items: WorkbenchCapabilitySummary[]) =>
+  const pick = (items: AssistantCapabilitySummary[]) =>
     items
       .map((item) => ({ item, score: scoreCapability(item, query) }))
       .sort((a, b) => b.score - a.score)

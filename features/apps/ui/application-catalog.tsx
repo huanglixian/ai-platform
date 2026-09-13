@@ -2,32 +2,57 @@
 
 import { Dialog } from "@base-ui/react/dialog";
 import { useEffect, useMemo, useState } from "react";
-import { AlertTriangle, LoaderCircle, Trash2 } from "lucide-react";
-import { CardPageFrame } from "@/components/shared/card-page-frame";
-import type { PublishedApp } from "@/features/apps/types";
-import { AppActionDrawer } from "./app-action-drawer";
-import { AppCard } from "./app-card";
-import { APP_GROUP_TABS, APP_TABS, sourceLabels, typeLabels } from "./app-presentation";
-import { ExternalAppForm } from "./external-app-form";
-
-const ITEM_WIDTH = 260;
+import { AlertTriangle, LoaderCircle, Plus, Search, Trash2 } from "lucide-react";
+import type { PlatformSource, PublishedApp } from "@/features/apps/types";
+import { AppActionDrawer } from "./application-action-drawer";
+import { AppCard } from "./application-card";
+import { sourceLabels, typeLabels } from "./application-presentation";
+import { ApplicationForm } from "./application-form";
 
 function EmptyApps() {
   return (
-    <div className="flex min-h-[180px] flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 bg-white px-4 text-center" style={{ gridColumn: "1 / -1" }}>
+    <div className="flex min-h-[180px] flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-white px-4 text-center">
       <div className="text-sm font-semibold text-title">没有找到应用</div>
       <p className="mt-2 max-w-[280px] text-xs leading-5 text-muted-foreground">可以调整搜索条件，或接入一个新的外部应用。</p>
     </div>
   );
 }
 
-export function AppsPageClient() {
+type ApplicationGroupProps = {
+  source: PlatformSource;
+  apps: PublishedApp[];
+  onAdd?: () => void;
+  onSelect: (app: PublishedApp) => void;
+  onOpen: (app: PublishedApp) => void;
+  onRemove: (app: PublishedApp) => void;
+};
+
+function ApplicationGroup({ source, apps, onAdd, onSelect, onOpen, onRemove }: ApplicationGroupProps) {
+  const compactGrid = source === "dify" || source === "n8n";
+
+  return (
+    <section aria-labelledby={`application-group-${source}`} className="min-w-0 overflow-hidden rounded-xl border border-[#dce5ed] bg-white shadow-[0_2px_8px_rgba(28,52,77,0.025)]">
+      <header className="flex h-10 items-center gap-2.5 border-b border-[#e2eaf1] bg-gradient-to-r from-[#edf4f9] to-[#f8fafc] px-3.5">
+        <span aria-hidden="true" className="h-3.5 w-[3px] rounded-full bg-[#5a86ab]" />
+        <h2 id={`application-group-${source}`} className="text-[14px] font-semibold tracking-[0.01em] text-[#294b69]">{sourceLabels[source]}</h2>
+        {onAdd ? <button type="button" onClick={onAdd} className="ml-auto inline-flex h-7 shrink-0 items-center gap-1 rounded-md px-2 text-[12px] font-medium text-[#477395] transition-colors hover:bg-white hover:text-[#155b91] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#5a86ab]"><Plus size={14} />接入应用</button> : null}
+      </header>
+      {apps.length ? (
+        <div className={compactGrid ? "grid gap-2 p-2.5 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2" : "grid gap-2 p-2.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"}>
+          {apps.map((app) => <AppCard key={app.id} app={app} onSelect={onSelect} onOpen={onOpen} onRemove={onRemove} />)}
+        </div>
+      ) : <div className="px-4 py-5 text-center text-[12px] text-[#8095a9]">暂无应用</div>}
+    </section>
+  );
+}
+
+export function ApplicationCatalog() {
   const [list, setList] = useState<PublishedApp[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [selectedApp, setSelectedApp] = useState<PublishedApp | null>(null);
   const [editingApp, setEditingApp] = useState<PublishedApp | null | undefined>(undefined);
-  const [activeTab, setActiveTab] = useState<(typeof APP_TABS)[number]>("全部");
+  const [newApplicationSource, setNewApplicationSource] = useState<"external" | "dify" | "n8n">("external");
   const [keyword, setKeyword] = useState("");
   const [pendingAction, setPendingAction] = useState<"start" | "stop" | null>(null);
   const [actionError, setActionError] = useState("");
@@ -109,6 +134,11 @@ export function AppsPageClient() {
     setRemovingApp(app);
   }
 
+  function openApplicationForm(source: "external" | "dify" | "n8n") {
+    setNewApplicationSource(source);
+    setEditingApp(null);
+  }
+
   function handleSaved(app: PublishedApp, isNew: boolean) {
     setList((current) => isNew ? [app, ...current] : current.map((item) => item.id === app.id ? app : item));
     setSelectedApp((current) => current?.id === app.id ? app : current);
@@ -126,25 +156,47 @@ export function AppsPageClient() {
     ));
   }, [keyword, list]);
 
-  const visibleApps = activeTab === "全部" ? searchedApps : searchedApps.filter((app) => sourceLabels[app.source] === activeTab);
-  const groupedApps = APP_GROUP_TABS.map((tab) => ({
-    key: tab,
-    title: tab,
-    children: searchedApps.filter((app) => sourceLabels[app.source] === tab).map((app) => <AppCard key={app.id} app={app} onSelect={handleSelect} onOpen={handleOpen} onRemove={requestRemove} />),
-  })).filter((section) => section.children.length > 0);
+  const groups = {
+    appfactory: searchedApps.filter((app) => app.source === "appfactory"),
+    external: searchedApps.filter((app) => app.source === "external"),
+    dify: searchedApps.filter((app) => app.source === "dify"),
+    n8n: searchedApps.filter((app) => app.source === "n8n"),
+  };
+  const hasSearch = Boolean(keyword.trim());
 
   if (loading) {
-    return <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{[1, 2, 3].map((item) => <div key={item} className="h-44 animate-pulse rounded-xl bg-slate-100" />)}</div>;
+    return <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">{[1, 2, 3, 4].map((item) => <div key={item} className="h-44 animate-pulse rounded-2xl bg-slate-100" />)}</div>;
   }
 
   return (
     <>
-      {loadError ? <div className="mb-4 flex items-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700"><AlertTriangle size={15} />{loadError}</div> : null}
-      {removeError ? <div className="mb-4 flex items-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700"><AlertTriangle size={15} />{removeError}</div> : null}
-      <CardPageFrame title="应用中心" count={visibleApps.length} itemWidth={ITEM_WIDTH} actionLabel="接入应用" onActionClick={() => setEditingApp(null)} tabs={[...APP_TABS]} activeTab={activeTab} onTabChange={(tab) => setActiveTab(tab as (typeof APP_TABS)[number])} groupedSections={groupedApps} searchValue={keyword} searchPlaceholder="搜索应用名称、说明、来源或类型" onSearchChange={setKeyword}>
-        {visibleApps.length ? visibleApps.map((app) => <AppCard key={app.id} app={app} onSelect={handleSelect} onOpen={handleOpen} onRemove={requestRemove} />) : <EmptyApps />}
-      </CardPageFrame>
-      {editingApp !== undefined ? <ExternalAppForm key={editingApp?.id ?? "new"} app={editingApp} onClose={() => setEditingApp(undefined)} onSaved={handleSaved} /> : null}
+      <section id="applications" className="scroll-mt-24">
+        {loadError ? <div className="mb-4 flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700"><AlertTriangle size={15} />{loadError}</div> : null}
+        {removeError ? <div className="mb-4 flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700"><AlertTriangle size={15} />{removeError}</div> : null}
+        <div className="mb-3 flex items-center">
+          <label className="flex h-[34px] min-w-0 flex-1 items-center gap-2 rounded-lg border border-[#dce5ed] bg-white px-3 transition-colors focus-within:border-[#86add5] focus-within:ring-2 focus-within:ring-[#eaf3fc]">
+            <Search size={16} className="shrink-0 text-[#7890a8]" />
+            <input
+              value={keyword}
+              onChange={(event) => setKeyword(event.target.value)}
+              placeholder="搜索应用"
+              aria-label="搜索应用"
+              className="min-w-0 flex-1 bg-transparent text-[13px] text-title outline-none placeholder:text-[#9aaabc]"
+            />
+          </label>
+        </div>
+        {searchedApps.length || !hasSearch ? (
+          <div className="space-y-3">
+            {!hasSearch || groups.appfactory.length ? <ApplicationGroup source="appfactory" apps={groups.appfactory} onSelect={handleSelect} onOpen={handleOpen} onRemove={requestRemove} /> : null}
+            {!hasSearch || groups.external.length ? <ApplicationGroup source="external" apps={groups.external} onAdd={() => openApplicationForm("external")} onSelect={handleSelect} onOpen={handleOpen} onRemove={requestRemove} /> : null}
+            {!hasSearch || groups.dify.length || groups.n8n.length ? <div className="grid items-start gap-3 lg:grid-cols-2">
+              {!hasSearch || groups.dify.length ? <ApplicationGroup source="dify" apps={groups.dify} onAdd={() => openApplicationForm("dify")} onSelect={handleSelect} onOpen={handleOpen} onRemove={requestRemove} /> : null}
+              {!hasSearch || groups.n8n.length ? <ApplicationGroup source="n8n" apps={groups.n8n} onAdd={() => openApplicationForm("n8n")} onSelect={handleSelect} onOpen={handleOpen} onRemove={requestRemove} /> : null}
+            </div> : null}
+          </div>
+        ) : <EmptyApps />}
+      </section>
+      {editingApp !== undefined ? <ApplicationForm key={editingApp?.id ?? "new"} app={editingApp} source={newApplicationSource} onClose={() => setEditingApp(undefined)} onSaved={handleSaved} /> : null}
       {selectedApp ? <AppActionDrawer app={selectedApp} pendingAction={pendingAction} error={actionError} onClose={() => setSelectedApp(null)} onOpen={handleOpen} onStart={(app) => void handleServiceAction(app, "start")} onStop={(app) => void handleServiceAction(app, "stop")} onEdit={(app) => { setSelectedApp(null); setEditingApp(app); }} onRemove={requestRemove} /> : null}
       <Dialog.Root open={removingApp !== null} onOpenChange={(open) => { if (!open && !removing) setRemovingApp(null); }}>
         <Dialog.Portal>

@@ -1,18 +1,18 @@
 import type { CapabilityKind } from "@/features/capabilities/types";
 
-export type WorkbenchChatRole = "user" | "assistant";
+export type AssistantChatRole = "user" | "assistant";
 
-export type WorkbenchChatMessage = {
+export type AssistantChatMessage = {
   id?: string;
-  role: WorkbenchChatRole;
+  role: AssistantChatRole;
   content: string;
 };
 
-export type WorkbenchChatRequest = {
-  messages: WorkbenchChatMessage[];
+export type AssistantChatRequest = {
+  messages: AssistantChatMessage[];
 };
 
-export type WorkbenchCapabilitySummary = {
+export type AssistantCapabilitySummary = {
   id: string;
   kind: CapabilityKind;
   name: string;
@@ -22,7 +22,7 @@ export type WorkbenchCapabilitySummary = {
   featured: boolean;
 };
 
-export type WorkbenchRuntimeState = {
+export type AssistantRuntimeState = {
   activeSkillId?: string;
   skillStatus?: 'idle' | 'collecting_input' | 'running_tool' | 'completed' | 'failed';
   startedAtMessageIndex?: number;

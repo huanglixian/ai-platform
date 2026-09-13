@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useState } from "react";
 
-type WorkbenchCommandPanelProps = {
+type AssistantComposerProps = {
   value: string;
   placeholder: string;
   sending: boolean;
@@ -10,13 +10,11 @@ type WorkbenchCommandPanelProps = {
   submitLabel: string;
   sendingLabel: string;
   error?: string;
-  meta?: ReactNode;
   onChange: (value: string) => void;
   onSubmit: (value: string) => void | Promise<void>;
-  onClear?: () => void;
 };
 
-export function WorkbenchCommandPanel({
+export function AssistantComposer({
   value,
   placeholder,
   sending,
@@ -24,11 +22,9 @@ export function WorkbenchCommandPanel({
   submitLabel,
   sendingLabel,
   error = "",
-  meta,
   onChange,
   onSubmit,
-  onClear,
-}: WorkbenchCommandPanelProps) {
+}: AssistantComposerProps) {
   const [isComposing, setIsComposing] = useState(false);
 
   function submit() {
@@ -69,21 +65,9 @@ export function WorkbenchCommandPanel({
         />
 
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-3 text-[12px] text-[#7f8ea3]">
-            {meta ?? <div className="min-w-0 flex-1 truncate">{status}</div>}
-          </div>
+          <div className="min-w-0 flex-1 truncate text-[12px] text-[#7f8ea3]">{status}</div>
 
           <div className="flex items-center gap-2">
-            {onClear ? (
-              <button
-                type="button"
-                onClick={onClear}
-                className="h-[36px] rounded-[8px] border border-[#dbe5f0] px-4 text-[13px] font-medium text-[#51657d] transition-colors hover:bg-[#f7fafc]"
-              >
-                清空
-              </button>
-            ) : null}
-
             <button
               type="button"
               disabled={sending}

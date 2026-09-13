@@ -159,7 +159,7 @@ async function publish(job: PublicationJobLease, signal: AbortSignal) {
       applicationId: application.id,
       releaseId: release.id,
       entryUrl: runtime.url,
-      applicationCenterUrl: `${baseUrl}/apps`,
+      applicationCenterUrl: `${baseUrl}/`,
     });
   } catch (error) {
     if (newDeployment) {

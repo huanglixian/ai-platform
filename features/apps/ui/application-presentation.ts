@@ -1,9 +1,6 @@
 import type { PlatformSource } from "@/features/apps/types";
 
-export const APP_TABS = ["全部", "AppFactory", "外部应用", "Dify", "n8n"] as const;
-export const APP_GROUP_TABS = APP_TABS.filter((tab) => tab !== "全部");
-
-export const sourceLabels: Record<PlatformSource, (typeof APP_GROUP_TABS)[number]> = {
+export const sourceLabels: Record<PlatformSource, string> = {
   appfactory: "AppFactory",
   external: "外部应用",
   dify: "Dify",

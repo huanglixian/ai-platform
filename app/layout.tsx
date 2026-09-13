@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Ai Platform",
-  description: "面向 AI 工作台的前端原型",
+  description: "AI 助手与业务应用一体化平台",
 };
 
 export default function RootLayout({
