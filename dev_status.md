@@ -10,7 +10,7 @@ AI Platform 是单机演示系统。`/` 是统一首页：初始态在上方提�
 - 启动：`npm run dev` 同时启动平台与 AppFactory 发布 Worker；发布不使用 Docker。
 - 模块：项目以 ESM 模式运行，Node 直接加载 TypeScript 启动脚本时不会重复解析模块格式。
 - 环境：`.env.local` 必须设置 `AGENT_HUB_BASE_URL`，单机默认是 `http://localhost:19844`。
-- 数据：`data/settings` 是 Git 跟踪的平台配置；`data/builtin` 是 Git 跟踪的内置资源；`data/storage` 是本机运行数据。AppFactory 的项目、会话、任务与 Release 在 `data/storage/appfactory`；应用中心数据在 `data/storage/agenthub/agenthub.db`。启动器会将旧 `storage/agenthub` 与 `storage/appfactory` 一次性迁入新位置，旧 KnowHub 演示快照不会迁入。
+- 数据：`data/settings` 是 Git 跟踪的平台配置；`data/builtin` 是 Git 跟踪的内置资源；`data/storage` 是本机运行数据。AppFactory 的项目、会话、任务与 Release 在 `data/storage/appfactory`；应用中心数据在 `data/storage/agenthub/agenthub.db`。启动器会将旧运行数据迁入新位置；若迁移期间已生成空的新应用中心或 KnowHub 目录，会合并旧应用中心记录或以旧 KnowHub 数据恢复该空目录，旧副本归档至 `data/storage/recovery`。
 - Pi 会话会保留模型与应用所需环境变量，但会移除平台自身的 Node 启动参数，确保 Workspace 不会错误加载平台脚本。
 
 ## 目录结构
