@@ -9,6 +9,9 @@ import type { AssistantChatMessage, AssistantRuntimeState } from "../chat-types"
 import { AssistantComposer } from "./assistant-composer";
 import { AssistantConversationShell } from "./assistant-conversation-shell";
 import { AssistantEntry } from "./assistant-entry";
+import { listAssistantKnowledge, searchAssistantKnowledge, type KnowledgeOption } from "../knowledge-client";
+import type { RetrievalSearchResult } from "@/knowhub/features/retrieval/types";
+import { RetrievalResultsPanel } from "@/knowhub/components/retrieval/retrieval-results-panel";
 
 type JsonRecord = Record<string, unknown>;
 type ToolData = { name: string; args?: unknown; result?: JsonRecord };
@@ -342,6 +345,45 @@ type AssistantExperienceProps = {
 };
 
 export function AssistantExperience({ onConversationChange }: AssistantExperienceProps) {
+  const [mode, setMode] = useState<"chat" | "search">("chat");
+  const [searchActive, setSearchActive] = useState(false);
+  const [knowledgeOptions, setKnowledgeOptions] = useState<KnowledgeOption[]>([]);
+  const [knowledgeId, setKnowledgeId] = useState("");
+  const [knowledgeError, setKnowledgeError] = useState("");
+  const [searchInput, setSearchInput] = useState("");
+  const [searching, setSearching] = useState(false);
+  const [searchError, setSearchError] = useState("");
+  const [searchResult, setSearchResult] = useState<RetrievalSearchResult | null>(null);
+  const requestVersion = useRef(0);
+  useEffect(() => {
+    let active = true;
+    listAssistantKnowledge().then((items) => {
+      if (!active) return;
+      setKnowledgeOptions(items);
+      setKnowledgeId(items[0]?.id || "");
+    }).catch((error: Error) => { if (active) setKnowledgeError(error.message); });
+    return () => { active = false; };
+  }, []);
+
+  async function handleSearch(content: string) {
+    if (searching || !content.trim()) return;
+    if (!knowledgeId) { setSearchError("请先选择一个已发布的知识库"); return; }
+    const version = ++requestVersion.current;
+    setSearchInput(content.trim());
+    setSearchActive(true);
+    onConversationChange(true);
+    setSearching(true);
+    setSearchError("");
+    setSearchResult(null);
+    try {
+      const result = await searchAssistantKnowledge(knowledgeId, content.trim());
+      if (version === requestVersion.current) setSearchResult(result);
+    } catch (error) {
+      if (version === requestVersion.current) setSearchError(error instanceof Error ? error.message : "搜索失败");
+    } finally {
+      if (version === requestVersion.current) setSearching(false);
+    }
+  }
   const [chatMessages, setChatMessages] = useState<AssistantChatMessage[]>([]);
   const [runtimeState, setRuntimeState] = useState<AssistantRuntimeState>({ skillStatus: "idle" });
   const [chatInput, setChatInput] = useState("");
@@ -463,6 +505,11 @@ export function AssistantExperience({ onConversationChange }: AssistantExperienc
   }, [chatMessages]);
 
   function leaveConversation() {
+    requestVersion.current += 1;
+    setSearchActive(false);
+    setSearching(false);
+    setSearchResult(null);
+    setSearchError("");
     setChatMessages([]);
     setChatInput("");
     setChatError("");
@@ -471,9 +518,22 @@ export function AssistantExperience({ onConversationChange }: AssistantExperienc
     onConversationChange(false);
   }
 
+  if (searchActive) {
+    return <AssistantConversationShell header={
+      <header className="flex flex-wrap items-center gap-3">
+        <span className="text-sm font-semibold text-[#244e70]">知识库搜索</span>
+        <select aria-label="选择知识库" disabled={searching} value={knowledgeId} onChange={(event) => setKnowledgeId(event.target.value)} className="h-8 max-w-[240px] rounded-lg border border-[#d6e3ee] bg-white px-2 text-xs">{knowledgeOptions.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select>
+        <button type="button" onClick={leaveConversation} className="ml-auto rounded-lg border border-[#d6e3ee] px-3 py-1.5 text-xs text-[#526e85]">返回首页</button>
+      </header>
+    } commandPanel={<AssistantComposer value={searchInput} onChange={setSearchInput} onSubmit={handleSearch} placeholder="输入问题，搜索知识库…" sending={searching} status={searching ? "正在检索相关片段…" : "搜索已发布知识库中的文档片段"} submitLabel="搜索" sendingLabel="搜索中" error={searchError} />}>
+      {searching ? <p role="status" className="text-sm text-[#617a91]">正在检索相关片段…</p> : null}
+      <RetrievalResultsPanel visible={!searching && searchResult !== null} items={searchResult?.items ?? []} />
+    </AssistantConversationShell>;
+  }
+
   if (!chatMessages.length) {
     return (
-      <AssistantEntry sending={chatSending} onSend={handleChat} />
+      <AssistantEntry sending={chatSending || searching} mode={mode} onModeChange={setMode} knowledgeOptions={knowledgeOptions} knowledgeId={knowledgeId} onKnowledgeChange={setKnowledgeId} error={mode === "search" ? knowledgeError || searchError : undefined} onSend={mode === "chat" ? handleChat : handleSearch} />
     );
   }
 

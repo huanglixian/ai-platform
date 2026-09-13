@@ -50,15 +50,15 @@ scripts/app.mts                 平台与发布 Worker 统一启动器
 ### 统一首页、AI 助手与应用目录
 
 - 页面与组合状态：`app/(platform)/page.tsx`、`features/platform-home/platform-home-page.tsx`。首页仅负责在初始态展示助手输入区和应用分组；对话激活后只显示助手沟通界面。
-- 助手：客户端与 UI 在 `features/assistant/`，服务端接口为 `/api/platform/assistant/chat`。聊天服务负责技能路由、能力推荐与允许的工具调用。
-- 应用目录 UI：`features/apps/ui/application-catalog.tsx`。按 `AppFactory → 外部应用 → Dify / n8n` 展示；接入入口仅位于外部应用、Dify、n8n 的分组标题中。
-- 当前状态：助手消息仅保存在浏览器内存中；点击“返回首页”会结束当前对话并恢复应用目录。
+- 助手：客户端与 UI 在 `features/assistant/`，提供问答与已发布知识库搜索；问答接口为 `/api/platform/assistant/chat`，知识库搜索复用 KnowHub 检索接口。聊天服务负责技能路由、能力推荐与允许的工具调用。
+- 应用目录 UI：`features/apps/ui/application-catalog.tsx`。支持来源筛选与关键词搜索，按 `AppFactory → 外部应用 → Dify / n8n` 展示；接入入口仅位于外部应用、Dify、n8n 的分组标题中。
+- 当前状态：助手消息和搜索结果仅保存在浏览器内存中；点击“返回首页”会结束当前问答或搜索并恢复应用目录。
 
 ### 应用注册与运行
 
 - 服务与数据：`features/apps/server.ts`、`features/apps/external-app-seed.ts`、`features/apps/external-launcher.ts`；应用记录保存在 `storage/agenthub/agenthub.db`。
-- 接口：`/api/agenthub/v1/applications` 继续接收 AppFactory 的发布注册；外部应用的编辑、移除、启动和停止分别使用 `applications/[id]`、`applications/[id]/start`、`applications/[id]/stop`。
-- 当前状态：AppFactory 卡片只由发布 Worker 注册，点击后直接在新页签打开已发布应用；外部应用保留操作抽屉，并在平台托管运行中时提供卡片级直达按钮。外部应用、Dify 与 n8n 可从各自分组接入；所有应用卡片都提供删除入口。
+- 接口：`/api/agenthub/v1/applications` 继续接收 AppFactory 的发布注册；所有来源的注册信息编辑与移除使用 `applications/[id]`，外部应用启动和停止使用 `applications/[id]/start`、`applications/[id]/stop`。
+- 当前状态：首页不使用应用详情抽屉。所有卡片都可直接编辑和删除；AppFactory、Dify 与 n8n 卡片点击后直接在新页签打开，外部应用未启动时卡片本体不可点击，启动后可点击直达，并在卡片上直接启动或停止。AppFactory 的运行地址由发布流程维护，首页编辑只修改名称和说明。外部应用、Dify 与 n8n 可从各自分组接入。
 - 删除与运行边界：所有删除操作都会物理删除应用注册；删除外部应用前会停止平台记录的进程组，删除 AppFactory 应用前会停止运行时并标记部署已停止，但保留项目、源码与 Release 历史，之后可再次发布。预置应用仅在数据库首次初始化时写入，之后的删除不会被重新插入。外部应用以 `starting / running / null` 记录平台托管状态；启动器会剥离平台自身的 `PORT` 与 Node 运行参数，让外部应用自行采用启动命令、`.env` 或代码中的端口配置。`scripts/app.mts` 在 Ctrl+C、SIGTERM 或主子进程异常退出时回收所有平台记录的外部进程组，并在平台启动时清理异常退出遗留的进程。平台不会停止已经由其他方式运行的服务。
 
 ## 关键限制

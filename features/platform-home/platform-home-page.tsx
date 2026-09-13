@@ -9,7 +9,7 @@ export function PlatformHomePage() {
   const [conversationActive, setConversationActive] = useState(false);
 
   return (
-    <section className={conversationActive ? "h-[calc(100vh-104px)] min-h-0 w-full" : "mx-auto w-full max-w-[1440px] space-y-7 pb-8"}>
+    <section className={conversationActive ? "h-[calc(100vh-104px)] min-h-0 w-full" : "mx-auto w-full max-w-[1440px] space-y-4 pb-8"}>
       <AssistantExperience onConversationChange={setConversationActive} />
       {!conversationActive ? <ApplicationCatalog /> : null}
     </section>

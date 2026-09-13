@@ -30,18 +30,23 @@ export const applicationInputSchema = z.object({
   }
 });
 
-export const externalApplicationInputSchema = z.object({
-  name: z.string().trim().min(1).max(120),
-  description: z.string().trim().min(1).max(2_000),
-  kind: z.enum(["business", "general"]).default("business"),
-  entryUrl: z.string().trim().url(),
-  launchCommand: z.string().trim().min(1).max(5_000),
-});
+const applicationMetadataUpdateFields = {
+  name: z.string().trim().min(1).max(120).optional(),
+  description: z.string().trim().max(2_000).optional(),
+};
 
-export const externalApplicationUpdateSchema = externalApplicationInputSchema.partial();
+export const appFactoryApplicationUpdateSchema = z.object(applicationMetadataUpdateFields).strict();
+
+export const applicationUpdateSchema = z.object({
+  ...applicationMetadataUpdateFields,
+  entryUrl: z.string().trim().url().optional(),
+}).strict();
+
+export const externalApplicationUpdateSchema = applicationUpdateSchema.extend({
+  launchCommand: z.string().trim().min(1).max(5_000).optional(),
+}).strict();
 
 type ApplicationInput = z.infer<typeof applicationInputSchema>;
-type ExternalApplicationInput = z.infer<typeof externalApplicationInputSchema>;
 
 function getLaunchPid(row: Record<string, unknown>) {
   return typeof row.launch_pid === "number" ? row.launch_pid : null;
@@ -170,7 +175,7 @@ export function getApplication(id: string) {
   return row ? rowToApp(row) : null;
 }
 
-function updateApplication(id: string, input: Partial<ApplicationInput>) {
+export function updateApplication(id: string, input: Partial<ApplicationInput>) {
   const current = getApplicationRow(id);
   if (!current) return null;
   const next = {
@@ -194,17 +199,6 @@ function updateApplication(id: string, input: Partial<ApplicationInput>) {
     new Date().toISOString(), id,
   );
   return getApplication(id);
-}
-
-export function updateExternalApplication(id: string, input: Partial<ExternalApplicationInput>) {
-  const current = getExternalApplicationRow(id);
-  if (!current) return null;
-  return updateApplication(id, {
-    ...input,
-    producer: "external",
-    runtime: "web",
-    status: "active",
-  });
 }
 
 export async function startExternalApplication(id: string) {

@@ -4,10 +4,19 @@ import { Dialog } from "@base-ui/react/dialog";
 import { useEffect, useMemo, useState } from "react";
 import { AlertTriangle, LoaderCircle, Plus, Search, Trash2 } from "lucide-react";
 import type { PlatformSource, PublishedApp } from "@/features/apps/types";
-import { AppActionDrawer } from "./application-action-drawer";
 import { AppCard } from "./application-card";
 import { sourceLabels, typeLabels } from "./application-presentation";
 import { ApplicationForm } from "./application-form";
+
+type ApplicationFilter = "all" | PlatformSource;
+
+const sourceFilters: { value: ApplicationFilter; label: string }[] = [
+  { value: "all", label: "全部" },
+  { value: "appfactory", label: "AppFactory" },
+  { value: "external", label: "外部应用" },
+  { value: "dify", label: "Dify" },
+  { value: "n8n", label: "n8n" },
+];
 
 function EmptyApps() {
   return (
@@ -22,24 +31,26 @@ type ApplicationGroupProps = {
   source: PlatformSource;
   apps: PublishedApp[];
   onAdd?: () => void;
-  onSelect: (app: PublishedApp) => void;
+  pendingService: { appId: string; action: "start" | "stop" } | null;
   onOpen: (app: PublishedApp) => void;
+  onEdit: (app: PublishedApp) => void;
+  onServiceAction: (app: PublishedApp, action: "start" | "stop") => void;
   onRemove: (app: PublishedApp) => void;
 };
 
-function ApplicationGroup({ source, apps, onAdd, onSelect, onOpen, onRemove }: ApplicationGroupProps) {
+function ApplicationGroup({ source, apps, onAdd, pendingService, onOpen, onEdit, onServiceAction, onRemove }: ApplicationGroupProps) {
   const compactGrid = source === "dify" || source === "n8n";
 
   return (
-    <section aria-labelledby={`application-group-${source}`} className="min-w-0 overflow-hidden rounded-xl border border-[#dce5ed] bg-white shadow-[0_2px_8px_rgba(28,52,77,0.025)]">
-      <header className="flex h-10 items-center gap-2.5 border-b border-[#e2eaf1] bg-gradient-to-r from-[#edf4f9] to-[#f8fafc] px-3.5">
-        <span aria-hidden="true" className="h-3.5 w-[3px] rounded-full bg-[#5a86ab]" />
-        <h2 id={`application-group-${source}`} className="text-[14px] font-semibold tracking-[0.01em] text-[#294b69]">{sourceLabels[source]}</h2>
+    <section aria-labelledby={`application-group-${source}`} className="min-w-0 overflow-hidden rounded-xl border border-[#cdd9e4] bg-[#f6f8fa] shadow-[0_3px_12px_rgba(28,52,77,0.04)]">
+      <header className="flex h-10 items-center gap-2.5 border-b border-[#cbdfee] bg-[linear-gradient(105deg,#d5eafa_0%,#e6f2fb_48%,#f3f8fc_100%)] px-3.5">
+        <span aria-hidden="true" className="h-3.5 w-[3px] rounded-full bg-[#315f84]" />
+        <h2 id={`application-group-${source}`} className="text-[14px] font-semibold tracking-[0.01em] text-[#203f5c]">{sourceLabels[source]}</h2>
         {onAdd ? <button type="button" onClick={onAdd} className="ml-auto inline-flex h-7 shrink-0 items-center gap-1 rounded-md px-2 text-[12px] font-medium text-[#477395] transition-colors hover:bg-white hover:text-[#155b91] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#5a86ab]"><Plus size={14} />接入应用</button> : null}
       </header>
       {apps.length ? (
         <div className={compactGrid ? "grid gap-2 p-2.5 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2" : "grid gap-2 p-2.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"}>
-          {apps.map((app) => <AppCard key={app.id} app={app} onSelect={onSelect} onOpen={onOpen} onRemove={onRemove} />)}
+          {apps.map((app) => <AppCard key={app.id} app={app} pendingAction={pendingService?.appId === app.id ? pendingService.action : null} onOpen={onOpen} onEdit={onEdit} onServiceAction={onServiceAction} onRemove={onRemove} />)}
         </div>
       ) : <div className="px-4 py-5 text-center text-[12px] text-[#8095a9]">暂无应用</div>}
     </section>
@@ -50,11 +61,11 @@ export function ApplicationCatalog() {
   const [list, setList] = useState<PublishedApp[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
-  const [selectedApp, setSelectedApp] = useState<PublishedApp | null>(null);
   const [editingApp, setEditingApp] = useState<PublishedApp | null | undefined>(undefined);
   const [newApplicationSource, setNewApplicationSource] = useState<"external" | "dify" | "n8n">("external");
+  const [sourceFilter, setSourceFilter] = useState<ApplicationFilter>("all");
   const [keyword, setKeyword] = useState("");
-  const [pendingAction, setPendingAction] = useState<"start" | "stop" | null>(null);
+  const [pendingService, setPendingService] = useState<{ appId: string; action: "start" | "stop" } | null>(null);
   const [actionError, setActionError] = useState("");
   const [removingApp, setRemovingApp] = useState<PublishedApp | null>(null);
   const [removing, setRemoving] = useState(false);
@@ -78,11 +89,10 @@ export function ApplicationCatalog() {
 
   function replaceApplication(updated: PublishedApp) {
     setList((current) => current.map((item) => item.id === updated.id ? updated : item));
-    setSelectedApp((current) => current?.id === updated.id ? updated : current);
   }
 
   async function handleServiceAction(app: PublishedApp, action: "start" | "stop") {
-    setPendingAction(action);
+    setPendingService({ appId: app.id, action });
     setActionError("");
     if (action === "start") replaceApplication({ ...app, launchStatus: "starting" });
     try {
@@ -94,7 +104,7 @@ export function ApplicationCatalog() {
       if (action === "start") replaceApplication({ ...app, launchStatus: null });
       setActionError(error instanceof Error ? error.message : "服务操作失败");
     } finally {
-      setPendingAction(null);
+      setPendingService(null);
     }
   }
 
@@ -107,7 +117,6 @@ export function ApplicationCatalog() {
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error?.message || "移除应用失败");
       setList((current) => current.filter((item) => item.id !== removingApp.id));
-      setSelectedApp((current) => current?.id === removingApp.id ? null : current);
       setRemovingApp(null);
     } catch (error) {
       setRemoveError(error instanceof Error ? error.message : "移除应用失败");
@@ -118,15 +127,6 @@ export function ApplicationCatalog() {
 
   function handleOpen(app: PublishedApp) {
     window.open(app.url, "_blank", "noopener,noreferrer");
-  }
-
-  function handleSelect(app: PublishedApp) {
-    setActionError("");
-    if (app.source === "appfactory") {
-      handleOpen(app);
-      return;
-    }
-    setSelectedApp(app);
   }
 
   function requestRemove(app: PublishedApp) {
@@ -141,20 +141,20 @@ export function ApplicationCatalog() {
 
   function handleSaved(app: PublishedApp, isNew: boolean) {
     setList((current) => isNew ? [app, ...current] : current.map((item) => item.id === app.id ? app : item));
-    setSelectedApp((current) => current?.id === app.id ? app : current);
     setEditingApp(undefined);
   }
 
   const searchedApps = useMemo(() => {
     const normalizedKeyword = keyword.trim().toLowerCase();
-    if (!normalizedKeyword) return list;
     return list.filter((app) => (
-      app.name.toLowerCase().includes(normalizedKeyword)
-      || app.description.toLowerCase().includes(normalizedKeyword)
-      || sourceLabels[app.source].toLowerCase().includes(normalizedKeyword)
-      || typeLabels[app.appType].toLowerCase().includes(normalizedKeyword)
+      (sourceFilter === "all" || app.source === sourceFilter)
+      && (!normalizedKeyword
+        || app.name.toLowerCase().includes(normalizedKeyword)
+        || app.description.toLowerCase().includes(normalizedKeyword)
+        || sourceLabels[app.source].toLowerCase().includes(normalizedKeyword)
+        || typeLabels[app.appType].toLowerCase().includes(normalizedKeyword))
     ));
-  }, [keyword, list]);
+  }, [keyword, list, sourceFilter]);
 
   const groups = {
     appfactory: searchedApps.filter((app) => app.source === "appfactory"),
@@ -164,6 +164,21 @@ export function ApplicationCatalog() {
   };
   const hasSearch = Boolean(keyword.trim());
 
+  function renderGroup(source: PlatformSource) {
+    return (
+      <ApplicationGroup
+        source={source}
+        apps={groups[source]}
+        onAdd={source === "appfactory" ? undefined : () => openApplicationForm(source)}
+        pendingService={pendingService}
+        onOpen={handleOpen}
+        onEdit={setEditingApp}
+        onServiceAction={handleServiceAction}
+        onRemove={requestRemove}
+      />
+    );
+  }
+
   if (loading) {
     return <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">{[1, 2, 3, 4].map((item) => <div key={item} className="h-44 animate-pulse rounded-2xl bg-slate-100" />)}</div>;
   }
@@ -172,9 +187,13 @@ export function ApplicationCatalog() {
     <>
       <section id="applications" className="scroll-mt-24">
         {loadError ? <div className="mb-4 flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700"><AlertTriangle size={15} />{loadError}</div> : null}
+        {actionError ? <div className="mb-3 flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700"><AlertTriangle size={15} />{actionError}</div> : null}
         {removeError ? <div className="mb-4 flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700"><AlertTriangle size={15} />{removeError}</div> : null}
-        <div className="mb-3 flex items-center">
-          <label className="flex h-[34px] min-w-0 flex-1 items-center gap-2 rounded-lg border border-[#dce5ed] bg-white px-3 transition-colors focus-within:border-[#86add5] focus-within:ring-2 focus-within:ring-[#eaf3fc]">
+        <div className="mb-3 flex min-w-0 items-center gap-3 overflow-x-auto pb-px">
+          <div role="group" aria-label="应用来源筛选" className="inline-flex h-[34px] shrink-0 items-center rounded-lg border border-[#d4e0ea] bg-[#eaf1f7] p-[3px] shadow-[inset_0_1px_2px_rgba(35,66,92,0.04)]">
+            {sourceFilters.map((filter) => <button key={filter.value} type="button" aria-pressed={sourceFilter === filter.value} onClick={() => setSourceFilter(filter.value)} className={`h-[26px] rounded-md px-3 text-[11px] font-medium transition-[color,background-color,box-shadow] ${sourceFilter === filter.value ? "bg-white text-[#205f8d] shadow-[0_1px_4px_rgba(28,65,94,0.12)]" : "text-[#71869a] hover:text-[#315f84]"}`}>{filter.label}</button>)}
+          </div>
+          <label className="flex h-[34px] min-w-[220px] flex-1 items-center gap-2 rounded-lg border border-[#dce5ed] bg-white px-3 transition-colors focus-within:border-[#86add5] focus-within:ring-2 focus-within:ring-[#eaf3fc]">
             <Search size={16} className="shrink-0 text-[#7890a8]" />
             <input
               value={keyword}
@@ -187,17 +206,18 @@ export function ApplicationCatalog() {
         </div>
         {searchedApps.length || !hasSearch ? (
           <div className="space-y-3">
-            {!hasSearch || groups.appfactory.length ? <ApplicationGroup source="appfactory" apps={groups.appfactory} onSelect={handleSelect} onOpen={handleOpen} onRemove={requestRemove} /> : null}
-            {!hasSearch || groups.external.length ? <ApplicationGroup source="external" apps={groups.external} onAdd={() => openApplicationForm("external")} onSelect={handleSelect} onOpen={handleOpen} onRemove={requestRemove} /> : null}
-            {!hasSearch || groups.dify.length || groups.n8n.length ? <div className="grid items-start gap-3 lg:grid-cols-2">
-              {!hasSearch || groups.dify.length ? <ApplicationGroup source="dify" apps={groups.dify} onAdd={() => openApplicationForm("dify")} onSelect={handleSelect} onOpen={handleOpen} onRemove={requestRemove} /> : null}
-              {!hasSearch || groups.n8n.length ? <ApplicationGroup source="n8n" apps={groups.n8n} onAdd={() => openApplicationForm("n8n")} onSelect={handleSelect} onOpen={handleOpen} onRemove={requestRemove} /> : null}
+            {(sourceFilter === "all" || sourceFilter === "appfactory") && (!hasSearch || groups.appfactory.length) ? renderGroup("appfactory") : null}
+            {(sourceFilter === "all" || sourceFilter === "external") && (!hasSearch || groups.external.length) ? renderGroup("external") : null}
+            {sourceFilter === "all" && (!hasSearch || groups.dify.length || groups.n8n.length) ? <div className="grid items-start gap-3 lg:grid-cols-2">
+              {!hasSearch || groups.dify.length ? renderGroup("dify") : null}
+              {!hasSearch || groups.n8n.length ? renderGroup("n8n") : null}
             </div> : null}
+            {sourceFilter === "dify" && (!hasSearch || groups.dify.length) ? renderGroup("dify") : null}
+            {sourceFilter === "n8n" && (!hasSearch || groups.n8n.length) ? renderGroup("n8n") : null}
           </div>
         ) : <EmptyApps />}
       </section>
       {editingApp !== undefined ? <ApplicationForm key={editingApp?.id ?? "new"} app={editingApp} source={newApplicationSource} onClose={() => setEditingApp(undefined)} onSaved={handleSaved} /> : null}
-      {selectedApp ? <AppActionDrawer app={selectedApp} pendingAction={pendingAction} error={actionError} onClose={() => setSelectedApp(null)} onOpen={handleOpen} onStart={(app) => void handleServiceAction(app, "start")} onStop={(app) => void handleServiceAction(app, "stop")} onEdit={(app) => { setSelectedApp(null); setEditingApp(app); }} onRemove={requestRemove} /> : null}
       <Dialog.Root open={removingApp !== null} onOpenChange={(open) => { if (!open && !removing) setRemovingApp(null); }}>
         <Dialog.Portal>
           <Dialog.Backdrop className="fixed inset-0 z-[60] bg-slate-950/35 backdrop-blur-[1px]" />

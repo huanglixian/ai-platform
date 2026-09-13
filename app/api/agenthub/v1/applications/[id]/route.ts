@@ -1,5 +1,12 @@
 import { apiError, apiOk } from "@/lib/server/api-response";
-import { externalApplicationUpdateSchema, getApplication, removeApplication, updateExternalApplication } from "@/features/apps/server";
+import {
+  appFactoryApplicationUpdateSchema,
+  applicationUpdateSchema,
+  externalApplicationUpdateSchema,
+  getApplication,
+  removeApplication,
+  updateApplication,
+} from "@/features/apps/server";
 
 export const runtime = "nodejs";
 
@@ -24,9 +31,13 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   const { id } = await context.params;
   const app = getApplication(id);
   if (!app) return apiError("应用不存在", 404);
-  if (app.source !== "external") return apiError("只有外部应用可以编辑", 403);
-  const parsed = externalApplicationUpdateSchema.safeParse(await request.json());
+  const schema = app.source === "external"
+    ? externalApplicationUpdateSchema
+    : app.source === "appfactory"
+      ? appFactoryApplicationUpdateSchema
+      : applicationUpdateSchema;
+  const parsed = schema.safeParse(await request.json());
   if (!parsed.success) return apiError("应用字段校验失败", 422, parsed.error.flatten());
-  const updated = updateExternalApplication(id, parsed.data);
+  const updated = updateApplication(id, parsed.data);
   return updated ? apiOk(updated) : apiError("应用不存在", 404);
 }
