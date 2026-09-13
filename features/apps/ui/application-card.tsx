@@ -47,7 +47,7 @@ export function AppCard({ app, pendingAction, onOpen, onEdit, onServiceAction, o
               {pendingAction ? <LoaderCircle size={12} className="animate-spin" /> : <Square size={11} fill="currentColor" />}{pendingAction === "start" ? "启动中" : pendingAction === "stop" ? "停止中" : "停止"}
             </button>
           ) : (
-            <button type="button" disabled={pendingAction !== null} onClick={() => onServiceAction(app, "start")} className="inline-flex h-6 items-center gap-1 rounded bg-[#e9f3fa] px-2 text-[11px] font-medium text-[#286b98] hover:bg-[#dcecf7] hover:text-[#155b91] focus-visible:outline-2 focus-visible:outline-[#5a86ab] disabled:cursor-not-allowed disabled:opacity-60">
+            <button type="button" disabled={pendingAction !== null} onClick={() => onServiceAction(app, "start")} className="inline-flex h-6 items-center gap-1 rounded px-1.5 text-[11px] font-medium text-[#39779f] hover:bg-[#eef4f8] hover:text-[#155b91] focus-visible:outline-2 focus-visible:outline-[#5a86ab] disabled:cursor-not-allowed disabled:opacity-60">
               <Play size={11} fill="currentColor" />启动
             </button>
           ) : null}
