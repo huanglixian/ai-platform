@@ -47,7 +47,7 @@ export default function AppFactoryLayout({
             href="/"
             className="hidden text-[#667085] transition hover:text-[#0368b3] lg:inline"
           >
-            返回 AgentHub ↗
+            跳转 AgentHub
           </Link>
         </div>
       </header>

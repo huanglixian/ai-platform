@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 
 import { buttonVariants } from "@/components/ui/button-variants";
 import { cn } from "@/lib/utils";
@@ -73,8 +73,8 @@ export function KnowHubTopNav() {
               "w-full justify-center xl:w-auto"
             )}
           >
-            <ArrowLeft className="mr-1 h-3.5 w-3.5" />
-            返回平台
+            跳转 AgentHub
+            <ArrowUpRight className="ml-1 h-3.5 w-3.5" />
           </Link>
         </div>
 

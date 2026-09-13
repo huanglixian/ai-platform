@@ -1,6 +1,7 @@
 export type PlatformNavChild = {
   label: string;
   href?: string;
+  openInNewTab?: boolean;
   disabled?: boolean;
   hint?: string;
 };
@@ -9,6 +10,7 @@ export type PlatformNavGroup = {
   key: string;
   label: string;
   href?: string;
+  openInNewTab?: boolean;
   items?: PlatformNavChild[];
 };
 
@@ -30,6 +32,7 @@ export const platformNavGroups: PlatformNavGroup[] = [
       {
         label: "知识库",
         href: "/knowhub",
+        openInNewTab: true,
         hint: "知识接入、处理、检索与发布",
       },
       {
@@ -61,6 +64,7 @@ export const platformNavGroups: PlatformNavGroup[] = [
     key: "appfactory",
     label: "应用开发 ↗",
     href: process.env.NEXT_PUBLIC_APPFACTORY_URL || "/appfactory",
+    openInNewTab: true,
   },
 ];
 

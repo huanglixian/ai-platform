@@ -66,6 +66,8 @@ export function TopNav() {
                   <Link
                     key={group.key}
                     href={group.href}
+                    target={group.openInNewTab ? "_blank" : undefined}
+                    rel={group.openInNewTab ? "noreferrer" : undefined}
                     onMouseEnter={() => setOpenGroupKey(null)}
                     className={[
                       "border-b-2 px-3 py-[22px] text-[14px] font-semibold tracking-[-0.01em] transition-colors",
@@ -141,6 +143,8 @@ export function TopNav() {
                             <Link
                               key={item.href}
                               href={item.href}
+                              target={item.openInNewTab ? "_blank" : undefined}
+                              rel={item.openInNewTab ? "noreferrer" : undefined}
                               onClick={() => setOpenGroupKey(null)}
                               className={[
                                 "rounded-[10px] border px-3.5 py-2.5 transition-colors",
@@ -161,7 +165,7 @@ export function TopNav() {
                                       : "text-[#98a2b3]",
                                   ].join(" ")}
                                 >
-                                  进入
+                                  {item.openInNewTab ? "新页签 ↗" : "进入"}
                                 </div>
                               </div>
                               <div className="mt-1 text-[11px] leading-4.5 text-[#7f8ea3]">
