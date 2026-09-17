@@ -31,7 +31,7 @@ export function getAppFactoryDatabase() {
   db.pragma("foreign_keys = ON");
   db.pragma("busy_timeout = 5000");
   db.exec(`
-    CREATE TABLE IF NOT EXISTS projects (id TEXT PRIMARY KEY, name TEXT NOT NULL, description TEXT NOT NULL DEFAULT '', template_id TEXT NOT NULL DEFAULT 'nextjs-app', workspace_path TEXT NOT NULL, published_port INTEGER, created_at TEXT NOT NULL, updated_at TEXT NOT NULL);
+    CREATE TABLE IF NOT EXISTS projects (id TEXT PRIMARY KEY, name TEXT NOT NULL, description TEXT NOT NULL DEFAULT '', template_id TEXT NOT NULL DEFAULT 'nextjs-app', workspace_path TEXT NOT NULL, framework_id TEXT, framework_version TEXT, published_port INTEGER, created_at TEXT NOT NULL, updated_at TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS sessions (id TEXT PRIMARY KEY, project_id TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'idle', harness TEXT NOT NULL DEFAULT 'pi', title TEXT NOT NULL DEFAULT '新对话', model_profile_id TEXT NOT NULL DEFAULT 'zhipu', transcript_path TEXT, created_at TEXT NOT NULL, updated_at TEXT NOT NULL, FOREIGN KEY(project_id) REFERENCES projects(id));
     CREATE TABLE IF NOT EXISTS appfactory_settings (id INTEGER PRIMARY KEY CHECK (id = 1), default_model_profile TEXT NOT NULL DEFAULT 'zhipu', thinking_levels_json TEXT NOT NULL, updated_at TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS runs (id TEXT PRIMARY KEY, project_id TEXT NOT NULL, session_id TEXT, status TEXT NOT NULL DEFAULT 'queued', input TEXT NOT NULL DEFAULT '', output TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL, updated_at TEXT NOT NULL, FOREIGN KEY(project_id) REFERENCES projects(id));
@@ -43,7 +43,7 @@ export function getAppFactoryDatabase() {
       stage TEXT NOT NULL DEFAULT 'queued',
       step TEXT NOT NULL DEFAULT '等待发布',
       completed INTEGER NOT NULL DEFAULT 0,
-      total INTEGER NOT NULL DEFAULT 7,
+      total INTEGER NOT NULL DEFAULT 8,
       error TEXT,
       attempts INTEGER NOT NULL DEFAULT 0,
       lease_token TEXT,
@@ -72,6 +72,7 @@ export function getAppFactoryDatabase() {
       version INTEGER NOT NULL,
       artifact_path TEXT NOT NULL,
       runtime_id TEXT NOT NULL,
+      worker_entry TEXT,
       created_at TEXT NOT NULL,
       FOREIGN KEY(project_id) REFERENCES projects(id),
       FOREIGN KEY(job_id) REFERENCES publication_jobs(id),
@@ -86,6 +87,7 @@ export function getAppFactoryDatabase() {
       url TEXT NOT NULL,
       health_path TEXT NOT NULL,
       pid INTEGER,
+      worker_pid INTEGER,
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL,
       FOREIGN KEY(project_id) REFERENCES projects(id),
@@ -138,6 +140,12 @@ export function getAppFactoryDatabase() {
   if (!projectColumns.some((column) => column.name === "published_port")) {
     db.exec("ALTER TABLE projects ADD COLUMN published_port INTEGER");
   }
+  if (!projectColumns.some((column) => column.name === "framework_id")) {
+    db.exec("ALTER TABLE projects ADD COLUMN framework_id TEXT");
+  }
+  if (!projectColumns.some((column) => column.name === "framework_version")) {
+    db.exec("ALTER TABLE projects ADD COLUMN framework_version TEXT");
+  }
   db.exec("DROP TABLE IF EXISTS jobs; DROP TABLE IF EXISTS builds; DROP TABLE IF EXISTS releases; DROP TABLE IF EXISTS deployments;");
   const publicationDeploymentColumns = db.prepare("PRAGMA table_info(publication_deployments)").all() as { name: string }[];
   if (!publicationDeploymentColumns.some((column) => column.name === "health_path")) {
@@ -148,6 +156,12 @@ export function getAppFactoryDatabase() {
   if (!publicationReleaseColumns.some((column) => column.name === "runtime_id")) {
     db.exec("ALTER TABLE publication_releases ADD COLUMN runtime_id TEXT");
     db.prepare("UPDATE publication_releases SET runtime_id='nextjs' WHERE runtime_id IS NULL").run();
+  }
+  if (!publicationReleaseColumns.some((column) => column.name === "worker_entry")) {
+    db.exec("ALTER TABLE publication_releases ADD COLUMN worker_entry TEXT");
+  }
+  if (!publicationDeploymentColumns.some((column) => column.name === "worker_pid")) {
+    db.exec("ALTER TABLE publication_deployments ADD COLUMN worker_pid INTEGER");
   }
   const missingReleaseRuntimes = db.prepare("SELECT COUNT(*) AS count FROM publication_releases WHERE runtime_id IS NULL OR runtime_id='' ").get() as { count: number };
   if (missingReleaseRuntimes.count) throw new Error("发布产物缺少运行时，无法恢复运行");
@@ -164,6 +178,8 @@ type ProjectRow = {
   description: string;
   templateId: AppTemplateId;
   workspacePath: string;
+  frameworkId: string | null;
+  frameworkVersion: string | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -178,19 +194,22 @@ function projectDto(row: ProjectRow) {
       description: template.description,
       runtimeId: template.runtimeId,
     },
+    framework: row.frameworkId && row.frameworkVersion
+      ? { id: row.frameworkId, version: row.frameworkVersion }
+      : null,
   };
 }
 
 function readProject(id: string) {
   const row = getAppFactoryDatabase().prepare(
-    "SELECT id,name,description,template_id as templateId,workspace_path as workspacePath,created_at as createdAt,updated_at as updatedAt FROM projects WHERE id=?",
+    "SELECT id,name,description,template_id as templateId,workspace_path as workspacePath,framework_id as frameworkId,framework_version as frameworkVersion,created_at as createdAt,updated_at as updatedAt FROM projects WHERE id=?",
   ).get(id) as ProjectRow | undefined;
   return row ? projectDto(row) : undefined;
 }
 
 export function listProjects() {
   const rows = getAppFactoryDatabase().prepare(
-    "SELECT id,name,description,template_id as templateId,workspace_path as workspacePath,created_at as createdAt,updated_at as updatedAt FROM projects ORDER BY updated_at DESC",
+    "SELECT id,name,description,template_id as templateId,workspace_path as workspacePath,framework_id as frameworkId,framework_version as frameworkVersion,created_at as createdAt,updated_at as updatedAt FROM projects ORDER BY updated_at DESC",
   ).all() as ProjectRow[];
   return rows.map(projectDto);
 }
@@ -201,12 +220,22 @@ export function createProject(input: { name: string; description?: string; templ
   const workspace = path.join(dir, "workspaces", id);
   const template = getAppTemplate(input.templateId);
   try {
-    createTemplateWorkspace(template, workspace, input.name);
+    createTemplateWorkspace(template, workspace, input.name, id);
   } catch (error) {
     fs.rmSync(workspace, { recursive: true, force: true });
     throw error;
   }
-  getAppFactoryDatabase().prepare("INSERT INTO projects (id,name,description,template_id,workspace_path,created_at,updated_at) VALUES (?,?,?,?,?,?,?)").run(id, input.name, input.description ?? "", template.id, workspace, now, now);
+  getAppFactoryDatabase().prepare("INSERT INTO projects (id,name,description,template_id,workspace_path,framework_id,framework_version,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?)").run(
+    id,
+    input.name,
+    input.description ?? "",
+    template.id,
+    workspace,
+    template.enterprise?.frameworkId ?? null,
+    template.enterprise?.frameworkVersion ?? null,
+    now,
+    now,
+  );
   return readProject(id)!;
 }
 

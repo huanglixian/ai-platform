@@ -39,6 +39,7 @@ type ReleaseRow = {
   version: number;
   artifact_path: string;
   runtime_id: RuntimeId;
+  worker_entry: string | null;
   created_at: string;
 };
 
@@ -51,6 +52,7 @@ type DeploymentRow = {
   url: string;
   health_path: string;
   pid: number | null;
+  worker_pid: number | null;
   created_at: string;
   updated_at: string;
 };
@@ -81,6 +83,7 @@ function releaseDto(row: ReleaseRow): PublicationRelease {
     version: row.version,
     artifactPath: row.artifact_path,
     runtimeId: row.runtime_id,
+    workerEntry: row.worker_entry,
     createdAt: row.created_at,
   };
 }
@@ -95,6 +98,7 @@ function deploymentDto(row: DeploymentRow): PublicationDeployment {
     url: row.url,
     healthPath: row.health_path,
     pid: row.pid,
+    workerPid: row.worker_pid,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -110,7 +114,7 @@ export function enqueuePublication(projectId: string): PublicationJob {
     const id = `publication-${randomUUID()}`;
     const now = new Date().toISOString();
     database.prepare(
-      "INSERT INTO publication_jobs(id,project_id,status,stage,step,completed,total,created_at,updated_at) VALUES (?,?,'queued','queued','等待 Worker 处理',0,7,?,?)",
+      "INSERT INTO publication_jobs(id,project_id,status,stage,step,completed,total,created_at,updated_at) VALUES (?,?,'queued','queued','等待 Worker 处理',0,8,?,?)",
     ).run(id, projectId, now, now);
     appendPublicationEvent(id, "queued", "info", "发布任务已创建");
     return getPublicationJob(id)!;
@@ -214,7 +218,7 @@ export function requeuePublicationJob(job: PublicationJobLease, step: string) {
 
 export function completePublicationJob(job: PublicationJobLease, result: PublicationResult) {
   getAppFactoryDatabase().prepare(
-    "UPDATE publication_jobs SET status='succeeded',stage='completed',step='发布完成',completed=7,release_id=?,result_json=?,lease_token=NULL,lease_expires_at=NULL,updated_at=? WHERE id=? AND status='running' AND lease_token=?",
+    "UPDATE publication_jobs SET status='succeeded',stage='completed',step='发布完成',completed=total,release_id=?,result_json=?,lease_token=NULL,lease_expires_at=NULL,updated_at=? WHERE id=? AND status='running' AND lease_token=?",
   ).run(result.releaseId, JSON.stringify(result), new Date().toISOString(), job.id, job.lease_token);
   appendPublicationEvent(job.id, "completed", "success", "应用已发布到应用中心");
 }
@@ -238,15 +242,16 @@ export function createPublicationRelease(
   jobId: string,
   artifactPath: string,
   runtimeId: RuntimeId,
+  workerEntry: string | null,
 ): PublicationRelease {
   const database = getAppFactoryDatabase();
   const version = (database.prepare("SELECT COALESCE(MAX(version),0) AS value FROM publication_releases WHERE project_id=?").get(projectId) as { value: number }).value + 1;
   const id = `publication-release-${randomUUID()}`;
   const createdAt = new Date().toISOString();
   database.prepare(
-    "INSERT INTO publication_releases(id,project_id,job_id,version,artifact_path,runtime_id,created_at) VALUES (?,?,?,?,?,?,?)",
-  ).run(id, projectId, jobId, version, artifactPath, runtimeId, createdAt);
-  return releaseDto({ id, project_id: projectId, job_id: jobId, version, artifact_path: artifactPath, runtime_id: runtimeId, created_at: createdAt });
+    "INSERT INTO publication_releases(id,project_id,job_id,version,artifact_path,runtime_id,worker_entry,created_at) VALUES (?,?,?,?,?,?,?,?)",
+  ).run(id, projectId, jobId, version, artifactPath, runtimeId, workerEntry, createdAt);
+  return releaseDto({ id, project_id: projectId, job_id: jobId, version, artifact_path: artifactPath, runtime_id: runtimeId, worker_entry: workerEntry, created_at: createdAt });
 }
 
 export function getLatestPublicationRelease(projectId: string): PublicationRelease | null {
@@ -289,14 +294,15 @@ export function createPublicationDeployment(
   url: string,
   healthPath: string,
   pid: number | null,
+  workerPid: number | null,
   status: PublicationDeployment["status"],
 ): PublicationDeployment {
   const id = `publication-deployment-${randomUUID()}`;
   const now = new Date().toISOString();
   getAppFactoryDatabase().prepare(
-    "INSERT INTO publication_deployments(id,project_id,release_id,status,port,url,health_path,pid,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?)",
-  ).run(id, projectId, releaseId, status, port, url, healthPath, pid, now, now);
-  return deploymentDto({ id, project_id: projectId, release_id: releaseId, status, port, url, health_path: healthPath, pid, created_at: now, updated_at: now });
+    "INSERT INTO publication_deployments(id,project_id,release_id,status,port,url,health_path,pid,worker_pid,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+  ).run(id, projectId, releaseId, status, port, url, healthPath, pid, workerPid, now, now);
+  return deploymentDto({ id, project_id: projectId, release_id: releaseId, status, port, url, health_path: healthPath, pid, worker_pid: workerPid, created_at: now, updated_at: now });
 }
 
 export function getLatestPublicationDeployment(projectId: string): PublicationDeployment | null {
@@ -313,8 +319,13 @@ export function getRunningPublicationDeployment(projectId: string): PublicationD
   return row ? deploymentDto(row) : null;
 }
 
-export function updatePublicationDeployment(id: string, status: PublicationDeployment["status"], pid: number | null) {
+export function updatePublicationDeployment(
+  id: string,
+  status: PublicationDeployment["status"],
+  pid: number | null,
+  workerPid: number | null,
+) {
   getAppFactoryDatabase().prepare(
-    "UPDATE publication_deployments SET status=?,pid=?,updated_at=? WHERE id=?",
-  ).run(status, pid, new Date().toISOString(), id);
+    "UPDATE publication_deployments SET status=?,pid=?,worker_pid=?,updated_at=? WHERE id=?",
+  ).run(status, pid, workerPid, new Date().toISOString(), id);
 }

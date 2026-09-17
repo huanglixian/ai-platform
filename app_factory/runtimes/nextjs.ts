@@ -1,7 +1,11 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
-import { getReleaseStagingPath, materializeRuntimeWorkspace } from "@/app_factory/server/runtime-workspace";
+import {
+  getReleaseStagingPath,
+  materializeRuntimeWorkspace,
+  seedWorkspaceRuntimeDependencies,
+} from "@/app_factory/server/runtime-workspace";
 import { runWorkspaceCommand } from "@/app_factory/server/workspace";
 
 import type { AppRuntime, RuntimeBuildOptions } from "./types";
@@ -19,6 +23,9 @@ async function buildRelease(
   const stagingPath = getReleaseStagingPath(releasePath);
   try {
     await materializeRuntimeWorkspace(workspacePath, stagingPath);
+    if (options.enterprise) {
+      seedWorkspaceRuntimeDependencies(stagingPath, { includeToolchain: true });
+    }
     const commands = [
       ["lint", "npm run lint"],
       ["typecheck", "npm run typecheck"],
@@ -41,9 +48,17 @@ async function buildRelease(
 
     await fs.mkdir(path.dirname(releasePath), { recursive: true });
     await fs.mkdir(releasePath);
-    await fs.cp(standalone, releasePath, { recursive: true });
+    await fs.cp(standalone, releasePath, { recursive: true, dereference: true });
     await copyIfExists(path.join(stagingPath, ".next", "static"), path.join(releasePath, ".next", "static"));
     await copyIfExists(path.join(stagingPath, "public"), path.join(releasePath, "public"));
+    if (options.enterprise) {
+      await copyIfExists(path.join(stagingPath, "src", "server"), path.join(releasePath, "src", "server"));
+      await copyIfExists(path.join(stagingPath, "db"), path.join(releasePath, "db"));
+      await copyIfExists(path.join(stagingPath, "worker"), path.join(releasePath, "worker"));
+      await copyIfExists(path.join(stagingPath, ".appfactory-framework.json"), path.join(releasePath, ".appfactory-framework.json"));
+      await copyIfExists(path.join(stagingPath, "app.yaml"), path.join(releasePath, "app.yaml"));
+      seedWorkspaceRuntimeDependencies(releasePath, { includeTypes: false });
+    }
     options.onLog({ stage: "package", output: "已生成独立的 Next.js standalone Release" });
   } finally {
     await fs.rm(stagingPath, { recursive: true, force: true });
@@ -71,6 +86,20 @@ export const nextjsRuntime: AppRuntime = {
     return {
       executable: process.execPath,
       args: [path.join(releasePath, "server.js")],
+      cwd: releasePath,
+    };
+  },
+  createWorkerCommand(releasePath, workerEntry) {
+    return {
+      executable: process.execPath,
+      args: ["--experimental-strip-types", workerEntry],
+      cwd: releasePath,
+    };
+  },
+  createMigrationCommand(releasePath) {
+    return {
+      executable: process.execPath,
+      args: ["--experimental-strip-types", "src/server/db/migrate-cli.ts"],
       cwd: releasePath,
     };
   },

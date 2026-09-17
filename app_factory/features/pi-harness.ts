@@ -1,5 +1,6 @@
 import path from "node:path";
 import { spawn, type ChildProcess } from "node:child_process";
+import fs from "node:fs";
 import nextEnv from "@next/env";
 import { normalizePiEvent } from "@/app_factory/features/pi-events";
 import { ensurePiAgentConfig } from "@/app_factory/server/pi-agent-config";
@@ -40,6 +41,10 @@ export function createPiRunArgs(
   const profile = getModelProfile(options.modelProfileId);
   const template = getAppTemplate(options.templateId);
   if (!isThinkingLevel(profile.id, options.thinkingLevel)) throw new Error(`${profile.label} 不支持 ${options.thinkingLevel} 思考程度`);
+  const shortRulesPath = path.join(template.rootPath, "rules", "short-rules.md");
+  if (template.id === "nextjs-enterprise" && !fs.existsSync(shortRulesPath)) {
+    throw new Error("Next.js 企业模板缺少平台短规则");
+  }
   return [
     "--provider", profile.piProvider,
     "--model", getModelName(profile),
@@ -49,6 +54,9 @@ export function createPiRunArgs(
     "--session-id", session.id,
     "--session-dir", dataPaths.appFactoryPiSessions,
     "--skill", template.rootPath,
+    ...(template.id === "nextjs-enterprise"
+      ? ["--append-system-prompt", shortRulesPath]
+      : []),
     "--",
     prompt,
   ];

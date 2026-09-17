@@ -1,9 +1,17 @@
 import fs from "node:fs";
 import path from "node:path";
 
+import {
+  enterpriseSchemaForProject,
+  getNextjsEnterpriseFrameworkBinding,
+  installNextjsEnterpriseFramework,
+  type NextjsEnterpriseFrameworkBinding,
+} from "@/app_factory/nextjs-enterprise-framework";
 import type { RuntimeId } from "@/app_factory/runtimes/types";
 
-export type AppTemplateId = "nextjs-app" | "static-html";
+export type AppTemplateId = "nextjs-app" | "nextjs-enterprise" | "static-html";
+
+export type EnterpriseTemplate = NextjsEnterpriseFrameworkBinding;
 
 export type AppTemplate = {
   id: AppTemplateId;
@@ -11,6 +19,7 @@ export type AppTemplate = {
   description: string;
   runtimeId: RuntimeId;
   rootPath: string;
+  enterprise?: EnterpriseTemplate;
 };
 
 export type AppTemplateSummary = Pick<AppTemplate, "id" | "name" | "description">;
@@ -23,6 +32,13 @@ const templates: Record<AppTemplateId, Omit<AppTemplate, "rootPath">> = {
     name: "Next.js 应用",
     description: "适合需要服务端渲染、路由与全栈能力的 Web 应用。",
     runtimeId: "nextjs",
+  },
+  "nextjs-enterprise": {
+    id: "nextjs-enterprise",
+    name: "Next.js 企业应用",
+    description: "包含 PostgreSQL、用户与组织权限、可选 Worker、审计及紧凑企业 UI 的通用起始项目。",
+    runtimeId: "nextjs",
+    enterprise: getNextjsEnterpriseFrameworkBinding(),
   },
   "static-html": {
     id: "static-html",
@@ -60,7 +76,7 @@ export function getAppTemplate(id: string): AppTemplate {
   return { ...templates[id], rootPath: templatePath(id) };
 }
 
-function replaceTemplateTokens(root: string, name: string) {
+function replaceTemplateTokens(root: string, name: string, projectId: string) {
   const values = {
     "{{APP_NAME_JSON}}": JSON.stringify(name),
     "{{APP_NAME_JS}}": JSON.stringify(name).slice(1, -1),
@@ -70,6 +86,7 @@ function replaceTemplateTokens(root: string, name: string) {
       .replaceAll(">", "&gt;")
       .replaceAll('"', "&quot;")
       .replaceAll("'", "&#39;"),
+    "{{APP_SCHEMA}}": enterpriseSchemaForProject(projectId),
   };
   const visit = (current: string) => {
     for (const entry of fs.readdirSync(current, { withFileTypes: true })) {
@@ -99,11 +116,19 @@ export function createTemplateWorkspace(
   template: AppTemplate,
   workspacePath: string,
   name: string,
+  projectId: string,
 ) {
   const scaffoldPath = path.join(template.rootPath, "scaffold");
   fs.mkdirSync(path.dirname(workspacePath), { recursive: true });
   fs.cpSync(scaffoldPath, workspacePath, { recursive: true });
-  replaceTemplateTokens(workspacePath, name);
+  if (template.enterprise) {
+    installNextjsEnterpriseFramework(
+      workspacePath,
+      enterpriseSchemaForProject(projectId),
+      template.enterprise.frameworkVersion,
+    );
+  }
+  replaceTemplateTokens(workspacePath, name, projectId);
   const baseline = Object.fromEntries(
     listWorkspaceFiles(workspacePath).map((relative) => [
       relative,

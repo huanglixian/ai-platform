@@ -52,6 +52,29 @@ test("新建数据库使用稳定模型档案 ID", async () => {
       await fs.readFile(path.join(project.workspacePath, "app.yaml"), "utf8"),
       /runtime: static-web/,
     );
+    const enterpriseProject = createProject({
+      name: "通用企业应用",
+      templateId: "nextjs-enterprise",
+    });
+    assert.equal(enterpriseProject.template.name, "Next.js 企业应用");
+    assert.deepEqual(enterpriseProject.framework, {
+      id: "appfactory-nextjs-enterprise",
+      version: "0.1.0",
+    });
+    const enterpriseManifest = await fs.readFile(
+      path.join(enterpriseProject.workspacePath, "app.yaml"),
+      "utf8",
+    );
+    assert.match(enterpriseManifest, /enterpriseFramework: appfactory-nextjs-enterprise@0\.1\.0/);
+    assert.match(
+      enterpriseManifest,
+      new RegExp(
+        `databaseSchema: appfactory_${enterpriseProject.id.replace(/[^a-z0-9]/gi, "_").toLowerCase()}`,
+      ),
+    );
+    await fs.access(path.join(enterpriseProject.workspacePath, "src", "server", "organization", "service.ts"));
+    await fs.access(path.join(enterpriseProject.workspacePath, "src", "server", "shared", "README.md"));
+    await fs.access(path.join(enterpriseProject.workspacePath, "db", "migrations", "0001_framework_identity.sql"));
     const session = createSession(project.id);
     const initialSettings = getAppFactoryModelSettings();
     assert.deepEqual(initialSettings.thinkingLevels, { zhipu: "high", deepseek: "high", cockpit: "high" });

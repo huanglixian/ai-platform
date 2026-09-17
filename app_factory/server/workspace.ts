@@ -11,6 +11,12 @@ export interface WorkspaceRuntime {
   ): Promise<{ code: number | null; stdout: string; stderr: string }>;
 }
 
+export type WorkspaceCommandOptions = {
+  nodeEnv?: "development" | "production" | "test";
+  signal?: AbortSignal;
+  environment?: Record<string, string | undefined>;
+};
+
 const ignoredWorkspaceDirectories = new Set([
   "node_modules",
   ".next",
@@ -53,27 +59,33 @@ export async function writeWorkspaceFile(
   await fs.writeFile(target, content, "utf8");
 }
 
-export function runWorkspaceCommand(
+function commandEnvironment(options: WorkspaceCommandOptions): NodeJS.ProcessEnv {
+  const provided = Object.fromEntries(
+    Object.entries(options.environment ?? {}).filter(([, value]) => typeof value === "string"),
+  ) as Record<string, string>;
+  return {
+    PATH: `${path.join(process.cwd(), "node_modules/.bin")}:${process.env.PATH ?? ""}`,
+    NODE_ENV: options.nodeEnv ?? process.env.NODE_ENV ?? "development",
+    ...provided,
+  };
+}
+
+function runWorkspaceProcess(
   root: string,
-  command: string,
-  timeoutMs = 30_000,
-  options: { nodeEnv?: string; signal?: AbortSignal } = {},
+  executable: string,
+  args: string[],
+  timeoutMs: number,
+  options: WorkspaceCommandOptions,
 ) {
-  if (/(^|\s)(rm\s+-rf|sudo|mkfs|shutdown|docker\s+run)/i.test(command)) {
-    throw new Error("Command rejected by workspace policy");
-  }
   return new Promise<{
     code: number | null;
     stdout: string;
     stderr: string;
   }>((resolve, reject) => {
-    const child = spawn("/bin/sh", ["-lc", command], {
+    const child = spawn(executable, args, {
       cwd: path.resolve(root),
       detached: true,
-      env: {
-        PATH: `${path.join(process.cwd(), "node_modules/.bin")}:${process.env.PATH ?? ""}`,
-        NODE_ENV: options.nodeEnv ?? process.env.NODE_ENV ?? "development",
-      } as NodeJS.ProcessEnv,
+      env: commandEnvironment(options),
     });
     let stdout = "";
     let stderr = "";
@@ -103,20 +115,20 @@ export function runWorkspaceCommand(
       cleanup();
       callback();
     };
-    if (options.signal?.aborted) abort();
-    options.signal?.addEventListener("abort", abort, { once: true });
     const timer = setTimeout(() => {
       terminalError = new Error("Command timed out");
       terminateGroup();
     }, timeoutMs);
-    child.stdout.on("data", (data) => {
+    if (options.signal?.aborted) abort();
+    else options.signal?.addEventListener("abort", abort, { once: true });
+    child.stdout?.on("data", (data) => {
       stdout += data.toString();
       if (stdout.length > 200_000) {
         terminalError = new Error("Command output exceeded limit");
         terminateGroup();
       }
     });
-    child.stderr.on("data", (data) => {
+    child.stderr?.on("data", (data) => {
       stderr += data.toString();
       if (stderr.length > 200_000) {
         terminalError = new Error("Command output exceeded limit");
@@ -134,6 +146,28 @@ export function runWorkspaceCommand(
       settle(() => resolve({ code, stdout, stderr }));
     });
   });
+}
+
+export function runWorkspaceCommand(
+  root: string,
+  command: string,
+  timeoutMs = 30_000,
+  options: WorkspaceCommandOptions = {},
+) {
+  if (/(^|\s)(rm\s+-rf|sudo|mkfs|shutdown|docker\s+run)/i.test(command)) {
+    throw new Error("Command rejected by workspace policy");
+  }
+  return runWorkspaceProcess(root, "/bin/sh", ["-lc", command], timeoutMs, options);
+}
+
+export function runWorkspaceExecutable(
+  root: string,
+  executable: string,
+  args: string[],
+  timeoutMs = 30_000,
+  options: WorkspaceCommandOptions = {},
+) {
+  return runWorkspaceProcess(root, executable, args, timeoutMs, options);
 }
 
 export function createLocalWorkspaceRuntime(root: string): WorkspaceRuntime {

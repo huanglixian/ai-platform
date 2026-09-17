@@ -1,9 +1,14 @@
 import path from "node:path";
 
+import {
+  assertNextjsEnterpriseRuntimeEnvironmentConfigured,
+  enterpriseSchemaForProject,
+} from "@/app_factory/nextjs-enterprise-framework";
 import { readApplicationManifest, validateProject } from "@/app_factory/contracts/validator";
 import { createAgentHubClient } from "@/app_factory/features/agenthub-client";
 import { getAppRuntime } from "@/app_factory/runtimes";
 import { getProject, listCapabilityBindings } from "@/app_factory/server/database";
+import { runWorkspaceExecutable } from "@/app_factory/server/workspace";
 import { getAppTemplate } from "@/app_factory/template-catalog";
 import { dataPaths } from "@/lib/data-paths";
 import {
@@ -41,6 +46,54 @@ function ensureActive(job: PublicationJobLease) {
   if (!isPublicationJobActive(job)) throw cancellationError();
 }
 
+function publicationEnterpriseBinding(
+  project: NonNullable<ReturnType<typeof getProject>>,
+  template: ReturnType<typeof getAppTemplate>,
+) {
+  if (!template.enterprise) return undefined;
+  if (!project.framework) {
+    throw new Error("Next.js 企业项目缺少创建时绑定的 Framework 版本");
+  }
+  return {
+    frameworkId: project.framework.id,
+    frameworkVersion: project.framework.version,
+    databaseSchema: enterpriseSchemaForProject(project.id),
+  };
+}
+
+function migrationFailureMessage(output: string) {
+  const databaseUrl = process.env.DATABASE_URL?.trim();
+  const redacted = databaseUrl ? output.replaceAll(databaseUrl, "[REDACTED]") : output;
+  return redacted.trim().slice(-2_000);
+}
+
+async function migrateNextjsEnterpriseRelease(
+  releasePath: string,
+  runtimeId: string,
+  signal: AbortSignal,
+) {
+  const runtime = getAppRuntime(runtimeId);
+  const command = runtime.createMigrationCommand?.(releasePath);
+  if (!command) throw new Error("当前运行时不支持 Next.js 企业应用数据库迁移");
+  const databaseUrl = process.env.DATABASE_URL?.trim();
+  if (!databaseUrl) throw new Error("企业应用发布缺少 DATABASE_URL");
+  const result = await runWorkspaceExecutable(
+    command.cwd,
+    command.executable,
+    command.args,
+    120_000,
+    {
+      nodeEnv: "production",
+      signal,
+      environment: { DATABASE_URL: databaseUrl },
+    },
+  );
+  if (result.code !== 0) {
+    const detail = migrationFailureMessage(`${result.stdout}${result.stderr}`);
+    throw new Error(detail ? `数据库迁移失败：${detail}` : "数据库迁移失败");
+  }
+}
+
 async function restorePreviousRuntime(
   deployment: PublicationDeployment | null,
   release: PublicationRelease | null,
@@ -52,8 +105,9 @@ async function restorePreviousRuntime(
     release.runtimeId,
     deployment.port,
     deployment.healthPath,
+    release.workerEntry,
   );
-  updatePublicationDeployment(deployment.id, "running", runtime.pid);
+  updatePublicationDeployment(deployment.id, "running", runtime.pid, runtime.workerPid);
 }
 
 async function publish(job: PublicationJobLease, signal: AbortSignal) {
@@ -61,10 +115,13 @@ async function publish(job: PublicationJobLease, signal: AbortSignal) {
   if (!project) throw new Error("项目不存在");
   const template = getAppTemplate(project.templateId);
   const appRuntime = getAppRuntime(template.runtimeId);
+  const enterpriseBinding = publicationEnterpriseBinding(project, template);
 
   updatePublicationProgress(job, "validating", "正在校验应用配置与能力绑定", 1);
   const checks = await validateProject(project.workspacePath, {
     boundCapabilityIds: listCapabilityBindings(project.id).map((binding) => binding.capabilityId),
+    requiresEnterprise: Boolean(template.enterprise),
+    enterpriseBinding,
   });
   const validationErrors = checks.filter((check) => check.level === "error");
   if (validationErrors.length) {
@@ -74,12 +131,18 @@ async function publish(job: PublicationJobLease, signal: AbortSignal) {
   if (manifest.runtime !== appRuntime.id) {
     throw new Error("app.yaml 的运行时与项目模板不一致");
   }
+  if (manifest.enterprise) {
+    assertNextjsEnterpriseRuntimeEnvironmentConfigured();
+  }
   ensureActive(job);
 
   updatePublicationProgress(job, "building", `正在构建${template.name}`, 2);
   const releasePath = path.join(dataPaths.appFactoryReleases, project.id, job.id);
   await appRuntime.buildRelease(project.workspacePath, releasePath, {
     signal,
+    enterprise: manifest.enterprise
+      ? { workerEntry: manifest.enterprise.workerEntry }
+      : null,
     onLog(log) {
       updatePublicationProgress(
         job,
@@ -92,6 +155,12 @@ async function publish(job: PublicationJobLease, signal: AbortSignal) {
   ensureActive(job);
 
   updatePublicationProgress(job, "packaging", "正在创建不可变 Release", 4);
+  if (manifest.enterprise) {
+    updatePublicationProgress(job, "migrating", "正在应用应用数据库迁移", 5);
+    await migrateNextjsEnterpriseRelease(releasePath, appRuntime.id, signal);
+    updatePublicationProgress(job, "migrating", "应用数据库迁移完成", 5);
+    ensureActive(job);
+  }
   const previousDeployment = getRunningPublicationDeployment(project.id);
   const previousRelease = previousDeployment
     ? getPublicationRelease(previousDeployment.releaseId)
@@ -99,17 +168,27 @@ async function publish(job: PublicationJobLease, signal: AbortSignal) {
   const publishedPort = getPublishedPort(project.id);
   const port = publishedPort ?? await allocatePublishedPort(project.id);
   if (publishedPort === null) setPublishedPort(project.id, port);
-  const release = createPublicationRelease(project.id, job.id, releasePath, appRuntime.id);
+  const release = createPublicationRelease(
+    project.id,
+    job.id,
+    releasePath,
+    appRuntime.id,
+    manifest.enterprise?.workerEntry ?? null,
+  );
 
   let newDeployment: PublicationDeployment | null = null;
   let previousStopped = false;
   try {
-    updatePublicationProgress(job, "deploying", "正在切换到新 Release", 5);
+    updatePublicationProgress(job, "deploying", "正在切换到新 Release", 6);
     if (previousDeployment) {
-      if (!await stopPublicationRuntime(project.id, previousDeployment.pid)) {
+      if (!await stopPublicationRuntime(
+        project.id,
+        previousDeployment.pid,
+        previousDeployment.workerPid,
+      )) {
         throw new Error("旧 Release 未能在 5 秒内停止，已取消切换");
       }
-      updatePublicationDeployment(previousDeployment.id, "stopped", null);
+      updatePublicationDeployment(previousDeployment.id, "stopped", null, null);
       previousStopped = true;
     }
     ensureActive(job);
@@ -120,6 +199,7 @@ async function publish(job: PublicationJobLease, signal: AbortSignal) {
       release.runtimeId,
       port,
       manifest.healthPath,
+      release.workerEntry,
     );
     newDeployment = createPublicationDeployment(
       project.id,
@@ -128,12 +208,13 @@ async function publish(job: PublicationJobLease, signal: AbortSignal) {
       runtime.url,
       manifest.healthPath,
       runtime.pid,
+      runtime.workerPid,
       "running",
     );
-    updatePublicationProgress(job, "checking", "新 Release 健康检查通过", 6);
+    updatePublicationProgress(job, "checking", "新 Release 健康检查通过", 7);
     ensureActive(job);
 
-    updatePublicationProgress(job, "registering", "正在注册到应用中心", 6);
+    updatePublicationProgress(job, "registering", "正在注册到应用中心", 8);
     const application = await createAgentHubClient().registerApplication({
       name: project.name,
       description: project.description,
@@ -157,11 +238,15 @@ async function publish(job: PublicationJobLease, signal: AbortSignal) {
     });
   } catch (error) {
     if (newDeployment) {
-      const stopped = await stopPublicationRuntime(project.id, newDeployment.pid);
+      const stopped = await stopPublicationRuntime(
+        project.id,
+        newDeployment.pid,
+        newDeployment.workerPid,
+      );
       if (!stopped) {
         throw new Error("新 Release 未能在 5 秒内停止，无法安全恢复旧 Release");
       }
-      updatePublicationDeployment(newDeployment.id, "failed", null);
+      updatePublicationDeployment(newDeployment.id, "failed", null, null);
     }
     if (previousStopped) await restorePreviousRuntime(previousDeployment, previousRelease);
     throw error;

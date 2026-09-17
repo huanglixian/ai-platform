@@ -1,0 +1,9 @@
+name: {{APP_NAME_JSON}}
+version: 0.1.0
+runtime: nextjs
+entry: src/app/page.tsx
+healthPath: /api/health
+capabilities: []
+enterpriseFramework: appfactory-nextjs-enterprise@0.1.0
+database: postgresql
+databaseSchema: {{APP_SCHEMA}}

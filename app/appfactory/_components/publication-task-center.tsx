@@ -30,6 +30,7 @@ type PublicationStage =
   | "validating"
   | "building"
   | "packaging"
+  | "migrating"
   | "deploying"
   | "checking"
   | "registering"
@@ -66,6 +67,7 @@ const stageLabels: Record<Exclude<PublicationStage, "completed">, string> = {
   validating: "校验应用",
   building: "构建应用",
   packaging: "打包发布产物",
+  migrating: "应用数据库迁移",
   deploying: "启动应用",
   checking: "健康检查",
   registering: "加入应用中心",

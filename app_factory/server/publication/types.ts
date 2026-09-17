@@ -3,6 +3,7 @@ export const publicationStages = [
   "validating",
   "building",
   "packaging",
+  "migrating",
   "deploying",
   "checking",
   "registering",
@@ -52,6 +53,7 @@ export type PublicationRelease = {
   version: number;
   artifactPath: string;
   runtimeId: "nextjs" | "static-web";
+  workerEntry: string | null;
   createdAt: string;
 };
 
@@ -64,6 +66,7 @@ export type PublicationDeployment = {
   url: string;
   healthPath: string;
   pid: number | null;
+  workerPid: number | null;
   createdAt: string;
   updatedAt: string;
 };

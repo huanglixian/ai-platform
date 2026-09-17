@@ -1,0 +1,8 @@
+[data-theme="teal"] {
+  --primary: #0f766e;
+  --primary-hover: #115e59;
+  --primary-foreground: #ffffff;
+  --accent: #f0fdfa;
+  --accent-foreground: #115e59;
+  --ring: #0f766e;
+}

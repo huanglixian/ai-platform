@@ -1,0 +1,39 @@
+:root {
+  --background: #f6f8fb;
+  --foreground: #172033;
+  --card: #ffffff;
+  --card-foreground: #172033;
+  --muted: #f0f3f7;
+  --muted-foreground: #64748b;
+  --border: #dbe2ea;
+  --input: #cbd5e1;
+  --ring: #1d4ed8;
+  --primary: #1d4ed8;
+  --primary-hover: #1e40af;
+  --primary-foreground: #ffffff;
+  --accent: #eff6ff;
+  --accent-foreground: #1e40af;
+  --success: #157f3d;
+  --warning: #b45309;
+  --danger: #b42318;
+  --radius: 0.55rem;
+  --control-height: 2.25rem;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --radius-md: var(--radius);
+}

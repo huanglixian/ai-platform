@@ -10,6 +10,7 @@ import {
 import {
   getPreviewWorkspacePath,
   materializeRuntimeWorkspace,
+  seedWorkspaceRuntimeDependencies,
 } from "./runtime-workspace";
 import { getAppRuntime } from "@/app_factory/runtimes";
 import type { RuntimeId } from "@/app_factory/runtimes/types";
@@ -271,6 +272,10 @@ export async function startPreview(
 
   try {
     await materializeRuntimeWorkspace(sourceWorkspacePath, workspacePath);
+    const enterpriseFramework = path.join(workspacePath, ".appfactory-framework.json");
+    if (await fs.access(enterpriseFramework).then(() => true).catch(() => false)) {
+      seedWorkspaceRuntimeDependencies(workspacePath, { includeToolchain: true });
+    }
   } catch (error) {
     const message = error instanceof Error ? error.message : "未知错误";
     throw new PreviewStartError(`Preview 工作区准备失败：${message}`, []);

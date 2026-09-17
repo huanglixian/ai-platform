@@ -42,6 +42,10 @@ test("旧项目迁移为 Next.js 模板", async () => {
     assert.equal(settings.defaultModelProfileId, "deepseek");
     assert.deepEqual(settings.thinkingLevels, { zhipu: "max", deepseek: "max", cockpit: "high" });
     assert.equal(database.prepare("PRAGMA table_info(appfactory_settings)").all().some((column) => column.name === "thinking_level"), false);
+    const releaseColumns = database.prepare("PRAGMA table_info(publication_releases)").all();
+    const deploymentColumns = database.prepare("PRAGMA table_info(publication_deployments)").all();
+    assert.equal(releaseColumns.some((column) => column.name === "worker_entry"), true);
+    assert.equal(deploymentColumns.some((column) => column.name === "worker_pid"), true);
     assert.deepEqual(getAppFactoryModelSettings(), settings);
   } finally {
     database?.close();

@@ -6,7 +6,7 @@ import test from "node:test";
 
 // Node 的原生 TypeScript runner 需要显式扩展名，生产编译不参与该导入。
 // @ts-expect-error TS 配置保持 Next.js 默认，不开启 TS 扩展名导入。
-import { isWorkspaceEntryVisible, runWorkspaceCommand } from "./workspace.ts";
+import { isWorkspaceEntryVisible, runWorkspaceCommand, runWorkspaceExecutable } from "./workspace.ts";
 
 test("文件列表忽略依赖和构建产物目录", () => {
   assert.equal(isWorkspaceEntryVisible("node_modules"), false);
@@ -24,6 +24,20 @@ test("构建命令可以显式使用生产环境", async () => {
     { nodeEnv: "production" },
   );
   assert.equal(result.stdout, "production");
+});
+
+test("受控可执行程序只接收明确注入的环境变量", async () => {
+  const result = await runWorkspaceExecutable(
+    process.cwd(),
+    process.execPath,
+    ["-e", "process.stdout.write([process.env.NODE_ENV, process.env.DATABASE_URL, Boolean(process.env.APPFACTORY_COCKPIT_API_KEY)].join('|'))"],
+    30_000,
+    {
+      nodeEnv: "production",
+      environment: { DATABASE_URL: "postgresql://isolated.example/app" },
+    },
+  );
+  assert.equal(result.stdout, "production|postgresql://isolated.example/app|false");
 });
 
 test("构建命令可以被发布任务取消", async () => {

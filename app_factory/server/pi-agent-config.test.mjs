@@ -1,9 +1,11 @@
 import assert from "node:assert/strict";
+import path from "node:path";
 import test from "node:test";
 
 import { createPiModelsConfig } from "./pi-agent-config.ts";
 import { createPiRunArgs } from "../features/pi-harness.ts";
 import { streamSimple } from "../../node_modules/@earendil-works/pi-coding-agent/node_modules/@earendil-works/pi-ai/dist/api/openai-responses.js";
+import { loadSkillsFromDir } from "../../node_modules/@earendil-works/pi-coding-agent/dist/core/skills.js";
 
 test("智谱 Pi 配置保留 PaaS Chat Completions，未配置的 Cockpit 不注册", () => {
   const config = createPiModelsConfig({ APPFACTORY_ZHIPU_MODEL: "glm-5.3-flash-test", APPFACTORY_ZHIPU_API_KEY: "test" });
@@ -23,6 +25,24 @@ test("PI 启动参数按档案校验，不允许 Cockpit max 或智谱 xhigh", (
   for (const [modelProfileId, thinkingLevel] of [["cockpit", "max"], ["zhipu", "xhigh"], ["deepseek", "xhigh"]]) {
     assert.throws(() => createPiRunArgs(session, "测试", { modelProfileId, thinkingLevel, templateId: "static-html" }), /不支持/);
   }
+});
+
+test("Next.js 企业模板传入有效 Skill 和平台短规则", () => {
+  const session = { id: "test-session", projectId: "test-project", harness: "pi", cwd: "/tmp" };
+  const args = createPiRunArgs(session, "测试", {
+    modelProfileId: "cockpit",
+    thinkingLevel: "high",
+    templateId: "nextjs-enterprise",
+  });
+  const templateRoot = path.join(process.cwd(), "app_factory", "templates", "nextjs-enterprise");
+  assert.equal(args[args.indexOf("--skill") + 1], templateRoot);
+  assert.equal(
+    args[args.indexOf("--append-system-prompt") + 1],
+    path.join(templateRoot, "rules", "short-rules.md"),
+  );
+  const result = loadSkillsFromDir({ dir: templateRoot, source: "temporary" });
+  assert.deepEqual(result.diagnostics, []);
+  assert.deepEqual(result.skills.map((skill) => skill.name), ["nextjs-enterprise"]);
 });
 
 test("PI Responses 适配器原样发送四档思考程度并解析流式工具调用", async () => {

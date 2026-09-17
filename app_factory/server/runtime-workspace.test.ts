@@ -21,6 +21,9 @@ test("运行副本只复制应用源码，不带入依赖和构建产物", async
   await fs.writeFile(path.join(source, ".next", "dev", "lock"), "preview");
   await fs.writeFile(path.join(source, "node_modules", "next", "package.json"), "{}");
   await fs.writeFile(path.join(source, "tsconfig.tsbuildinfo"), "cache");
+  await fs.writeFile(path.join(source, ".env"), "DATABASE_URL=secret");
+  await fs.writeFile(path.join(source, ".env.local"), "APP_AUTH_SECRET=secret");
+  await fs.writeFile(path.join(source, ".env.example"), "DATABASE_URL=");
 
   try {
     await materializeRuntimeWorkspace(source, destination);
@@ -29,6 +32,27 @@ test("运行副本只复制应用源码，不带入依赖和构建产物", async
     await assert.rejects(fs.access(path.join(destination, ".next")));
     await assert.rejects(fs.access(path.join(destination, "node_modules")));
     await assert.rejects(fs.access(path.join(destination, "tsconfig.tsbuildinfo")));
+    await assert.rejects(fs.access(path.join(destination, ".env")));
+    await assert.rejects(fs.access(path.join(destination, ".env.local")));
+    await assert.rejects(fs.access(path.join(destination, ".env.example")));
+  } finally {
+    await fs.rm(root, { recursive: true, force: true });
+  }
+});
+
+test("运行时 Workspace 拒绝符号链接", async () => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "appfactory-runtime-workspace-"));
+  const source = path.join(root, "source");
+  const destination = path.join(root, "destination");
+  const outside = path.join(root, "outside.txt");
+  try {
+    await fs.mkdir(source);
+    await fs.writeFile(outside, "outside");
+    await fs.symlink(outside, path.join(source, "outside-link.txt"));
+    await assert.rejects(
+      materializeRuntimeWorkspace(source, destination),
+      /不允许符号链接：outside-link\.txt/,
+    );
   } finally {
     await fs.rm(root, { recursive: true, force: true });
   }

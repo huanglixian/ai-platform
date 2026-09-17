@@ -14,6 +14,9 @@ export type RuntimeBuildLog = {
 export type RuntimeBuildOptions = {
   onLog: (log: RuntimeBuildLog) => void;
   signal?: AbortSignal;
+  enterprise?: {
+    workerEntry: string | null;
+  } | null;
 };
 
 export type AppRuntime = {
@@ -26,4 +29,9 @@ export type AppRuntime = {
     options: RuntimeBuildOptions,
   ) => Promise<void>;
   createReleaseCommand: (releasePath: string, port: number) => RuntimeCommand;
+  createWorkerCommand?: (
+    releasePath: string,
+    workerEntry: string,
+  ) => RuntimeCommand;
+  createMigrationCommand?: (releasePath: string) => RuntimeCommand;
 };
