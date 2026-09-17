@@ -208,6 +208,7 @@ export function ChatPanel({
   onRetry: () => void;
 }) {
   const [now, setNow] = useState(() => Date.now());
+  const [isComposing, setIsComposing] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const autoFollowRunRef = useRef<string | null>(null);
   const runSummaries = useMemo(() => buildWorkspaceRunSummaries(events), [events]);
@@ -391,8 +392,15 @@ export function ChatPanel({
           <textarea
             value={prompt}
             onChange={(event) => onPromptChange(event.target.value)}
+            onCompositionStart={() => setIsComposing(true)}
+            onCompositionEnd={() => setIsComposing(false)}
             onKeyDown={(event) => {
-              if (event.key === "Enter" && !event.shiftKey) {
+              if (
+                event.key === "Enter" &&
+                !event.shiftKey &&
+                !isComposing &&
+                !event.nativeEvent.isComposing
+              ) {
                 event.preventDefault();
                 onSend();
               }
