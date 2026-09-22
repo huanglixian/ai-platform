@@ -150,9 +150,25 @@ test("企业发布要求由宿主运行环境提供应用密钥", () => {
   );
   assert.doesNotThrow(() => assertNextjsEnterpriseRuntimeEnvironmentConfigured({
     DATABASE_URL: "postgresql://example.invalid/app",
-    APP_AUTH_SECRET: "not-a-production-secret",
-    ENTERPRISE_BOOTSTRAP_TOKEN: "not-a-production-token",
+    APP_AUTH_SECRET: "a".repeat(32),
+    ENTERPRISE_BOOTSTRAP_TOKEN: "b".repeat(16),
   }));
+  assert.throws(
+    () => assertNextjsEnterpriseRuntimeEnvironmentConfigured({
+      DATABASE_URL: "postgresql://example.invalid/app",
+      APP_AUTH_SECRET: "short",
+      ENTERPRISE_BOOTSTRAP_TOKEN: "b".repeat(16),
+    }),
+    /APP_AUTH_SECRET 至少需要 32 个字符/,
+  );
+  assert.throws(
+    () => assertNextjsEnterpriseRuntimeEnvironmentConfigured({
+      DATABASE_URL: "postgresql://example.invalid/app",
+      APP_AUTH_SECRET: "a".repeat(32),
+      ENTERPRISE_BOOTSTRAP_TOKEN: "short",
+    }),
+    /ENTERPRISE_BOOTSTRAP_TOKEN 至少需要 16 个字符/,
+  );
 });
 
 test("企业模板不能通过删除企业清单降级为普通发布", async () => {

@@ -12,6 +12,8 @@ import {
   materializeRuntimeWorkspace,
   seedWorkspaceRuntimeDependencies,
 } from "./runtime-workspace";
+import { migrateNextjsEnterpriseWorkspace } from "./nextjs-enterprise-migrations";
+import { assertNextjsEnterpriseRuntimeEnvironmentConfigured } from "@/app_factory/nextjs-enterprise-framework";
 import { getAppRuntime } from "@/app_factory/runtimes";
 import type { RuntimeId } from "@/app_factory/runtimes/types";
 
@@ -206,14 +208,33 @@ async function selectPreviewPort(preferredPort?: number) {
   return port;
 }
 
+async function hasEnterpriseFramework(workspacePath: string) {
+  return await fs.access(path.join(workspacePath, ".appfactory-framework.json"))
+    .then(() => true)
+    .catch(() => false);
+}
+
+function previewStartError(prefix: string, error: unknown) {
+  const message = error instanceof Error ? error.message : "未知错误";
+  return new PreviewStartError(`${prefix}：${message}`, []);
+}
+
 export async function startPreview(
   projectId: string,
   sourceWorkspacePath: string,
   runtimeId: RuntimeId,
   preferredPort?: number,
 ) {
+  const enterprise = await hasEnterpriseFramework(sourceWorkspacePath);
+  if (enterprise) {
+    try {
+      assertNextjsEnterpriseRuntimeEnvironmentConfigured();
+    } catch (error) {
+      throw previewStartError("企业应用 Preview 前置条件未满足", error);
+    }
+  }
+
   ensurePreviewTable();
-  await stopOtherPreviews(projectId);
   const workspacePath = getPreviewWorkspacePath(projectId);
   const existing = processes.get(projectId);
   if (existing?.workspacePath === workspacePath && ["starting", "running"].includes(existing.status)) {
@@ -272,14 +293,17 @@ export async function startPreview(
 
   try {
     await materializeRuntimeWorkspace(sourceWorkspacePath, workspacePath);
-    const enterpriseFramework = path.join(workspacePath, ".appfactory-framework.json");
-    if (await fs.access(enterpriseFramework).then(() => true).catch(() => false)) {
+    if (enterprise) {
       seedWorkspaceRuntimeDependencies(workspacePath, { includeToolchain: true });
+      await migrateNextjsEnterpriseWorkspace(workspacePath, runtimeId, {
+        nodeEnv: "development",
+      });
     }
   } catch (error) {
-    const message = error instanceof Error ? error.message : "未知错误";
-    throw new PreviewStartError(`Preview 工作区准备失败：${message}`, []);
+    throw previewStartError("Preview 工作区准备失败", error);
   }
+
+  await stopOtherPreviews(projectId);
 
   const port = await selectPreviewPort(
     preferredPort ?? getPersistedPreview(projectId)?.port,

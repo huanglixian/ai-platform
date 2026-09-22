@@ -7,8 +7,9 @@ import {
 import { readApplicationManifest, validateProject } from "@/app_factory/contracts/validator";
 import { createAgentHubClient } from "@/app_factory/features/agenthub-client";
 import { getAppRuntime } from "@/app_factory/runtimes";
+import type { RuntimeId } from "@/app_factory/runtimes/types";
 import { getProject, listCapabilityBindings } from "@/app_factory/server/database";
-import { runWorkspaceExecutable } from "@/app_factory/server/workspace";
+import { migrateNextjsEnterpriseWorkspace } from "@/app_factory/server/nextjs-enterprise-migrations";
 import { getAppTemplate } from "@/app_factory/template-catalog";
 import { dataPaths } from "@/lib/data-paths";
 import {
@@ -61,37 +62,15 @@ function publicationEnterpriseBinding(
   };
 }
 
-function migrationFailureMessage(output: string) {
-  const databaseUrl = process.env.DATABASE_URL?.trim();
-  const redacted = databaseUrl ? output.replaceAll(databaseUrl, "[REDACTED]") : output;
-  return redacted.trim().slice(-2_000);
-}
-
 async function migrateNextjsEnterpriseRelease(
   releasePath: string,
-  runtimeId: string,
+  runtimeId: RuntimeId,
   signal: AbortSignal,
 ) {
-  const runtime = getAppRuntime(runtimeId);
-  const command = runtime.createMigrationCommand?.(releasePath);
-  if (!command) throw new Error("当前运行时不支持 Next.js 企业应用数据库迁移");
-  const databaseUrl = process.env.DATABASE_URL?.trim();
-  if (!databaseUrl) throw new Error("企业应用发布缺少 DATABASE_URL");
-  const result = await runWorkspaceExecutable(
-    command.cwd,
-    command.executable,
-    command.args,
-    120_000,
-    {
-      nodeEnv: "production",
-      signal,
-      environment: { DATABASE_URL: databaseUrl },
-    },
-  );
-  if (result.code !== 0) {
-    const detail = migrationFailureMessage(`${result.stdout}${result.stderr}`);
-    throw new Error(detail ? `数据库迁移失败：${detail}` : "数据库迁移失败");
-  }
+  await migrateNextjsEnterpriseWorkspace(releasePath, runtimeId, {
+    nodeEnv: "production",
+    signal,
+  });
 }
 
 async function restorePreviousRuntime(

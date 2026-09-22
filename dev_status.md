@@ -53,7 +53,7 @@ scripts/app.mts                 平台与发布 Worker 统一启动器
 - 企业能力：预置登录/会话、用户、部门、角色、多角色关系、权限目录、`self / department / department_and_children / all / custom` 数据范围、事务迁移、幂等、持久化 Job/Worker、站内消息、审计、输入校验、统一错误、服务端环境读取、结构化日志和健康检查。`custom` 由业务显式传入 policy，用于项目成员、被分配人等不能由部门表达的范围。
 - 系统管理与 UI：Scaffold 预置紧凑的 AppShell、基础 UI、PageHeader、FilterBar、DataTablePanel、Form/Detail/状态/空错 Pattern，以及海蓝和青绿主题。`/system/users`、`/system/departments`、`/system/roles`、`/system/audit` 连接真实服务并受服务端权限约束；当前可见里程碑是用户列表和角色详情/权限范围编辑。用户/部门完整的创建、分配和维护 UI 仍留待后续阶段，不应误认为已经交付完整后台。
 - Pi 约束：Pi 通过模板根目录加载真实 `SKILL.md`，平台额外注入 `rules/short-rules.md`；测试已确认当前 Pi Skill loader 能解析该 Skill。Skill 负责导航和开发原则，不是操作系统级沙箱。
-- PostgreSQL 生命周期：创建项目时仅分配稳定 Schema 名并写入 Workspace，不连接数据库；首次与后续发布都在该 Schema 上执行迁移，创建 Schema、加 advisory lock、校验已执行 checksum，只追加新迁移。迁移成功后才启动 Web；`app.yaml` 声明 `workerEntry` 时才启动应用自己的 Worker。更新不会重建 Schema；从 AI Platform 删除应用只停止 Release 并移除目录入口，默认保留 Workspace、Release 历史和 Schema，真正 `DROP SCHEMA` 尚无产品入口，必须作为未来单独确认的 purge 操作。当前发布仍使用宿主 `DATABASE_URL`，未自动创建每应用独立 PostgreSQL Role/Credential；生产环境应由数据库管理员为每个应用配受限凭证，不能把 Schema 名或 `search_path` 当作完整权限隔离。
+- PostgreSQL 生命周期：创建项目时仅分配稳定 Schema 名并写入 Workspace，不连接数据库；首次 Preview、首次发布及以后每次重新准备运行环境时，都会在该 Schema 上受控执行迁移，创建 Schema、加 advisory lock、校验已执行 checksum，只追加新迁移。迁移成功后才启动 Web；`app.yaml` 声明 `workerEntry` 时才启动应用自己的 Worker。Preview 和 Release 共用该应用 Schema，Preview 的业务写操作会保留，不是隔离演示库。更新不会重建 Schema；从 AI Platform 删除应用只停止 Release 并移除目录入口，默认保留 Workspace、Release 历史和 Schema，真正 `DROP SCHEMA` 尚无产品入口，必须作为未来单独确认的 purge 操作。当前发布仍使用宿主 `DATABASE_URL`，未自动创建每应用独立 PostgreSQL Role/Credential；生产环境应由数据库管理员为每个应用配受限凭证，不能把 Schema 名或 `search_path` 当作完整权限隔离。
 
 ### 一键发布与任务中心
 
@@ -87,4 +87,4 @@ scripts/app.mts                 平台与发布 Worker 统一启动器
 - 内置技能位于 `data/builtin/skills`；首次使用技能时仅复制一次到 `data/storage/agenthub/skills`，之后运行目录才是有效技能集，用户对技能的删除或修改不会被内置资源覆盖。
 - 发布取消会终止构建进程组；Release 切换失败时会停止新实例并恢复上一个健康 Release。
 - AppFactory 模型使用各档案专属的 `APPFACTORY_ZHIPU_*`、`APPFACTORY_DEEPSEEK_*`、`APPFACTORY_COCKPIT_*` 环境变量；Cockpit 必须配置 `BASE_URL`、`API_KEY`、`MODEL`。密钥仅保存在服务端环境文件中，生成的 Pi 配置只保存环境变量引用，启动子进程时仅注入所选档案的模型密钥。不得复用平台 AI 助手的 `DEEPSEEK_*` 或旧 `APPFACTORY_PI_*` 配置。
-- `nextjs-enterprise` 发布要求宿主运行环境提供 `DATABASE_URL`、`APP_AUTH_SECRET` 和 `ENTERPRISE_BOOTSTRAP_TOKEN`；它们不会写入 Workspace 或 Release。`.appfactory-framework.json`、项目绑定版本和源文件清单共同保护新模板 Framework；新增通用能力应更新模板 Framework、references 与基础测试，而不是把权限、队列、消息或审计服务塞进 AI Platform。
+- `nextjs-enterprise` 的 Preview 与发布都要求宿主运行环境提供 `DATABASE_URL`、`APP_AUTH_SECRET` 和 `ENTERPRISE_BOOTSTRAP_TOKEN`；缺失时会在启动进程或迁移前立即失败，不会写入 Workspace 或 Release。`.appfactory-framework.json`、项目绑定版本和源文件清单共同保护新模板 Framework；新增通用能力应更新模板 Framework、references 与基础测试，而不是把权限、队列、消息或审计服务塞进 AI Platform。

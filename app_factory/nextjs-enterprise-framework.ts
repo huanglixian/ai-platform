@@ -51,8 +51,14 @@ export function assertNextjsEnterpriseRuntimeEnvironmentConfigured(
   );
   if (missing.length) {
     throw new Error(
-      `Next.js 企业应用发布需要由宿主运行环境注入：${missing.join("、")}`,
+      `Next.js 企业应用需要由宿主运行环境注入：${missing.join("、")}`,
     );
+  }
+  if (environment.APP_AUTH_SECRET!.trim().length < 32) {
+    throw new Error("APP_AUTH_SECRET 至少需要 32 个字符");
+  }
+  if (environment.ENTERPRISE_BOOTSTRAP_TOKEN!.trim().length < 16) {
+    throw new Error("ENTERPRISE_BOOTSTRAP_TOKEN 至少需要 16 个字符");
   }
 }
 
