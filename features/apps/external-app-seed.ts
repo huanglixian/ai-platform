@@ -17,11 +17,11 @@ export const EXTERNAL_APP_SEEDS: ExternalAppSeed[] = [
   {
     id: "app-external-customer-management",
     externalId: "desktop-customer-management",
-    name: "智能客户关系管理",
+    name: "AICRM",
     description: "集中管理客户、联系人、线索和销售项目，并提供个人与团队工作台、经营分析和智能辅助。",
     appType: "business",
-    url: "http://localhost:19855",
-    launchCommand: 'cd "/Users/huanglixian-m2/Documents/LienCode/AI-CRM" && npm run dev',
+    url: "http://localhost:19854",
+    launchCommand: 'cd "/Users/huanglixian-m2/Documents/LienCode/AI-CRM-demo" && npm run dev',
   },
   {
     id: "app-external-data-extraction",

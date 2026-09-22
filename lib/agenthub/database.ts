@@ -83,6 +83,15 @@ UPDATE applications SET launch_status='running' WHERE producer='external' AND la
 );`,
   },
   { id: "008_remove_assistant_settings", sql: "DROP TABLE IF EXISTS assistant_settings;" },
+  {
+    id: "009_ai_crm_demo",
+    sql: `UPDATE applications
+      SET name='AICRM',
+          entry_url='http://localhost:19854',
+          launch_command='cd "/Users/huanglixian-m2/Documents/LienCode/AI-CRM-demo" && npm run dev',
+          updated_at=strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+      WHERE id='app-external-customer-management' AND producer='external';`,
+  },
 ];
 
 export function getAgentHubDatabase(): Database.Database {
