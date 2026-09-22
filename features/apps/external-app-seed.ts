@@ -17,7 +17,7 @@ export const EXTERNAL_APP_SEEDS: ExternalAppSeed[] = [
   {
     id: "app-external-customer-management",
     externalId: "desktop-customer-management",
-    name: "AICRM",
+    name: "AI-CRM",
     description: "集中管理客户、联系人、线索和销售项目，并提供个人与团队工作台、经营分析和智能辅助。",
     appType: "business",
     url: "http://localhost:19854",

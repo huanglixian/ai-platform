@@ -2,7 +2,7 @@ import { spawn } from "node:child_process";
 
 const START_TIMEOUT_MS = 30_000;
 const POLL_INTERVAL_MS = 500;
-const EXCLUDED_PLATFORM_ENVIRONMENT_KEYS = ["PORT", "NODE_OPTIONS", "npm_config_node_options", "TS_NODE_PROJECT"] as const;
+const EXCLUDED_PLATFORM_ENVIRONMENT_KEYS = ["PORT", "NODE_OPTIONS", "npm_config_node_options", "TS_NODE_PROJECT", "TURBOPACK"] as const;
 
 export type ExternalLaunchInput = {
   command: string;

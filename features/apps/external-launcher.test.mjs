@@ -55,6 +55,29 @@ test("外部应用不会继承平台的 PORT", async () => {
   }
 });
 
+test("外部应用不会继承平台的 Turbopack 开关", async () => {
+  const originalTurbopack = process.env.TURBOPACK;
+  const port = await getAvailablePort();
+  const url = `http://127.0.0.1:${port}`;
+  const script = `if (process.env.TURBOPACK) process.exit(1); require('node:http').createServer((_, response) => response.end('ok')).listen(${port}, '127.0.0.1')`;
+  let result;
+
+  process.env.TURBOPACK = "1";
+  try {
+    result = await startExternalProcess({
+      command: `${JSON.stringify(process.execPath)} -e ${JSON.stringify(script)}`,
+      url,
+      timeoutMs: 5_000,
+    });
+
+    assert.equal(await isUrlReady(url), true);
+  } finally {
+    if (result?.pid) await stopExternalProcess(result.pid);
+    if (originalTurbopack === undefined) delete process.env.TURBOPACK;
+    else process.env.TURBOPACK = originalTurbopack;
+  }
+});
+
 test("启动命令退出后不会等待完整健康检查超时", async () => {
   const port = await getAvailablePort();
   const startedAt = Date.now();

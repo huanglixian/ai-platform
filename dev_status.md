@@ -75,7 +75,7 @@ scripts/app.mts                 平台与发布 Worker 统一启动器
 - 服务与数据：`features/apps/server.ts`、`features/apps/external-app-seed.ts`、`features/apps/external-launcher.ts`；应用记录保存在 `data/storage/agenthub/agenthub.db`。
 - 接口：`/api/agenthub/v1/applications` 继续接收 AppFactory 的发布注册；所有来源的注册信息编辑与移除使用 `applications/[id]`，外部应用启动和停止使用 `applications/[id]/start`、`applications/[id]/stop`。
 - 当前状态：首页不使用应用详情抽屉。所有卡片都可直接编辑和删除；AppFactory、Dify 与 n8n 卡片点击后直接在新页签打开，外部应用未启动时卡片本体不可点击，启动后可点击直达，并在卡片上直接启动或停止。AppFactory 的运行地址由发布流程维护，首页编辑只修改名称和说明。外部应用、Dify 与 n8n 可从各自分组接入。
-- 删除与运行边界：所有删除操作都会物理删除应用注册；删除外部应用前会停止平台记录的进程组，删除 AppFactory 应用前会停止运行时并标记部署已停止，但保留项目、源码与 Release 历史，之后可再次发布。预置应用仅在数据库首次初始化时写入，之后的删除不会被重新插入。外部应用以 `starting / running / null` 记录平台托管状态；启动器会剥离平台自身的 `PORT` 与 Node 运行参数，让外部应用自行采用启动命令、`.env` 或代码中的端口配置。`scripts/app.mts` 在 Ctrl+C、SIGTERM 或主子进程异常退出时回收所有平台记录的外部进程组，并在平台启动时清理异常退出遗留的进程。平台不会停止已经由其他方式运行的服务。
+- 删除与运行边界：所有删除操作都会物理删除应用注册；删除外部应用前会停止平台记录的进程组，删除 AppFactory 应用前会停止运行时并标记部署已停止，但保留项目、源码与 Release 历史，之后可再次发布。预置应用仅在数据库首次初始化时写入，之后的删除不会被重新插入。外部应用以 `starting / running / null` 记录平台托管状态；启动器会剥离平台自身的 `PORT`、Node 运行参数和 Turbopack 开关，让外部应用自行采用启动命令、`.env` 或代码中的端口配置。`scripts/app.mts` 在 Ctrl+C、SIGTERM 或主子进程异常退出时回收所有平台记录的外部进程组，并在平台启动时清理异常退出遗留的进程。平台不会停止已经由其他方式运行的服务。
 
 ## 关键限制
 

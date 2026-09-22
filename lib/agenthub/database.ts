@@ -86,9 +86,16 @@ UPDATE applications SET launch_status='running' WHERE producer='external' AND la
   {
     id: "009_ai_crm_demo",
     sql: `UPDATE applications
-      SET name='AICRM',
+      SET name='AI-CRM',
           entry_url='http://localhost:19854',
           launch_command='cd "/Users/huanglixian-m2/Documents/LienCode/AI-CRM-demo" && npm run dev',
+          updated_at=strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+      WHERE id='app-external-customer-management' AND producer='external';`,
+  },
+  {
+    id: "010_ai_crm_name",
+    sql: `UPDATE applications
+      SET name='AI-CRM',
           updated_at=strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
       WHERE id='app-external-customer-management' AND producer='external';`,
   },
