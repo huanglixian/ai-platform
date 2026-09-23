@@ -21,7 +21,7 @@ export const EXTERNAL_APP_SEEDS: ExternalAppSeed[] = [
     description: "集中管理客户、联系人、线索和销售项目，并提供个人与团队工作台、经营分析和智能辅助。",
     appType: "business",
     url: "http://localhost:19854",
-    launchCommand: 'cd "/Users/huanglixian-m2/Documents/LienCode/AI-CRM-demo" && npm run dev',
+    launchCommand: 'cd "/Users/huanglixian-m2/Documents/LienCode/AI-CRM-demo" && npm run start',
   },
   {
     id: "app-external-data-extraction",
