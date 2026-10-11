@@ -50,9 +50,9 @@ export function TopNav() {
             </div>
             <div className="min-w-0">
               <div className="text-title text-sm font-semibold tracking-tight">
-                AI-业务编排平台
+                AgentHub-智能体中台
               </div>
-              <div className="text-tertiary text-xs">基于数据与业务组件</div>
+              <div className="text-tertiary text-xs">基于数据与集成的企业级平台</div>
             </div>
           </div>
 

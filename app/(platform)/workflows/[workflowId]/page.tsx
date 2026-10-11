@@ -8,7 +8,7 @@ type PageProps = {
 };
 
 export const metadata = {
-  title: "业务流画布编辑 - AI-业务编排平台",
+  title: "业务流画布编辑 - AgentHub-智能体中台",
   description: "拖拽节点，编排并发布业务流",
 };
 
