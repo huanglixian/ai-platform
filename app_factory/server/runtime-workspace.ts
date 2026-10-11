@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import fsSync from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
@@ -37,6 +38,33 @@ export function getPreviewWorkspacePath(projectId: string) {
 
 export function getReleaseStagingPath(releasePath: string) {
   return `${releasePath}.staging`;
+}
+
+export async function getRuntimeWorkspaceRevision(source: string) {
+  const root = path.resolve(source);
+  const hash = createHash("sha256");
+  async function visit(current: string) {
+    const entries = (await fs.readdir(current, { withFileTypes: true }))
+      .sort((left, right) => left.name.localeCompare(right.name));
+    for (const entry of entries) {
+      const target = path.join(current, entry.name);
+      if (!shouldCopy(root, target)) continue;
+      if (entry.isSymbolicLink()) {
+        throw new Error(`运行时 Workspace 不允许符号链接：${path.relative(root, target)}`);
+      }
+      if (entry.isDirectory()) {
+        await visit(target);
+      } else if (entry.isFile()) {
+        const relative = path.relative(root, target);
+        hash.update(`${relative.length}:${relative}:`);
+        const content = await fs.readFile(target);
+        hash.update(`${content.length}:`);
+        hash.update(content);
+      }
+    }
+  }
+  await visit(root);
+  return hash.digest("hex");
 }
 
 export async function materializeRuntimeWorkspace(source: string, destination: string) {

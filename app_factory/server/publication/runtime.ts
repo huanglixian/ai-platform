@@ -6,6 +6,7 @@ import net from "node:net";
 import { getAppRuntime } from "@/app_factory/runtimes";
 import type { RuntimeId } from "@/app_factory/runtimes/types";
 import { waitForHttpReady } from "@/app_factory/server/preview-readiness";
+import { isolateEnterpriseRuntimeEnvironment } from "@/app_factory/server/runtime-environment";
 import {
   getPublicationRelease,
   getRunningPublicationDeployment,
@@ -127,23 +128,9 @@ function runtimeEnvironment(
   port: number,
   isolatePlatformEnvironment = false,
 ): NodeJS.ProcessEnv {
-  const environment = { ...process.env };
-  if (isolatePlatformEnvironment) {
-    for (const key of Object.keys(environment)) {
-      if (key.startsWith("APPFACTORY_")) delete environment[key];
-    }
-    for (const key of [
-      "AGENT_HUB_BASE_URL",
-      "NEXT_PUBLIC_APPFACTORY_URL",
-      "DEEPSEEK_API_KEY",
-      "DEEPSEEK_BASE_URL",
-      "DEEPSEEK_MODEL",
-      "TOWER_MATCH_API_URL",
-      "TOWER_MATCH_API_KEY",
-    ]) {
-      delete environment[key];
-    }
-  }
+  const environment = isolatePlatformEnvironment
+    ? isolateEnterpriseRuntimeEnvironment(process.env)
+    : { ...process.env };
   return {
     ...environment,
     NODE_ENV: "production",

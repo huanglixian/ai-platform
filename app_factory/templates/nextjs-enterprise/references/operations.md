@@ -4,6 +4,8 @@
 
 每个新项目会在创建 Workspace 时分配稳定的 Schema 名，并写入受管 Framework 与 `app.yaml`；这一步不连接数据库。首次 Preview、首次发布及以后每次重新准备运行环境时，平台都会在该 Schema 上受控执行受管和业务迁移：创建 Schema、加 advisory lock、校验 checksum、只追加新迁移。Web 在迁移成功后才启动；有 `workerEntry` 时才额外启动应用自己的 Worker。Preview 和 Release 使用同一应用 Schema，Preview 的业务写操作会保留；它不是隔离的演示数据库。
 
+企业 Preview 在 Pi 完成修改后按源码版本后台构建 standalone 产物，点击预览时启动对应版本并检查 `healthPath`。构建阶段不读取运行时数据库和密钥；首次预览或尚未构建完成时，页面会显示构建进度。
+
 更新应用不会重建 Schema。删除 AI Platform 中的应用只停止 Release 和移除目录入口，默认保留项目源码、Release 历史和 PostgreSQL Schema；真正 `DROP SCHEMA` 必须是未来单独确认的 purge 操作。
 
 当前平台已实现每应用独立 Schema，但尚未代管每应用独立 PostgreSQL Role/Credential：部署时仍由宿主提供 `DATABASE_URL`，该账号需要访问目标 Schema。生产环境应由数据库管理员为每个应用分配受限 Role，并让其默认 `search_path` / 权限只覆盖本应用 Schema；不能把“仅切换 search_path”当成完整权限隔离。

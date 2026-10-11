@@ -2,6 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 
 import { getProject } from "@/app_factory/server/database";
+import { restartActivePreview } from "@/app_factory/server/preview";
 import {
   isWorkspaceEntryVisible,
   readWorkspaceFile,
@@ -82,6 +83,11 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
   if (typeof body?.path !== "string" || typeof body.content !== "string" || !body.path.trim()) return apiError("文件路径和内容格式无效", 422);
   try {
     await writeWorkspaceFile(project.workspacePath, body.path, body.content);
+    if (project.framework) {
+      void restartActivePreview(project.id, project.workspacePath, project.template.runtimeId).catch((error: unknown) => {
+        console.error(`AppFactory Preview 后台构建失败：${project.id}`, error);
+      });
+    }
     const baseline = await readBaseline(project.workspacePath);
     return apiOk({ path: body.path, content: body.content, changed: baseline[body.path] !== undefined && baseline[body.path] !== body.content, diff: unifiedDiff(body.path, baseline[body.path], body.content) });
   } catch (error) {

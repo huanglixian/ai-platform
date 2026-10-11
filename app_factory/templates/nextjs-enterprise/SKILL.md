@@ -9,7 +9,7 @@ description: 在 Next.js 企业应用模板中开发业务模块，复用预置�
 
 ## 开发位置
 
-- 新业务放 `src/app/<业务模块>/`：页面在 `page.tsx`，私有 UI 在 `_components/`，服务端业务逻辑、查询和 Job Handler 在 `_server/`。
+- 需要登录的业务模块放 `src/app/(workspace)/<业务模块>/`，继承工作区 layout；页面在 `page.tsx`，私有 UI 在 `_components/`，服务端业务逻辑、查询和 Job Handler 在 `_server/`。
 - 多个业务模块共享、但不属于企业 Framework 的后端逻辑放 `src/server/shared/`。
 - 跨业务 UI 复用 `src/components/ui/`、`layout/`、`patterns/`；纯函数和格式化工具放 `src/lib/`。
 - `src/server/auth`、`organization`、`permissions`、`jobs`、`notifications`、`audit`、`db`、`env`、`validation`、`errors`、`observability` 与 `db/migrations/0001–0999` 是受管核心，不修改、替换或绕开。

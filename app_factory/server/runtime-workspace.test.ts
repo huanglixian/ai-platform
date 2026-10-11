@@ -6,7 +6,7 @@ import test from "node:test";
 
 // Node 的原生 TypeScript runner 需要显式扩展名，生产编译不参与该导入。
 // @ts-expect-error TS 配置保持 Next.js 默认，不开启 TS 扩展名导入。
-import { materializeRuntimeWorkspace } from "./runtime-workspace.ts";
+import { getRuntimeWorkspaceRevision, materializeRuntimeWorkspace } from "./runtime-workspace.ts";
 
 test("运行副本只复制应用源码，不带入依赖和构建产物", async () => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "appfactory-runtime-workspace-"));
@@ -53,6 +53,23 @@ test("运行时 Workspace 拒绝符号链接", async () => {
       materializeRuntimeWorkspace(source, destination),
       /不允许符号链接：outside-link\.txt/,
     );
+  } finally {
+    await fs.rm(root, { recursive: true, force: true });
+  }
+});
+
+test("预览版本仅随运行时源码变化", async () => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "appfactory-preview-revision-"));
+  try {
+    await fs.mkdir(path.join(root, "src"));
+    await fs.mkdir(path.join(root, ".next"));
+    await fs.writeFile(path.join(root, "src", "page.tsx"), "first");
+    const first = await getRuntimeWorkspaceRevision(root);
+    await fs.writeFile(path.join(root, ".next", "cache"), "changed");
+    await fs.writeFile(path.join(root, ".env.local"), "DATABASE_URL=changed");
+    assert.equal(await getRuntimeWorkspaceRevision(root), first);
+    await fs.writeFile(path.join(root, "src", "page.tsx"), "second");
+    assert.notEqual(await getRuntimeWorkspaceRevision(root), first);
   } finally {
     await fs.rm(root, { recursive: true, force: true });
   }

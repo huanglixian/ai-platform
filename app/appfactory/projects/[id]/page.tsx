@@ -438,12 +438,24 @@ export default function ProjectPage({
   const openPreview = async () => {
     setError("");
     const previewWindow = window.open("", "_blank");
+    let progressTimer: ReturnType<typeof setInterval> | undefined;
     try {
       if (previewWindow) {
         previewWindow.document.title = "正在启动预览";
         previewWindow.document.body.style.cssText =
-          "margin:0;display:grid;min-height:100vh;place-items:center;background:#f6f8fb;color:#667085;font:14px system-ui,sans-serif";
+          "margin:0;display:grid;min-height:100vh;place-items:center;padding:24px;box-sizing:border-box;white-space:pre-wrap;overflow-wrap:anywhere;background:#f6f8fb;color:#667085;font:14px system-ui,sans-serif";
         previewWindow.document.body.textContent = "正在启动应用预览…";
+        progressTimer = setInterval(async () => {
+          try {
+            const progress = await fetch(`/api/appfactory/v1/projects/${id}/preview`);
+            const payload = await progress.json();
+            if (payload.data?.buildStage && !previewWindow.closed) {
+              previewWindow.document.body.textContent = payload.data.buildStage;
+            }
+          } catch {
+            // 状态查询失败时，启动请求仍会返回最终结果。
+          }
+        }, 1_000);
       }
       const response = await fetch(
         `/api/appfactory/v1/projects/${id}/preview`,
@@ -454,8 +466,14 @@ export default function ProjectPage({
       if (previewWindow && payload.data?.url)
         previewWindow.location.href = payload.data.url;
     } catch (reason) {
-      previewWindow?.close();
-      setError(reason instanceof Error ? reason.message : "预览启动失败");
+      const message = reason instanceof Error ? reason.message : "预览启动失败";
+      if (previewWindow && !previewWindow.closed) {
+        previewWindow.document.title = "预览启动失败";
+        previewWindow.document.body.textContent = message;
+      }
+      setError(message);
+    } finally {
+      if (progressTimer) clearInterval(progressTimer);
     }
   };
   const executePrompt = async (text: string, remember = true) => {

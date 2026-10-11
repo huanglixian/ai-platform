@@ -212,6 +212,13 @@ export async function* executePiRun({
     finishRun(runId, cancelled ? "cancelled" : "failed", message);
     setSessionStatus(session.id, cancelled ? "idle" : "error");
   } finally {
-    await restartActivePreview(session.project_id, session.cwd, template.runtimeId);
+    const refresh = restartActivePreview(session.project_id, session.cwd, template.runtimeId);
+    if (template.enterprise) {
+      void refresh.catch((error: unknown) => {
+        console.error(`AppFactory Preview 后台构建失败：${session.project_id}`, error);
+      });
+    } else {
+      await refresh;
+    }
   }
 }

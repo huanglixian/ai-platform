@@ -24,6 +24,7 @@ app_factory/server/publication/ 持久任务、Release 构建、运行时恢复
 app_factory/contracts/          app.yaml 校验
 app_factory/template-catalog.ts 模板注册与 Workspace 组合入口
 app_factory/nextjs-enterprise-framework.ts Next.js 企业 Framework 原件、安装与完整性校验
+app_factory/server/enterprise-preview-build.ts 企业 Preview 源码版本、后台构建与产物缓存
 app_factory/templates/nextjs-enterprise/ 通用企业模板 Bundle（Skill、references、scaffold、framework）
 features/platform-home/         首页组合与展示状态
 features/assistant/             AI 助手客户端、会话 UI 与服务端编排
@@ -39,7 +40,7 @@ scripts/app.mts                 平台与发布 Worker 统一启动器
 
 - 页面：`app/appfactory/page.tsx`、`app/appfactory/projects/[id]/page.tsx`、`app/appfactory/settings/page.tsx`。
 - 对话与文件：`app/appfactory/projects/[id]/page.tsx`、`app/appfactory/_components/workspace-panels.tsx`、`app_factory/server/pi-run.ts`。`POST sessions/[id]/run` 只创建并启动 Run，`GET sessions/[id]/run` 查询活动任务，`GET runs/[id]/events` 以 SSE 回放并订阅带序号的 transcript；项目页首次进入或重新进入时均可恢复正在执行的任务与实时过程。
-- 项目模板与运行时：`app_factory/template-catalog.ts` 是唯一的项目模板注册入口；每个模板在 `app_factory/templates/` 中同时保存初始 Workspace、Pi 开发说明和按需 reference。`app_factory/runtimes/` 负责模板对应的 Preview、构建和 Release 启动，当前支持 Next.js、企业 Next.js 与纯 HTML 静态站点。Pi 完成后会以原端口重建已开启的 Preview，使原预览页刷新后显示最新源码；全局仅保留一个 Preview，30 分钟未重新请求预览时自动回收。Pi 可以继续在真实 Workspace 使用 Bash；Pi 运行期间不能 Preview/发布，发布排队或运行期间不能开始 Pi，避免读写同一份源码。
+- 项目模板与运行时：`app_factory/template-catalog.ts` 是唯一的项目模板注册入口；每个模板在 `app_factory/templates/` 中同时保存初始 Workspace、Pi 开发说明和按需 reference。`app_factory/runtimes/` 负责模板对应的 Preview、构建和 Release 启动，当前支持 Next.js、企业 Next.js 与纯 HTML 静态站点。Pi 完成后会以原端口重建已开启的 Preview；企业模板按源码版本在后台生成 standalone 预览产物，完成后切换运行进程，未开启预览时只预构建。全局仅保留一个 Preview，30 分钟未重新请求预览时自动回收。Pi 可以继续在真实 Workspace 使用 Bash；Pi 运行期间不能 Preview/发布，发布排队或运行期间不能开始 Pi，避免读写同一份源码。
 - 模型配置：`app_factory/server/model-profiles.ts` 定义稳定档案 `zhipu`、`deepseek`、`cockpit` 及各自允许的思考档位；`app_factory/types/model.ts` 提供前后端共享类型。实际模型名由各档案的 `APPFACTORY_*_MODEL` 配置；`pi-agent-config.ts` 注册配置完整的智谱 PaaS Chat Completions 和 Cockpit Responses Provider，DeepSeek 使用 Pi 内置适配。Cockpit 默认部署模型为 `gpt-5.6-terra`，自定义模型描述按其上下文与输出限制配置，替换为其他模型时须核对能力配置。
 - 数据：`app_factory/server/database.ts` 保存项目、Workspace、Pi Session、transcript、runs 和单行模型设置。
 - 当前状态：项目可创建、预览、以 Pi 修改 Workspace，并恢复会话历史及进行中的 Run。默认档案为 `zhipu`；默认档案只应用于新建对话，对话创建后固定档案，实际模型名每次执行从环境变量读取，环境文件修改后需重启平台。思考程度按档案保存在单行设置的 `thinking_levels_json`，在对应会话下次执行时生效；智谱和 DeepSeek 开放 `low / high / max`，Cockpit 仅开放 `low / medium / high / xhigh`，各档案初始值为 `high`。设置接口和执行入口均校验档位，项目页按当前会话档案显示思考程度。模型请求失败会将运行与会话标记为失败，不会误报完成。
@@ -48,12 +49,12 @@ scripts/app.mts                 平台与发布 Worker 统一启动器
 
 - 模板入口：`nextjs-enterprise` 已在 `app_factory/template-catalog.ts` 注册；普通 `nextjs-app` 保持不变。
 - Bundle 与组合：`app_factory/templates/nextjs-enterprise/` 包含 `SKILL.md`、按需 `references/`、可改业务骨架 `scaffold/` 与受管原件 `framework/0.1.0/`。创建时先复制 Scaffold，再由 `nextjs-enterprise-framework.ts` 将 Framework 映射到 Workspace 的 `src/server/` 和 `db/migrations/0001_framework_identity.sql`，并写入绑定版本、Schema 与指纹的 `.appfactory-framework.json`。
-- 生成项目边界：业务代码就近放在 `src/app/<业务模块>/`，其私有 UI 和服务端逻辑分别放 `_components/`、`_server/`；跨业务共享的应用后端逻辑放 `src/server/shared/`。`src/config/{permissions,resource-access,navigation,theme}.ts`、业务 Job Handler、主题和 `1000–8999` 业务迁移是合法扩展点。模板不预置 CRM、合同或其他业务模块。
+- 生成项目边界：需要登录的业务代码就近放在 `src/app/(workspace)/<业务模块>/`，继承工作区布局和动态渲染配置，其私有 UI 和服务端逻辑分别放 `_components/`、`_server/`；跨业务共享的应用后端逻辑放 `src/server/shared/`。`src/config/{permissions,resource-access,navigation,theme}.ts`、业务 Job Handler、主题和 `1000–8999` 业务迁移是合法扩展点。模板不预置 CRM、合同或其他业务模块。
 - 受管核心：`src/server/{auth,organization,permissions,jobs,notifications,audit,db,env,validation,errors,observability}` 及 `0001–0999` 迁移由 Framework 管理；发布时比对版本、内容和受管目录，不能通过改写、删除核心或向核心目录塞入未受管文件绕过。`organization` 只管理部门树与用户主部门；`permissions` 管多角色、权限和每个资源/操作的数据范围。
 - 企业能力：预置登录/会话、用户、部门、角色、多角色关系、权限目录、`self / department / department_and_children / all / custom` 数据范围、事务迁移、幂等、持久化 Job/Worker、站内消息、审计、输入校验、统一错误、服务端环境读取、结构化日志和健康检查。`custom` 由业务显式传入 policy，用于项目成员、被分配人等不能由部门表达的范围。
 - 系统管理与 UI：Scaffold 预置紧凑的 AppShell、基础 UI、PageHeader、FilterBar、DataTablePanel、Form/Detail/状态/空错 Pattern，以及海蓝和青绿主题。`/system/users`、`/system/departments`、`/system/roles`、`/system/audit` 连接真实服务并受服务端权限约束；当前可见里程碑是用户列表和角色详情/权限范围编辑。用户/部门完整的创建、分配和维护 UI 仍留待后续阶段，不应误认为已经交付完整后台。
 - Pi 约束：Pi 通过模板根目录加载真实 `SKILL.md`，平台额外注入 `rules/short-rules.md`；测试已确认当前 Pi Skill loader 能解析该 Skill。Skill 负责导航和开发原则，不是操作系统级沙箱。
-- PostgreSQL 生命周期：创建项目时仅分配稳定 Schema 名并写入 Workspace，不连接数据库；首次 Preview、首次发布及以后每次重新准备运行环境时，都会在该 Schema 上受控执行迁移，创建 Schema、加 advisory lock、校验已执行 checksum，只追加新迁移。迁移成功后才启动 Web；`app.yaml` 声明 `workerEntry` 时才启动应用自己的 Worker。Preview 和 Release 共用该应用 Schema，Preview 的业务写操作会保留，不是隔离演示库。更新不会重建 Schema；从 AI Platform 删除应用只停止 Release 并移除目录入口，默认保留 Workspace、Release 历史和 Schema，真正 `DROP SCHEMA` 尚无产品入口，必须作为未来单独确认的 purge 操作。当前发布仍使用宿主 `DATABASE_URL`，未自动创建每应用独立 PostgreSQL Role/Credential；生产环境应由数据库管理员为每个应用配受限凭证，不能把 Schema 名或 `search_path` 当作完整权限隔离。
+- PostgreSQL 生命周期：创建项目时仅分配稳定 Schema 名并写入 Workspace，不连接数据库；企业预览与发布的构建阶段不注入数据库密钥，启动前才在该 Schema 上受控执行迁移，创建 Schema、加 advisory lock、校验已执行 checksum，只追加新迁移。迁移成功后才启动 Web；`app.yaml` 声明 `workerEntry` 时才启动应用自己的 Worker。Preview 和 Release 共用该应用 Schema，Preview 的业务写操作会保留，不是隔离演示库。更新不会重建 Schema；从 AI Platform 删除应用只停止 Release 并移除目录入口，默认保留 Workspace、Release 历史和 Schema，真正 `DROP SCHEMA` 尚无产品入口，必须作为未来单独确认的 purge 操作。当前发布仍使用宿主 `DATABASE_URL`，未自动创建每应用独立 PostgreSQL Role/Credential；生产环境应由数据库管理员为每个应用配受限凭证，不能把 Schema 名或 `search_path` 当作完整权限隔离。
 
 ### 一键发布与任务中心
 
