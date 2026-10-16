@@ -17,11 +17,20 @@ export const EXTERNAL_APP_SEEDS: ExternalAppSeed[] = [
   {
     id: "app-external-customer-management",
     externalId: "desktop-customer-management",
-    name: "GY-Ai-CRM",
+    name: "AI-CRM-demo",
     description: "集中管理客户、联系人、线索和销售项目，并提供个人与团队工作台、经营分析和智能辅助。",
     appType: "business",
     url: "http://localhost:19854",
     launchCommand: 'cd "/Users/huanglixian-m2/Documents/LienCode/AI-CRM-demo" && npm run start',
+  },
+  {
+    id: "app-external-qiaoyin-crm",
+    externalId: "desktop-qiaoyin-crm",
+    name: "侨银AI-CRM",
+    description: "统一管理客户、人脉、线索和销售项目，提供个人与团队工作台、管理驾驶舱及 AI 问数和跟进辅助。",
+    appType: "business",
+    url: "http://localhost:19855",
+    launchCommand: 'cd "/Users/huanglixian-m2/Documents/LienCode/AI-CRM" && docker compose up -d --wait --wait-timeout 20 postgres && npm run start',
   },
   {
     id: "app-external-dagefan-ltc",

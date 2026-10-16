@@ -126,6 +126,23 @@ UPDATE applications SET launch_status='running' WHERE producer='external' AND la
           updated_at=strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
       WHERE id='app-external-customer-management' AND producer='external';`,
   },
+  {
+    id: "014_qiaoyin_crm",
+    sql: `UPDATE applications
+      SET name='AI-CRM-demo',
+          updated_at=strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+      WHERE id='app-external-customer-management' AND producer='external';
+      INSERT OR IGNORE INTO applications
+      (id,name,description,producer,kind,runtime,status,entry_url,version,external_id,launch_command,created_at,updated_at)
+      VALUES (
+        'app-external-qiaoyin-crm',
+        '侨银AI-CRM',
+        '统一管理客户、人脉、线索和销售项目，提供个人与团队工作台、管理驾驶舱及 AI 问数和跟进辅助。',
+        'external','business','web','active','http://localhost:19855','1.0.0','desktop-qiaoyin-crm',
+        'cd "/Users/huanglixian-m2/Documents/LienCode/AI-CRM" && docker compose up -d --wait --wait-timeout 20 postgres && npm run start',
+        strftime('%Y-%m-%dT%H:%M:%fZ', 'now'),strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+      );`,
+  },
 ];
 
 export function getAgentHubDatabase(): Database.Database {
