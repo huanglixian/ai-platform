@@ -24,6 +24,15 @@ export const EXTERNAL_APP_SEEDS: ExternalAppSeed[] = [
     launchCommand: 'cd "/Users/huanglixian-m2/Documents/LienCode/AI-CRM-demo" && npm run start',
   },
   {
+    id: "app-external-dagefan-ltc",
+    externalId: "desktop-dagefan-ltc",
+    name: "大鸽饭 AI 销售与客户订货",
+    description: "贯通客户开发、销售跟进、客户自主订货、订单履约和应收开票，提供个人与管理工作台及 AI 辅助。",
+    appType: "business",
+    url: "http://localhost:19848",
+    launchCommand: 'cd "/Users/huanglixian-m2/Documents/LienCode/dagefan-LTC" && npm run start',
+  },
+  {
     id: "app-external-data-extraction",
     externalId: "desktop-data-extraction",
     name: "表格数据提取与知识图谱",

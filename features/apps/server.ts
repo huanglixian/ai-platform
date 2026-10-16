@@ -149,6 +149,12 @@ export function listApplications() {
       WHEN 'external' THEN 1
       WHEN 'dify' THEN 2
       WHEN 'n8n' THEN 3
+    END, CASE
+      WHEN producer != 'external' THEN 0
+      WHEN id = 'app-external-customer-management' THEN 0
+      WHEN id = 'app-external-dagefan-ltc' THEN 1
+      WHEN name IN ('AI招投标', 'AI招投标管理') THEN 2
+      ELSE 3
     END, created_at DESC`).all() as Record<string, unknown>[];
   return rows.map(rowToApp);
 }

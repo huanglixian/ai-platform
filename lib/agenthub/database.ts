@@ -106,6 +106,19 @@ UPDATE applications SET launch_status='running' WHERE producer='external' AND la
           updated_at=strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
       WHERE id='app-external-customer-management' AND producer='external';`,
   },
+  {
+    id: "012_dagefan_ltc",
+    sql: `INSERT OR IGNORE INTO applications
+      (id,name,description,producer,kind,runtime,status,entry_url,version,external_id,launch_command,created_at,updated_at)
+      VALUES (
+        'app-external-dagefan-ltc',
+        '大鸽饭 AI 销售与客户订货',
+        '贯通客户开发、销售跟进、客户自主订货、订单履约和应收开票，提供个人与管理工作台及 AI 辅助。',
+        'external','business','web','active','http://localhost:19848','1.0.0','desktop-dagefan-ltc',
+        'cd "/Users/huanglixian-m2/Documents/LienCode/dagefan-LTC" && npm run start',
+        strftime('%Y-%m-%dT%H:%M:%fZ', 'now'),strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+      );`,
+  },
 ];
 
 export function getAgentHubDatabase(): Database.Database {
