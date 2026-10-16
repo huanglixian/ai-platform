@@ -119,6 +119,13 @@ UPDATE applications SET launch_status='running' WHERE producer='external' AND la
         strftime('%Y-%m-%dT%H:%M:%fZ', 'now'),strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
       );`,
   },
+  {
+    id: "013_gy_ai_crm_name",
+    sql: `UPDATE applications
+      SET name='GY-Ai-CRM',
+          updated_at=strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+      WHERE id='app-external-customer-management' AND producer='external';`,
+  },
 ];
 
 export function getAgentHubDatabase(): Database.Database {
