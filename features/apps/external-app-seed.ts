@@ -35,7 +35,7 @@ export const EXTERNAL_APP_SEEDS: ExternalAppSeed[] = [
   {
     id: "app-external-dagefan-ltc",
     externalId: "desktop-dagefan-ltc",
-    name: "大鸽饭 AI 销售与客户订货",
+    name: "大鸽饭 AI 销售与订单中心",
     description: "贯通客户开发、销售跟进、客户自主订货、订单履约和应收开票，提供个人与管理工作台及 AI 辅助。",
     appType: "business",
     url: "http://localhost:19848",

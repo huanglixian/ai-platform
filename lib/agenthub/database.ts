@@ -143,6 +143,13 @@ UPDATE applications SET launch_status='running' WHERE producer='external' AND la
         strftime('%Y-%m-%dT%H:%M:%fZ', 'now'),strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
       );`,
   },
+  {
+    id: "015_dagefan_order_center_name",
+    sql: `UPDATE applications
+      SET name='大鸽饭 AI 销售与订单中心',
+          updated_at=strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
+      WHERE id='app-external-dagefan-ltc' AND producer='external';`,
+  },
 ];
 
 export function getAgentHubDatabase(): Database.Database {
