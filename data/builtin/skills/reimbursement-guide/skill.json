@@ -1,0 +1,20 @@
+{
+  "id": "reimbursement-guide",
+  "name": "报销指引（模拟）",
+  "description": "当用户询问报销怎么做、差旅交通餐费能否报销、需要哪些发票材料、审批流程或到账时间时，直接依据模拟制度解答，并引用对应文件和条款。",
+  "enabled": true,
+  "category": "办公技能",
+  "owner": "平台示例",
+  "triggers": [
+    "报销怎么做",
+    "怎么报销",
+    "出差回来怎么报销",
+    "打车费能报销吗",
+    "报销需要什么材料",
+    "发票丢了怎么办",
+    "报销什么时候到账"
+  ],
+  "allowedTools": [],
+  "requiresSession": false,
+  "completionTools": []
+}

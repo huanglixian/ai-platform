@@ -67,7 +67,7 @@ scripts/app.mts                 平台与发布 Worker 统一启动器
 ### 统一首页、AI 助手与应用目录
 
 - 页面与组合状态：`app/(platform)/page.tsx`、`features/platform-home/platform-home-page.tsx`。首页仅负责在初始态展示助手输入区和应用分组；对话激活后只显示助手沟通界面。
-- 助手：客户端与 UI 在 `features/assistant/`，提供问答与已发布知识库搜索；问答接口为 `/api/platform/assistant/chat`，知识库搜索复用 KnowHub 检索接口。问答先在应用、已启用技能和可用业务 API 中分流：明确任务执行技能，相关但不足以执行的请求返回推荐卡片，无明显匹配时显示固定引导文案及首页、技能中心、业务 API 跳转入口；通用工具不参与推荐。技能执行时只挂载其声明且已注册实现的工具。
+- 助手：客户端与 UI 在 `features/assistant/`，提供问答与已发布知识库搜索；问答接口为 `/api/platform/assistant/chat`，知识库搜索复用 KnowHub 检索接口。问答先在应用、已启用技能和可用业务 API 中分流：明确任务执行技能，相关但不足以执行的请求返回推荐卡片，无明显匹配时显示固定引导文案及首页、技能中心、业务 API 跳转入口；通用工具不参与推荐。技能执行时只挂载其声明且已注册实现的工具；`features/skills/runner.ts` 将参考文件正文和引用地址一同注入执行上下文，`/api/platform/skills/[skillId]/references/[fileName]` 只提供技能包中已有参考文件的纯文本。
 - 应用目录 UI：`features/apps/ui/application-catalog.tsx`。支持来源筛选与关键词搜索，按 `AppFactory → 外部应用 → Dify / n8n` 展示；接入入口仅位于外部应用、Dify、n8n 的分组标题中。
 - 当前状态：助手消息和搜索结果仅保存在浏览器内存中；未匹配引导文案与跳转入口固定在助手流程内；点击“返回首页”会结束当前问答或搜索并恢复应用目录。
 
@@ -85,6 +85,7 @@ scripts/app.mts                 平台与发布 Worker 统一启动器
 - `app.yaml` 的 `healthPath` 必须是站内路径，并与 capability bindings 一同参与发布校验。
 - Workspace 文件访问限制在项目根目录；transcript 只从 `data/storage/appfactory/transcripts` 读取。
 - Preview 与 Release 物化会拒绝 Workspace 中未排除目录的符号链接，避免把 Workspace 外文件带入运行产物。
+- 报销演示技能：`data/builtin/skills/reimbursement-guide`，运行目录为同名技能包；依据一份虚构的报销制度快速回答流程、材料、标准与时限，并附可打开的文件引用，不实际提交报销。
 - 内置技能位于 `data/builtin/skills`；首次使用技能时仅复制一次到 `data/storage/agenthub/skills`，之后运行目录才是有效技能集，用户对技能的删除或修改不会被内置资源覆盖。
 - 发布取消会终止构建进程组；Release 切换失败时会停止新实例并恢复上一个健康 Release。
 - AppFactory 模型使用各档案专属的 `APPFACTORY_ZHIPU_*`、`APPFACTORY_DEEPSEEK_*`、`APPFACTORY_COCKPIT_*` 环境变量；Cockpit 必须配置 `BASE_URL`、`API_KEY`、`MODEL`。密钥仅保存在服务端环境文件中，生成的 Pi 配置只保存环境变量引用，启动子进程时仅注入所选档案的模型密钥。不得复用平台 AI 助手的 `DEEPSEEK_*` 或旧 `APPFACTORY_PI_*` 配置。
