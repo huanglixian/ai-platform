@@ -21,7 +21,7 @@ export function AssistantConversationShell({
         {header}
         <div
           ref={contentRef}
-          className="min-h-0 overflow-y-auto rounded-[14px] border border-[#dbe5f0] bg-[#f3f7fb] px-4 py-4"
+          className="min-h-0 overflow-y-auto rounded-[14px] border border-[#e9ddda] bg-[#f8f4f1] px-4 py-4"
         >
           {children}
         </div>

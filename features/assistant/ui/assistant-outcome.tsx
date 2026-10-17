@@ -12,7 +12,7 @@ const outcomePresentation = {
 } as const;
 
 function RecommendationAction({ item, onReturnHome }: { item: AssistantRecommendation; onReturnHome: () => void }) {
-  const className = "mt-3 inline-flex h-7 items-center rounded-md border border-[#d6e3ee] bg-white px-2.5 text-[11px] font-medium text-[#28618b] transition-colors hover:border-[#aecae3] hover:bg-[#f6fbff]";
+  const className = "mt-3 inline-flex h-7 items-center rounded-md border border-[#e8dcda] bg-white px-2.5 text-[11px] font-medium text-[#922c3b] transition-colors hover:border-[#d8b4ab] hover:bg-[#fcf7f4]";
 
   if (item.returnToHome) {
     return <button type="button" onClick={onReturnHome} className={className}>{item.actionLabel}</button>;
@@ -29,9 +29,9 @@ export function AssistantOutcome({ outcome, onReturnHome }: { outcome: Assistant
   if (outcome.type === "no_match") {
     return (
       <div className="mt-3 flex flex-wrap gap-2 border-t border-[#e7edf4] pt-3">
-        <button type="button" onClick={onReturnHome} className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-[#0368b3] px-3 text-[11px] font-medium text-white transition-colors hover:bg-[#1a4d87]"><Home size={13} />返回首页查看应用</button>
-        <Link href="/skills" className="inline-flex h-8 items-center rounded-lg border border-[#d6e3ee] bg-white px-3 text-[11px] font-medium text-[#526e85] transition-colors hover:border-[#aecae3] hover:text-[#1a5c96]">查看技能中心</Link>
-        <Link href="/services" className="inline-flex h-8 items-center rounded-lg border border-[#d6e3ee] bg-white px-3 text-[11px] font-medium text-[#526e85] transition-colors hover:border-[#aecae3] hover:text-[#1a5c96]">查看业务 API</Link>
+        <button type="button" onClick={onReturnHome} className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-[#922c3b] px-3 text-[11px] font-medium text-white transition-colors hover:bg-[#70202e]"><Home size={13} />返回首页查看应用</button>
+        <Link href="/skills" className="inline-flex h-8 items-center rounded-lg border border-[#e8dcda] bg-white px-3 text-[11px] font-medium text-[#836c69] transition-colors hover:border-[#d8b4ab] hover:text-[#8b293a]">查看技能中心</Link>
+        <Link href="/services" className="inline-flex h-8 items-center rounded-lg border border-[#e8dcda] bg-white px-3 text-[11px] font-medium text-[#836c69] transition-colors hover:border-[#d8b4ab] hover:text-[#8b293a]">查看业务 API</Link>
       </div>
     );
   }
@@ -42,18 +42,18 @@ export function AssistantOutcome({ outcome, onReturnHome }: { outcome: Assistant
         const presentation = outcomePresentation[item.kind];
         const Icon = presentation.icon;
         return (
-          <article key={`${item.kind}-${item.id}`} className="rounded-[10px] border border-[#dce7f1] bg-[#f8fbfe] p-3">
+          <article key={`${item.kind}-${item.id}`} className="rounded-[10px] border border-[#e9ddda] bg-[#fcf8f5] p-3">
             <div className="flex items-start gap-2.5">
               <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-lg ${presentation.className}`}><Icon size={14} /></span>
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-medium text-[#7f8ea3]">{presentation.label}</span>
-                  <span className="truncate text-[12px] font-semibold text-[#28455f]">{item.name}</span>
+                  <span className="text-[10px] font-medium text-[#a08d85]">{presentation.label}</span>
+                  <span className="truncate text-[12px] font-semibold text-[#513437]">{item.name}</span>
                 </div>
-                <p className="mt-1 line-clamp-2 text-[11px] leading-4 text-[#6b8094]">{item.description}</p>
+                <p className="mt-1 line-clamp-2 text-[11px] leading-4 text-[#887772]">{item.description}</p>
               </div>
             </div>
-            <p className="mt-2 line-clamp-2 text-[11px] leading-4 text-[#476b86]">{item.reason}</p>
+            <p className="mt-2 line-clamp-2 text-[11px] leading-4 text-[#836c69]">{item.reason}</p>
             <RecommendationAction item={item} onReturnHome={onReturnHome} />
           </article>
         );

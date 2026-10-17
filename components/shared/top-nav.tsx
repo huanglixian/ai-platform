@@ -1,6 +1,6 @@
 "use client";
 
-import { Bot } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useRef, useState } from "react";
@@ -45,14 +45,14 @@ export function TopNav() {
       <div className="w-full px-6 sm:px-8">
         <div className="relative flex h-[64px] items-center gap-6">
           <div className="flex min-w-0 items-center gap-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-tr from-[#0368b3] to-[#2e7dd2] text-white shadow-[0_3px_8px_rgba(3,104,179,0.2)]">
-              <Bot className="h-5 w-5" />
-            </div>
+            <Link href="/" aria-label="广昱首页" className="shrink-0">
+              <Image src="/branding/guangyu-logo.png" alt="广昱" width={90} height={84} unoptimized className="h-[42px] w-[45px] object-contain" />
+            </Link>
             <div className="min-w-0">
               <div className="text-title text-sm font-semibold tracking-tight">
-                AgentHub-智能体中台
+                广昱 · 智能体中台
               </div>
-              <div className="text-tertiary text-xs">基于数据与集成的企业级平台</div>
+              <div className="text-tertiary text-xs">企业智能协同平台</div>
             </div>
           </div>
 
@@ -72,7 +72,7 @@ export function TopNav() {
                     className={[
                       "border-b-2 px-3 py-[22px] text-[14px] font-semibold tracking-[-0.01em] transition-colors",
                       active
-                        ? "border-[#0368b3] text-title"
+                        ? "border-[#922c3b] text-title"
                         : "border-transparent text-[#4d4d4d] hover:text-title",
                     ].join(" ")}
                   >
@@ -99,7 +99,7 @@ export function TopNav() {
                     className={[
                       "border-b-2 px-3 py-[22px] text-[14px] font-semibold tracking-[-0.01em] transition-colors",
                       active
-                        ? "border-[#0368b3] text-title"
+                        ? "border-[#922c3b] text-title"
                         : "border-transparent text-[#4d4d4d] hover:text-title",
                     ].join(" ")}
                   >
@@ -108,7 +108,7 @@ export function TopNav() {
 
                   {openGroup?.key === group.key && group.items?.length ? (
                     <div
-                      className="absolute left-1/2 top-full z-50 mt-2 w-[320px] -translate-x-1/2 rounded-[14px] border border-[#dbe5f0] bg-white/98 p-1.5 shadow-[0_18px_36px_rgba(15,23,42,0.10)] backdrop-blur"
+                      className="absolute left-1/2 top-full z-50 mt-2 w-[320px] -translate-x-1/2 rounded-[14px] border border-[#e9ddda] bg-white/98 p-1.5 shadow-[0_18px_36px_rgba(15,23,42,0.10)] backdrop-blur"
                       onMouseEnter={clearCloseTimer}
                       onMouseLeave={scheduleClosePanel}
                     >
@@ -120,7 +120,7 @@ export function TopNav() {
                             return (
                               <div
                                 key={item.label}
-                                className="rounded-[10px] border border-[#edf2f7] bg-[#fafbfd] px-3.5 py-2.5"
+                                className="rounded-[10px] border border-[#f6eae6] bg-[#fafbfd] px-3.5 py-2.5"
                               >
                                 <div className="flex items-center justify-between gap-3">
                                   <div className="text-[13.5px] font-semibold tracking-[-0.01em] text-[#7b8798]">
@@ -149,8 +149,8 @@ export function TopNav() {
                               className={[
                                 "rounded-[10px] border px-3.5 py-2.5 transition-colors",
                                 active
-                                  ? "border-[#d8e8fa] bg-[#eef5fd]"
-                                  : "border-transparent bg-white hover:border-[#e2ebf5] hover:bg-[#f8fbfe]",
+                                  ? "border-[#eed6d0] bg-[#faf0ec]"
+                                  : "border-transparent bg-white hover:border-[#e2ebf5] hover:bg-[#fcf8f5]",
                               ].join(" ")}
                             >
                               <div className="flex items-center justify-between gap-3">
@@ -161,14 +161,14 @@ export function TopNav() {
                                   className={[
                                     "text-[9px] font-medium",
                                     active
-                                      ? "text-[#1a4d87]"
+                                      ? "text-[#70202e]"
                                       : "text-[#98a2b3]",
                                   ].join(" ")}
                                 >
                                   {item.openInNewTab ? "新页签 ↗" : "进入"}
                                 </div>
                               </div>
-                              <div className="mt-1 text-[11px] leading-4.5 text-[#7f8ea3]">
+                              <div className="mt-1 text-[11px] leading-4.5 text-[#a08d85]">
                                 {hint}
                               </div>
                             </Link>
@@ -183,7 +183,7 @@ export function TopNav() {
           </nav>
 
           <div className="ml-auto hidden items-center gap-3 sm:flex">
-            <div className="flex h-10 w-10 items-center justify-center rounded-md border border-[#0d0d0d] bg-[#0d0d0d] text-sm font-semibold text-white">
+            <div className="flex h-9 w-9 items-center justify-center rounded-full border border-[#e5cfca] bg-[#faf0ec] text-sm font-semibold text-[#922c3b]">
               U
             </div>
           </div>

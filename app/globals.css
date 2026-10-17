@@ -147,6 +147,19 @@
   color: var(--text-title);
 }
 
+.platform-shell:has(.platform-home) {
+  --background: #f7f4f2;
+  --primary: #922c3b;
+  --ring: #ad5964;
+  --border: #e7dcda;
+  --text-title: #35292c;
+  background: radial-gradient(ellipse at 95% 0%, #f2e5e3 0%, transparent 38%), #f7f4f2;
+}
+
+.platform-home .message-markdown a {
+  color: var(--primary);
+}
+
 @utility text-secondary {
   color: var(--text-secondary);
 }

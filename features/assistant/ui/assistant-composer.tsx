@@ -61,18 +61,18 @@ export function AssistantComposer({
             }
           }}
           placeholder={placeholder}
-          className="min-h-[88px] resize-none rounded-[12px] border border-[#dbe5f0] bg-white px-4 py-3 text-[13px] leading-6 text-title outline-none transition-colors placeholder:text-[#98a2b3] focus:border-[#6f96c4]"
+          className="min-h-[88px] resize-none rounded-[12px] border border-[#e9ddda] bg-white px-4 py-3 text-[13px] leading-6 text-title outline-none transition-colors placeholder:text-[#98a2b3] focus:border-[#ad5964]"
         />
 
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="min-w-0 flex-1 truncate text-[12px] text-[#7f8ea3]">{status}</div>
+          <div className="min-w-0 flex-1 truncate text-[12px] text-[#a08d85]">{status}</div>
 
           <div className="flex items-center gap-2">
             <button
               type="button"
               disabled={sending}
               onClick={submit}
-              className="h-[36px] rounded-[8px] bg-[#0368b3] px-4 text-[13px] font-medium text-white transition-colors hover:bg-[#1a4d87] disabled:cursor-not-allowed disabled:bg-[#7eaed6]"
+              className="h-[36px] rounded-[8px] bg-[#922c3b] px-4 text-[13px] font-medium text-white transition-colors hover:bg-[#70202e] disabled:cursor-not-allowed disabled:bg-[#c99499]"
             >
               {sending ? sendingLabel : submitLabel}
             </button>
