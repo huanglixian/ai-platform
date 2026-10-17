@@ -156,7 +156,16 @@ export function listApplications() {
       WHEN id = 'app-external-dagefan-ltc' THEN 2
       WHEN name IN ('AI招投标', 'AI招投标管理') THEN 3
       WHEN id = 'app-external-zhongda-service' THEN 4
-      ELSE 5
+      WHEN id = 'app-external-power-engineering' THEN 5
+      WHEN id = 'app-external-tower-match' THEN 6
+      WHEN id = 'app-external-data-resource' THEN 7
+      WHEN id = 'app-external-data-preprocessing' THEN 8
+      WHEN id = 'app-external-document-chunking' THEN 9
+      WHEN id = 'app-external-document-knowledge' THEN 10
+      WHEN id = 'app-external-data-extraction' THEN 11
+      WHEN id = 'app-external-investment-reference' THEN 12
+      WHEN id = 'app-external-document-review' THEN 13
+      ELSE 14
     END, created_at DESC`).all() as Record<string, unknown>[];
   return rows.map(rowToApp);
 }
