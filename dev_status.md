@@ -85,7 +85,7 @@ scripts/app.mts                 平台与发布 Worker 统一启动器
 - `app.yaml` 的 `healthPath` 必须是站内路径，并与 capability bindings 一同参与发布校验。
 - Workspace 文件访问限制在项目根目录；transcript 只从 `data/storage/appfactory/transcripts` 读取。
 - Preview 与 Release 物化会拒绝 Workspace 中未排除目录的符号链接，避免把 Workspace 外文件带入运行产物。
-- 报销演示技能：`data/builtin/skills/reimbursement-guide`，运行目录为同名技能包；依据一份虚构的报销制度快速回答流程、材料、标准与时限，并附可打开的文件引用，不实际提交报销。
+- 报销演示技能：`data/builtin/skills/reimbursement-guide`，运行目录为同名技能包；依据一份虚构的报销制度详细说明流程、材料、标准与时限，通常回答 400～600 字；引用 `public/demo/reimbursement/expense-policy.pdf`（第 1 页），PDF 与技能内 `references/expense-policy.md` 的规则保持一致，不实际提交报销。
 - 内置技能位于 `data/builtin/skills`；首次使用技能时仅复制一次到 `data/storage/agenthub/skills`，之后运行目录才是有效技能集，用户对技能的删除或修改不会被内置资源覆盖。
 - 发布取消会终止构建进程组；Release 切换失败时会停止新实例并恢复上一个健康 Release。
 - AppFactory 模型使用各档案专属的 `APPFACTORY_ZHIPU_*`、`APPFACTORY_DEEPSEEK_*`、`APPFACTORY_COCKPIT_*` 环境变量；Cockpit 必须配置 `BASE_URL`、`API_KEY`、`MODEL`。密钥仅保存在服务端环境文件中，生成的 Pi 配置只保存环境变量引用，启动子进程时仅注入所选档案的模型密钥。不得复用平台 AI 助手的 `DEEPSEEK_*` 或旧 `APPFACTORY_PI_*` 配置。
