@@ -6,6 +6,8 @@ import { usePathname } from "next/navigation";
 import { useRef, useState } from "react";
 
 import { getActiveNavGroup, platformNavGroups } from "@/lib/nav";
+import { SkinSwitcher } from "@/features/appearance/skin-switcher";
+import { SKINS } from "@/features/appearance/skins";
 
 function isActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
@@ -43,20 +45,22 @@ export function TopNav() {
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-white/96 backdrop-blur">
       <div className="w-full px-6 sm:px-8">
-        <div className="relative flex h-[64px] items-center gap-6">
-          <div className="flex min-w-0 items-center gap-3">
-            <Link href="/" aria-label="广昱首页" className="shrink-0">
-              <Image src="/branding/guangyu-logo.png" alt="广昱" width={90} height={84} unoptimized className="h-[42px] w-[45px] object-contain" />
-            </Link>
-            <div className="min-w-0">
-              <div className="text-title text-sm font-semibold tracking-tight">
-                广昱 · 智能体中台
+        <div className="relative flex h-[64px] items-center gap-3 xl:gap-6">
+          <div className="min-w-0 flex-1 xl:flex-none">
+            {SKINS.map((skin) => (
+              <div key={skin.id} data-skin-brand={skin.id} className="flex min-w-0 items-center gap-3">
+                <Link href="/" aria-label={`${skin.logoAlt}首页`} className="shrink-0">
+                  <Image src={skin.logo} alt={skin.logoAlt} width={90} height={84} unoptimized className="h-9 w-[39px] object-contain sm:h-[42px] sm:w-[45px]" />
+                </Link>
+                <div className="min-w-0">
+                  <div className="truncate text-sm font-semibold tracking-tight text-[var(--skin-text)]">{skin.title}</div>
+                  <div className="truncate text-xs text-[var(--skin-text-muted)]">{skin.subtitle}</div>
+                </div>
               </div>
-              <div className="text-tertiary text-xs">企业智能协同平台</div>
-            </div>
+            ))}
           </div>
 
-          <nav className="absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 items-center gap-2 lg:flex">
+          <nav className="absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 items-center gap-2 xl:flex">
             {platformNavGroups.map((group) => {
               const active =
                 routeGroupKey === group.key || openGroupKey === group.key;
@@ -72,8 +76,8 @@ export function TopNav() {
                     className={[
                       "border-b-2 px-3 py-[22px] text-[14px] font-semibold tracking-[-0.01em] transition-colors",
                       active
-                        ? "border-[#922c3b] text-title"
-                        : "border-transparent text-[#4d4d4d] hover:text-title",
+                        ? "border-[var(--skin-primary)] text-title"
+                        : "border-transparent text-[var(--skin-text)] hover:text-title",
                     ].join(" ")}
                   >
                     {group.label}
@@ -99,8 +103,8 @@ export function TopNav() {
                     className={[
                       "border-b-2 px-3 py-[22px] text-[14px] font-semibold tracking-[-0.01em] transition-colors",
                       active
-                        ? "border-[#922c3b] text-title"
-                        : "border-transparent text-[#4d4d4d] hover:text-title",
+                        ? "border-[var(--skin-primary)] text-title"
+                        : "border-transparent text-[var(--skin-text)] hover:text-title",
                     ].join(" ")}
                   >
                     {group.label}
@@ -108,7 +112,7 @@ export function TopNav() {
 
                   {openGroup?.key === group.key && group.items?.length ? (
                     <div
-                      className="absolute left-1/2 top-full z-50 mt-2 w-[320px] -translate-x-1/2 rounded-[14px] border border-[#e9ddda] bg-white/98 p-1.5 shadow-[0_18px_36px_rgba(15,23,42,0.10)] backdrop-blur"
+                      className="absolute left-1/2 top-full z-50 mt-2 w-[320px] -translate-x-1/2 rounded-[14px] border border-[var(--skin-border)] bg-white/98 p-1.5 shadow-[0_18px_36px_rgba(var(--skin-shadow-rgb),0.10)] backdrop-blur"
                       onMouseEnter={clearCloseTimer}
                       onMouseLeave={scheduleClosePanel}
                     >
@@ -120,17 +124,17 @@ export function TopNav() {
                             return (
                               <div
                                 key={item.label}
-                                className="rounded-[10px] border border-[#f6eae6] bg-[#fafbfd] px-3.5 py-2.5"
+                                className="rounded-[10px] border border-[var(--skin-surface-accent)] bg-[var(--skin-surface-soft)] px-3.5 py-2.5"
                               >
                                 <div className="flex items-center justify-between gap-3">
-                                  <div className="text-[13.5px] font-semibold tracking-[-0.01em] text-[#7b8798]">
+                                  <div className="text-[13.5px] font-semibold tracking-[-0.01em] text-[var(--skin-text-subtle)]">
                                     {item.label}
                                   </div>
-                                  <div className="rounded-full border border-[#e6edf5] bg-white px-2 py-0.5 text-[9px] font-medium text-[#98a2b3]">
+                                  <div className="rounded-full border border-[var(--skin-border)] bg-white px-2 py-0.5 text-[9px] font-medium text-[var(--skin-text-subtle)]">
                                     待开放
                                   </div>
                                 </div>
-                                <div className="mt-1 text-[11px] leading-4.5 text-[#98a2b3]">
+                                <div className="mt-1 text-[11px] leading-4.5 text-[var(--skin-text-subtle)]">
                                   {hint}
                                 </div>
                               </div>
@@ -149,8 +153,8 @@ export function TopNav() {
                               className={[
                                 "rounded-[10px] border px-3.5 py-2.5 transition-colors",
                                 active
-                                  ? "border-[#eed6d0] bg-[#faf0ec]"
-                                  : "border-transparent bg-white hover:border-[#e2ebf5] hover:bg-[#fcf8f5]",
+                                  ? "border-[var(--skin-border-strong)] bg-[var(--skin-surface-accent)]"
+                                  : "border-transparent bg-white hover:border-[var(--skin-border)] hover:bg-[var(--skin-surface-soft)]",
                               ].join(" ")}
                             >
                               <div className="flex items-center justify-between gap-3">
@@ -161,14 +165,14 @@ export function TopNav() {
                                   className={[
                                     "text-[9px] font-medium",
                                     active
-                                      ? "text-[#70202e]"
-                                      : "text-[#98a2b3]",
+                                      ? "text-[var(--skin-primary-hover)]"
+                                      : "text-[var(--skin-text-subtle)]",
                                   ].join(" ")}
                                 >
                                   {item.openInNewTab ? "新页签 ↗" : "进入"}
                                 </div>
                               </div>
-                              <div className="mt-1 text-[11px] leading-4.5 text-[#a08d85]">
+                              <div className="mt-1 text-[11px] leading-4.5 text-[var(--skin-text-muted)]">
                                 {hint}
                               </div>
                             </Link>
@@ -182,8 +186,9 @@ export function TopNav() {
             })}
           </nav>
 
-          <div className="ml-auto hidden items-center gap-3 sm:flex">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full border border-[#e5cfca] bg-[#faf0ec] text-sm font-semibold text-[#922c3b]">
+          <div className="ml-auto flex shrink-0 items-center gap-3">
+            <SkinSwitcher />
+            <div className="hidden h-9 w-9 items-center justify-center rounded-full border border-[var(--skin-border)] bg-[var(--skin-surface-accent)] text-sm font-semibold text-[var(--skin-primary)] md:flex">
               U
             </div>
           </div>

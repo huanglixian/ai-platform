@@ -17,11 +17,11 @@ export function AssistantConversationShell({
 }: AssistantConversationShellProps) {
   return (
     <section className="h-[calc(100vh-104px)] min-h-0 w-full py-1">
-      <div className="grid h-full min-h-0 grid-rows-[auto_minmax(0,1fr)_auto] gap-3 overflow-hidden rounded-[20px] border border-[#d9e6f2] bg-white p-4 shadow-[0_18px_48px_rgba(15,23,42,0.055)] sm:p-5">
+      <div className="grid h-full min-h-0 grid-rows-[auto_minmax(0,1fr)_auto] gap-3 overflow-hidden rounded-[20px] border border-[var(--skin-border)] bg-white p-4 shadow-[0_18px_48px_rgba(var(--skin-shadow-rgb),0.055)] sm:p-5">
         {header}
         <div
           ref={contentRef}
-          className="min-h-0 overflow-y-auto rounded-[14px] border border-[#e9ddda] bg-[#f8f4f1] px-4 py-4"
+          className="min-h-0 overflow-y-auto rounded-[14px] border border-[var(--skin-border)] bg-[var(--skin-surface-soft)] px-4 py-4"
         >
           {children}
         </div>

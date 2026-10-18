@@ -139,10 +139,10 @@ function ToolResultView({ name, result }: { name: string; result: JsonRecord | n
   // 特别针对杆塔匹配服务结果进行精美的表格化展示
   if (name === "tower.match.search" && Array.isArray(dataList) && dataList.length > 0) {
     return (
-      <div className="mt-2 overflow-x-auto rounded border border-[#ece2df] font-sans">
-        <table className="w-full border-collapse text-left text-[11px] text-[#78655f]">
+      <div className="mt-2 overflow-x-auto rounded border border-[var(--skin-border)] font-sans">
+        <table className="w-full border-collapse text-left text-[11px] text-[var(--skin-text)]">
           <thead>
-            <tr className="bg-[#f8f4f1] border-b border-[#ece2df] font-semibold text-title">
+            <tr className="bg-[var(--skin-surface-soft)] border-b border-[var(--skin-border)] font-semibold text-title">
               <th className="px-3 py-1.5 whitespace-nowrap">序号</th>
               <th className="px-3 py-1.5 whitespace-nowrap">杆塔名称</th>
               <th className="px-3 py-1.5 whitespace-nowrap">类型</th>
@@ -158,9 +158,9 @@ function ToolResultView({ name, result }: { name: string; result: JsonRecord | n
               const item = isRecord(rawItem) ? rawItem : {};
               const value = (key: string, fallbackKey?: string) => item[key] ?? (fallbackKey ? item[fallbackKey] : undefined);
               return (
-              <tr key={idx} className="border-b border-[#ece2df] hover:bg-[#fdfaf8] last:border-b-0">
+              <tr key={idx} className="border-b border-[var(--skin-border)] hover:bg-[var(--skin-surface-soft)] last:border-b-0">
                 <td className="px-3 py-1.5 whitespace-nowrap">{idx + 1}</td>
-                <td className="px-3 py-1.5 font-mono font-bold text-[#922c3b] whitespace-nowrap">
+                <td className="px-3 py-1.5 font-mono font-bold text-[var(--skin-primary)] whitespace-nowrap">
                   {String(value("杆塔名称", "towerName") ?? "")}
                 </td>
                 <td className="px-3 py-1.5 whitespace-nowrap">{String(value("杆塔类型", "towerType") ?? "")}</td>
@@ -187,7 +187,7 @@ function ToolResultView({ name, result }: { name: string; result: JsonRecord | n
 
   // 通用其它 API 工具结果展示为 JSON 代码块
   return (
-    <pre className="max-h-[200px] overflow-auto rounded bg-[#f8f4f1] p-2 whitespace-pre-wrap break-all font-mono text-[11px]">
+    <pre className="max-h-[200px] overflow-auto rounded bg-[var(--skin-surface-soft)] p-2 whitespace-pre-wrap break-all font-mono text-[11px]">
       {JSON.stringify(result, null, 2)}
     </pre>
   );
@@ -241,14 +241,14 @@ function AssistantMessageContent({ content }: { content: string }) {
   return (
     <div>
       {skillCallMatch && (
-        <div className="text-[12px] font-medium leading-5 text-[#922c3b] mb-1">
+        <div className="text-[12px] font-medium leading-5 text-[var(--skin-primary)] mb-1">
           调用技能：{skillCallMatch[1]}
         </div>
       )}
       {renderedElements.length > 0 ? (
         <div className="flex flex-col gap-1">{renderedElements}</div>
       ) : (
-        <div className="text-[#a08d85] text-[13px] italic">回复生成中...</div>
+        <div className="text-[var(--skin-text-muted)] text-[13px] italic">回复生成中...</div>
       )}
     </div>
   );
@@ -261,34 +261,34 @@ function ToolInvocationCard({ name, args, result }: { name: string; args?: unkno
   const isExpanded = expanded ?? Boolean(result);
 
   return (
-    <div className="my-2.5 overflow-hidden rounded-[10px] border border-[#ece2df] bg-[#fbf7f4] text-[13px] leading-5 text-title">
+    <div className="my-2.5 overflow-hidden rounded-[10px] border border-[var(--skin-border)] bg-[var(--skin-surface-soft)] text-[13px] leading-5 text-title">
       <div 
         onClick={() => setExpanded(!isExpanded)}
-        className="flex cursor-pointer items-center justify-between px-3 py-2 hover:bg-[#f9eeea] transition-colors"
+        className="flex cursor-pointer items-center justify-between px-3 py-2 hover:bg-[var(--skin-surface-accent)] transition-colors"
       >
         <div className="flex items-center gap-2">
           {isPending ? (
-            <span className="flex h-4 w-4 animate-spin rounded-full border-2 border-[#922c3b] border-t-transparent" />
+            <span className="flex h-4 w-4 animate-spin rounded-full border-2 border-[var(--skin-primary)] border-t-transparent" />
           ) : isSuccess ? (
             <span className="text-[#2e7d32]">✅</span>
           ) : (
             <span className="text-[#d32f2f]">⚠️</span>
           )}
-          <span className="font-mono font-medium text-[#922c3b]">{name}</span>
-          <span className="text-[11px] text-[#a08d85]">
+          <span className="font-mono font-medium text-[var(--skin-primary)]">{name}</span>
+          <span className="text-[11px] text-[var(--skin-text-muted)]">
             {isPending ? "正在执行..." : isSuccess ? "执行成功" : "执行失败"}
           </span>
         </div>
-        <span className="text-[11px] text-[#a08d85] hover:text-[#922c3b]">
+        <span className="text-[11px] text-[var(--skin-text-muted)] hover:text-[var(--skin-primary)]">
           {isExpanded ? "收起 ▴" : "详情 ▾"}
         </span>
       </div>
       {isExpanded && (
-        <div className="border-t border-[#ece2df] bg-white p-3 text-[11px] text-[#78655f]">
+        <div className="border-t border-[var(--skin-border)] bg-white p-3 text-[11px] text-[var(--skin-text)]">
           {isPending ? (
             <div>
-              <div className="mb-1 font-semibold text-[#922c3b] font-sans">输入参数 (Input):</div>
-              <pre className="max-h-[150px] overflow-auto rounded bg-[#f8f4f1] p-2 font-mono text-[11px] whitespace-pre-wrap break-all">
+              <div className="mb-1 font-semibold text-[var(--skin-primary)] font-sans">输入参数 (Input):</div>
+              <pre className="max-h-[150px] overflow-auto rounded bg-[var(--skin-surface-soft)] p-2 font-mono text-[11px] whitespace-pre-wrap break-all">
                 {JSON.stringify(args, null, 2)}
               </pre>
             </div>
@@ -296,16 +296,16 @@ function ToolInvocationCard({ name, args, result }: { name: string; args?: unkno
             <div>
               {/* 输入参数折叠区 (details 原生折叠，默认收起) */}
               <details className="group mb-3">
-                <summary className="flex cursor-pointer select-none items-center gap-1 text-[11px] text-[#a08d85] hover:text-[#922c3b] list-none [&::-webkit-details-marker]:hidden font-sans font-medium">
+                <summary className="flex cursor-pointer select-none items-center gap-1 text-[11px] text-[var(--skin-text-muted)] hover:text-[var(--skin-primary)] list-none [&::-webkit-details-marker]:hidden font-sans font-medium">
                   <span className="transition-transform group-open:rotate-90">▸</span>
                   <span>输入参数 (Input)</span>
                 </summary>
-                <pre className="mt-1.5 max-h-[150px] overflow-auto rounded bg-[#f8f4f1] p-2 font-mono text-[11px] whitespace-pre-wrap break-all text-[#78655f]">
+                <pre className="mt-1.5 max-h-[150px] overflow-auto rounded bg-[var(--skin-surface-soft)] p-2 font-mono text-[11px] whitespace-pre-wrap break-all text-[var(--skin-text)]">
                   {JSON.stringify(args, null, 2)}
                 </pre>
               </details>
 
-              <div className="mb-1 font-semibold text-[#922c3b] font-sans">返回结果 (Output):</div>
+              <div className="mb-1 font-semibold text-[var(--skin-primary)] font-sans">返回结果 (Output):</div>
               <ToolResultView name={name} result={result} />
             </div>
           )}
@@ -323,11 +323,11 @@ function ChatMessageCard({ message, onReturnHome }: { message: AssistantChatMess
       className={[
         "rounded-[14px] border px-4 py-3",
         isUser
-          ? "ml-auto max-w-[78%] border-[#e4c7be] bg-[#faf0ec]"
-          : "mr-auto max-w-[86%] border-[#eee5e2] bg-white",
+          ? "ml-auto max-w-[78%] border-[var(--skin-border-strong)] bg-[var(--skin-surface-accent)]"
+          : "mr-auto max-w-[86%] border-[var(--skin-border)] bg-white",
       ].join(" ")}
     >
-      <div className="mb-1 text-[11px] font-medium text-[#a08d85]">
+      <div className="mb-1 text-[11px] font-medium text-[var(--skin-text-muted)]">
         {isUser ? "我" : "AI 助手"}
       </div>
       {isUser ? (
@@ -526,12 +526,12 @@ export function AssistantExperience({ onConversationChange }: AssistantExperienc
   if (searchActive) {
     return <AssistantConversationShell header={
       <header className="flex flex-wrap items-center gap-3">
-        <span className="text-sm font-semibold text-[#6d2935]">知识库搜索</span>
-        <select aria-label="选择知识库" disabled={searching} value={knowledgeId} onChange={(event) => setKnowledgeId(event.target.value)} className="h-8 max-w-[240px] rounded-lg border border-[#e8dcda] bg-white px-2 text-xs">{knowledgeOptions.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select>
-        <button type="button" onClick={leaveConversation} className="ml-auto rounded-lg border border-[#e8dcda] px-3 py-1.5 text-xs text-[#836c69]">返回首页</button>
+        <span className="text-sm font-semibold text-[var(--skin-primary)]">知识库搜索</span>
+        <select aria-label="选择知识库" disabled={searching} value={knowledgeId} onChange={(event) => setKnowledgeId(event.target.value)} className="h-8 max-w-[240px] rounded-lg border border-[var(--skin-border)] bg-white px-2 text-xs">{knowledgeOptions.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select>
+        <button type="button" onClick={leaveConversation} className="ml-auto rounded-lg border border-[var(--skin-border)] px-3 py-1.5 text-xs text-[var(--skin-text-muted)]">返回首页</button>
       </header>
     } commandPanel={<AssistantComposer value={searchInput} onChange={setSearchInput} onSubmit={handleSearch} placeholder="输入问题，搜索知识库…" sending={searching} status={searching ? "正在检索相关片段…" : "搜索已发布知识库中的文档片段"} submitLabel="搜索" sendingLabel="搜索中" error={searchError} />}>
-      {searching ? <p role="status" className="text-sm text-[#8a716b]">正在检索相关片段…</p> : null}
+      {searching ? <p role="status" className="text-sm text-[var(--skin-text-muted)]">正在检索相关片段…</p> : null}
       <RetrievalResultsPanel visible={!searching && searchResult !== null} items={searchResult?.items ?? []} />
     </AssistantConversationShell>;
   }
@@ -547,12 +547,12 @@ export function AssistantExperience({ onConversationChange }: AssistantExperienc
       contentRef={chatScrollRef}
       header={
         <header className="flex items-center gap-3 px-1 py-1">
-          <div className="grid h-9 w-9 place-items-center rounded-xl bg-[#f8eae5] text-[#922c3b]"><Sparkles size={17} /></div>
+          <div className="grid h-9 w-9 place-items-center rounded-xl bg-[var(--skin-surface-accent)] text-[var(--skin-primary)]"><Sparkles size={17} /></div>
           <div className="min-w-0">
             <div className="text-[14px] font-semibold text-title">AI 助手</div>
-            <div className="text-[11px] text-[#a18a82]">理解任务并协助连接平台能力</div>
+            <div className="text-[11px] text-[var(--skin-text-muted)]">理解任务并协助连接平台能力</div>
           </div>
-          <button type="button" onClick={leaveConversation} className="ml-auto inline-flex h-8 items-center gap-1.5 rounded-lg border border-[#e9ddda] px-3 text-[12px] font-medium text-[#8a716b] transition-colors hover:border-[#d9b2a9] hover:bg-[#fcf7f4] hover:text-[#8b293a]"><ArrowLeft size={14} />返回首页</button>
+          <button type="button" onClick={leaveConversation} className="ml-auto inline-flex h-8 items-center gap-1.5 rounded-lg border border-[var(--skin-border)] px-3 text-[12px] font-medium text-[var(--skin-text-muted)] transition-colors hover:border-[var(--skin-border-strong)] hover:bg-[var(--skin-surface-soft)] hover:text-[var(--skin-primary)]"><ArrowLeft size={14} />返回首页</button>
         </header>
       }
       commandPanel={

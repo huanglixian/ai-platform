@@ -2,10 +2,10 @@ import type { PlatformSource } from "@/features/apps/types";
 import { Boxes, Globe2, Sparkles, Workflow } from "lucide-react";
 
 export const sourceAccents = {
-  appfactory: { icon: Boxes, iconClass: "border-[#ecd8d3] bg-[#faf0ec] text-[#a04c57]" },
-  external: { icon: Globe2, iconClass: "border-[#ecd8d3] bg-[#faf0ec] text-[#a04c57]" },
-  dify: { icon: Sparkles, iconClass: "border-[#ecd8d3] bg-[#faf0ec] text-[#a04c57]" },
-  n8n: { icon: Workflow, iconClass: "border-[#ecd8d3] bg-[#faf0ec] text-[#a04c57]" },
+  appfactory: { icon: Boxes, iconClass: "border-[var(--skin-border)] bg-[var(--skin-surface-accent)] text-[var(--skin-primary)]" },
+  external: { icon: Globe2, iconClass: "border-[var(--skin-border)] bg-[var(--skin-surface-accent)] text-[var(--skin-primary)]" },
+  dify: { icon: Sparkles, iconClass: "border-[var(--skin-border)] bg-[var(--skin-surface-accent)] text-[var(--skin-primary)]" },
+  n8n: { icon: Workflow, iconClass: "border-[var(--skin-border)] bg-[var(--skin-surface-accent)] text-[var(--skin-primary)]" },
 };
 
 export const sourceLabels: Record<PlatformSource, string> = {

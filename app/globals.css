@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+@import "./skins.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -148,16 +149,15 @@
 }
 
 .platform-shell:has(.platform-home) {
-  --background: #f7f4f2;
-  --primary: #922c3b;
-  --ring: #ad5964;
-  --border: #e7dcda;
-  --text-title: #35292c;
-  background: radial-gradient(ellipse at 95% 0%, #f2e5e3 0%, transparent 38%), #f7f4f2;
+  --primary: var(--skin-primary);
+  --ring: var(--skin-ring);
+  --border: var(--skin-border);
+  --text-title: var(--skin-text);
+  background: var(--skin-page-background);
 }
 
 .platform-home .message-markdown a {
-  color: var(--primary);
+  color: var(--skin-primary);
 }
 
 @utility text-secondary {

@@ -1,0 +1,47 @@
+:root[data-skin="blue"] {
+  --skin-primary: #0368b3;
+  --skin-primary-hover: #1a4d87;
+  --skin-text: #263b50;
+  --skin-text-muted: #687789;
+  --skin-text-subtle: #8b9aaa;
+  --skin-border: #dce3ea;
+  --skin-border-strong: #a6bbcd;
+  --skin-surface-soft: #f6f8fb;
+  --skin-surface-accent: #edf4f9;
+  --skin-ring: #668fae;
+  --skin-button-disabled: #7eaed6;
+  --skin-shadow-rgb: 24, 49, 78;
+  --skin-page-background: #f2f4f7;
+  --skin-section-background: linear-gradient(105deg, #d5eafa 0%, #e6f2fb 48%, #f3f8fc 100%);
+  --skin-hero-background: linear-gradient(145deg, #d5eafa 0%, #e6f2fb 55%, #f3f8fc 100%);
+  --skin-hero-text: #244e70;
+  --skin-hero-muted: #5d7e98;
+  --skin-hero-icon-background: #287ab3;
+}
+
+:root[data-skin="guangyu"] {
+  --skin-primary: #922c3b;
+  --skin-primary-hover: #70202e;
+  --skin-text: #3e3031;
+  --skin-text-muted: #887772;
+  --skin-text-subtle: #ab9890;
+  --skin-border: #e8dfdb;
+  --skin-border-strong: #c99e95;
+  --skin-surface-soft: #f8f4f1;
+  --skin-surface-accent: #faf0ec;
+  --skin-ring: #ad5964;
+  --skin-button-disabled: #c99499;
+  --skin-shadow-rgb: 81, 38, 39;
+  --skin-page-background: radial-gradient(ellipse at 95% 0%, #f2e5e3 0%, transparent 38%), #f7f4f2;
+  --skin-section-background: linear-gradient(105deg, #f3e7e2 0%, #f8f0eb 48%, #fcf8f5 100%);
+  --skin-hero-background: linear-gradient(145deg, #651d2d 0%, #8d2b3e 65%, #a44451 100%);
+  --skin-hero-text: #ffffff;
+  --skin-hero-muted: #eed5d5;
+  --skin-hero-icon-background: rgb(255 255 255 / 12%);
+}
+
+/* 两套品牌随根节点切换，首次加载时与配色一同生效。 */
+:root[data-skin="blue"] [data-skin-brand]:not([data-skin-brand="blue"]),
+:root[data-skin="guangyu"] [data-skin-brand]:not([data-skin-brand="guangyu"]) {
+  display: none;
+}

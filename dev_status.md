@@ -27,6 +27,7 @@ app_factory/nextjs-enterprise-framework.ts Next.js 企业 Framework 原件、安
 app_factory/server/enterprise-preview-build.ts 企业 Preview 源码版本、后台构建与产物缓存
 app_factory/templates/nextjs-enterprise/ 通用企业模板 Bundle（Skill、references、scaffold、framework）
 features/platform-home/         首页组合与展示状态
+features/appearance/            皮肤预设、切换、浏览器偏好与品牌同步
 features/assistant/             AI 助手客户端、会话 UI 与服务端编排
 features/apps/                  应用目录数据、运行时与分组 UI
 data/builtin/                   随 Git 发布的内置技能资源
@@ -67,7 +68,7 @@ scripts/app.mts                 平台与发布 Worker 统一启动器
 ### 统一首页、AI 助手与应用目录
 
 - 页面与组合状态：`app/(platform)/page.tsx`、`features/platform-home/platform-home-page.tsx`。首页仅负责在初始态展示助手输入区和应用分组；对话激活后只显示助手沟通界面。
-- 品牌与首页样式：顶部品牌为“广昱 · 智能体中台”，Logo 位于 `public/branding/guangyu-logo.png`；首页使用深绛红与暖白配色，基础主题范围由 `app/globals.css` 的 `.platform-shell:has(.platform-home)` 控制，助手与应用卡片样式分别在 `features/assistant/ui/`、`features/apps/ui/`。
+- 外观与品牌：顶部“选择皮肤”提供默认蓝与广昱红，默认仍为广昱红；当前浏览器的选择保存在 `localStorage` 的 `ai-platform-skin`，同源页签同步。`features/appearance/skins.ts` 管品牌名称、Logo 和标题，`app/skins.css` 集中定义语义颜色与品牌显示规则，`skin-provider.tsx` 管切换和页面标题/图标同步，`skin-switcher.tsx` 提供入口；`app/layout.tsx` 在首次绘制前应用已保存的皮肤。首页、助手、应用卡片与顶栏使用同一套变量，状态语义颜色保持固定；不影响外部应用自己的界面。增加预设时补充品牌配置、同名 CSS 配色与品牌选择规则，Logo 放在 `public/branding/`。
 - 助手：客户端与 UI 在 `features/assistant/`，提供问答与已发布知识库搜索；问答接口为 `/api/platform/assistant/chat`，知识库搜索复用 KnowHub 检索接口。问答先在应用、已启用技能和可用业务 API 中分流：明确任务执行技能，相关但不足以执行的请求返回推荐卡片，无明显匹配时显示固定引导文案及首页、技能中心、业务 API 跳转入口；通用工具不参与推荐。技能执行时只挂载其声明且已注册实现的工具；`features/skills/runner.ts` 将参考文件正文和引用地址一同注入执行上下文，`/api/platform/skills/[skillId]/references/[fileName]` 只提供技能包中已有参考文件的纯文本。
 - 应用目录 UI：`features/apps/ui/application-catalog.tsx`。支持来源筛选与关键词搜索，按 `AppFactory → 外部应用 → Dify / n8n` 展示；接入入口仅位于外部应用、Dify、n8n 的分组标题中。
 - 当前状态：助手消息和搜索结果仅保存在浏览器内存中；未匹配引导文案与跳转入口固定在助手流程内；点击“返回首页”会结束当前问答或搜索并恢复应用目录。

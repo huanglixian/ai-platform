@@ -1,10 +1,14 @@
 import type { Metadata } from "next";
+import { SkinProvider } from "@/features/appearance/skin-provider";
+import { DEFAULT_SKIN, getSkin, skinInitializationScript } from "@/features/appearance/skins";
 import "./globals.css";
 
+const defaultSkin = getSkin(DEFAULT_SKIN);
+
 export const metadata: Metadata = {
-  title: "广昱 · 智能体中台",
+  title: defaultSkin.title,
   description: "AI 助手与业务应用一体化平台",
-  icons: { icon: "/branding/guangyu-logo.png" },
+  icons: { icon: defaultSkin.logo },
 };
 
 export default function RootLayout({
@@ -13,8 +17,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="zh-CN" className="h-full antialiased">
-      <body className="min-h-full flex flex-col">{children}</body>
+    <html lang="zh-CN" className="h-full antialiased" data-skin={DEFAULT_SKIN} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: skinInitializationScript }} />
+      </head>
+      <body className="min-h-full flex flex-col"><SkinProvider>{children}</SkinProvider></body>
     </html>
   );
 }

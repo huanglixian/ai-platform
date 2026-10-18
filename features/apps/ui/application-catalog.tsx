@@ -42,17 +42,17 @@ function ApplicationGroup({ source, apps, onAdd, pendingService, onOpen, onEdit,
   const compactGrid = source === "dify" || source === "n8n";
 
   return (
-    <section aria-labelledby={`application-group-${source}`} className="min-w-0 overflow-hidden rounded-xl border border-[#e3d8d3] bg-[#f8f5f2] shadow-[0_3px_12px_rgba(81,38,39,0.035)]">
-      <header className="flex h-10 items-center gap-2.5 border-b border-[#e6d5cf] bg-[linear-gradient(105deg,#f3e7e2_0%,#f8f0eb_48%,#fcf8f5_100%)] px-3.5">
-        <span aria-hidden="true" className="h-3.5 w-[3px] rounded-full bg-[#8d3543]" />
-        <h2 id={`application-group-${source}`} className="text-[14px] font-semibold tracking-[0.01em] text-[#6d2935]">{sourceLabels[source]}</h2>
-        {onAdd ? <button type="button" onClick={onAdd} className="ml-auto inline-flex h-7 shrink-0 items-center gap-1 rounded-md px-2 text-[12px] font-medium text-[#963e4a] transition-colors hover:bg-white hover:text-[#8b293a] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ad5964]"><Plus size={14} />接入应用</button> : null}
+    <section aria-labelledby={`application-group-${source}`} className="min-w-0 overflow-hidden rounded-xl border border-[var(--skin-border)] bg-[var(--skin-surface-soft)] shadow-[0_3px_12px_rgba(var(--skin-shadow-rgb),0.035)]">
+      <header className="flex h-10 items-center gap-2.5 border-b border-[var(--skin-border)] bg-[image:var(--skin-section-background)] px-3.5">
+        <span aria-hidden="true" className="h-3.5 w-[3px] rounded-full bg-[var(--skin-primary)]" />
+        <h2 id={`application-group-${source}`} className="text-[14px] font-semibold tracking-[0.01em] text-[var(--skin-primary)]">{sourceLabels[source]}</h2>
+        {onAdd ? <button type="button" onClick={onAdd} className="ml-auto inline-flex h-7 shrink-0 items-center gap-1 rounded-md px-2 text-[12px] font-medium text-[var(--skin-primary)] transition-colors hover:bg-white hover:text-[var(--skin-primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--skin-ring)]"><Plus size={14} />接入应用</button> : null}
       </header>
       {apps.length ? (
         <div className={compactGrid ? "grid gap-2 p-2.5 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2" : "grid gap-2 p-2.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"}>
           {apps.map((app) => <AppCard key={app.id} app={app} pendingAction={pendingService?.appId === app.id ? pendingService.action : null} onOpen={onOpen} onEdit={onEdit} onServiceAction={onServiceAction} onRemove={onRemove} />)}
         </div>
-      ) : <div className="px-4 py-5 text-center text-[12px] text-[#a18a82]">暂无应用</div>}
+      ) : <div className="px-4 py-5 text-center text-[12px] text-[var(--skin-text-muted)]">暂无应用</div>}
     </section>
   );
 }
@@ -190,17 +190,17 @@ export function ApplicationCatalog() {
         {actionError ? <div className="mb-3 flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700"><AlertTriangle size={15} />{actionError}</div> : null}
         {removeError ? <div className="mb-4 flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700"><AlertTriangle size={15} />{removeError}</div> : null}
         <div className="mb-3 flex min-w-0 items-center gap-3 overflow-x-auto pb-px">
-          <div role="group" aria-label="应用来源筛选" className="inline-flex h-[34px] shrink-0 items-center rounded-lg border border-[#e5d8d3] bg-[#f1e8e3] p-[3px] shadow-[inset_0_1px_2px_rgba(81,38,39,0.04)]">
-            {sourceFilters.map((filter) => <button key={filter.value} type="button" aria-pressed={sourceFilter === filter.value} onClick={() => setSourceFilter(filter.value)} className={`h-[26px] rounded-md px-3 text-[11px] font-medium transition-[color,background-color,box-shadow] ${sourceFilter === filter.value ? "bg-white text-[#8b293a] shadow-[0_1px_4px_rgba(81,38,39,0.08)]" : "text-[#9a847d] hover:text-[#8d3543]"}`}>{filter.label}</button>)}
+          <div role="group" aria-label="应用来源筛选" className="inline-flex h-[34px] shrink-0 items-center rounded-lg border border-[var(--skin-border)] bg-[var(--skin-surface-accent)] p-[3px] shadow-[inset_0_1px_2px_rgba(var(--skin-shadow-rgb),0.04)]">
+            {sourceFilters.map((filter) => <button key={filter.value} type="button" aria-pressed={sourceFilter === filter.value} onClick={() => setSourceFilter(filter.value)} className={`h-[26px] rounded-md px-3 text-[11px] font-medium transition-[color,background-color,box-shadow] ${sourceFilter === filter.value ? "bg-white text-[var(--skin-primary)] shadow-[0_1px_4px_rgba(var(--skin-shadow-rgb),0.08)]" : "text-[var(--skin-text-muted)] hover:text-[var(--skin-primary)]"}`}>{filter.label}</button>)}
           </div>
-          <label className="flex h-[34px] min-w-[220px] flex-1 items-center gap-2 rounded-lg border border-[#e8dfdb] bg-white px-3 transition-colors focus-within:border-[#c68a82] focus-within:ring-2 focus-within:ring-[#eaf3fc]">
-            <Search size={16} className="shrink-0 text-[#a18a82]" />
+          <label className="flex h-[34px] min-w-[220px] flex-1 items-center gap-2 rounded-lg border border-[var(--skin-border)] bg-white px-3 transition-colors focus-within:border-[var(--skin-border-strong)] focus-within:ring-2 focus-within:ring-[var(--skin-surface-accent)]">
+            <Search size={16} className="shrink-0 text-[var(--skin-text-muted)]" />
             <input
               value={keyword}
               onChange={(event) => setKeyword(event.target.value)}
               placeholder="搜索应用"
               aria-label="搜索应用"
-              className="min-w-0 flex-1 bg-transparent text-[13px] text-title outline-none placeholder:text-[#b5a59d]"
+              className="min-w-0 flex-1 bg-transparent text-[13px] text-title outline-none placeholder:text-[var(--skin-text-subtle)]"
             />
           </label>
         </div>

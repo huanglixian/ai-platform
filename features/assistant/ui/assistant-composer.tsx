@@ -61,18 +61,18 @@ export function AssistantComposer({
             }
           }}
           placeholder={placeholder}
-          className="min-h-[88px] resize-none rounded-[12px] border border-[#e9ddda] bg-white px-4 py-3 text-[13px] leading-6 text-title outline-none transition-colors placeholder:text-[#98a2b3] focus:border-[#ad5964]"
+          className="min-h-[88px] resize-none rounded-[12px] border border-[var(--skin-border)] bg-white px-4 py-3 text-[13px] leading-6 text-title outline-none transition-colors placeholder:text-[var(--skin-text-subtle)] focus:border-[var(--skin-ring)]"
         />
 
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="min-w-0 flex-1 truncate text-[12px] text-[#a08d85]">{status}</div>
+          <div className="min-w-0 flex-1 truncate text-[12px] text-[var(--skin-text-muted)]">{status}</div>
 
           <div className="flex items-center gap-2">
             <button
               type="button"
               disabled={sending}
               onClick={submit}
-              className="h-[36px] rounded-[8px] bg-[#922c3b] px-4 text-[13px] font-medium text-white transition-colors hover:bg-[#70202e] disabled:cursor-not-allowed disabled:bg-[#c99499]"
+              className="h-[36px] rounded-[8px] bg-[var(--skin-primary)] px-4 text-[13px] font-medium text-white transition-colors hover:bg-[var(--skin-primary-hover)] disabled:cursor-not-allowed disabled:bg-[var(--skin-button-disabled)]"
             >
               {sending ? sendingLabel : submitLabel}
             </button>
