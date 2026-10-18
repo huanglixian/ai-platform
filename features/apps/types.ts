@@ -14,3 +14,12 @@ export interface PublishedApp {
   createdAt: string;
   updatedAt: string;
 }
+
+export type ExternalStopResult = {
+  stoppedIds: string[];
+  failures: { id: string; name: string; message: string }[];
+};
+
+export type ExternalStopResponse = ExternalStopResult & {
+  applications: PublishedApp[];
+};

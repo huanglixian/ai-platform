@@ -20,7 +20,10 @@ let forceStopTimer: NodeJS.Timeout | undefined;
 async function stopManagedExternalApplications() {
   try {
     const { stopManagedExternalApplications: stopApplications } = await import("../features/apps/server");
-    await stopApplications();
+    const result = await stopApplications();
+    for (const failure of result.failures) {
+      console.error(`[启动器] ${failure.name} 回收失败：${failure.message}`);
+    }
   } catch (error) {
     console.error(`[启动器] 外部应用回收失败：${error instanceof Error ? error.message : String(error)}`);
   }

@@ -5,7 +5,7 @@ import { getAgentHubDatabase } from "@/lib/agenthub/database";
 import { EXTERNAL_APP_SEEDS } from "./external-app-seed";
 import { isProcessGroupRunning, isUrlReady, startExternalProcess, stopExternalProcess } from "./external-launcher";
 import { INITIAL_APPS } from "./mock-data";
-import type { ExternalLaunchStatus, PlatformSource, PublishedApp } from "./types";
+import type { ExternalLaunchStatus, ExternalStopResult, PlatformSource, PublishedApp } from "./types";
 
 const platformSources = ["appfactory", "external", "dify", "n8n"] as const;
 const platformSourceSchema = z.enum(platformSources);
@@ -301,14 +301,23 @@ export async function removeApplication(id: string) {
   return result.changes > 0;
 }
 
-export async function stopManagedExternalApplications() {
+export async function stopManagedExternalApplications(): Promise<ExternalStopResult> {
   const rows = getAgentHubDatabase().prepare(
-    "SELECT id, launch_pid FROM applications WHERE producer='external' AND launch_pid IS NOT NULL",
-  ).all() as { id: string; launch_pid: number }[];
-  await Promise.all(rows.map(async (row) => {
-    const stopped = await stopExternalProcess(row.launch_pid);
-    if (stopped || !isProcessGroupRunning(row.launch_pid)) {
-      updateLaunchState(row.id, null, null, null, row.launch_pid);
-    }
+    "SELECT id, name, launch_pid FROM applications WHERE producer='external' AND launch_pid IS NOT NULL",
+  ).all() as { id: string; name: string; launch_pid: number }[];
+  const results = await Promise.allSettled(rows.map(async (row) => {
+    await stopExternalProcess(row.launch_pid);
+    updateLaunchState(row.id, null, null, null, row.launch_pid);
   }));
+  const result: ExternalStopResult = { stoppedIds: [], failures: [] };
+  results.forEach((entry, index) => {
+    const row = rows[index];
+    if (entry.status === "fulfilled") result.stoppedIds.push(row.id);
+    else result.failures.push({
+      id: row.id,
+      name: row.name,
+      message: entry.reason instanceof Error ? entry.reason.message : "停止服务失败",
+    });
+  });
+  return result;
 }

@@ -93,3 +93,20 @@ test("启动命令退出后不会等待完整健康检查超时", async () => {
 
   assert.ok(Date.now() - startedAt < 2_000);
 });
+
+test("服务忽略 SIGTERM 时会强制结束，并等待进程组退出", async () => {
+  const port = await getAvailablePort();
+  const script = `process.on('SIGTERM', () => {}); require('node:http').createServer((_, response) => response.end('ok')).listen(${port}, '127.0.0.1')`;
+  const result = await startExternalProcess({
+    command: `exec ${JSON.stringify(process.execPath)} -e ${JSON.stringify(script)}`,
+    url: `http://127.0.0.1:${port}`,
+    timeoutMs: 5_000,
+  });
+  try {
+    assert.equal(await stopExternalProcess(result.pid), true);
+    assert.equal(isProcessGroupRunning(result.pid), false);
+    assert.equal(await stopExternalProcess(result.pid), false);
+  } finally {
+    await stopExternalProcess(result.pid);
+  }
+});

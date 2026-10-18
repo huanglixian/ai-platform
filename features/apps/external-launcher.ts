@@ -83,13 +83,26 @@ export async function startExternalProcess({ command, url, timeoutMs = START_TIM
 export async function stopExternalProcess(pid: number) {
   if (!isProcessGroupRunning(pid)) return false;
 
-  process.kill(-pid, "SIGTERM");
+  signalProcessGroup(pid, "SIGTERM");
   const deadline = Date.now() + 5_000;
   while (Date.now() < deadline) {
     if (!isProcessGroupRunning(pid)) return true;
     await pause(100);
   }
 
-  process.kill(-pid, "SIGKILL");
-  return true;
+  signalProcessGroup(pid, "SIGKILL");
+  const forceDeadline = Date.now() + 1_000;
+  while (Date.now() < forceDeadline) {
+    if (!isProcessGroupRunning(pid)) return true;
+    await pause(100);
+  }
+  throw new ExternalLaunchError("服务进程组仍未退出，请稍后重试。");
+}
+
+function signalProcessGroup(pid: number, signal: NodeJS.Signals) {
+  try {
+    process.kill(-pid, signal);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ESRCH") throw error;
+  }
 }

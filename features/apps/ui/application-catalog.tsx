@@ -2,8 +2,8 @@
 
 import { Dialog } from "@base-ui/react/dialog";
 import { useEffect, useMemo, useState } from "react";
-import { AlertTriangle, LoaderCircle, Plus, Search, Trash2 } from "lucide-react";
-import type { PlatformSource, PublishedApp } from "@/features/apps/types";
+import { AlertTriangle, CheckCircle2, LoaderCircle, Plus, Search, Square, Trash2 } from "lucide-react";
+import type { ExternalStopResponse, PlatformSource, PublishedApp } from "@/features/apps/types";
 import { AppCard } from "./application-card";
 import { sourceLabels, typeLabels } from "./application-presentation";
 import { ApplicationForm } from "./application-form";
@@ -18,6 +18,8 @@ const sourceFilters: { value: ApplicationFilter; label: string }[] = [
   { value: "n8n", label: "n8n" },
 ];
 
+const groupActionClassName = "inline-flex h-7 shrink-0 items-center justify-center gap-1.5 rounded-md border border-[var(--skin-border)] bg-white/75 px-2.5 text-[12px] font-medium text-[var(--skin-primary)] shadow-[0_1px_2px_rgba(var(--skin-shadow-rgb),0.04)] transition-[background-color,border-color,box-shadow] hover:border-[var(--skin-border-strong)] hover:bg-white hover:shadow-[0_2px_5px_rgba(var(--skin-shadow-rgb),0.08)] active:bg-[var(--skin-surface-accent)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--skin-ring)] disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none";
+
 function EmptyApps() {
   return (
     <div className="flex min-h-[180px] flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-white px-4 text-center">
@@ -31,6 +33,9 @@ type ApplicationGroupProps = {
   source: PlatformSource;
   apps: PublishedApp[];
   onAdd?: () => void;
+  onStopAll?: () => void;
+  canStopAll: boolean;
+  stoppingAll: boolean;
   pendingService: { appId: string; action: "start" | "stop" } | null;
   onOpen: (app: PublishedApp) => void;
   onEdit: (app: PublishedApp) => void;
@@ -38,19 +43,30 @@ type ApplicationGroupProps = {
   onRemove: (app: PublishedApp) => void;
 };
 
-function ApplicationGroup({ source, apps, onAdd, pendingService, onOpen, onEdit, onServiceAction, onRemove }: ApplicationGroupProps) {
+function ApplicationGroup({ source, apps, onAdd, onStopAll, canStopAll, stoppingAll, pendingService, onOpen, onEdit, onServiceAction, onRemove }: ApplicationGroupProps) {
   const compactGrid = source === "dify" || source === "n8n";
+  const isStoppingGroup = source === "external" && stoppingAll;
 
   return (
     <section aria-labelledby={`application-group-${source}`} className="min-w-0 overflow-hidden rounded-xl border border-[var(--skin-border)] bg-[var(--skin-surface-soft)] shadow-[0_3px_12px_rgba(var(--skin-shadow-rgb),0.035)]">
-      <header className="flex h-10 items-center gap-2.5 border-b border-[var(--skin-border)] bg-[image:var(--skin-section-background)] px-3.5">
-        <span aria-hidden="true" className="h-3.5 w-[3px] rounded-full bg-[var(--skin-primary)]" />
+      <header className="flex min-h-11 flex-wrap items-center gap-x-2.5 gap-y-2 border-b border-[var(--skin-border)] bg-[image:var(--skin-section-background)] px-3.5 py-2">
+        <span aria-hidden="true" className="h-3.5 w-[3px] shrink-0 rounded-full bg-[var(--skin-primary)]" />
         <h2 id={`application-group-${source}`} className="text-[14px] font-semibold tracking-[0.01em] text-[var(--skin-primary)]">{sourceLabels[source]}</h2>
-        {onAdd ? <button type="button" onClick={onAdd} className="ml-auto inline-flex h-7 shrink-0 items-center gap-1 rounded-md px-2 text-[12px] font-medium text-[var(--skin-primary)] transition-colors hover:bg-white hover:text-[var(--skin-primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--skin-ring)]"><Plus size={14} />接入应用</button> : null}
+        {onAdd ? (
+          <div className="ml-auto flex shrink-0 items-center gap-2">
+            {onStopAll ? (
+              <button type="button" onClick={onStopAll} disabled={!canStopAll || stoppingAll} aria-busy={stoppingAll} title="停止所有由平台启动的外部应用（包含搜索结果之外的应用）" className={groupActionClassName}>
+                {stoppingAll ? <LoaderCircle size={13} className="animate-spin" /> : <Square size={13} strokeWidth={1.8} />}
+                {stoppingAll ? "停止中…" : "全部停止"}
+              </button>
+            ) : null}
+            <button type="button" onClick={onAdd} disabled={isStoppingGroup} className={groupActionClassName}><Plus size={14} strokeWidth={1.8} />接入应用</button>
+          </div>
+        ) : null}
       </header>
       {apps.length ? (
         <div className={compactGrid ? "grid gap-2 p-2.5 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2" : "grid gap-2 p-2.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"}>
-          {apps.map((app) => <AppCard key={app.id} app={app} pendingAction={pendingService?.appId === app.id ? pendingService.action : null} onOpen={onOpen} onEdit={onEdit} onServiceAction={onServiceAction} onRemove={onRemove} />)}
+          {apps.map((app) => <AppCard key={app.id} app={app} pendingAction={isStoppingGroup && app.launchStatus !== null ? "stop" : pendingService?.appId === app.id ? pendingService.action : null} serviceDisabled={stoppingAll || pendingService !== null} menuDisabled={isStoppingGroup} onOpen={onOpen} onEdit={onEdit} onServiceAction={onServiceAction} onRemove={onRemove} />)}
         </div>
       ) : <div className="px-4 py-5 text-center text-[12px] text-[var(--skin-text-muted)]">暂无应用</div>}
     </section>
@@ -67,6 +83,8 @@ export function ApplicationCatalog() {
   const [keyword, setKeyword] = useState("");
   const [pendingService, setPendingService] = useState<{ appId: string; action: "start" | "stop" } | null>(null);
   const [actionError, setActionError] = useState("");
+  const [actionNotice, setActionNotice] = useState("");
+  const [stoppingAll, setStoppingAll] = useState(false);
   const [removingApp, setRemovingApp] = useState<PublishedApp | null>(null);
   const [removing, setRemoving] = useState(false);
   const [removeError, setRemoveError] = useState("");
@@ -92,8 +110,10 @@ export function ApplicationCatalog() {
   }
 
   async function handleServiceAction(app: PublishedApp, action: "start" | "stop") {
+    if (stoppingAll || pendingService) return;
     setPendingService({ appId: app.id, action });
     setActionError("");
+    setActionNotice("");
     if (action === "start") replaceApplication({ ...app, launchStatus: "starting" });
     try {
       const response = await fetch(`/api/agenthub/v1/applications/${app.id}/${action}`, { method: "POST" });
@@ -105,6 +125,29 @@ export function ApplicationCatalog() {
       setActionError(error instanceof Error ? error.message : "服务操作失败");
     } finally {
       setPendingService(null);
+    }
+  }
+
+  async function handleStopAll() {
+    if (stoppingAll || pendingService || removing) return;
+    setStoppingAll(true);
+    setActionError("");
+    setActionNotice("");
+    try {
+      const response = await fetch("/api/agenthub/v1/applications/stop", { method: "POST" });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error?.message || "批量停止服务失败");
+      const result: ExternalStopResponse = payload.data;
+      setList(result.applications);
+      if (result.failures.length) {
+        setActionError(`已停止 ${result.stoppedIds.length} 个应用，${result.failures.length} 个停止失败：${result.failures.map((failure) => `${failure.name}（${failure.message}）`).join("；")}`);
+      } else {
+        setActionNotice(result.stoppedIds.length ? `已停止 ${result.stoppedIds.length} 个外部应用` : "当前没有需要停止的外部应用");
+      }
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : "批量停止服务失败");
+    } finally {
+      setStoppingAll(false);
     }
   }
 
@@ -170,6 +213,9 @@ export function ApplicationCatalog() {
         source={source}
         apps={groups[source]}
         onAdd={source === "appfactory" ? undefined : () => openApplicationForm(source)}
+        onStopAll={source === "external" ? () => void handleStopAll() : undefined}
+        canStopAll={!pendingService && !removing && list.some((app) => app.source === "external" && app.launchStatus !== null)}
+        stoppingAll={stoppingAll}
         pendingService={pendingService}
         onOpen={handleOpen}
         onEdit={setEditingApp}
@@ -187,7 +233,8 @@ export function ApplicationCatalog() {
     <>
       <section id="applications" className="scroll-mt-24">
         {loadError ? <div className="mb-4 flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700"><AlertTriangle size={15} />{loadError}</div> : null}
-        {actionError ? <div className="mb-3 flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700"><AlertTriangle size={15} />{actionError}</div> : null}
+        {actionError ? <div role="alert" className="mb-3 flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700"><AlertTriangle size={15} className="shrink-0" />{actionError}</div> : null}
+        {actionNotice ? <div role="status" className="mb-3 flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-700"><CheckCircle2 size={15} className="shrink-0" />{actionNotice}</div> : null}
         {removeError ? <div className="mb-4 flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700"><AlertTriangle size={15} />{removeError}</div> : null}
         <div className="mb-3 flex min-w-0 items-center gap-3 overflow-x-auto pb-px">
           <div role="group" aria-label="应用来源筛选" className="inline-flex h-[34px] shrink-0 items-center rounded-lg border border-[var(--skin-border)] bg-[var(--skin-surface-accent)] p-[3px] shadow-[inset_0_1px_2px_rgba(var(--skin-shadow-rgb),0.04)]">
