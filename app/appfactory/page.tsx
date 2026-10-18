@@ -1,5 +1,8 @@
 "use client";
 
+import { notify } from "@/features/feedback/notify";
+import { InlineNotice } from "@/components/shared/inline-notice";
+
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -34,7 +37,7 @@ export default function AppFactoryPage() {
   const [templateId, setTemplateId] = useState("");
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
-  const [error, setError] = useState("");
+  const [loadError, setLoadError] = useState("");
   const { latestForProject } = usePublicationTaskCenter();
   useEffect(() => {
     Promise.all([
@@ -58,7 +61,7 @@ export default function AppFactoryPage() {
         setTemplateId((current) => current || nextTemplates[0]?.id || "");
       })
       .catch((reason: unknown) =>
-        setError(reason instanceof Error ? reason.message : "项目加载失败"),
+        setLoadError(reason instanceof Error ? reason.message : "项目加载失败"),
       )
       .finally(() => setLoading(false));
   }, []);
@@ -89,7 +92,6 @@ export default function AppFactoryPage() {
     event.preventDefault();
     if (!name.trim() || creating) return;
     setCreating(true);
-    setError("");
     try {
       const response = await fetch("/api/appfactory/v1/projects", {
         method: "POST",
@@ -101,9 +103,10 @@ export default function AppFactoryPage() {
         throw new Error(payload.error?.message || "项目创建失败");
       const project = payload.data as Project | undefined;
       if (!project?.id) throw new Error("项目创建成功，但缺少项目标识");
+      notify.success("项目已创建");
       router.push(`/appfactory/projects/${encodeURIComponent(project.id)}`);
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "项目创建失败");
+      notify.error(reason instanceof Error ? reason.message : "项目创建失败");
     } finally {
       setCreating(false);
     }
@@ -128,10 +131,8 @@ export default function AppFactoryPage() {
           新建项目
         </button>
       </header>
-      {error && (
-        <div className="mb-5 rounded-lg border border-[#f3c6c2] bg-[#fff5f4] px-4 py-3 text-sm text-[#b9382f]">
-          {error}
-        </div>
+      {loadError && (
+        <InlineNotice className="mb-5" action={<button type="button" onClick={() => window.location.reload()}>重新加载</button>}>{loadError}</InlineNotice>
       )}
       <div className="mb-5 flex flex-col gap-2 rounded-xl border border-[#dbe5f0] bg-[#fbfdff] p-1.5 sm:flex-row sm:items-center">
         <div className="flex flex-wrap gap-2">

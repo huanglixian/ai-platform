@@ -1,5 +1,8 @@
 "use client";
 
+import { notify } from "@/features/feedback/notify";
+import { InlineNotice } from "@/components/shared/inline-notice";
+
 import { useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -72,7 +75,7 @@ export function StrategyTestPanel({
 
       setResult(payload.result);
     } catch (nextError) {
-      setError(nextError instanceof Error ? nextError.message : "策略测试失败");
+      notify.error(nextError instanceof Error ? nextError.message : "策略测试失败");
       setResult(null);
     } finally {
       setPending(false);
@@ -135,9 +138,7 @@ export function StrategyTestPanel({
       </div>
 
       {error ? (
-        <div className="mt-4 rounded-[12px] border border-[#f0d2d2] bg-[#fff8f8] px-3 py-2 text-[12px] text-[#a33a3a]">
-          {error}
-        </div>
+        <InlineNotice>{error}</InlineNotice>
       ) : null}
 
       {result ? (

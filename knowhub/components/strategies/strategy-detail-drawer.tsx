@@ -1,5 +1,8 @@
 "use client";
 
+import { notify } from "@/features/feedback/notify";
+import { InlineNotice } from "@/components/shared/inline-notice";
+
 import { useEffect, useMemo, useState } from "react";
 import { ChevronDown, ChevronRight, X } from "lucide-react";
 
@@ -160,8 +163,9 @@ export function StrategyDetailDrawer({
       });
       setPresetId(savedPreset.id);
       setPresetName(savedPreset.name);
+      notify.success("策略预设已保存");
     } catch (nextError) {
-      setError(nextError instanceof Error ? nextError.message : "保存预设失败");
+      notify.error(nextError instanceof Error ? nextError.message : "保存预设失败");
     } finally {
       setPending(false);
     }
@@ -265,9 +269,7 @@ export function StrategyDetailDrawer({
               </section>
 
               {error ? (
-                <div className="rounded-[14px] border border-[#f0d2d2] bg-[#fff8f8] px-4 py-3 text-[13px] text-[#a33a3a]">
-                  {error}
-                </div>
+                <InlineNotice>{error}</InlineNotice>
               ) : null}
             </section>
 

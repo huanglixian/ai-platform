@@ -1,5 +1,7 @@
 "use client";
 
+import { notify } from "@/features/feedback/notify";
+import { InlineNotice } from "@/components/shared/inline-notice";
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
 import {
@@ -28,6 +30,8 @@ interface Props {
 
 export function WorkflowDesignerClient({ workflowId }: Props) {
   const [currentWorkflow, setCurrentWorkflow] = useState<Workflow | null>(null);
+  const [loadError, setLoadError] = useState("");
+  const [saving, setSaving] = useState(false);
 
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
@@ -41,7 +45,17 @@ export function WorkflowDesignerClient({ workflowId }: Props) {
 
   // 加载数据
   useEffect(() => {
-    fetch(`/api/agenthub/v1/workflows/${workflowId}`).then((r) => r.json()).then((payload) => { const matched = payload.data as Workflow | undefined; if (matched) { setCurrentWorkflow(matched); setNodes(matched.nodes as Node[]); setEdges(matched.edges as Edge[]); } });
+    let active = true;
+    fetch(`/api/agenthub/v1/workflows/${workflowId}`).then(async (response) => {
+      const payload = await response.json();
+      if (!response.ok || !payload.data) throw new Error(payload.error?.message || "业务流加载失败");
+      if (!active) return;
+      const matched = payload.data as Workflow;
+      setCurrentWorkflow(matched);
+      setNodes(matched.nodes as Node[]);
+      setEdges(matched.edges as Edge[]);
+    }).catch((error: unknown) => { if (active) setLoadError(error instanceof Error ? error.message : "业务流加载失败"); });
+    return () => { active = false; };
   }, [workflowId, setNodes, setEdges]);
 
   // 自定义节点类型定义
@@ -99,8 +113,9 @@ export function WorkflowDesignerClient({ workflowId }: Props) {
   }
 
   // 保存
-  function handleSave() {
-    if (!currentWorkflow) return;
+  async function handleSave() {
+    if (!currentWorkflow || saving) return;
+    setSaving(true);
     const updatedFlow: Workflow = {
       ...currentWorkflow,
       nodes: nodes.map((n) => ({
@@ -116,13 +131,20 @@ export function WorkflowDesignerClient({ workflowId }: Props) {
       })),
       updatedAt: new Date().toISOString()
     };
-    fetch(`/api/agenthub/v1/workflows/${workflowId}`, { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify({ name: updatedFlow.name, description: updatedFlow.description, category: updatedFlow.category, nodes: updatedFlow.nodes, edges: updatedFlow.edges }) }).then((r) => { if (!r.ok) throw new Error("保存失败"); setCurrentWorkflow(updatedFlow); alert("保存成功！"); }).catch((error: Error) => alert(error.message));
+    try {
+      const response = await fetch(`/api/agenthub/v1/workflows/${workflowId}`, { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify({ name: updatedFlow.name, description: updatedFlow.description, category: updatedFlow.category, nodes: updatedFlow.nodes, edges: updatedFlow.edges }) });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error?.message || "保存失败");
+      setCurrentWorkflow(updatedFlow);
+      notify.success("业务流已保存");
+    } catch (error) { notify.error(error instanceof Error ? error.message : "保存失败"); }
+    finally { setSaving(false); }
   }
 
   if (!currentWorkflow) {
     return (
       <div className="flex items-center justify-center py-20 text-xs text-muted-foreground font-sans">
-        正在加载业务流画布...
+        {loadError ? <InlineNotice action={<button type="button" onClick={() => window.location.reload()}>重新加载</button>}>{loadError}</InlineNotice> : "正在加载业务流画布..."}
       </div>
     );
   }
@@ -188,10 +210,11 @@ export function WorkflowDesignerClient({ workflowId }: Props) {
             </button>
             <span className="text-slate-200 mx-1">|</span>
             <button
-              onClick={handleSave}
+              onClick={() => void handleSave()}
+              disabled={saving}
               className="rounded-lg bg-gradient-to-tr from-[#0368b3] to-[#2e7dd2] text-white font-medium text-[10px] px-4 py-1.5 hover:brightness-105 shadow-sm transition-all cursor-pointer"
             >
-              保存业务流
+              {saving ? "保存中…" : "保存业务流"}
             </button>
           </div>
         </div>

@@ -1,0 +1,41 @@
+.platform-toast-viewport {
+  position: fixed;
+  z-index: 200;
+  top: calc(72px + env(safe-area-inset-top));
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: min(380px, calc(100vw - 32px));
+  max-height: calc(100dvh - 100px);
+  pointer-events: none;
+  outline: none;
+}
+
+.platform-toast {
+  flex-shrink: 0;
+  border: 1px solid var(--skin-border);
+  border-radius: 14px;
+  background: rgb(255 255 255 / 98%);
+  padding: 14px 16px;
+  box-shadow: 0 8px 32px rgb(15 23 42 / 10%), 0 2px 6px rgb(15 23 42 / 4%);
+  pointer-events: auto;
+  opacity: 1;
+  transform: translateX(var(--toast-swipe-movement-x, 0));
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+
+.platform-toast[data-starting-style],
+.platform-toast[data-ending-style] { opacity: 0; transform: translateY(-8px); }
+.platform-toast[data-limited] { display: none; }
+.platform-toast-icon { flex-shrink: 0; display: grid; place-items: center; width: 28px; height: 28px; margin-top: -3px; border-radius: 8px; color: #0368b3; background: #edf5fd; }
+.platform-toast[data-type="success"] .platform-toast-icon { color: #15803d; background: #eef9f1; }
+.platform-toast[data-type="error"] .platform-toast-icon { color: #be123c; background: #fff1f2; }
+.platform-toast[data-type="warning"] .platform-toast-icon { color: #b45309; background: #fffbeb; }
+
+@media (max-width: 640px) {
+  .platform-toast-viewport { right: 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .platform-toast { transition: none; }
+}

@@ -1,9 +1,11 @@
 "use client";
 
-import { Dialog } from "@base-ui/react/dialog";
 import { useEffect, useMemo, useState } from "react";
-import { AlertTriangle, CheckCircle2, LoaderCircle, Plus, Search, Square, Trash2 } from "lucide-react";
+import { LoaderCircle, Plus, Search, Square } from "lucide-react";
 import type { ExternalStopResponse, PlatformSource, PublishedApp } from "@/features/apps/types";
+import { notify } from "@/features/feedback/notify";
+import { InlineNotice } from "@/components/shared/inline-notice";
+import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { AppCard } from "./application-card";
 import { sourceLabels, typeLabels } from "./application-presentation";
 import { ApplicationForm } from "./application-form";
@@ -82,12 +84,9 @@ export function ApplicationCatalog() {
   const [sourceFilter, setSourceFilter] = useState<ApplicationFilter>("all");
   const [keyword, setKeyword] = useState("");
   const [pendingService, setPendingService] = useState<{ appId: string; action: "start" | "stop" } | null>(null);
-  const [actionError, setActionError] = useState("");
-  const [actionNotice, setActionNotice] = useState("");
   const [stoppingAll, setStoppingAll] = useState(false);
   const [removingApp, setRemovingApp] = useState<PublishedApp | null>(null);
   const [removing, setRemoving] = useState(false);
-  const [removeError, setRemoveError] = useState("");
 
   useEffect(() => {
     async function loadApplications() {
@@ -112,17 +111,16 @@ export function ApplicationCatalog() {
   async function handleServiceAction(app: PublishedApp, action: "start" | "stop") {
     if (stoppingAll || pendingService) return;
     setPendingService({ appId: app.id, action });
-    setActionError("");
-    setActionNotice("");
     if (action === "start") replaceApplication({ ...app, launchStatus: "starting" });
     try {
       const response = await fetch(`/api/agenthub/v1/applications/${app.id}/${action}`, { method: "POST" });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error?.message || "服务操作失败");
       replaceApplication(payload.data);
+      notify.success(`已${action === "start" ? "启动" : "停止"}“${app.name}”`);
     } catch (error) {
       if (action === "start") replaceApplication({ ...app, launchStatus: null });
-      setActionError(error instanceof Error ? error.message : "服务操作失败");
+      notify.error(error instanceof Error ? error.message : "服务操作失败");
     } finally {
       setPendingService(null);
     }
@@ -131,8 +129,6 @@ export function ApplicationCatalog() {
   async function handleStopAll() {
     if (stoppingAll || pendingService || removing) return;
     setStoppingAll(true);
-    setActionError("");
-    setActionNotice("");
     try {
       const response = await fetch("/api/agenthub/v1/applications/stop", { method: "POST" });
       const payload = await response.json();
@@ -140,12 +136,12 @@ export function ApplicationCatalog() {
       const result: ExternalStopResponse = payload.data;
       setList(result.applications);
       if (result.failures.length) {
-        setActionError(`已停止 ${result.stoppedIds.length} 个应用，${result.failures.length} 个停止失败：${result.failures.map((failure) => `${failure.name}（${failure.message}）`).join("；")}`);
+        notify.warning(`已停止 ${result.stoppedIds.length} 个应用，${result.failures.length} 个停止失败`, { details: result.failures.map((failure) => `${failure.name}：${failure.message}`).join("\n") });
       } else {
-        setActionNotice(result.stoppedIds.length ? `已停止 ${result.stoppedIds.length} 个外部应用` : "当前没有需要停止的外部应用");
+        notify.success(result.stoppedIds.length ? `已停止 ${result.stoppedIds.length} 个外部应用` : "当前没有需要停止的外部应用");
       }
     } catch (error) {
-      setActionError(error instanceof Error ? error.message : "批量停止服务失败");
+      notify.error(error instanceof Error ? error.message : "批量停止服务失败");
     } finally {
       setStoppingAll(false);
     }
@@ -154,15 +150,15 @@ export function ApplicationCatalog() {
   async function confirmRemove() {
     if (!removingApp) return;
     setRemoving(true);
-    setRemoveError("");
     try {
       const response = await fetch(`/api/agenthub/v1/applications/${removingApp.id}`, { method: "DELETE" });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error?.message || "移除应用失败");
       setList((current) => current.filter((item) => item.id !== removingApp.id));
       setRemovingApp(null);
+      notify.success(`已删除“${removingApp.name}”`);
     } catch (error) {
-      setRemoveError(error instanceof Error ? error.message : "移除应用失败");
+      notify.error(error instanceof Error ? error.message : "移除应用失败");
     } finally {
       setRemoving(false);
     }
@@ -173,7 +169,6 @@ export function ApplicationCatalog() {
   }
 
   function requestRemove(app: PublishedApp) {
-    setRemoveError("");
     setRemovingApp(app);
   }
 
@@ -232,10 +227,7 @@ export function ApplicationCatalog() {
   return (
     <>
       <section id="applications" className="scroll-mt-24">
-        {loadError ? <div className="mb-4 flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700"><AlertTriangle size={15} />{loadError}</div> : null}
-        {actionError ? <div role="alert" className="mb-3 flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700"><AlertTriangle size={15} className="shrink-0" />{actionError}</div> : null}
-        {actionNotice ? <div role="status" className="mb-3 flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-700"><CheckCircle2 size={15} className="shrink-0" />{actionNotice}</div> : null}
-        {removeError ? <div className="mb-4 flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700"><AlertTriangle size={15} />{removeError}</div> : null}
+        {loadError ? <InlineNotice className="mb-3" action={<button type="button" onClick={() => window.location.reload()}>重新加载</button>}>{loadError}</InlineNotice> : null}
         <div className="mb-3 flex min-w-0 items-center gap-3 overflow-x-auto pb-px">
           <div role="group" aria-label="应用来源筛选" className="inline-flex h-[34px] shrink-0 items-center rounded-lg border border-[var(--skin-border)] bg-[var(--skin-surface-accent)] p-[3px] shadow-[inset_0_1px_2px_rgba(var(--skin-shadow-rgb),0.04)]">
             {sourceFilters.map((filter) => <button key={filter.value} type="button" aria-pressed={sourceFilter === filter.value} onClick={() => setSourceFilter(filter.value)} className={`h-[26px] rounded-md px-3 text-[11px] font-medium transition-[color,background-color,box-shadow] ${sourceFilter === filter.value ? "bg-white text-[var(--skin-primary)] shadow-[0_1px_4px_rgba(var(--skin-shadow-rgb),0.08)]" : "text-[var(--skin-text-muted)] hover:text-[var(--skin-primary)]"}`}>{filter.label}</button>)}
@@ -265,20 +257,14 @@ export function ApplicationCatalog() {
         ) : <EmptyApps />}
       </section>
       {editingApp !== undefined ? <ApplicationForm key={editingApp?.id ?? "new"} app={editingApp} source={newApplicationSource} onClose={() => setEditingApp(undefined)} onSaved={handleSaved} /> : null}
-      <Dialog.Root open={removingApp !== null} onOpenChange={(open) => { if (!open && !removing) setRemovingApp(null); }}>
-        <Dialog.Portal>
-          <Dialog.Backdrop className="fixed inset-0 z-[60] bg-slate-950/35 backdrop-blur-[1px]" />
-          <Dialog.Popup className="fixed left-1/2 top-1/2 z-[61] w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl focus:outline-none">
-            <Dialog.Title className="text-base font-bold text-title">删除应用</Dialog.Title>
-            <Dialog.Description className="mt-2 text-sm leading-6 text-slate-600">确定删除“{removingApp?.name}”吗？{removingApp?.source === "appfactory" ? "已发布的运行时会停止，但 AppFactory 项目和发布历史会保留。" : removingApp?.source === "external" ? "由应用中心启动的服务会一并停止。" : "该应用注册记录会从应用中心删除。"}</Dialog.Description>
-            {removeError ? <p role="alert" className="mt-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs leading-5 text-rose-700">{removeError}</p> : null}
-            <div className="mt-5 flex justify-end gap-2">
-              <Dialog.Close disabled={removing} className="inline-flex h-9 items-center justify-center rounded-lg border border-border px-3 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60">取消</Dialog.Close>
-              <button type="button" onClick={() => void confirmRemove()} disabled={removing} className="inline-flex h-9 items-center justify-center gap-2 rounded-lg bg-rose-600 px-3 text-sm font-medium text-white transition-colors hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-60">{removing ? <LoaderCircle size={15} className="animate-spin" /> : <Trash2 size={15} />}删除</button>
-            </div>
-          </Dialog.Popup>
-        </Dialog.Portal>
-      </Dialog.Root>
+      <ConfirmDialog
+        open={removingApp !== null}
+        onOpenChange={(open) => { if (!open) setRemovingApp(null); }}
+        title="删除应用"
+        description={`确定删除“${removingApp?.name}”吗？${removingApp?.source === "appfactory" ? "已发布的运行时会停止，但 AppFactory 项目和发布历史会保留。" : removingApp?.source === "external" ? "由应用中心启动的服务会一并停止。" : "该应用注册记录会从应用中心删除。"}`}
+        pending={removing}
+        onConfirm={() => void confirmRemove()}
+      />
     </>
   );
 }

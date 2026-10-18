@@ -1,5 +1,8 @@
 "use client";
 
+import { notify } from "@/features/feedback/notify";
+import { InlineNotice } from "@/components/shared/inline-notice";
+
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { ChevronDown, ChevronRight, Settings2, X } from "lucide-react";
@@ -349,9 +352,7 @@ function KnowledgeBuilderDialogContent({
               </section>
 
               {error ? (
-                <div className="rounded-[14px] border border-[#f0d2d2] bg-[#fff8f8] px-4 py-3 text-[13px] text-[#a33a3a]">
-                  {error}
-                </div>
+                <InlineNotice>{error}</InlineNotice>
               ) : null}
             </section>
           </div>
@@ -389,12 +390,17 @@ function KnowledgeBuilderDialogContent({
                       fileTypes,
                     }),
                   );
-                  const runResult = await runKnowledgeApi(createdItem.id);
-
-                  onCreated(runResult.item);
+                  try {
+                    const runResult = await runKnowledgeApi(createdItem.id);
+                    onCreated(runResult.item);
+                    notify.success("知识库构建完成");
+                  } catch (runError) {
+                    onCreated(createdItem);
+                    notify.error("知识库已创建，构建失败", { details: runError instanceof Error ? runError.message : "请在知识库详情中重新建库。" });
+                  }
                   closeDialog();
                 } catch (nextError) {
-                  setError(nextError instanceof Error ? nextError.message : "建库失败");
+                  notify.error(nextError instanceof Error ? nextError.message : "建库失败");
                 } finally {
                   setPending(false);
                 }

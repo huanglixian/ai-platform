@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { SkinProvider } from "@/features/appearance/skin-provider";
+import { NotificationProvider } from "@/features/feedback/notification-provider";
 import { DEFAULT_SKIN, getSkin, skinInitializationScript } from "@/features/appearance/skins";
 import "./globals.css";
 
@@ -21,7 +22,7 @@ export default function RootLayout({
       <head>
         <script dangerouslySetInnerHTML={{ __html: skinInitializationScript }} />
       </head>
-      <body className="min-h-full flex flex-col"><SkinProvider>{children}</SkinProvider></body>
+      <body className="min-h-full flex flex-col"><SkinProvider><NotificationProvider>{children}</NotificationProvider></SkinProvider></body>
     </html>
   );
 }

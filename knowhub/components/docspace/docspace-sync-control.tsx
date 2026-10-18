@@ -1,5 +1,7 @@
 "use client";
 
+import { notify } from "@/features/feedback/notify";
+
 import { LoaderCircle, RefreshCw } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -14,17 +16,16 @@ type DocSpaceSyncControlProps = {
 export function DocSpaceSyncControl({ id }: DocSpaceSyncControlProps) {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState("");
 
   async function handleSync() {
     setSubmitting(true);
-    setError("");
 
     try {
       await syncDocSpaceApi(id);
       router.refresh();
+      notify.success("文档空间已同步");
     } catch (syncError) {
-      setError(syncError instanceof Error ? syncError.message : "同步失败");
+      notify.error(syncError instanceof Error ? syncError.message : "同步失败");
     } finally {
       setSubmitting(false);
     }
@@ -46,7 +47,6 @@ export function DocSpaceSyncControl({ id }: DocSpaceSyncControlProps) {
         )}
         {submitting ? "同步中" : "同步"}
       </Button>
-      {error ? <div className="text-[12px] text-[#b54747]">{error}</div> : null}
     </div>
   );
 }

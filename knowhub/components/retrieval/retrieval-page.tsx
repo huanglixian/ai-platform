@@ -1,5 +1,8 @@
 "use client";
 
+import { notify } from "@/features/feedback/notify";
+import { InlineNotice } from "@/components/shared/inline-notice";
+
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -106,7 +109,7 @@ export function KnowHubRetrievalPage() {
       setResult(payload.result);
     } catch (nextError) {
       setResult(null);
-      setError(nextError instanceof Error ? nextError.message : "检索失败");
+      notify.error(nextError instanceof Error ? nextError.message : "检索失败");
     } finally {
       setSearching(false);
     }
@@ -161,9 +164,7 @@ export function KnowHubRetrievalPage() {
       </section>
 
       {error ? (
-        <div className="rounded-[16px] border border-[#f0d2d2] bg-[#fff8f8] px-4 py-3 text-[13px] text-[#a33a3a]">
-          {error}
-        </div>
+        <InlineNotice>{error}</InlineNotice>
       ) : null}
 
       <RetrievalResultsPanel visible={hasSearched} items={result?.items ?? []} />

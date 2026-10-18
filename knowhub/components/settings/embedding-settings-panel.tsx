@@ -1,5 +1,8 @@
 "use client";
 
+import { notify } from "@/features/feedback/notify";
+import { InlineNotice } from "@/components/shared/inline-notice";
+
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -44,7 +47,6 @@ export function EmbeddingSettingsPanel({
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [status, setStatus] = useState("");
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -95,8 +97,6 @@ export function EmbeddingSettingsPanel({
 
   async function handleSave() {
     setSaving(true);
-    setError("");
-    setStatus("");
 
     try {
       const response = await fetch("/api/knowhub/settings/embedding", {
@@ -121,9 +121,9 @@ export function EmbeddingSettingsPanel({
       }
 
       setValues(payload.item);
-      setStatus("embedding 配置已保存");
+      notify.success("Embedding 配置已保存");
     } catch (nextError) {
-      setError(nextError instanceof Error ? nextError.message : "保存 embedding 配置失败");
+      notify.error(nextError instanceof Error ? nextError.message : "保存 embedding 配置失败");
     } finally {
       setSaving(false);
     }
@@ -141,7 +141,7 @@ export function EmbeddingSettingsPanel({
             检索 API，不直接感知这套配置。
           </div>
         </div>
-        <Button onClick={handleSave} disabled={loading || saving}>
+        <Button onClick={handleSave} disabled={loading || saving || Boolean(error)}>
           {saving ? "保存中..." : "保存 Embedding 配置"}
         </Button>
       </div>
@@ -188,15 +188,7 @@ export function EmbeddingSettingsPanel({
       </div>
 
       {error ? (
-        <div className="mt-3 rounded-[12px] border border-[#f0d2d2] bg-[#fff8f8] px-3 py-2 text-[12px] text-[#a33a3a]">
-          {error}
-        </div>
-      ) : null}
-
-      {status ? (
-        <div className="mt-3 rounded-[12px] border border-[#dbe5ef] bg-[#f8fbfe] px-3 py-2 text-[12px] text-[#5f6f82]">
-          {status}
-        </div>
+        <InlineNotice action={<button type="button" onClick={() => window.location.reload()}>重新加载</button>}>{error}</InlineNotice>
       ) : null}
     </section>
   );

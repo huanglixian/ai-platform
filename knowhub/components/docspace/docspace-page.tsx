@@ -1,5 +1,7 @@
 "use client";
 
+import { InlineNotice } from "@/components/shared/inline-notice";
+
 import { useEffect, useState } from "react";
 
 import { DocSpaceCard } from "@/knowhub/components/docspace/docspace-card";
@@ -75,9 +77,7 @@ export function KnowHubDocspacePage() {
             正在加载文档空间...
           </div>
         ) : error ? (
-          <div className="rounded-[14px] border border-[#f0d2d2] bg-[#fff8f8] px-4 py-8 text-center text-[13px] text-[#a33a3a]">
-            {error}
-          </div>
+          <InlineNotice action={<button type="button" onClick={() => void loadDocspaceItems()}>重试</button>}>{error}</InlineNotice>
         ) : filteredItems.length ? (
           <KnowHubCardGrid itemWidth={325}>
             {filteredItems.map((item) => (

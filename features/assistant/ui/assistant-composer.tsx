@@ -1,5 +1,7 @@
 "use client";
 
+import { InlineNotice } from "@/components/shared/inline-notice";
+
 import { useState } from "react";
 
 type AssistantComposerProps = {
@@ -39,9 +41,7 @@ export function AssistantComposer({
     <section className="app-card-no-hover overflow-hidden">
       <div className="grid gap-3 px-4 py-4">
         {error ? (
-          <div className="rounded-[10px] border border-[#f0d2d2] bg-[#fff8f8] px-3 py-2 text-[12px] text-[#a33a3a]">
-            {error}
-          </div>
+          <InlineNotice>{error}</InlineNotice>
         ) : null}
 
         <textarea

@@ -1,5 +1,8 @@
 "use client";
 
+import { notify } from "@/features/feedback/notify";
+import { InlineNotice } from "@/components/shared/inline-notice";
+
 import { useState } from "react";
 import { Cloud, FolderPlus, HardDriveDownload, LoaderCircle, X } from "lucide-react";
 
@@ -69,7 +72,6 @@ export function DocSpaceCreateDialog({
   const [submitting, setSubmitting] = useState(false);
   const [testing, setTesting] = useState(false);
   const [error, setError] = useState("");
-  const [testMessage, setTestMessage] = useState("");
 
   const selectedOption =
     sourceOptions.find((item) => item.key === source) ?? sourceOptions[0];
@@ -91,7 +93,6 @@ export function DocSpaceCreateDialog({
     setPassword("");
     setDomain("");
     setError("");
-    setTestMessage("");
   }
 
   function buildPayload() {
@@ -146,17 +147,21 @@ export function DocSpaceCreateDialog({
 
   async function handleTestConnection() {
     if (source === "hosted") {
-      setTestMessage("平台托管空间无需测试连接。");
+      notify.info("平台托管空间无需测试连接。");
       setError("");
       return;
     }
 
+    let payload;
+    try { payload = buildPayload(); }
+    catch (validationError) {
+      setError(validationError instanceof Error ? validationError.message : "请检查填写内容");
+      return;
+    }
     setTesting(true);
     setError("");
-    setTestMessage("");
 
     try {
-      const payload = buildPayload();
       let result = null;
 
       if (payload.source.type === "oss") {
@@ -173,26 +178,32 @@ export function DocSpaceCreateDialog({
         throw new Error("当前方式无需测试连接");
       }
 
-      setTestMessage(result.message);
+      notify.success(result.message);
     } catch (testError) {
-      setError(testError instanceof Error ? testError.message : "测试连接失败");
+      notify.error(testError instanceof Error ? testError.message : "测试连接失败");
     } finally {
       setTesting(false);
     }
   }
 
   async function handleSubmit() {
+    let payload;
+    try { payload = buildPayload(); }
+    catch (validationError) {
+      setError(validationError instanceof Error ? validationError.message : "请检查填写内容");
+      return;
+    }
     setSubmitting(true);
     setError("");
 
     try {
-      const payload = buildPayload();
       const item = await createDocSpaceApi(payload);
       onCreated(item);
       onOpenChange(false);
       resetForm();
+      notify.success("文档空间已创建");
     } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : "创建失败");
+      notify.error(submitError instanceof Error ? submitError.message : "创建失败");
     } finally {
       setSubmitting(false);
     }
@@ -220,6 +231,7 @@ export function DocSpaceCreateDialog({
               onOpenChange(false);
               resetForm();
             }}
+            aria-label="关闭新建空间"
             className="rounded-[10px] border border-[#dbe5f0] p-2 text-[#667085] transition-colors hover:border-[#c7d8ea] hover:text-title"
           >
             <X className="h-4 w-4" />
@@ -239,7 +251,6 @@ export function DocSpaceCreateDialog({
                   onClick={() => {
                     setSource(item.key);
                     setError("");
-                    setTestMessage("");
                   }}
                   className="rounded-[12px] border px-3 py-3 text-center transition-colors"
                   style={{
@@ -351,15 +362,8 @@ export function DocSpaceCreateDialog({
               {selectedOption.title}
             </span>
           </div>
-          {testMessage ? (
-            <div className="mt-3 rounded-[12px] border border-[#d7e8d7] bg-[#f5fbf5] px-3 py-2 text-[12px] text-[#2c6b2f]">
-              {testMessage}
-            </div>
-          ) : null}
           {error ? (
-            <div className="mt-3 rounded-[12px] border border-[#f0d2d2] bg-[#fff8f8] px-3 py-2 text-[12px] text-[#a33a3a]">
-              {error}
-            </div>
+            <InlineNotice>{error}</InlineNotice>
           ) : null}
           <div className="mt-4 flex justify-end gap-2">
             {source !== "hosted" ? (

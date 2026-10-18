@@ -1,5 +1,8 @@
 "use client";
 
+import { notify } from "@/features/feedback/notify";
+import { InlineNotice } from "@/components/shared/inline-notice";
+
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
@@ -36,8 +39,6 @@ export default function AppFactorySettingsPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [saveMessage, setSaveMessage] = useState<string | null>(null);
-  const [saveError, setSaveError] = useState<string | null>(null);
 
   const loadSettings = useCallback(async () => {
     setRefreshing(true);
@@ -88,16 +89,12 @@ export default function AppFactorySettingsPage() {
 
   const updateForm = (change: Partial<ModelSettingsForm>) => {
     setForm((current) => (current ? { ...current, ...change } : current));
-    setSaveMessage(null);
-    setSaveError(null);
   };
 
   const saveSettings = async () => {
     if (!form) return;
 
     setSaving(true);
-    setSaveError(null);
-    setSaveMessage(null);
     try {
       const response = await fetch("/api/appfactory/v1/settings/model", {
         method: "PUT",
@@ -114,9 +111,9 @@ export default function AppFactorySettingsPage() {
         defaultModelProfileId: payload.data.defaultModelProfileId,
         thinkingLevels: payload.data.thinkingLevels,
       });
-      setSaveMessage("已保存：默认档案用于新建对话，各档案思考程度下次执行生效");
+      notify.success("模型设置已保存", { description: "默认档案用于新建对话，思考程度下次执行生效。" });
     } catch (reason) {
-      setSaveError(reason instanceof Error ? reason.message : "保存失败，请稍后重试");
+      notify.error(reason instanceof Error ? reason.message : "保存失败，请稍后重试");
     } finally {
       setSaving(false);
     }
@@ -167,9 +164,7 @@ export default function AppFactorySettingsPage() {
         </div>
 
         {loadError ? (
-          <div className="mt-5 rounded-lg border border-[#f0c5c1] bg-[#fff5f4] px-3 py-2 text-xs text-[#b9382f]">
-            {loadError}
-          </div>
+          <InlineNotice className="mt-5" action={<button type="button" onClick={() => void loadSettings()}>重试</button>}>{loadError}</InlineNotice>
         ) : (
           <div className="mt-5 grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] md:items-end">
             <label className="block">
@@ -224,8 +219,6 @@ export default function AppFactorySettingsPage() {
           </div>
         ) : null}
 
-        {saveMessage ? <p className="mt-3 text-xs text-[#1f8a57]">{saveMessage}</p> : null}
-        {saveError ? <p className="mt-3 text-xs text-[#b9382f]">{saveError}</p> : null}
       </section>
 
       <section className="mt-5 grid gap-4 md:grid-cols-2">

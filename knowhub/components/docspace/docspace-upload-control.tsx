@@ -1,5 +1,7 @@
 "use client";
 
+import { notify } from "@/features/feedback/notify";
+
 import { useRef, useState } from "react";
 import { FilePlus2, LoaderCircle, UploadCloud } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -20,7 +22,6 @@ export function DocSpaceUploadControl({
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [uploading, setUploading] = useState(false);
   const [dragging, setDragging] = useState(false);
-  const [error, setError] = useState("");
 
   async function submitFiles(fileList: FileList | File[]) {
     const files = Array.from(fileList);
@@ -30,13 +31,13 @@ export function DocSpaceUploadControl({
     }
 
     setUploading(true);
-    setError("");
 
     try {
       await uploadDocSpaceFilesApi(id, files);
       router.refresh();
+      notify.success("文件已上传");
     } catch (uploadError) {
-      setError(uploadError instanceof Error ? uploadError.message : "上传失败");
+      notify.error(uploadError instanceof Error ? uploadError.message : "上传失败");
     } finally {
       setUploading(false);
 
@@ -93,7 +94,6 @@ export function DocSpaceUploadControl({
             仅支持本地空间上传，可一次选择多个文件。
           </div>
         </button>
-        {error ? <div className="text-[12px] text-[#b54747]">{error}</div> : null}
       </div>
     );
   }
@@ -125,7 +125,6 @@ export function DocSpaceUploadControl({
         )}
         {uploading ? "上传中" : "上传文件"}
       </Button>
-      {error ? <div className="text-[12px] text-[#b54747]">{error}</div> : null}
     </div>
   );
 }

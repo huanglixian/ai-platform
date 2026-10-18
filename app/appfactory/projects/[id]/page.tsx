@@ -1,5 +1,8 @@
 "use client";
 
+import { notify } from "@/features/feedback/notify";
+import { InlineNotice } from "@/components/shared/inline-notice";
+
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -98,7 +101,7 @@ export default function ProjectPage({
   const [sessionLoading, setSessionLoading] = useState(false);
   const [activeRun, setActiveRun] = useState<RunFeedback | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [loadError, setLoadError] = useState("");
   const [lastOperation, setLastOperation] = useState<Operation | null>(null);
   const eventSourceRef = useRef<EventSource | null>(null);
   const sessionLoadRef = useRef(0);
@@ -120,7 +123,7 @@ export default function ProjectPage({
       setFileContent(payload.data?.content ?? "");
       setFileDiff(payload.data?.diff ?? "");
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "文件内容加载失败");
+      notify.error(reason instanceof Error ? reason.message : "文件内容加载失败");
     }
   };
   const refreshFiles = async (preferred?: string) => {
@@ -265,12 +268,13 @@ export default function ProjectPage({
           : current,
       );
       setBusy(false);
-      if (status === "cancelled") setError("");
-      else if (status === "failed" && data.message) setError(data.message);
+      if (status === "completed") notify.success("Pi 任务已完成", { id: `pi:${run.id}` });
+      else if (status === "failed") notify.error("Pi 任务执行失败", { id: `pi:${run.id}`, description: "可在执行记录中查看详细原因。" });
+      else notify.info("Pi 任务已停止", { id: `pi:${run.id}` });
       void refreshFiles().catch((reason) =>
-        setError(reason instanceof Error ? reason.message : "文件列表加载失败"),
+        notify.error(reason instanceof Error ? reason.message : "文件列表加载失败"),
       );
-      void refreshSessions();
+      void refreshSessions().catch((reason) => notify.error(reason instanceof Error ? reason.message : "对话列表加载失败"));
     });
   };
   const switchSession = async (nextSession: AppFactorySession) => {
@@ -283,11 +287,7 @@ export default function ProjectPage({
     setActiveRun(null);
     setPrompt("");
     setLastOperation(null);
-    setError(
-      nextSession.piStatus === "missing"
-        ? "该对话的 Pi 上下文文件缺失，历史记录仍可查看，但下一轮会从新上下文开始。"
-        : "",
-    );
+    if (nextSession.piStatus === "missing") notify.warning("该对话的 Pi 上下文文件缺失", { description: "历史记录仍可查看，下一轮会从新上下文开始。" });
     try {
       const [nextEvents, nextRun] = await Promise.all([
         loadSessionTranscript(nextSession.id),
@@ -303,7 +303,7 @@ export default function ProjectPage({
       }
     } catch (reason) {
       if (sessionLoadRef.current === requestId) {
-        setError(reason instanceof Error ? reason.message : "对话记录加载失败");
+        notify.error(reason instanceof Error ? reason.message : "对话记录加载失败");
       }
     } finally {
       if (sessionLoadRef.current === requestId) setSessionLoading(false);
@@ -312,7 +312,6 @@ export default function ProjectPage({
   const createConversation = async () => {
     if (!id || busy || sessionLoading) return;
     setSessionLoading(true);
-    setError("");
     try {
       const response = await fetch(
         `/api/appfactory/v1/projects/${id}/sessions`,
@@ -334,7 +333,7 @@ export default function ProjectPage({
       setPrompt("");
       setLastOperation(null);
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "新建对话失败");
+      notify.error(reason instanceof Error ? reason.message : "新建对话失败");
     } finally {
       setSessionLoading(false);
     }
@@ -382,9 +381,7 @@ export default function ProjectPage({
         );
         setSession(currentSession);
         if (currentSession?.piStatus === "missing") {
-          setError(
-            "该对话的 Pi 上下文文件缺失，历史记录仍可查看，但下一轮会从新上下文开始。",
-          );
+          notify.warning("该对话的 Pi 上下文文件缺失", { description: "历史记录仍可查看，下一轮会从新上下文开始。" });
         }
         if (currentSession?.id) {
           const [currentEvents, currentRun] = await Promise.all([
@@ -422,7 +419,7 @@ export default function ProjectPage({
           );
       } catch (reason) {
         if (active)
-          setError(reason instanceof Error ? reason.message : "项目加载失败");
+          setLoadError(reason instanceof Error ? reason.message : "项目加载失败");
       } finally {
         if (active) setLoading(false);
       }
@@ -436,7 +433,6 @@ export default function ProjectPage({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params]);
   const openPreview = async () => {
-    setError("");
     const previewWindow = window.open("", "_blank");
     let progressTimer: ReturnType<typeof setInterval> | undefined;
     try {
@@ -471,7 +467,7 @@ export default function ProjectPage({
         previewWindow.document.title = "预览启动失败";
         previewWindow.document.body.textContent = message;
       }
-      setError(message);
+      notify.error(message);
     } finally {
       if (progressTimer) clearInterval(progressTimer);
     }
@@ -495,7 +491,6 @@ export default function ProjectPage({
           : item,
       ),
     );
-    setError("");
     setPrompt("");
     try {
       const response = await fetch(
@@ -532,8 +527,8 @@ export default function ProjectPage({
         status: "failed",
         message,
       });
-      setError(message);
-      void refreshSessions();
+      notify.error(message);
+      void refreshSessions().catch((reason) => notify.error(reason instanceof Error ? reason.message : "对话列表加载失败"));
     }
   };
   const retry = () => {
@@ -554,7 +549,7 @@ export default function ProjectPage({
         throw new Error(errorText(payload, "停止任务失败"));
       }
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "停止任务失败");
+      notify.error(reason instanceof Error ? reason.message : "停止任务失败");
     }
   };
   if (loading)
@@ -566,7 +561,7 @@ export default function ProjectPage({
   if (!project)
     return (
       <main className="grid h-[calc(100dvh-56px)] place-items-center text-sm text-[#b9382f]">
-        {error || "项目不存在"}
+        <InlineNotice action={<button type="button" onClick={() => window.location.reload()}>重新加载</button>}>{loadError || "项目不存在"}</InlineNotice>
       </main>
     );
   const activeModelConfigured = session
@@ -598,6 +593,7 @@ export default function ProjectPage({
       : "bg-[#fff5f4] text-[#b9382f]";
   return (
     <main className="flex h-[calc(100dvh-56px)] min-h-0 flex-col overflow-hidden bg-[#f6f8fb]">
+      {loadError ? <InlineNotice action={<button type="button" onClick={() => window.location.reload()}>重新加载</button>}>{loadError}</InlineNotice> : null}
       <header className="flex min-h-14 shrink-0 items-center justify-between gap-4 border-b border-[#d4dde8] bg-white px-4 sm:px-6">
         <div className="flex min-w-0 items-center gap-3">
           <Link
@@ -632,7 +628,7 @@ export default function ProjectPage({
           </button>
           <button
             type="button"
-            onClick={() => void publish(id).catch((reason: unknown) => setError(reason instanceof Error ? reason.message : "创建发布任务失败"))}
+            onClick={() => void publish(id).catch((reason: unknown) => notify.error(reason instanceof Error ? reason.message : "创建发布任务失败"))}
             disabled={busy || publication?.status === "queued" || publication?.status === "running"}
             className="h-8 rounded-lg bg-[#0368b3] px-3 text-xs font-medium text-white hover:bg-[#1a4d87] disabled:opacity-40"
           >

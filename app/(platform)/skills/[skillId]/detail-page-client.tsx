@@ -1,5 +1,9 @@
 "use client";
 
+import { Dialog } from "@base-ui/react/dialog";
+import { notify } from "@/features/feedback/notify";
+import { InlineNotice } from "@/components/shared/inline-notice";
+import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -82,9 +86,7 @@ function MermaidRenderer({ chart }: { chart: string }) {
 
   if (renderError) {
     return (
-      <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-4 text-center text-xs text-destructive font-sans">
-        ⚠️ {renderError}
-      </div>
+      <InlineNotice>{renderError}</InlineNotice>
     );
   }
 
@@ -111,7 +113,10 @@ export function SkillDetailPageClient({ skill }: SkillDetailPageClientProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
-  const [saveError, setSaveError] = useState("");
+  const [createFileOpen, setCreateFileOpen] = useState(false);
+  const [newFileName, setNewFileName] = useState("");
+  const [fileNameError, setFileNameError] = useState("");
+  const [deletingFile, setDeletingFile] = useState<string | null>(null);
   const [analyzeError, setAnalyzeError] = useState("");
   const [flowMermaid, setFlowMermaid] = useState(skill.flowMermaid || "");
   const [hasAttemptedAuto, setHasAttemptedAuto] = useState(false);
@@ -151,49 +156,36 @@ export function SkillDetailPageClient({ skill }: SkillDetailPageClientProps) {
     }
   };
 
-  // 新建参考文件
   const handleCreateFile = () => {
-    const fileName = prompt(
-      "请输入新建参考文件的相对路径 (例如: references/config.txt，必须以 references/ 开头):"
-    );
-    if (!fileName) return;
-
-    let formattedName = fileName.trim();
-    if (!formattedName.startsWith("references/")) {
-      formattedName = "references/" + formattedName;
-    }
-
-    if (formattedName === "references/") {
-      alert("文件名不能为空！");
-      return;
-    }
-
-    if (refFiles.some((f) => f.name === formattedName)) {
-      alert("该文件已存在！");
-      return;
-    }
-
-    const newFile = { name: formattedName, content: "" };
-    setRefFiles((prev) => [...prev, newFile].sort((a, b) => a.name.localeCompare(b.name)));
-    setCurrentFilePath(formattedName);
+    setNewFileName("");
+    setFileNameError("");
+    setCreateFileOpen(true);
   };
 
-  // 删除参考文件
-  const handleDeleteFile = (fileName: string, e: React.MouseEvent) => {
-    e.stopPropagation(); // 阻止点击事件穿透到选中文件
-    if (!confirm(`确定要删除参考文件 ${fileName.replace("references/", "")} 吗？`)) {
-      return;
-    }
+  const createReferenceFile = (event: React.FormEvent) => {
+    event.preventDefault();
+    const name = newFileName.trim();
+    const formattedName = name.startsWith("references/") ? name : `references/${name}`;
+    if (!name || formattedName === "references/") { setFileNameError("请输入文件名"); return; }
+    if (refFiles.some((file) => file.name === formattedName)) { setFileNameError("该文件已存在"); return; }
+    setRefFiles((current) => [...current, { name: formattedName, content: "" }].sort((a, b) => a.name.localeCompare(b.name)));
+    setCurrentFilePath(formattedName);
+    setCreateFileOpen(false);
+  };
 
-    setRefFiles((prev) => prev.filter((f) => f.name !== fileName));
-    if (currentFilePath === fileName) {
-      setCurrentFilePath("SKILL.md");
-    }
+  const handleDeleteFile = (fileName: string, event: React.MouseEvent) => {
+    event.stopPropagation();
+    setDeletingFile(fileName);
+  };
+
+  const deleteReferenceFile = () => {
+    setRefFiles((current) => current.filter((file) => file.name !== deletingFile));
+    if (currentFilePath === deletingFile) setCurrentFilePath("SKILL.md");
+    setDeletingFile(null);
   };
 
   const handleSave = async () => {
     setSaving(true);
-    setSaveError("");
 
     const triggers = triggersInput
       .split(/[,，\s]+/)
@@ -235,11 +227,12 @@ export function SkillDetailPageClient({ skill }: SkillDetailPageClientProps) {
 
       setIsEditing(false);
       router.refresh();
+      notify.success("技能配置已保存");
 
       // 保存修改成功后，前端主动再调用一次分析逻辑，将更新后的 SKILL.md 重新分析并重新渲染图
       void handleAnalyze();
     } catch (err) {
-      setSaveError(err instanceof Error ? err.message : "未知错误导致保存失败");
+      notify.error(err instanceof Error ? err.message : "保存失败");
     } finally {
       setSaving(false);
     }
@@ -278,6 +271,21 @@ export function SkillDetailPageClient({ skill }: SkillDetailPageClientProps) {
 
   return (
     <div className="w-full max-w-none flex flex-col gap-4">
+      <ConfirmDialog open={deletingFile !== null} onOpenChange={(open) => { if (!open) setDeletingFile(null); }} title="删除参考文件" description={`确定删除“${deletingFile?.replace("references/", "") }”吗？保存配置后生效。`} onConfirm={deleteReferenceFile} />
+      <Dialog.Root open={createFileOpen} onOpenChange={setCreateFileOpen}>
+        <Dialog.Portal>
+          <Dialog.Backdrop className="fixed inset-0 z-[80] bg-slate-950/30 backdrop-blur-[2px]" />
+          <Dialog.Popup className="fixed left-1/2 top-1/2 z-[81] w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl focus:outline-none">
+            <Dialog.Title className="text-base font-semibold text-slate-900">新建参考文件</Dialog.Title>
+            <Dialog.Description className="mt-2 text-xs leading-5 text-slate-500">文件位于 references/ 目录，保存配置后生效。</Dialog.Description>
+            <form onSubmit={createReferenceFile} className="mt-4 space-y-3">
+              <label className="block text-xs text-slate-600">文件名<Input autoFocus value={newFileName} onChange={(event) => { setNewFileName(event.target.value); setFileNameError(""); }} placeholder="例如：config.txt" className="mt-1.5" aria-invalid={Boolean(fileNameError)} /></label>
+              {fileNameError ? <InlineNotice>{fileNameError}</InlineNotice> : null}
+              <div className="flex justify-end gap-2"><Dialog.Close className="rounded-lg border border-slate-200 px-3 py-2 text-xs">取消</Dialog.Close><Button type="submit" size="sm">创建</Button></div>
+            </form>
+          </Dialog.Popup>
+        </Dialog.Portal>
+      </Dialog.Root>
       {/* 顶部面包屑与操作栏 */}
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border pb-3">
         <div className="min-w-0">
@@ -310,8 +318,7 @@ export function SkillDetailPageClient({ skill }: SkillDetailPageClientProps) {
                 disabled={saving}
                 onClick={() => {
                   setIsEditing(false);
-                  setSaveError("");
-                  // 还原状态
+                                // 还原状态
                   setName(skill.name);
                   setDescription(skill.description);
                   setCategory(skill.category);
@@ -335,12 +342,6 @@ export function SkillDetailPageClient({ skill }: SkillDetailPageClientProps) {
           )}
         </div>
       </div>
-
-      {saveError && (
-        <div className="rounded-[10px] border border-destructive/20 bg-destructive/5 px-4 py-3 text-xs text-destructive font-sans shadow-sm">
-          保存错误: {saveError}
-        </div>
-      )}
 
       {/* 顶部元数据区：全宽、高度不大的 meta 横向排开 */}
       <div className="app-card-no-hover p-4 bg-white flex flex-col gap-3">
@@ -659,9 +660,7 @@ export function SkillDetailPageClient({ skill }: SkillDetailPageClientProps) {
         </div>
 
         {analyzeError && (
-          <div className="rounded-lg border border-destructive/20 bg-destructive/5 px-3 py-2 text-xs text-destructive font-sans shadow-sm">
-            分析失败: {analyzeError}
-          </div>
+          <InlineNotice>分析失败：{analyzeError}</InlineNotice>
         )}
 
         {flowMermaid ? (

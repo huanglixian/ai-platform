@@ -28,6 +28,7 @@ app_factory/server/enterprise-preview-build.ts 企业 Preview 源码版本、后
 app_factory/templates/nextjs-enterprise/ 通用企业模板 Bundle（Skill、references、scaffold、framework）
 features/platform-home/         首页组合与展示状态
 features/appearance/            皮肤预设、切换、浏览器偏好与品牌同步
+features/feedback/              全局 Toast、通知调用入口与接入规范
 features/assistant/             AI 助手客户端、会话 UI 与服务端编排
 features/apps/                  应用目录数据、运行时与分组 UI
 data/builtin/                   随 Git 发布的内置技能资源
@@ -72,6 +73,12 @@ scripts/app.mts                 平台与发布 Worker 统一启动器
 - 助手：客户端与 UI 在 `features/assistant/`，提供问答与已发布知识库搜索；问答接口为 `/api/platform/assistant/chat`，知识库搜索复用 KnowHub 检索接口。问答先在应用、已启用技能和可用业务 API 中分流：明确任务执行技能，相关但不足以执行的请求返回推荐卡片，无明显匹配时显示固定引导文案及首页、技能中心、业务 API 跳转入口；通用工具不参与推荐。技能执行时只挂载其声明且已注册实现的工具；`features/skills/runner.ts` 将参考文件正文和引用地址一同注入执行上下文，`/api/platform/skills/[skillId]/references/[fileName]` 只提供技能包中已有参考文件的纯文本。
 - 应用目录 UI：`features/apps/ui/application-catalog.tsx`。支持来源筛选与关键词搜索，按 `AppFactory → 外部应用 → Dify / n8n` 展示；接入入口仅位于外部应用、Dify、n8n 的分组标题中。
 - 当前状态：助手消息和搜索结果仅保存在浏览器内存中；未匹配引导文案与跳转入口固定在助手流程内；点击“返回首页”会结束当前问答或搜索并恢复应用目录。
+
+### 平台消息反馈
+
+- 公共入口：`features/feedback/notify.ts` 提供成功、失败、警告、信息、加载中和关闭通知；`notification-provider.tsx` 在根布局挂载一次，覆盖首页、AppFactory 与 KnowHub；样式与接入规则位于同目录 `notifications.css`、`README.md`，复用现有 Base UI，无新增依赖。
+- 使用边界：用户操作结果使用 Toast，字段校验和页面加载失败使用原位 `components/shared/inline-notice.tsx`，删除前使用 `components/shared/confirm-dialog.tsx`。平台前端不使用原生 alert、confirm 或 prompt；技能参考文件输入使用受控 Dialog。外部应用与生成项目保留各自界面边界。
+- 运行行为：同一消息在显示期间去重，指定 ID 可将加载通知更新为结果；成功默认 3 秒，其他普通通知默认 6 秒，加载及包含可展开详情的消息手动关闭。发布和 Pi 保留原有任务记录，运行中的任务结束时附加一次通知，首次读取的发布历史不补发通知；轮询异常在任务中心原位显示，不逐次弹出。通知只保存在当前浏览器页面内存中，不是持久化站内信。
 
 ### 应用注册与运行
 

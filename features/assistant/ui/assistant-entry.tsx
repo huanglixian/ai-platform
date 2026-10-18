@@ -1,5 +1,7 @@
 "use client";
 
+import { InlineNotice } from "@/components/shared/inline-notice";
+
 import { useState } from "react";
 import { ArrowUp, Sparkles } from "lucide-react";
 import type { KnowledgeOption } from "../knowledge-client";
@@ -103,7 +105,7 @@ function AssistantEntryContent({
               {sending ? "处理中" : mode === "chat" ? "开始对话" : "搜索"}<ArrowUp size={15} />
             </button>
           </div>
-          {error ? <p role="alert" className="mt-2 text-xs text-rose-600">{error}</p> : null}
+          {error ? <InlineNotice>{error}</InlineNotice> : null}
         </div>
       </div>
     </section>

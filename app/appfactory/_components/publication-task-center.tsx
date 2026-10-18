@@ -1,5 +1,7 @@
 "use client";
 
+import { notify } from "@/features/feedback/notify";
+import { InlineNotice } from "@/components/shared/inline-notice";
 import { Dialog } from "@base-ui/react/dialog";
 import Link from "next/link";
 import {
@@ -160,6 +162,25 @@ function JobDetails({ job, events, onCancel, onRetry }: {
 
 export function PublicationTaskCenterProvider({ children }: { children: ReactNode }) {
   const [jobs, setJobs] = useState<PublicationJob[]>([]);
+  const [connectionError, setConnectionError] = useState("");
+  const observedJobs = useRef(new Map<string, PublicationJob>());
+  const announcedJobs = useRef(new Set<string>());
+  const receiveJob = useCallback((job: PublicationJob) => {
+    const previous = observedJobs.current.get(job.id);
+    observedJobs.current.set(job.id, job);
+    setJobs((current) => mergeJob(current, job));
+    const notificationId = `publication:${job.id}:${job.attempts}`;
+    if (previous && isActive(previous) && !isActive(job) && !announcedJobs.current.has(notificationId)) {
+      announcedJobs.current.add(notificationId);
+      const options = { id: notificationId };
+      if (job.status === "succeeded") notify.success("应用发布成功", options);
+      else if (job.status === "failed") notify.error("应用发布失败", { ...options, description: "可在发布任务中心查看详情。" });
+      else notify.info("应用发布已取消", options);
+    }
+  }, []);
+  const reportConnectionError = useCallback((error: unknown) => {
+    setConnectionError(error instanceof Error ? error.message : "发布状态读取失败，正在重试");
+  }, []);
   const [events, setEvents] = useState<Record<string, PublicationEvent[]>>({});
   const [centerOpen, setCenterOpen] = useState(false);
   const [launchJobId, setLaunchJobId] = useState<string | null>(null);
@@ -184,13 +205,13 @@ export function PublicationTaskCenterProvider({ children }: { children: ReactNod
     const response = await fetch(`/api/appfactory/v1/publication-jobs/${jobId}`);
     const payload = await response.json();
     if (!response.ok) throw new Error(messageFrom(payload, "发布任务读取失败"));
-    setJobs((current) => mergeJob(current, payload.data));
+    receiveJob(payload.data);
     return payload.data as PublicationJob;
-  }, []);
+  }, [receiveJob]);
   const refreshEvents = useCallback(async (jobId: string, after = 0) => {
     const response = await fetch(`/api/appfactory/v1/publication-jobs/${jobId}/events?after=${after}`);
     const payload = await response.json();
-    if (!response.ok) return;
+    if (!response.ok) throw new Error(messageFrom(payload, "发布事件读取失败"));
     const incoming = Array.isArray(payload.data) ? payload.data as PublicationEvent[] : [];
     if (!incoming.length) return;
     receiveEvents(jobId, incoming);
@@ -198,15 +219,17 @@ export function PublicationTaskCenterProvider({ children }: { children: ReactNod
   const refreshJobs = useCallback(async () => {
     const response = await fetch("/api/appfactory/v1/publication-jobs");
     const payload = await response.json();
-    if (!response.ok) return;
+    if (!response.ok) throw new Error(messageFrom(payload, "发布任务读取失败"));
     const next = Array.isArray(payload.data) ? payload.data as PublicationJob[] : [];
+    setConnectionError("");
+    next.forEach((job) => observedJobs.current.set(job.id, job));
     setJobs(next);
   }, []);
 
   useEffect(() => {
-    const timer = window.setTimeout(() => { void refreshJobs(); }, 0);
+    const timer = window.setTimeout(() => { void refreshJobs().catch(reportConnectionError); }, 0);
     return () => window.clearTimeout(timer);
-  }, [refreshJobs]);
+  }, [refreshJobs, reportConnectionError]);
   const activeJobIds = jobs.filter(isActive).map((job) => job.id).sort().join(",");
   useEffect(() => {
     const jobIds = activeJobIds ? activeJobIds.split(",") : [];
@@ -218,38 +241,44 @@ export function PublicationTaskCenterProvider({ children }: { children: ReactNod
         const parsed = parseSseBlock(`data: ${event.data}`);
         const publicationEvent = parsed?.data as PublicationEvent | undefined;
         if (publicationEvent?.id) receiveEvents(jobId, [publicationEvent]);
-        void refreshJob(jobId);
+        void refreshJob(jobId).catch(reportConnectionError);
       });
       return source;
     });
-    const poll = window.setInterval(() => jobIds.forEach((jobId) => {
-      void refreshEvents(jobId, eventCursorsRef.current[jobId] || 0);
-      void refreshJob(jobId);
-    }), 2_500);
+    const poll = window.setInterval(() => {
+      void Promise.all(jobIds.map((jobId) => Promise.all([
+        refreshEvents(jobId, eventCursorsRef.current[jobId] || 0),
+        refreshJob(jobId),
+      ]))).then(() => setConnectionError("")).catch(reportConnectionError);
+    }, 2_500);
     return () => { streams.forEach((source) => source.close()); window.clearInterval(poll); };
-  }, [activeJobIds, receiveEvents, refreshEvents, refreshJob]);
+  }, [activeJobIds, receiveEvents, refreshEvents, refreshJob, reportConnectionError]);
 
   const publish = useCallback(async (projectId: string) => {
     const response = await fetch(`/api/appfactory/v1/projects/${projectId}/publication`, { method: "POST" });
     const payload = await response.json();
     if (!response.ok) throw new Error(messageFrom(payload, "创建发布任务失败"));
     const job = payload.data as PublicationJob;
-    setJobs((current) => mergeJob(current, job));
+    receiveJob(job);
     setLaunchJobId(job.id);
     setFlying(false);
     eventCursorsRef.current[job.id] = eventCursorsRef.current[job.id] || 0;
     setEvents((current) => ({ ...current, [job.id]: current[job.id] || [] }));
-    void refreshEvents(job.id);
+    void refreshEvents(job.id).catch(reportConnectionError);
     return job;
-  }, [refreshEvents]);
+  }, [refreshEvents, receiveJob, reportConnectionError]);
   const act = useCallback(async (jobId: string, action: "cancel" | "retry") => {
-    const response = await fetch(`/api/appfactory/v1/publication-jobs/${jobId}/actions`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ action }) });
-    const payload = await response.json();
-    if (!response.ok) throw new Error(messageFrom(payload, action === "cancel" ? "取消失败" : "重试失败"));
-    const job = payload.data as PublicationJob;
-    setJobs((current) => mergeJob(current, job));
-    if (action === "retry") { setLaunchJobId(job.id); setFlying(false); }
-  }, []);
+    try {
+      const response = await fetch(`/api/appfactory/v1/publication-jobs/${jobId}/actions`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ action }) });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(messageFrom(payload, action === "cancel" ? "取消失败" : "重试失败"));
+      const job = payload.data as PublicationJob;
+      receiveJob(job);
+      if (action === "retry") { setLaunchJobId(job.id); setFlying(false); }
+    } catch (error) {
+      notify.error(error instanceof Error ? error.message : "发布任务操作失败");
+    }
+  }, [receiveJob]);
 
   useEffect(() => {
     if (!launchJobId || flying) return;
@@ -287,7 +316,7 @@ export function PublicationTaskCenterProvider({ children }: { children: ReactNod
       <Dialog.Portal>
         <Dialog.Popup className="publication-task-center" initialFocus={false}>
           <div className="flex items-center justify-between border-b border-[#e5ebf2] px-5 py-4"><div><Dialog.Title className="text-sm font-semibold text-[#173f6b]">发布任务中心</Dialog.Title><Dialog.Description className="mt-1 text-xs text-[#98a2b3]">应用发布会在后台持续运行</Dialog.Description></div><Dialog.Close className="rounded-md p-1 text-[#98a2b3] hover:bg-[#f2f4f7] hover:text-[#4d4d4d]" aria-label="关闭任务中心"><X size={17} /></Dialog.Close></div>
-          <div className="min-h-0 flex-1 overflow-auto p-4">{jobs.length ? <div className="space-y-3">{jobs.map((job) => <article key={job.id} className="rounded-xl border border-[#dce5ee] bg-white p-4"><JobDetails job={job} events={events[job.id] || []} onCancel={() => void act(job.id, "cancel")} onRetry={() => void act(job.id, "retry")} /></article>)}</div> : <div className="grid min-h-48 place-items-center text-center"><div><CircleDashed className="mx-auto text-[#bfd7f2]" size={28} /><p className="mt-3 text-sm font-medium text-[#667085]">暂无发布任务</p><p className="mt-1 text-xs text-[#98a2b3]">从项目页发布应用后，进度会显示在这里。</p></div></div>}</div>
+          <div className="min-h-0 flex-1 overflow-auto p-4">{connectionError ? <InlineNotice className="mb-3" action={<button type="button" onClick={() => void refreshJobs().catch(reportConnectionError)}>重试</button>}>{connectionError}</InlineNotice> : null}{jobs.length ? <div className="space-y-3">{jobs.map((job) => <article key={job.id} className="rounded-xl border border-[#dce5ee] bg-white p-4"><JobDetails job={job} events={events[job.id] || []} onCancel={() => void act(job.id, "cancel")} onRetry={() => void act(job.id, "retry")} /></article>)}</div> : <div className="grid min-h-48 place-items-center text-center"><div><CircleDashed className="mx-auto text-[#bfd7f2]" size={28} /><p className="mt-3 text-sm font-medium text-[#667085]">暂无发布任务</p><p className="mt-1 text-xs text-[#98a2b3]">从项目页发布应用后，进度会显示在这里。</p></div></div>}</div>
         </Dialog.Popup>
       </Dialog.Portal>
     </Dialog.Root>

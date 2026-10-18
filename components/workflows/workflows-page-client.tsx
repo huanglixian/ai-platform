@@ -1,5 +1,8 @@
 "use client";
 
+import { notify } from "@/features/feedback/notify";
+import { ConfirmDialog } from "@/components/shared/confirm-dialog";
+import { InlineNotice } from "@/components/shared/inline-notice";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Plus, Trash2 } from "lucide-react";
@@ -101,23 +104,67 @@ export function WorkflowsPageClient() {
   const [showModal, setShowModal] = useState(false);
   const [newFlowName, setNewFlowName] = useState("");
   const [newFlowDesc, setNewFlowDesc] = useState("");
+  const [loadError, setLoadError] = useState("");
+  const [createError, setCreateError] = useState("");
+  const [creating, setCreating] = useState(false);
+  const [deletingFlow, setDeletingFlow] = useState<Workflow | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
-    fetch("/api/agenthub/v1/workflows").then((r) => r.json()).then((payload) => setList(payload.data ?? []));
+    let active = true;
+    fetch("/api/agenthub/v1/workflows")
+      .then(async (response) => {
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload.error?.message || "业务流加载失败");
+        if (active) setList(payload.data ?? []);
+      })
+      .catch((error: unknown) => { if (active) setLoadError(error instanceof Error ? error.message : "业务流加载失败"); });
+    return () => { active = false; };
   }, []);
 
-  function handleCreate() {
-    const trimmedName = newFlowName.trim();
-    if (!trimmedName) return;
-
-    fetch("/api/agenthub/v1/workflows", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ name: trimmedName, description: newFlowDesc.trim() || "暂无描述", category: "业务审批", nodes: [{ id: "start-1", type: "start", position: { x: 100, y: 150 }, data: { label: "开始", description: "接收输入参数", config: {} } }], edges: [] }) }).then((r) => r.json()).then((payload) => { setList((current) => [payload.data, ...current]); setShowModal(false); setNewFlowName(""); setNewFlowDesc(""); });
+  async function handleCreate() {
+    if (creating) return;
+    const name = newFlowName.trim();
+    if (!name) { setCreateError("请输入业务流名称"); return; }
+    setCreateError("");
+    setCreating(true);
+    try {
+      const response = await fetch("/api/agenthub/v1/workflows", {
+        method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ name, description: newFlowDesc.trim() || "暂无描述", category: "业务审批", nodes: [{ id: "start-1", type: "start", position: { x: 100, y: 150 }, data: { label: "开始", description: "接收输入参数", config: {} } }], edges: [] }),
+      });
+      const payload = await response.json();
+      if (!response.ok || !payload.data) throw new Error(payload.error?.message || "业务流创建失败");
+      setList((current) => [payload.data, ...current]);
+      setShowModal(false);
+      setNewFlowName("");
+      setNewFlowDesc("");
+      notify.success("业务流已创建");
+    } catch (error) {
+      notify.error(error instanceof Error ? error.message : "业务流创建失败");
+    } finally { setCreating(false); }
   }
 
   function handleDelete(id: string, event: React.MouseEvent) {
     event.preventDefault();
     event.stopPropagation();
-    if (!confirm("确定删除该业务流吗？")) return;
-    fetch(`/api/agenthub/v1/workflows/${id}`, { method: "DELETE" }).then(() => setList((current) => current.filter((item) => item.id !== id)));
+    setDeletingFlow(list.find((flow) => flow.id === id) ?? null);
+  }
+
+  async function confirmDelete() {
+    if (!deletingFlow || deleting) return;
+    setDeleting(true);
+    try {
+      const response = await fetch(`/api/agenthub/v1/workflows/${deletingFlow.id}`, { method: "DELETE" });
+      if (!response.ok) {
+        const payload = await response.json();
+        throw new Error(payload.error?.message || "业务流删除失败");
+      }
+      setList((current) => current.filter((item) => item.id !== deletingFlow.id));
+      setDeletingFlow(null);
+      notify.success("业务流已删除");
+    } catch (error) { notify.error(error instanceof Error ? error.message : "业务流删除失败"); }
+    finally { setDeleting(false); }
   }
 
   const normalizedKeyword = keyword.trim().toLowerCase();
@@ -164,7 +211,8 @@ export function WorkflowsPageClient() {
   })).filter((section) => section.children.length > 0);
 
   return (
-    <>
+    <div className="min-w-0 flex-1">
+      {loadError ? <InlineNotice className="mb-3" action={<button type="button" onClick={() => window.location.reload()}>重新加载</button>}>{loadError}</InlineNotice> : null}
       <CardPageFrame
         title="业务流"
         count={visibleWorkflows.length}
@@ -186,18 +234,20 @@ export function WorkflowsPageClient() {
         )}
       </CardPageFrame>
 
+      <ConfirmDialog open={deletingFlow !== null} onOpenChange={(open) => { if (!open) setDeletingFlow(null); }} title="删除业务流" description={`确定删除“${deletingFlow?.name}”吗？`} pending={deleting} onConfirm={() => void confirmDelete()} />
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm">
           <div className="w-full max-w-md rounded-[10px] border border-border bg-white p-6 shadow-2xl animate-in fade-in-50 zoom-in-95 duration-200">
             <h3 className="mb-4 text-sm font-bold text-title">新建业务流</h3>
 
+            {createError ? <InlineNotice className="mb-3">{createError}</InlineNotice> : null}
             <div className="flex flex-col gap-4">
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-semibold text-slate-500">名称</label>
                 <input
                   type="text"
                   value={newFlowName}
-                  onChange={(event) => setNewFlowName(event.target.value)}
+                  onChange={(event) => { setNewFlowName(event.target.value); setCreateError(""); }}
                   className="w-full rounded-lg border border-input bg-transparent px-3 py-2 text-xs text-foreground outline-none transition-colors focus:border-primary"
                   placeholder="例如：故障检测处理流"
                 />
@@ -223,15 +273,16 @@ export function WorkflowsPageClient() {
               </button>
               <button
                 type="button"
-                onClick={handleCreate}
+                onClick={() => void handleCreate()}
+                disabled={creating}
                 className="rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-white transition-all hover:brightness-105"
               >
-                创建
+                {creating ? "创建中…" : "创建"}
               </button>
             </div>
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }
