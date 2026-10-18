@@ -1,3 +1,4 @@
+import { withApiAuth } from "@/features/auth/api";
 import { NextResponse } from "next/server";
 
 import { listDocSpaceFiles } from "@/knowhub/features/docspace/service";
@@ -10,7 +11,7 @@ type DocSpaceFilesRouteContext = {
   }>;
 };
 
-export async function GET(
+async function handleGET(
   _request: Request,
   context: DocSpaceFilesRouteContext,
 ) {
@@ -32,3 +33,5 @@ export async function GET(
     items,
   });
 }
+
+export const GET = withApiAuth(handleGET);

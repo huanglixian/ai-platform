@@ -1,9 +1,10 @@
+import { withApiAuth } from "@/features/auth/api";
 import { apiError, apiOk } from "@/lib/server/api-response";
 import { getApplication, startExternalApplication } from "@/features/apps/server";
 
 export const runtime = "nodejs";
 
-export async function POST(_request: Request, context: { params: Promise<{ id: string }> }) {
+async function handlePOST(_request: Request, context: { params: Promise<{ id: string }> }) {
   const { id } = await context.params;
   const app = getApplication(id);
   if (!app) return apiError("应用不存在", 404);
@@ -15,3 +16,5 @@ export async function POST(_request: Request, context: { params: Promise<{ id: s
     return apiError(error instanceof Error ? error.message : "启动服务失败", 409);
   }
 }
+
+export const POST = withApiAuth(handlePOST);

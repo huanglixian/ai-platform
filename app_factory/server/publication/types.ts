@@ -1,3 +1,5 @@
+import type { Visibility } from "@/features/access/types";
+
 export const publicationStages = [
   "queued",
   "validating",
@@ -26,6 +28,8 @@ export type PublicationEvent = {
 export type PublicationJob = {
   id: string;
   projectId: string;
+  visibility: Visibility;
+  policyRevision: number;
   status: PublicationStatus;
   stage: PublicationStage;
   step: string;

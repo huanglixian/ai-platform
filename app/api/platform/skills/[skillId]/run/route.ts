@@ -1,3 +1,4 @@
+import { withApiAuth } from "@/features/auth/api";
 import { NextResponse } from "next/server";
 
 import { buildSkillRunContext } from "@/features/skills/runner";
@@ -10,7 +11,7 @@ type SkillRunRouteContext = {
   }>;
 };
 
-export async function POST(_request: Request, context: SkillRunRouteContext) {
+async function handlePOST(_request: Request, context: SkillRunRouteContext) {
   const { skillId } = await context.params;
 
   try {
@@ -30,3 +31,5 @@ export async function POST(_request: Request, context: SkillRunRouteContext) {
     );
   }
 }
+
+export const POST = withApiAuth(handlePOST);

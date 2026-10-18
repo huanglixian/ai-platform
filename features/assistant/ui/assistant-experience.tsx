@@ -1,5 +1,8 @@
 "use client";
 
+import { useCurrentUser } from "@/features/auth/auth-provider";
+import { hasPermission } from "@/features/auth/types";
+
 import { ArrowLeft, Sparkles } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
@@ -349,6 +352,7 @@ type AssistantExperienceProps = {
 };
 
 export function AssistantExperience({ onConversationChange }: AssistantExperienceProps) {
+  const canSearch = hasPermission(useCurrentUser(), "platform.manage");
   const [mode, setMode] = useState<"chat" | "search">("chat");
   const [searchActive, setSearchActive] = useState(false);
   const [knowledgeOptions, setKnowledgeOptions] = useState<KnowledgeOption[]>([]);
@@ -361,13 +365,14 @@ export function AssistantExperience({ onConversationChange }: AssistantExperienc
   const requestVersion = useRef(0);
   useEffect(() => {
     let active = true;
+    if (!canSearch) return;
     listAssistantKnowledge().then((items) => {
       if (!active) return;
       setKnowledgeOptions(items);
       setKnowledgeId(items[0]?.id || "");
     }).catch((error: Error) => { if (active) setKnowledgeError(error.message); });
     return () => { active = false; };
-  }, []);
+  }, [canSearch]);
 
   async function handleSearch(content: string) {
     if (searching || !content.trim()) return;

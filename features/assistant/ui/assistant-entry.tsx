@@ -5,6 +5,8 @@ import { InlineNotice } from "@/components/shared/inline-notice";
 import { useState } from "react";
 import { ArrowUp, Sparkles } from "lucide-react";
 import type { KnowledgeOption } from "../knowledge-client";
+import { useCurrentUser } from "@/features/auth/auth-provider";
+import { hasPermission } from "@/features/auth/types";
 import { SKINS } from "@/features/appearance/skins";
 
 type AssistantEntryProps = {
@@ -47,6 +49,7 @@ function AssistantEntryContent({
   onKnowledgeChange,
   error,
 }: AssistantEntryProps) {
+  const canSearch = hasPermission(useCurrentUser(), "platform.manage");
   const [value, setValue] = useState(initialValue);
   const [isComposing, setIsComposing] = useState(false);
 
@@ -97,7 +100,7 @@ function AssistantEntryContent({
           <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
             <div className="flex min-w-0 flex-1 flex-wrap gap-2">
               <div role="group" aria-label="助手功能" className="inline-flex rounded-lg border border-[var(--skin-border)] bg-[var(--skin-surface-accent)] p-0.5">
-                {(["chat", "search"] as const).map((item) => <button key={item} type="button" aria-pressed={mode === item} disabled={sending} onClick={() => onModeChange(item)} className={`rounded-md px-4 py-1.5 text-xs font-medium transition-colors ${mode === item ? "bg-white text-[var(--skin-primary)] shadow-sm" : "text-[var(--skin-text-muted)] hover:text-[var(--skin-primary)]"}`}>{item === "chat" ? "问答" : "搜索"}</button>)}
+                {(["chat", "search"] as const).filter((item) => item === "chat" || canSearch).map((item) => <button key={item} type="button" aria-pressed={mode === item} disabled={sending} onClick={() => onModeChange(item)} className={`rounded-md px-4 py-1.5 text-xs font-medium transition-colors ${mode === item ? "bg-white text-[var(--skin-primary)] shadow-sm" : "text-[var(--skin-text-muted)] hover:text-[var(--skin-primary)]"}`}>{item === "chat" ? "问答" : "搜索"}</button>)}
               </div>
               {mode === "search" ? <select aria-label="选择知识库" value={knowledgeId} onChange={(event) => onKnowledgeChange(event.target.value)} className="h-8 min-w-0 max-w-[220px] rounded-lg border border-[var(--skin-border)] bg-white px-2 text-xs text-[var(--skin-text-muted)]"><option value="">请选择知识库</option>{knowledgeOptions.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select> : null}
             </div>

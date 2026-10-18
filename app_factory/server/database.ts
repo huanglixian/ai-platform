@@ -1,3 +1,4 @@
+import { currentUser, requireRequestUser } from "@/features/auth/context";
 import Database from "better-sqlite3";
 import fs from "node:fs";
 import path from "node:path";
@@ -31,7 +32,7 @@ export function getAppFactoryDatabase() {
   db.pragma("foreign_keys = ON");
   db.pragma("busy_timeout = 5000");
   db.exec(`
-    CREATE TABLE IF NOT EXISTS projects (id TEXT PRIMARY KEY, name TEXT NOT NULL, description TEXT NOT NULL DEFAULT '', template_id TEXT NOT NULL DEFAULT 'nextjs-app', workspace_path TEXT NOT NULL, framework_id TEXT, framework_version TEXT, published_port INTEGER, created_at TEXT NOT NULL, updated_at TEXT NOT NULL);
+    CREATE TABLE IF NOT EXISTS projects (id TEXT PRIMARY KEY, name TEXT NOT NULL, description TEXT NOT NULL DEFAULT '', template_id TEXT NOT NULL DEFAULT 'nextjs-app', workspace_path TEXT NOT NULL, owner_id TEXT NOT NULL, framework_id TEXT, framework_version TEXT, published_port INTEGER, created_at TEXT NOT NULL, updated_at TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS sessions (id TEXT PRIMARY KEY, project_id TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'idle', harness TEXT NOT NULL DEFAULT 'pi', title TEXT NOT NULL DEFAULT '新对话', model_profile_id TEXT NOT NULL DEFAULT 'zhipu', transcript_path TEXT, created_at TEXT NOT NULL, updated_at TEXT NOT NULL, FOREIGN KEY(project_id) REFERENCES projects(id));
     CREATE TABLE IF NOT EXISTS appfactory_settings (id INTEGER PRIMARY KEY CHECK (id = 1), default_model_profile TEXT NOT NULL DEFAULT 'zhipu', thinking_levels_json TEXT NOT NULL, updated_at TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS runs (id TEXT PRIMARY KEY, project_id TEXT NOT NULL, session_id TEXT, status TEXT NOT NULL DEFAULT 'queued', input TEXT NOT NULL DEFAULT '', output TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL, updated_at TEXT NOT NULL, FOREIGN KEY(project_id) REFERENCES projects(id));
@@ -39,6 +40,9 @@ export function getAppFactoryDatabase() {
     CREATE TABLE IF NOT EXISTS publication_jobs (
       id TEXT PRIMARY KEY,
       project_id TEXT NOT NULL,
+      requested_by TEXT NOT NULL,
+      visibility TEXT NOT NULL CHECK(visibility IN ('private','internal','all')),
+      policy_revision INTEGER NOT NULL,
       status TEXT NOT NULL DEFAULT 'queued',
       stage TEXT NOT NULL DEFAULT 'queued',
       step TEXT NOT NULL DEFAULT '等待发布',
@@ -99,70 +103,13 @@ export function getAppFactoryDatabase() {
       ON publication_events(job_id, sequence);
     CREATE INDEX IF NOT EXISTS publication_deployments_by_project
       ON publication_deployments(project_id, created_at DESC);
+    CREATE INDEX IF NOT EXISTS projects_by_owner ON projects(owner_id,updated_at DESC);
   `);
-  const sessionColumns = db.prepare("PRAGMA table_info(sessions)").all() as { name: string }[];
-  if (!sessionColumns.some((column) => column.name === "title")) {
-    db.exec("ALTER TABLE sessions ADD COLUMN title TEXT NOT NULL DEFAULT '新对话'");
-  }
-  if (!sessionColumns.some((column) => column.name === "model_profile_id")) {
-    db.exec("ALTER TABLE sessions ADD COLUMN model_profile_id TEXT NOT NULL DEFAULT 'zhipu'");
-  }
-  db.transaction(() => {
-    const columns = db!.prepare("PRAGMA table_info(appfactory_settings)").all() as { name: string }[];
-    if (!columns.some((column) => column.name === "thinking_levels_json")) {
-      const legacy = db!.prepare("SELECT thinking_level FROM appfactory_settings WHERE id=1").get() as { thinking_level: string } | undefined;
-      const levels = defaultThinkingLevels();
-      for (const id of ["zhipu", "deepseek"] as const) {
-        if (isThinkingLevel(id, legacy?.thinking_level)) levels[id] = legacy.thinking_level;
-      }
-      db!.exec("ALTER TABLE appfactory_settings ADD COLUMN thinking_levels_json TEXT NOT NULL DEFAULT '{}'");
-      db!.prepare("UPDATE appfactory_settings SET thinking_levels_json=?").run(JSON.stringify(levels));
-      db!.exec("ALTER TABLE appfactory_settings DROP COLUMN thinking_level");
-    }
-  }).immediate();
   db.prepare("INSERT OR IGNORE INTO appfactory_settings (id,default_model_profile,thinking_levels_json,updated_at) VALUES (1,?,?,?)").run(
     DEFAULT_MODEL_PROFILE_ID,
     JSON.stringify(defaultThinkingLevels()),
     new Date().toISOString(),
   );
-  let projectColumns = db.prepare("PRAGMA table_info(projects)").all() as { name: string }[];
-  if (projectColumns.some((column) => column.name === "agenthub_mode")) {
-    db.exec("ALTER TABLE projects DROP COLUMN agenthub_mode");
-  }
-  if (projectColumns.some((column) => column.name === "skill_profile")) {
-    db.exec("ALTER TABLE projects RENAME COLUMN skill_profile TO template_id");
-    db.prepare("UPDATE projects SET template_id='nextjs-app'").run();
-    projectColumns = db.prepare("PRAGMA table_info(projects)").all() as { name: string }[];
-  }
-  if (!projectColumns.some((column) => column.name === "template_id")) {
-    throw new Error("项目缺少 template_id，无法确定运行时");
-  }
-  if (!projectColumns.some((column) => column.name === "published_port")) {
-    db.exec("ALTER TABLE projects ADD COLUMN published_port INTEGER");
-  }
-  if (!projectColumns.some((column) => column.name === "framework_id")) {
-    db.exec("ALTER TABLE projects ADD COLUMN framework_id TEXT");
-  }
-  if (!projectColumns.some((column) => column.name === "framework_version")) {
-    db.exec("ALTER TABLE projects ADD COLUMN framework_version TEXT");
-  }
-  db.exec("DROP TABLE IF EXISTS jobs; DROP TABLE IF EXISTS builds; DROP TABLE IF EXISTS releases; DROP TABLE IF EXISTS deployments;");
-  const publicationDeploymentColumns = db.prepare("PRAGMA table_info(publication_deployments)").all() as { name: string }[];
-  if (!publicationDeploymentColumns.some((column) => column.name === "health_path")) {
-    db.exec("ALTER TABLE publication_deployments ADD COLUMN health_path TEXT");
-    db.prepare("UPDATE publication_deployments SET health_path='/' WHERE health_path IS NULL").run();
-  }
-  const publicationReleaseColumns = db.prepare("PRAGMA table_info(publication_releases)").all() as { name: string }[];
-  if (!publicationReleaseColumns.some((column) => column.name === "runtime_id")) {
-    db.exec("ALTER TABLE publication_releases ADD COLUMN runtime_id TEXT");
-    db.prepare("UPDATE publication_releases SET runtime_id='nextjs' WHERE runtime_id IS NULL").run();
-  }
-  if (!publicationReleaseColumns.some((column) => column.name === "worker_entry")) {
-    db.exec("ALTER TABLE publication_releases ADD COLUMN worker_entry TEXT");
-  }
-  if (!publicationDeploymentColumns.some((column) => column.name === "worker_pid")) {
-    db.exec("ALTER TABLE publication_deployments ADD COLUMN worker_pid INTEGER");
-  }
   const missingReleaseRuntimes = db.prepare("SELECT COUNT(*) AS count FROM publication_releases WHERE runtime_id IS NULL OR runtime_id='' ").get() as { count: number };
   if (missingReleaseRuntimes.count) throw new Error("发布产物缺少运行时，无法恢复运行");
   const missingHealthPaths = db.prepare("SELECT COUNT(*) AS count FROM publication_deployments WHERE health_path IS NULL OR health_path='' ").get() as { count: number };
@@ -178,6 +125,7 @@ type ProjectRow = {
   description: string;
   templateId: AppTemplateId;
   workspacePath: string;
+  ownerId: string;
   frameworkId: string | null;
   frameworkVersion: string | null;
   createdAt: string;
@@ -202,19 +150,20 @@ function projectDto(row: ProjectRow) {
 
 function readProject(id: string) {
   const row = getAppFactoryDatabase().prepare(
-    "SELECT id,name,description,template_id as templateId,workspace_path as workspacePath,framework_id as frameworkId,framework_version as frameworkVersion,created_at as createdAt,updated_at as updatedAt FROM projects WHERE id=?",
+    "SELECT id,name,description,template_id as templateId,workspace_path as workspacePath,owner_id as ownerId,framework_id as frameworkId,framework_version as frameworkVersion,created_at as createdAt,updated_at as updatedAt FROM projects WHERE id=?",
   ).get(id) as ProjectRow | undefined;
+  if (row && currentUser() && row.ownerId !== currentUser()!.id) return undefined;
   return row ? projectDto(row) : undefined;
 }
 
 export function listProjects() {
   const rows = getAppFactoryDatabase().prepare(
-    "SELECT id,name,description,template_id as templateId,workspace_path as workspacePath,framework_id as frameworkId,framework_version as frameworkVersion,created_at as createdAt,updated_at as updatedAt FROM projects ORDER BY updated_at DESC",
-  ).all() as ProjectRow[];
+    "SELECT id,name,description,template_id as templateId,workspace_path as workspacePath,owner_id as ownerId,framework_id as frameworkId,framework_version as frameworkVersion,created_at as createdAt,updated_at as updatedAt FROM projects WHERE owner_id=? ORDER BY updated_at DESC",
+  ).all(requireRequestUser().id) as ProjectRow[];
   return rows.map(projectDto);
 }
 
-export function createProject(input: { name: string; description?: string; templateId: AppTemplateId }) {
+export function createProject(input: { name: string; description?: string; templateId: AppTemplateId }, ownerId = requireRequestUser().id) {
   const id = `project-${crypto.randomUUID()}`;
   const now = new Date().toISOString();
   const workspace = path.join(dir, "workspaces", id);
@@ -225,12 +174,13 @@ export function createProject(input: { name: string; description?: string; templ
     fs.rmSync(workspace, { recursive: true, force: true });
     throw error;
   }
-  getAppFactoryDatabase().prepare("INSERT INTO projects (id,name,description,template_id,workspace_path,framework_id,framework_version,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?)").run(
+  getAppFactoryDatabase().prepare("INSERT INTO projects (id,name,description,template_id,workspace_path,owner_id,framework_id,framework_version,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?)").run(
     id,
     input.name,
     input.description ?? "",
     template.id,
     workspace,
+    ownerId,
     template.enterprise?.frameworkId ?? null,
     template.enterprise?.frameworkVersion ?? null,
     now,

@@ -1,3 +1,4 @@
+import { withApiAuth } from "@/features/auth/api";
 import { NextResponse } from "next/server";
 import path from "node:path";
 import { generateSkillFlowMermaid } from "@/features/services/tools/skills-flow";
@@ -10,7 +11,7 @@ type RouteContext = {
   }>;
 };
 
-export async function POST(_request: Request, context: RouteContext) {
+async function handlePOST(_request: Request, context: RouteContext) {
   const { skillId } = await context.params;
 
   try {
@@ -40,3 +41,5 @@ export async function POST(_request: Request, context: RouteContext) {
     );
   }
 }
+
+export const POST = withApiAuth(handlePOST);

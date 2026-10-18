@@ -4,6 +4,8 @@ import { notify } from "@/features/feedback/notify";
 import { useState } from "react";
 import { LoaderCircle, X } from "lucide-react";
 import type { PlatformSource, PublishedApp } from "@/features/apps/types";
+import { VisibilitySelector } from "@/features/access/visibility-selector";
+import type { Visibility } from "@/features/access/types";
 import { sourceLabels } from "./application-presentation";
 
 type ApplicationFormProps = {
@@ -18,6 +20,7 @@ export function ApplicationForm({ app, source, onClose, onSaved }: ApplicationFo
   const [description, setDescription] = useState(app?.description ?? "");
   const [url, setUrl] = useState(app?.url ?? "");
   const [launchCommand, setLaunchCommand] = useState(app?.launchCommand ?? "");
+  const [visibility, setVisibility] = useState<Visibility>(app?.access?.visibility ?? "internal");
   const [saving, setSaving] = useState(false);
   const isEditing = Boolean(app);
   const applicationSource: PlatformSource = app?.source ?? source;
@@ -41,11 +44,14 @@ export function ApplicationForm({ app, source, onClose, onSaved }: ApplicationFo
         body: JSON.stringify(isEditing ? {
           name,
           description,
+          visibility,
+          policyRevision: app?.access?.revision,
           ...(hasEditableUrl ? { entryUrl: url } : {}),
           ...(requiresLaunchCommand ? { launchCommand } : {}),
         } : {
           name,
           description,
+          visibility,
           producer: applicationSource,
           kind: "business",
           entryUrl: url,
@@ -72,6 +78,7 @@ export function ApplicationForm({ app, source, onClose, onSaved }: ApplicationFo
           <label className="block space-y-1.5"><span className="text-xs font-semibold text-slate-600">应用说明</span><textarea required value={description} onChange={(event) => setDescription(event.target.value)} placeholder="用一句话说明这个应用能做什么" className="min-h-20 w-full resize-y rounded-lg border border-input px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/15" /></label>
           {hasEditableUrl ? <label className="block space-y-1.5"><span className="text-xs font-semibold text-slate-600">访问地址</span><input required type="url" value={url} onChange={(event) => setUrl(event.target.value)} placeholder="http://127.0.0.1:端口号" className="h-10 w-full rounded-lg border border-input px-3 text-sm outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/15" /></label> : null}
           {requiresLaunchCommand ? <label className="block space-y-1.5"><span className="text-xs font-semibold text-slate-600">启动命令</span><textarea required value={launchCommand} onChange={(event) => setLaunchCommand(event.target.value)} placeholder="在这里粘贴本机的启动命令" className="min-h-24 w-full resize-y rounded-lg border border-input px-3 py-2 font-mono text-xs leading-5 outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/15" /></label> : null}
+          <VisibilitySelector value={visibility} onChange={setVisibility} disabled={saving} />
           <div className="flex justify-end gap-2 pt-2"><button type="button" onClick={onClose} disabled={saving} className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60">取消</button><button type="submit" disabled={saving} className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60">{saving ? <LoaderCircle size={15} className="animate-spin" /> : null}{isEditing ? "保存修改" : "接入应用"}</button></div>
         </form>
       </section>

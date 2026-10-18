@@ -1,3 +1,4 @@
+import { withApiAuth } from "@/features/auth/api";
 import nextEnv from "@next/env";
 
 import {
@@ -22,12 +23,12 @@ function presentSettings() {
   };
 }
 
-export async function GET() {
+async function handleGET() {
   nextEnv.loadEnvConfig(process.cwd());
   return apiOk(presentSettings());
 }
 
-export async function PUT(request: Request) {
+async function handlePUT(request: Request) {
   nextEnv.loadEnvConfig(process.cwd());
   let payload: unknown;
   try {
@@ -46,3 +47,6 @@ export async function PUT(request: Request) {
   updateAppFactoryModelSettings({ defaultModelProfileId, thinkingLevels });
   return apiOk(presentSettings());
 }
+
+export const GET = withApiAuth(handleGET);
+export const PUT = withApiAuth(handlePUT);

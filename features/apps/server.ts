@@ -1,4 +1,9 @@
 import { z } from "zod";
+import { currentUser, requireRequestUser } from "@/features/auth/context";
+import { AuthError } from "@/features/auth/errors";
+import { hasPermission } from "@/features/auth/types";
+import { audit, canManageApplication, canUseResource, getResourcePolicy, writeResourcePolicy } from "@/features/access/server";
+import type { Visibility } from "@/features/access/types";
 import { stopPublishedApplication } from "@/app_factory/server/publication/runtime";
 import { hasActivePublicationForProject } from "@/app_factory/server/publication/repository";
 import { getAgentHubDatabase } from "@/lib/agenthub/database";
@@ -9,6 +14,8 @@ import type { ExternalLaunchStatus, ExternalStopResult, PlatformSource, Publishe
 
 const platformSources = ["appfactory", "external", "dify", "n8n"] as const;
 const platformSourceSchema = z.enum(platformSources);
+const visibilitySchema = z.enum(["private", "internal", "all"]);
+const webUrlSchema = z.string().trim().url().refine((value) => ["http:", "https:"].includes(new URL(value).protocol), "应用地址必须使用 HTTP 或 HTTPS");
 
 export const applicationInputSchema = z.object({
   name: z.string().trim().min(1).max(120),
@@ -17,11 +24,12 @@ export const applicationInputSchema = z.object({
   kind: z.string().trim().min(1).max(40).default("application"),
   runtime: z.string().trim().min(1).max(40).default("web"),
   status: z.enum(["active", "archived", "disabled"]).default("active"),
-  entryUrl: z.string().trim().url(),
+  entryUrl: webUrlSchema,
+  visibility: visibilitySchema.default("internal"),
   version: z.string().trim().max(40).default("1.0.0"),
   externalId: z.string().trim().max(120).optional(),
   launchCommand: z.string().trim().min(1).max(5_000).optional(),
-}).superRefine((input, context) => {
+}).strict().superRefine((input, context) => {
   if (input.producer === "external" && !input.launchCommand) {
     context.addIssue({ code: "custom", path: ["launchCommand"], message: "外部应用必须提供启动命令" });
   }
@@ -33,13 +41,15 @@ export const applicationInputSchema = z.object({
 const applicationMetadataUpdateFields = {
   name: z.string().trim().min(1).max(120).optional(),
   description: z.string().trim().max(2_000).optional(),
+  visibility: visibilitySchema.optional(),
+  policyRevision: z.number().int().positive().optional(),
 };
 
 export const appFactoryApplicationUpdateSchema = z.object(applicationMetadataUpdateFields).strict();
 
 export const applicationUpdateSchema = z.object({
   ...applicationMetadataUpdateFields,
-  entryUrl: z.string().trim().url().optional(),
+  entryUrl: webUrlSchema.optional(),
 }).strict();
 
 export const externalApplicationUpdateSchema = applicationUpdateSchema.extend({
@@ -62,17 +72,22 @@ function getLaunchStatus(source: PlatformSource, row: Record<string, unknown>): 
 
 function rowToApp(row: Record<string, unknown>): PublishedApp {
   const source = platformSourceSchema.parse(row.producer) as PlatformSource;
+  const user = currentUser();
+  const policy = getResourcePolicy("application", String(row.id));
+  const canOperate = Boolean(user && hasPermission(user, "applications.manage") && canManageApplication(user, policy));
+  const canManage = Boolean(user && canManageApplication(user, policy) && (source === "appfactory" || canOperate));
   return {
     id: String(row.id),
     name: String(row.name),
     description: String(row.description ?? ""),
     source,
     appType: row.kind === "business" ? "business" : "general",
-    url: String(row.entry_url),
-    launchCommand: typeof row.launch_command === "string" ? row.launch_command : null,
+    url: !user || canManage ? String(row.entry_url) : `/applications/${encodeURIComponent(String(row.id))}/open`,
+    launchCommand: (!user || canOperate) && typeof row.launch_command === "string" ? row.launch_command : null,
     launchStatus: getLaunchStatus(source, row),
     createdAt: String(row.created_at),
     updatedAt: String(row.updated_at),
+    ...(user ? { canManage, canOperate, canUse: canUseResource(user, policy), ...(canManage ? { access: policy } : {}) } : {}),
   };
 }
 
@@ -136,11 +151,16 @@ export function seedApplications() {
       });
     }
     db.prepare("INSERT INTO application_seed_state(id,seeded_at) VALUES (1,?)").run(now);
+    const owner = db.prepare("SELECT user_id FROM platform_user_roles WHERE role_code='super_admin' LIMIT 1").get() as { user_id: string } | undefined;
+    if (owner) {
+      db.prepare("INSERT OR IGNORE INTO resource_policies(resource_type,resource_id,owner_id,visibility,updated_at) SELECT 'application',id,?,'internal',? FROM applications").run(owner.user_id, now);
+    }
   });
   seed();
 }
 
 export function listApplications() {
+  const user = requireRequestUser();
   seedApplications();
   const rows = getAgentHubDatabase().prepare(`SELECT * FROM applications
     WHERE status != 'archived' AND producer IN ('appfactory', 'external', 'dify', 'n8n')
@@ -167,55 +187,77 @@ export function listApplications() {
       WHEN id = 'app-external-document-review' THEN 13
       ELSE 14
     END, created_at DESC`).all() as Record<string, unknown>[];
-  return rows.map(rowToApp);
+  return rows.filter((row) => canUseResource(user, getResourcePolicy("application", String(row.id)))).map(rowToApp);
 }
 
-export function createApplication(input: ApplicationInput) {
-  if (input.externalId) {
-    const existing = getAgentHubDatabase().prepare("SELECT id FROM applications WHERE external_id = ?").get(input.externalId) as { id: string } | undefined;
-    if (existing) return updateApplication(existing.id, input);
-  }
-  const now = new Date().toISOString();
-  const id = `app-${crypto.randomUUID()}`;
-  getAgentHubDatabase().prepare(`INSERT INTO applications
-    (id,name,description,producer,kind,runtime,status,entry_url,version,external_id,launch_command,created_at,updated_at)
-    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`).run(
-    id, input.name, input.description, input.producer, input.kind, input.runtime, input.status,
-    input.entryUrl, input.version, input.externalId ?? null, input.launchCommand ?? null, now, now,
-  );
-  return getApplication(id);
+export function createApplication(input: ApplicationInput, options?: { ownerId: string; expectedRevision: number; actorId: string }) {
+  const db = getAgentHubDatabase();
+  const user = currentUser();
+  const ownerId = options?.ownerId ?? requireRequestUser().id;
+  return db.transaction(() => {
+    if (input.externalId) {
+      const existing = db.prepare("SELECT id FROM applications WHERE producer=? AND external_id=?").get(input.producer, input.externalId) as { id: string } | undefined;
+      if (existing) {
+        if (user && !canManageApplication(user, getResourcePolicy("application", existing.id))) throw new AuthError("无权更新该应用");
+        return updateApplication(existing.id, { ...input, policyRevision: options?.expectedRevision }, options?.actorId);
+      }
+    }
+    if (options && options.expectedRevision !== 0) throw new AuthError("应用注册已变化，请重新发布", 409);
+    const now = new Date().toISOString();
+    const id = `app-${crypto.randomUUID()}`;
+    getAgentHubDatabase().prepare(`INSERT INTO applications
+      (id,name,description,producer,kind,runtime,status,entry_url,version,external_id,launch_command,created_at,updated_at,created_by,updated_by)
+      VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).run(
+      id, input.name, input.description, input.producer, input.kind, input.runtime, input.status,
+      input.entryUrl, input.version, input.externalId ?? null, input.launchCommand ?? null, now, now, options?.actorId ?? ownerId, options?.actorId ?? ownerId,
+    );
+    writeResourcePolicy("application", id, ownerId, input.visibility);
+    audit(options?.actorId ?? ownerId, "application.create", id, { visibility: input.visibility });
+    return rowToApp(getApplicationRow(id)!);
+  })();
 }
 
 export function getApplication(id: string) {
+  const user = requireRequestUser();
   seedApplications();
   const row = getApplicationRow(id);
-  return row ? rowToApp(row) : null;
+  return row && (canUseResource(user, getResourcePolicy("application", id)) || hasPermission(user, "applications.govern")) ? rowToApp(row) : null;
 }
 
-export function updateApplication(id: string, input: Partial<ApplicationInput>) {
-  const current = getApplicationRow(id);
-  if (!current) return null;
-  const next = {
-    name: String(current.name),
-    description: String(current.description ?? ""),
-    producer: platformSourceSchema.parse(current.producer),
-    kind: String(current.kind),
-    runtime: String(current.runtime),
-    status: String(current.status),
-    entryUrl: String(current.entry_url),
-    version: String(current.version ?? "1.0.0"),
-    externalId: current.external_id ? String(current.external_id) : undefined,
-    launchCommand: current.launch_command ? String(current.launch_command) : undefined,
-    ...input,
-  };
-  getAgentHubDatabase().prepare(`UPDATE applications
-    SET name=?,description=?,producer=?,kind=?,runtime=?,status=?,entry_url=?,version=?,external_id=?,launch_command=?,updated_at=?
-    WHERE id=?`).run(
-    next.name, next.description, next.producer, next.kind, next.runtime, next.status,
-    next.entryUrl, next.version, next.externalId ?? null, next.launchCommand ?? null,
-    new Date().toISOString(), id,
-  );
-  return getApplication(id);
+export function updateApplication(id: string, input: Partial<ApplicationInput> & { policyRevision?: number }, actorId = currentUser()?.id ?? "system") {
+  const db = getAgentHubDatabase();
+  return db.transaction(() => {
+    const current = getApplicationRow(id);
+    if (!current) return null;
+    const next = {
+      name: String(current.name),
+      description: String(current.description ?? ""),
+      producer: platformSourceSchema.parse(current.producer),
+      kind: String(current.kind),
+      runtime: String(current.runtime),
+      status: String(current.status),
+      entryUrl: String(current.entry_url),
+      version: String(current.version ?? "1.0.0"),
+      externalId: current.external_id ? String(current.external_id) : undefined,
+      launchCommand: current.launch_command ? String(current.launch_command) : undefined,
+      ...input,
+    };
+    if (input.visibility !== undefined) {
+      const policy = getResourcePolicy("application", id);
+      if (!policy) throw new AuthError("应用缺少访问策略", 409);
+      writeResourcePolicy("application", id, policy.ownerId, input.visibility, input.policyRevision);
+      if (policy.visibility !== input.visibility) audit(actorId, "application.access", id, { visibility: input.visibility });
+    }
+    getAgentHubDatabase().prepare(`UPDATE applications
+      SET name=?,description=?,producer=?,kind=?,runtime=?,status=?,entry_url=?,version=?,external_id=?,launch_command=?,updated_at=?,updated_by=?
+      WHERE id=?`).run(
+      next.name, next.description, next.producer, next.kind, next.runtime, next.status,
+      next.entryUrl, next.version, next.externalId ?? null, next.launchCommand ?? null,
+      new Date().toISOString(), actorId, id,
+    );
+    audit(actorId, "application.update", id);
+    return rowToApp(getApplicationRow(id)!);
+  })();
 }
 
 export async function startExternalApplication(id: string) {
@@ -297,21 +339,28 @@ export async function removeApplication(id: string) {
     }
     await stopPublishedApplication(projectId);
   }
-  const result = getAgentHubDatabase().prepare("DELETE FROM applications WHERE id=?").run(id);
-  return result.changes > 0;
+  const db = getAgentHubDatabase();
+  return db.transaction(() => {
+    db.prepare("DELETE FROM resource_policies WHERE resource_type='application' AND resource_id=?").run(id);
+    const result = db.prepare("DELETE FROM applications WHERE id=?").run(id);
+    audit(currentUser()?.id ?? "system", "application.delete", id);
+    return result.changes > 0;
+  })();
 }
 
 export async function stopManagedExternalApplications(): Promise<ExternalStopResult> {
   const rows = getAgentHubDatabase().prepare(
     "SELECT id, name, launch_pid FROM applications WHERE producer='external' AND launch_pid IS NOT NULL",
   ).all() as { id: string; name: string; launch_pid: number }[];
-  const results = await Promise.allSettled(rows.map(async (row) => {
+  const user = currentUser();
+  const managedRows = rows.filter((row) => !user || canManageApplication(user, getResourcePolicy("application", row.id)));
+  const results = await Promise.allSettled(managedRows.map(async (row) => {
     await stopExternalProcess(row.launch_pid);
     updateLaunchState(row.id, null, null, null, row.launch_pid);
   }));
   const result: ExternalStopResult = { stoppedIds: [], failures: [] };
   results.forEach((entry, index) => {
-    const row = rows[index];
+    const row = managedRows[index];
     if (entry.status === "fulfilled") result.stoppedIds.push(row.id);
     else result.failures.push({
       id: row.id,
@@ -320,4 +369,14 @@ export async function stopManagedExternalApplications(): Promise<ExternalStopRes
     });
   });
   return result;
+}
+
+export function publishedApplicationAccess(projectId: string) {
+  const row = getAgentHubDatabase().prepare("SELECT id FROM applications WHERE producer='appfactory' AND external_id=?").get(projectId) as { id: string } | undefined;
+  return row ? getResourcePolicy("application", row.id) : undefined;
+}
+
+export function applicationEntry(id: string) {
+  const row = getApplicationRow(id);
+  return row ? { url: String(row.entry_url), status: String(row.status), source: String(row.producer), launchStatus: getLaunchStatus(platformSourceSchema.parse(row.producer), row) } : null;
 }

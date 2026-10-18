@@ -2,6 +2,8 @@
 
 import { Boxes, CodeXml, Home, Sparkles } from "lucide-react";
 import Link from "next/link";
+import { useCurrentUser } from "@/features/auth/auth-provider";
+import { hasPermission } from "@/features/auth/types";
 
 import type { AssistantChatOutcome, AssistantRecommendation } from "../chat-types";
 
@@ -26,12 +28,13 @@ function RecommendationAction({ item, onReturnHome }: { item: AssistantRecommend
 }
 
 export function AssistantOutcome({ outcome, onReturnHome }: { outcome: AssistantChatOutcome; onReturnHome: () => void }) {
+  const canManage = hasPermission(useCurrentUser(), "platform.manage");
   if (outcome.type === "no_match") {
     return (
       <div className="mt-3 flex flex-wrap gap-2 border-t border-[var(--skin-border)] pt-3">
         <button type="button" onClick={onReturnHome} className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-[var(--skin-primary)] px-3 text-[11px] font-medium text-white transition-colors hover:bg-[var(--skin-primary-hover)]"><Home size={13} />返回首页查看应用</button>
-        <Link href="/skills" className="inline-flex h-8 items-center rounded-lg border border-[var(--skin-border)] bg-white px-3 text-[11px] font-medium text-[var(--skin-text-muted)] transition-colors hover:border-[var(--skin-border-strong)] hover:text-[var(--skin-primary)]">查看技能中心</Link>
-        <Link href="/services" className="inline-flex h-8 items-center rounded-lg border border-[var(--skin-border)] bg-white px-3 text-[11px] font-medium text-[var(--skin-text-muted)] transition-colors hover:border-[var(--skin-border-strong)] hover:text-[var(--skin-primary)]">查看业务 API</Link>
+        {canManage && <Link href="/skills" className="inline-flex h-8 items-center rounded-lg border border-[var(--skin-border)] bg-white px-3 text-[11px] font-medium text-[var(--skin-text-muted)] transition-colors hover:border-[var(--skin-border-strong)] hover:text-[var(--skin-primary)]">查看技能中心</Link>}
+        {canManage && <Link href="/services" className="inline-flex h-8 items-center rounded-lg border border-[var(--skin-border)] bg-white px-3 text-[11px] font-medium text-[var(--skin-text-muted)] transition-colors hover:border-[var(--skin-border-strong)] hover:text-[var(--skin-primary)]">查看业务 API</Link>}
       </div>
     );
   }

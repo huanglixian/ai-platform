@@ -8,6 +8,7 @@ export type PlatformNavChild = {
 
 export type PlatformNavGroup = {
   key: string;
+  permission?: Permission;
   label: string;
   href?: string;
   openInNewTab?: boolean;
@@ -22,11 +23,13 @@ export const platformNavGroups: PlatformNavGroup[] = [
   },
   {
     key: "workflows",
+    permission: "platform.manage",
     label: "业务流",
     href: "/workflows",
   },
   {
     key: "data",
+    permission: "platform.manage",
     label: "数据中心",
     items: [
       {
@@ -44,6 +47,7 @@ export const platformNavGroups: PlatformNavGroup[] = [
   },
   {
     key: "capabilities",
+    permission: "platform.manage",
     label: "能力中心",
     items: [
       { label: "技能中心", href: "/skills", hint: "技能封装与能力分发" },
@@ -53,17 +57,18 @@ export const platformNavGroups: PlatformNavGroup[] = [
   },
   {
     key: "settings",
+    permission: "users.manage",
     label: "配置管理",
     items: [
-      { label: "组织管理", disabled: true, hint: "组织结构与协作边界" },
-      { label: "角色管理", disabled: true, hint: "角色权限与职责控制" },
-      { label: "用户管理", disabled: true, hint: "用户账号与成员维护" },
+      { label: "角色管理", href: "/settings/roles", hint: "角色权限与职责控制" },
+      { label: "用户管理", href: "/settings/users", hint: "用户账号与成员维护" },
     ],
   },
   {
     key: "appfactory",
+    permission: "appfactory.use",
     label: "应用开发 ↗",
-    href: process.env.NEXT_PUBLIC_APPFACTORY_URL || "/appfactory",
+    href: "/appfactory",
     openInNewTab: true,
   },
 ];
@@ -99,3 +104,4 @@ export function getActiveNavGroup(pathname: string) {
 
   return "home";
 }
+import type { Permission } from "@/features/auth/types";

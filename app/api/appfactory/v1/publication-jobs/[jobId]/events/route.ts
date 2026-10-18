@@ -1,3 +1,4 @@
+import { withApiAuth } from "@/features/auth/api";
 import {
   getPublicationJob,
   listPublicationEvents,
@@ -11,7 +12,7 @@ function parseAfter(value: string | null) {
   return Number.isInteger(parsed) && parsed >= 0 ? parsed : null;
 }
 
-export async function GET(
+async function handleGET(
   request: Request,
   context: { params: Promise<{ jobId: string }> },
 ) {
@@ -21,3 +22,5 @@ export async function GET(
   if (after === null) return apiError("after 必须是非负整数", 422);
   return apiOk(listPublicationEvents(jobId, after));
 }
+
+export const GET = withApiAuth(handleGET);

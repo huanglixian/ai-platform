@@ -6,6 +6,8 @@ import type { ExternalStopResponse, PlatformSource, PublishedApp } from "@/featu
 import { notify } from "@/features/feedback/notify";
 import { InlineNotice } from "@/components/shared/inline-notice";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
+import { useCurrentUser } from "@/features/auth/auth-provider";
+import { hasPermission } from "@/features/auth/types";
 import { AppCard } from "./application-card";
 import { sourceLabels, typeLabels } from "./application-presentation";
 import { ApplicationForm } from "./application-form";
@@ -26,7 +28,7 @@ function EmptyApps() {
   return (
     <div className="flex min-h-[180px] flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-white px-4 text-center">
       <div className="text-sm font-semibold text-title">没有找到应用</div>
-      <p className="mt-2 max-w-[280px] text-xs leading-5 text-muted-foreground">可以调整搜索条件，或接入一个新的外部应用。</p>
+      <p className="mt-2 max-w-[280px] text-xs leading-5 text-muted-foreground">可以调整搜索条件，或联系管理员分配应用。</p>
     </div>
   );
 }
@@ -76,6 +78,7 @@ function ApplicationGroup({ source, apps, onAdd, onStopAll, canStopAll, stopping
 }
 
 export function ApplicationCatalog() {
+  const canManage = hasPermission(useCurrentUser(), "applications.manage");
   const [list, setList] = useState<PublishedApp[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
@@ -165,7 +168,7 @@ export function ApplicationCatalog() {
   }
 
   function handleOpen(app: PublishedApp) {
-    window.open(app.url, "_blank", "noopener,noreferrer");
+    window.open(`/applications/${encodeURIComponent(app.id)}/open`, "_blank", "noopener,noreferrer");
   }
 
   function requestRemove(app: PublishedApp) {
@@ -178,7 +181,7 @@ export function ApplicationCatalog() {
   }
 
   function handleSaved(app: PublishedApp, isNew: boolean) {
-    setList((current) => isNew ? [app, ...current] : current.map((item) => item.id === app.id ? app : item));
+    setList((current) => app.canUse === false ? current.filter((item) => item.id !== app.id) : isNew ? [app, ...current] : current.map((item) => item.id === app.id ? app : item));
     setEditingApp(undefined);
   }
 
@@ -207,8 +210,8 @@ export function ApplicationCatalog() {
       <ApplicationGroup
         source={source}
         apps={groups[source]}
-        onAdd={source === "appfactory" ? undefined : () => openApplicationForm(source)}
-        onStopAll={source === "external" ? () => void handleStopAll() : undefined}
+        onAdd={!canManage || source === "appfactory" ? undefined : () => openApplicationForm(source)}
+        onStopAll={canManage && source === "external" ? () => void handleStopAll() : undefined}
         canStopAll={!pendingService && !removing && list.some((app) => app.source === "external" && app.launchStatus !== null)}
         stoppingAll={stoppingAll}
         pendingService={pendingService}

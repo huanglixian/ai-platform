@@ -1,3 +1,4 @@
+import { withApiAuth } from "@/features/auth/api";
 import { NextRequest, NextResponse } from "next/server";
 
 import {
@@ -17,7 +18,7 @@ function createErrorResponse(error: unknown, status = 400) {
   );
 }
 
-export async function GET() {
+async function handleGET() {
   try {
     const item = await getEmbeddingConfig();
 
@@ -30,7 +31,7 @@ export async function GET() {
   }
 }
 
-export async function PUT(request: NextRequest) {
+async function handlePUT(request: NextRequest) {
   try {
     const payload = (await request.json()) as {
       baseUrl: string;
@@ -47,3 +48,6 @@ export async function PUT(request: NextRequest) {
     return createErrorResponse(error);
   }
 }
+
+export const GET = withApiAuth(handleGET);
+export const PUT = withApiAuth(handlePUT);

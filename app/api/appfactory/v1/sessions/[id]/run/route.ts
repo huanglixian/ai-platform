@@ -1,3 +1,4 @@
+import { withApiAuth } from "@/features/auth/api";
 import { hasActivePublicationForProject } from "@/app_factory/server/publication/repository";
 import {
   type AppFactoryRun,
@@ -12,7 +13,7 @@ import { SessionBusyError } from "@/app_factory/server/errors";
 
 export const runtime = "nodejs";
 
-export async function GET(
+async function handleGET(
   _: Request,
   context: { params: Promise<{ id: string }> },
 ) {
@@ -21,7 +22,7 @@ export async function GET(
   return apiOk(getActiveRunForSession(id));
 }
 
-export async function POST(
+async function handlePOST(
   request: Request,
   context: { params: Promise<{ id: string }> },
 ) {
@@ -47,7 +48,7 @@ export async function POST(
   return apiOk(run, { status: 201 });
 }
 
-export async function DELETE(
+async function handleDELETE(
   _: Request,
   context: { params: Promise<{ id: string }> },
 ) {
@@ -60,3 +61,7 @@ export async function DELETE(
   }
   return apiOk({ id: run.id, cancellationRequested: true });
 }
+
+export const GET = withApiAuth(handleGET);
+export const POST = withApiAuth(handlePOST);
+export const DELETE = withApiAuth(handleDELETE);

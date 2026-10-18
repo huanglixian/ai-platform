@@ -1,3 +1,4 @@
+import { withApiAuth } from "@/features/auth/api";
 import { NextRequest, NextResponse } from "next/server";
 
 import {
@@ -18,7 +19,7 @@ function createErrorResponse(error: unknown, status = 400) {
   );
 }
 
-export async function GET() {
+async function handleGET() {
   try {
     const items = await listKnowledgeItems();
 
@@ -31,7 +32,7 @@ export async function GET() {
   }
 }
 
-export async function POST(request: NextRequest) {
+async function handlePOST(request: NextRequest) {
   try {
     const payload = (await request.json()) as CreateKnowledgeInput;
     const item = await createKnowledge(payload);
@@ -44,3 +45,6 @@ export async function POST(request: NextRequest) {
     return createErrorResponse(error);
   }
 }
+
+export const GET = withApiAuth(handleGET);
+export const POST = withApiAuth(handlePOST);

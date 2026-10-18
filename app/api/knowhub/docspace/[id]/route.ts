@@ -1,3 +1,4 @@
+import { withApiAuth } from "@/features/auth/api";
 import { NextResponse } from "next/server";
 
 import {
@@ -13,7 +14,7 @@ type DocSpaceRouteContext = {
   }>;
 };
 
-export async function GET(
+async function handleGET(
   _request: Request,
   context: DocSpaceRouteContext,
 ) {
@@ -36,7 +37,7 @@ export async function GET(
   });
 }
 
-export async function DELETE(
+async function handleDELETE(
   _request: Request,
   context: DocSpaceRouteContext,
 ) {
@@ -58,3 +59,6 @@ export async function DELETE(
     item,
   });
 }
+
+export const GET = withApiAuth(handleGET);
+export const DELETE = withApiAuth(handleDELETE);

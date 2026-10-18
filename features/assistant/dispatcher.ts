@@ -1,3 +1,5 @@
+import { requireRequestUser } from "@/features/auth/context";
+import { hasPermission } from "@/features/auth/types";
 import { generateText } from "ai";
 import { z } from "zod";
 
@@ -39,6 +41,8 @@ function normalizeDescription(value: string) {
   return value.replace(/\s+/g, " ").trim().slice(0, 240);
 }
 
+function allowedSkills() { return hasPermission(requireRequestUser(), "platform.manage") ? listEnabledSkills() : []; }
+
 function getCandidates(): DispatchCandidate[] {
   const applications = listApplications().map((app) => {
     const unavailableExternalApp = app.source === "external" && app.launchStatus !== "running";
@@ -47,13 +51,13 @@ function getCandidates(): DispatchCandidate[] {
       id: app.id,
       name: app.name,
       description: normalizeDescription(app.description),
-      href: unavailableExternalApp ? "/" : app.url,
-      actionLabel: unavailableExternalApp ? "前往首页管理" : "打开应用",
+      href: unavailableExternalApp ? "/" : `/applications/${encodeURIComponent(app.id)}/open`,
+      actionLabel: unavailableExternalApp ? "查看应用状态" : "打开应用",
       openInNewTab: !unavailableExternalApp,
       returnToHome: unavailableExternalApp,
     };
   });
-  const skills = listEnabledSkills().map((skill) => ({
+  const skills = allowedSkills().map((skill) => ({
     kind: "skill" as const,
     id: skill.id,
     name: skill.name,
@@ -63,7 +67,7 @@ function getCandidates(): DispatchCandidate[] {
     openInNewTab: false,
     returnToHome: false,
   }));
-  const services = listCapabilities("service")
+  const services = (hasPermission(requireRequestUser(), "platform.manage") ? listCapabilities("service") : [])
     .filter((service) => service.status === "active" && service.availability === "available")
     .map((service) => ({
       kind: "service" as const,
@@ -79,7 +83,7 @@ function getCandidates(): DispatchCandidate[] {
 }
 
 function buildDispatchPrompt(userInput: string, candidates: DispatchCandidate[]) {
-  const skills = listEnabledSkills().map((skill) => ({
+  const skills = allowedSkills().map((skill) => ({
     id: skill.id,
     name: skill.name,
     description: normalizeDescription(skill.description),
@@ -120,7 +124,7 @@ function parseDecision(text: string) {
 
 export async function dispatchAssistantRequest(userInput: string): Promise<AssistantDispatchDecision> {
   const candidates = getCandidates();
-  const skills = new Set(listEnabledSkills().map((skill) => skill.id));
+  const skills = new Set(allowedSkills().map((skill) => skill.id));
 
   try {
     const modelRuntime = getActiveModelRuntime();

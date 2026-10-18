@@ -5,7 +5,9 @@ import {
   enterpriseSchemaForProject,
 } from "@/app_factory/nextjs-enterprise-framework";
 import { readApplicationManifest, validateProject } from "@/app_factory/contracts/validator";
-import { createAgentHubClient } from "@/app_factory/features/agenthub-client";
+import { createApplication } from "@/features/apps/server";
+import { readPrincipal } from "@/features/auth/session";
+import { hasPermission } from "@/features/auth/types";
 import { getAppRuntime } from "@/app_factory/runtimes";
 import type { RuntimeId } from "@/app_factory/runtimes/types";
 import { getProject, listCapabilityBindings } from "@/app_factory/server/database";
@@ -92,6 +94,8 @@ async function restorePreviousRuntime(
 async function publish(job: PublicationJobLease, signal: AbortSignal) {
   const project = getProject(job.project_id);
   if (!project) throw new Error("项目不存在");
+  const owner = readPrincipal(project.ownerId);
+  if (!owner || job.requested_by !== owner.id || !hasPermission(owner, "appfactory.use")) throw new Error("项目所有者已停用或失去发布权限");
   const template = getAppTemplate(project.templateId);
   const appRuntime = getAppRuntime(template.runtimeId);
   const enterpriseBinding = publicationEnterpriseBinding(project, template);
@@ -194,7 +198,9 @@ async function publish(job: PublicationJobLease, signal: AbortSignal) {
     ensureActive(job);
 
     updatePublicationProgress(job, "registering", "正在注册到应用中心", 8);
-    const application = await createAgentHubClient().registerApplication({
+    const currentOwner = readPrincipal(project.ownerId);
+    if (!currentOwner || !hasPermission(currentOwner, "appfactory.use")) throw new Error("项目所有者已停用或失去发布权限");
+    const application = createApplication({
       name: project.name,
       description: project.description,
       producer: "appfactory",
@@ -204,15 +210,16 @@ async function publish(job: PublicationJobLease, signal: AbortSignal) {
       entryUrl: runtime.url,
       version: String(release.version),
       externalId: project.id,
-    }) as { id?: string };
-    if (!application.id) throw new Error("AgentHub 返回的应用缺少 id");
+      visibility: job.visibility,
+    }, { ownerId: project.ownerId, expectedRevision: job.policy_revision, actorId: job.requested_by });
+    if (!application?.id) throw new Error("AgentHub 返回的应用缺少 id");
     ensureActive(job);
     const baseUrl = process.env.AGENT_HUB_BASE_URL?.trim().replace(/\/$/, "");
     if (!baseUrl) throw new Error("缺少 AGENT_HUB_BASE_URL");
     completePublicationJob(job, {
       applicationId: application.id,
       releaseId: release.id,
-      entryUrl: runtime.url,
+      entryUrl: `${baseUrl}/applications/${encodeURIComponent(application.id)}/open`,
       applicationCenterUrl: `${baseUrl}/`,
     });
   } catch (error) {

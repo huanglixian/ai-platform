@@ -1,3 +1,4 @@
+import { withApiAuth } from "@/features/auth/api";
 import {
   getPublicationJob,
   listPublicationEvents,
@@ -14,7 +15,7 @@ function eventCursor(request: Request) {
   return Number.isInteger(value) && value >= 0 ? value : null;
 }
 
-export async function GET(
+async function handleGET(
   request: Request,
   context: { params: Promise<{ jobId: string }> },
 ) {
@@ -69,3 +70,5 @@ export async function GET(
     },
   });
 }
+
+export const GET = withApiAuth(handleGET);

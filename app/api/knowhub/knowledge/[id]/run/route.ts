@@ -1,3 +1,4 @@
+import { withApiAuth } from "@/features/auth/api";
 import { NextResponse } from "next/server";
 
 import { runKnowledge } from "@/knowhub/features/knowledge/service";
@@ -10,7 +11,7 @@ type KnowledgeRunRouteContext = {
   }>;
 };
 
-export async function POST(
+async function handlePOST(
   _request: Request,
   context: KnowledgeRunRouteContext,
 ) {
@@ -42,3 +43,5 @@ export async function POST(
     );
   }
 }
+
+export const POST = withApiAuth(handlePOST);

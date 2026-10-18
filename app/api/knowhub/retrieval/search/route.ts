@@ -1,3 +1,4 @@
+import { withApiAuth } from "@/features/auth/api";
 import { NextRequest, NextResponse } from "next/server";
 
 import { searchKnowledgeSlices } from "@/knowhub/features/retrieval/service";
@@ -14,7 +15,7 @@ function createErrorResponse(error: unknown, status = 400) {
   );
 }
 
-export async function POST(request: NextRequest) {
+async function handlePOST(request: NextRequest) {
   try {
     const payload = (await request.json()) as {
       knowledgeId: string;
@@ -31,3 +32,5 @@ export async function POST(request: NextRequest) {
     return createErrorResponse(error);
   }
 }
+
+export const POST = withApiAuth(handlePOST);

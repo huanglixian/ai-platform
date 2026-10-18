@@ -1,3 +1,4 @@
+import { withApiAuth } from "@/features/auth/api";
 import { Buffer } from "buffer";
 import { NextResponse } from "next/server";
 
@@ -11,7 +12,7 @@ type DocSpaceUploadRouteContext = {
   }>;
 };
 
-export async function POST(
+async function handlePOST(
   request: Request,
   context: DocSpaceUploadRouteContext,
 ) {
@@ -55,3 +56,5 @@ export async function POST(
     );
   }
 }
+
+export const POST = withApiAuth(handlePOST);

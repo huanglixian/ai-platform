@@ -1,3 +1,4 @@
+import { withApiAuth } from "@/features/auth/api";
 import { apiError, apiOk } from "@/lib/server/api-response";
 import { getPiSessionStatus } from "@/app_factory/types/session";
 import { getModelProfile, type ModelProfileId } from "@/app_factory/server/model-profiles";
@@ -39,7 +40,7 @@ async function presentSession(session: SessionRow) {
   };
 }
 
-export async function GET(
+async function handleGET(
   _: Request,
   context: { params: Promise<{ id: string }> },
 ) {
@@ -49,7 +50,7 @@ export async function GET(
   return apiOk(await Promise.all(sessions.map(presentSession)));
 }
 
-export async function POST(
+async function handlePOST(
   _: Request,
   context: { params: Promise<{ id: string }> },
 ) {
@@ -60,3 +61,6 @@ export async function POST(
     { status: 201 },
   );
 }
+
+export const GET = withApiAuth(handleGET);
+export const POST = withApiAuth(handlePOST);

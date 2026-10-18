@@ -1,3 +1,4 @@
+import { withApiAuth } from "@/features/auth/api";
 import { getProject, hasActiveRunForProject } from "@/app_factory/server/database";
 import {
   getPreview,
@@ -6,18 +7,20 @@ import {
   stopPreview,
 } from "@/app_factory/server/preview";
 import { apiError, apiOk } from "@/lib/server/api-response";
+import { isolatedApplicationUrl } from "@/features/auth/origin";
 
 export const runtime = "nodejs";
 
-export async function GET(
+async function handleGET(
   _: Request,
   context: { params: Promise<{ id: string }> },
 ) {
   const { id } = await context.params;
-  return apiOk(getPreview(id));
+  const preview = getPreview(id);
+  return apiOk(preview && "url" in preview ? { ...preview, url: isolatedApplicationUrl(preview.url) } : preview);
 }
 
-export async function POST(
+async function handlePOST(
   _: Request,
   context: { params: Promise<{ id: string }> },
 ) {
@@ -26,7 +29,8 @@ export async function POST(
   if (!project) return apiError("项目不存在", 404);
   if (hasActiveRunForProject(id)) return apiError("Pi 正在修改项目，完成后再预览", 409);
   try {
-    return apiOk(await startPreview(id, project.workspacePath, project.template.runtimeId));
+    const preview = await startPreview(id, project.workspacePath, project.template.runtimeId);
+    return apiOk({ ...preview, url: isolatedApplicationUrl(preview.url) });
   } catch (error) {
     if (error instanceof PreviewStartError) {
       return apiError(error.message, 502, { logs: error.logs });
@@ -35,7 +39,7 @@ export async function POST(
   }
 }
 
-export async function DELETE(
+async function handleDELETE(
   _: Request,
   context: { params: Promise<{ id: string }> },
 ) {
@@ -44,3 +48,7 @@ export async function DELETE(
     ? apiOk({ status: "stopped" })
     : apiError("Preview 未运行", 404);
 }
+
+export const GET = withApiAuth(handleGET);
+export const POST = withApiAuth(handlePOST);
+export const DELETE = withApiAuth(handleDELETE);

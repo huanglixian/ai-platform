@@ -17,6 +17,7 @@ test("新建数据库使用稳定模型档案 ID", async () => {
   } });
   try {
     await fs.symlink(path.join(originalDirectory, "app_factory"), path.join(temporaryDirectory, "app_factory"));
+    await fs.symlink(path.join(originalDirectory, "features"), path.join(temporaryDirectory, "features"));
     await fs.symlink(path.join(originalDirectory, "lib"), path.join(temporaryDirectory, "lib"));
     await fs.symlink(path.join(originalDirectory, "node_modules"), path.join(temporaryDirectory, "node_modules"));
     process.chdir(temporaryDirectory);
@@ -45,7 +46,7 @@ test("新建数据库使用稳定模型档案 ID", async () => {
     const project = createProject({
       name: "纯 HTML 测试项目",
       templateId: "static-html",
-    });
+    }, "test-owner");
     assert.equal(project.templateId, "static-html");
     assert.equal(project.template.name, "纯 HTML 应用");
     assert.match(
@@ -55,7 +56,7 @@ test("新建数据库使用稳定模型档案 ID", async () => {
     const enterpriseProject = createProject({
       name: "通用企业应用",
       templateId: "nextjs-enterprise",
-    });
+    }, "test-owner");
     assert.equal(enterpriseProject.template.name, "Next.js 企业应用");
     assert.deepEqual(enterpriseProject.framework, {
       id: "appfactory-nextjs-enterprise",
@@ -85,7 +86,14 @@ test("新建数据库使用稳定模型档案 ID", async () => {
     assert.throws(() => updateAppFactoryModelSettings({ defaultModelProfileId: "cockpit", thinkingLevels: { zhipu: "high", deepseek: "high", cockpit: "max" } }), /设置无效/);
     assert.equal(getAppFactoryModelSettings().thinkingLevels.cockpit, "xhigh");
     const { GET, PUT } = await import("../../app/api/appfactory/v1/settings/model/route.ts");
-    const response = await GET();
+    process.env.AGENT_HUB_BASE_URL = "http://localhost";
+    const { getAgentHubDatabase } = await import("../../lib/agenthub/database.ts");
+    const { createSession: createLoginSession, sessionCookie } = await import("../../features/auth/session.ts");
+    const identity = getAgentHubDatabase();
+    identity.prepare("INSERT INTO platform_users(id,username,display_name,password_hash,created_at,updated_at) VALUES ('test-admin','test-admin','测试管理员','unused','','')").run();
+    identity.prepare("INSERT INTO platform_user_roles(user_id,role_code) VALUES ('test-admin','super_admin')").run();
+    const headers = { origin: "http://localhost", cookie: `${sessionCookie}=${createLoginSession("test-admin")}` };
+    const response = await GET(new Request("http://localhost/api/appfactory/v1/settings/model", { headers }));
     const payload = await response.json();
     assert.deepEqual(payload.data.profiles.find((profile) => profile.id === "cockpit").thinkingLevels, ["low", "medium", "high", "xhigh"]);
     for (const thinkingLevels of [
@@ -93,10 +101,10 @@ test("新建数据库使用稳定模型档案 ID", async () => {
       { zhipu: "xhigh", deepseek: "low", cockpit: "high" },
       { zhipu: "high", deepseek: "xhigh", cockpit: "high" },
     ]) {
-      const rejected = await PUT(new Request("http://localhost/api/settings", { method: "PUT", body: JSON.stringify({ defaultModelProfileId: "cockpit", thinkingLevels }) }));
+      const rejected = await PUT(new Request("http://localhost/api/appfactory/v1/settings/model", { method: "PUT", headers, body: JSON.stringify({ defaultModelProfileId: "cockpit", thinkingLevels }) }));
       assert.equal(rejected.status, 422);
     }
-    const saved = await PUT(new Request("http://localhost/api/settings", { method: "PUT", body: JSON.stringify({ defaultModelProfileId: "deepseek", thinkingLevels: { zhipu: "max", deepseek: "low", cockpit: "medium" } }) }));
+    const saved = await PUT(new Request("http://localhost/api/appfactory/v1/settings/model", { method: "PUT", headers, body: JSON.stringify({ defaultModelProfileId: "deepseek", thinkingLevels: { zhipu: "max", deepseek: "low", cockpit: "medium" } }) }));
     assert.equal(saved.status, 200);
     assert.deepEqual(getAppFactoryModelSettings().thinkingLevels, { zhipu: "max", deepseek: "low", cockpit: "medium" });
     const run = createRun(project.id, session.id, "创建欢迎页");

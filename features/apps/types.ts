@@ -13,6 +13,10 @@ export interface PublishedApp {
   launchStatus: ExternalLaunchStatus;
   createdAt: string;
   updatedAt: string;
+  access?: ResourcePolicy;
+  canManage?: boolean;
+  canOperate?: boolean;
+  canUse?: boolean;
 }
 
 export type ExternalStopResult = {
@@ -23,3 +27,4 @@ export type ExternalStopResult = {
 export type ExternalStopResponse = ExternalStopResult & {
   applications: PublishedApp[];
 };
+import type { ResourcePolicy } from "@/features/access/types";

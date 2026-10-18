@@ -15,6 +15,7 @@ import {
   ProjectFileTree,
   type WorkspaceEvent,
 } from "@/app/appfactory/_components/workspace-panels";
+import { PublishButton } from "@/app/appfactory/_components/publish-button";
 import { usePublicationTaskCenter } from "@/app/appfactory/_components/publication-task-center";
 import type { RunFeedback } from "@/app/appfactory/_lib/run-state";
 import {
@@ -109,7 +110,7 @@ export default function ProjectPage({
     () => buildFileTree(files, changedFiles),
     [files, changedFiles],
   );
-  const { publish, latestForProject } = usePublicationTaskCenter();
+  const { latestForProject } = usePublicationTaskCenter();
   const selectFile = async (path: string, reveal = true, projectId = id) => {
     setSelectedFile(path);
     setFileOpen(reveal);
@@ -626,14 +627,7 @@ export default function ProjectPage({
           >
             预览 ↗
           </button>
-          <button
-            type="button"
-            onClick={() => void publish(id).catch((reason: unknown) => notify.error(reason instanceof Error ? reason.message : "创建发布任务失败"))}
-            disabled={busy || publication?.status === "queued" || publication?.status === "running"}
-            className="h-8 rounded-lg bg-[#0368b3] px-3 text-xs font-medium text-white hover:bg-[#1a4d87] disabled:opacity-40"
-          >
-            {publication?.status === "queued" || publication?.status === "running" ? "发布中…" : "发布"}
-          </button>
+          <PublishButton projectId={id} disabled={busy} />
         </div>
       </header>
       <div className="flex shrink-0 items-center gap-1 border-b border-[#d4dde8] bg-white px-3 py-2 sm:hidden">

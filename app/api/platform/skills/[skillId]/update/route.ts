@@ -1,3 +1,4 @@
+import { withApiAuth } from "@/features/auth/api";
 import { NextResponse } from "next/server";
 import fs from "node:fs/promises";
 import path from "node:path";
@@ -32,7 +33,7 @@ type RouteContext = {
   }>;
 };
 
-export async function POST(request: Request, context: RouteContext) {
+async function handlePOST(request: Request, context: RouteContext) {
   const { skillId } = await context.params;
 
   try {
@@ -97,3 +98,5 @@ export async function POST(request: Request, context: RouteContext) {
     );
   }
 }
+
+export const POST = withApiAuth(handlePOST);

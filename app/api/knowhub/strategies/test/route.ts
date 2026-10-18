@@ -1,3 +1,4 @@
+import { withApiAuth } from "@/features/auth/api";
 import { NextRequest, NextResponse } from "next/server";
 
 import { testStrategyTemplate } from "@/knowhub/features/strategies/service";
@@ -5,7 +6,7 @@ import type { StrategySettingValue } from "@/knowhub/features/strategies/types";
 
 export const dynamic = "force-dynamic";
 
-export async function POST(request: NextRequest) {
+async function handlePOST(request: NextRequest) {
   try {
     const formData = await request.formData();
     const templateId = String(formData.get("templateId") ?? "").trim();
@@ -44,3 +45,5 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+export const POST = withApiAuth(handlePOST);

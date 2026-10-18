@@ -1,4 +1,7 @@
 import Link from "next/link";
+import { requirePageUser } from "@/features/auth/server";
+import { hasPermission } from "@/features/auth/types";
+import { UserMenu } from "@/features/auth/user-menu";
 
 import { RuntimeStatusPill } from "@/app/appfactory/_components/runtime-status-pill";
 import {
@@ -6,11 +9,12 @@ import {
   PublicationTaskCenterTrigger,
 } from "@/app/appfactory/_components/publication-task-center";
 
-export default function AppFactoryLayout({
+export default async function AppFactoryLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const user = await requirePageUser("appfactory.use");
   return (
     <PublicationTaskCenterProvider>
     <div className="min-h-screen bg-[#f2f4f7] text-[#262626]">
@@ -32,17 +36,18 @@ export default function AppFactoryLayout({
             >
               项目
             </Link>
-            <Link
+            {hasPermission(user, "platform.manage") && <Link
               href="/appfactory/settings"
               className="rounded-md px-3 py-1.5 text-[#667085] transition hover:bg-[#f6f8fb] hover:text-[#1a4d87]"
             >
               设置
-            </Link>
+            </Link>}
           </nav>
         </div>
         <div className="flex shrink-0 items-center gap-3 text-xs sm:gap-4">
           <RuntimeStatusPill />
           <PublicationTaskCenterTrigger />
+          <UserMenu />
           <Link
             href="/"
             className="hidden text-[#667085] transition hover:text-[#0368b3] lg:inline"

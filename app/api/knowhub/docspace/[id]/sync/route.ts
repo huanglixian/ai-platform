@@ -1,3 +1,4 @@
+import { withApiAuth } from "@/features/auth/api";
 import { NextResponse } from "next/server";
 
 import { syncDocSpace } from "@/knowhub/features/docspace/service";
@@ -10,7 +11,7 @@ type DocSpaceSyncRouteContext = {
   }>;
 };
 
-export async function POST(
+async function handlePOST(
   _request: Request,
   context: DocSpaceSyncRouteContext,
 ) {
@@ -43,3 +44,5 @@ export async function POST(
     );
   }
 }
+
+export const POST = withApiAuth(handlePOST);

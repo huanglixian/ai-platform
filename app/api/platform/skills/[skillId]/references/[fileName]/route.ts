@@ -1,3 +1,4 @@
+import { withApiAuth } from "@/features/auth/api";
 import { getSkillById } from "@/features/skills/registry";
 
 export const runtime = "nodejs";
@@ -6,7 +7,7 @@ type ReferenceRouteContext = {
   params: Promise<{ skillId: string; fileName: string }>;
 };
 
-export async function GET(_request: Request, context: ReferenceRouteContext) {
+async function handleGET(_request: Request, context: ReferenceRouteContext) {
   const { skillId, fileName } = await context.params;
   const skill = getSkillById(skillId);
   const reference = skill?.referenceFiles.find((file) => file.name === `references/${fileName}`);
@@ -23,3 +24,5 @@ export async function GET(_request: Request, context: ReferenceRouteContext) {
     },
   });
 }
+
+export const GET = withApiAuth(handleGET);

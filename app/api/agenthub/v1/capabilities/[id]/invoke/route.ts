@@ -1,3 +1,4 @@
+import { withApiAuth } from "@/features/auth/api";
 import { z } from "zod";
 
 import {
@@ -14,7 +15,7 @@ const invokeRequestSchema = z.object({
   timeoutMs: z.number().int().min(100).max(30_000).default(10_000),
 });
 
-export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
+async function handlePOST(request: Request, context: { params: Promise<{ id: string }> }) {
   const parsed = invokeRequestSchema.safeParse(await request.json());
   if (!parsed.success) {
     return apiError("调用参数格式错误", 422, parsed.error.flatten());
@@ -43,3 +44,5 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     return apiError(error instanceof Error ? error.message : "能力调用失败", 500);
   }
 }
+
+export const POST = withApiAuth(handlePOST);

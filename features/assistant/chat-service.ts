@@ -1,3 +1,5 @@
+import { requireRequestUser } from "@/features/auth/context";
+import { hasPermission } from "@/features/auth/types";
 import { streamText, pruneMessages, stepCountIs, type ModelMessage, type ToolSet } from "ai";
 
 import { getActiveModelRuntime } from "@/features/models/provider";
@@ -51,7 +53,7 @@ export async function streamAssistantResponse(
 
   let decision: AssistantDispatchDecision;
   if (
-    runtimeState?.activeSkillId &&
+    hasPermission(requireRequestUser(), "platform.manage") && runtimeState?.activeSkillId &&
     runtimeState.skillStatus !== "completed" &&
     runtimeState.skillStatus !== "failed"
   ) {

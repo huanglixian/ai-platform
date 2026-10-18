@@ -1,3 +1,4 @@
+import { withApiAuth } from "@/features/auth/api";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -13,7 +14,7 @@ import { apiOk } from "@/lib/server/api-response";
 
 export const runtime = "nodejs";
 
-export async function GET() {
+async function handleGET() {
   nextEnv.loadEnvConfig(process.cwd());
   const modelSettings = getAppFactoryModelSettings();
   const modelProfile = getModelProfile(modelSettings.defaultModelProfileId);
@@ -43,3 +44,5 @@ export async function GET() {
     })),
   });
 }
+
+export const GET = withApiAuth(handleGET);

@@ -44,7 +44,7 @@ export function AppCard({ app, pendingAction, serviceDisabled, menuDisabled, onO
           {canOpen ? (
             <button type="button" onClick={() => onOpen(app)} aria-label={`打开${app.name}`} title="打开应用" className="grid h-6 w-6 place-items-center rounded text-[var(--skin-primary)] hover:bg-[var(--skin-surface-accent)] hover:text-[var(--skin-primary)] focus-visible:outline-2 focus-visible:outline-[var(--skin-ring)]"><ArrowUpRight size={14} /></button>
           ) : null}
-          {isExternal ? isManaged ? (
+          {isExternal && app.canOperate ? isManaged ? (
             <button type="button" disabled={serviceDisabled || pendingAction !== null} onClick={() => onServiceAction(app, "stop")} className="inline-flex h-6 items-center gap-1 rounded px-1.5 text-[11px] font-medium text-[#a25a56] hover:bg-[#f9eceb] hover:text-[#913f3b] focus-visible:outline-2 focus-visible:outline-[#b77975] disabled:cursor-not-allowed disabled:opacity-60">
               {pendingAction ? <LoaderCircle size={12} className="animate-spin" /> : <Square size={11} fill="currentColor" />}{pendingAction === "start" ? "启动中" : pendingAction === "stop" ? "停止中" : "停止"}
             </button>
@@ -53,7 +53,7 @@ export function AppCard({ app, pendingAction, serviceDisabled, menuDisabled, onO
               <Play size={11} fill="currentColor" />启动
             </button>
           ) : null}
-          <Menu.Root>
+          {app.canManage && <Menu.Root>
             <Menu.Trigger disabled={menuDisabled} aria-label={`${app.name}的更多操作`} className="grid h-6 w-6 place-items-center rounded text-[var(--skin-text-subtle)] hover:bg-[var(--skin-surface-accent)] hover:text-[var(--skin-primary)] focus-visible:outline-2 focus-visible:outline-[var(--skin-ring)]"><MoreHorizontal size={16} /></Menu.Trigger>
             <Menu.Portal>
               <Menu.Positioner side="bottom" align="end" sideOffset={4} className="z-50">
@@ -63,7 +63,7 @@ export function AppCard({ app, pendingAction, serviceDisabled, menuDisabled, onO
                 </Menu.Popup>
               </Menu.Positioner>
             </Menu.Portal>
-          </Menu.Root>
+          </Menu.Root>}
         </div>
       </div>
     </article>

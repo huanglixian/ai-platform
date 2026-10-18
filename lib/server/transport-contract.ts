@@ -10,5 +10,5 @@ export const apiErrorSchema = z.object({
 export const apiResponseHeaders = z.object({
   "X-AgentHub-API-Version": z.literal(agentHubTransportVersion),
   "X-Request-Id": z.string().min(1),
-  "X-Request-Actor": z.enum(["local-user", "system"]),
+  "X-Request-Actor": z.string().min(1),
 });

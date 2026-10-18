@@ -1,3 +1,4 @@
+import { withApiAuth } from "@/features/auth/api";
 import { NextRequest, NextResponse } from "next/server";
 import { createTextStreamResponse } from "ai";
 import { z } from "zod";
@@ -19,7 +20,7 @@ const chatRequestSchema = z.object({
   }).optional(),
 });
 
-export async function POST(request: NextRequest) {
+async function handlePOST(request: NextRequest) {
   try {
     const payload = chatRequestSchema.parse(await request.json());
     const result = await streamAssistantResponse(payload.messages, payload.runtimeState);
@@ -121,3 +122,5 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+export const POST = withApiAuth(handlePOST);

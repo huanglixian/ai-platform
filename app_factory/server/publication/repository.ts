@@ -1,4 +1,9 @@
 import { randomUUID } from "node:crypto";
+import { requireRequestUser } from "@/features/auth/context";
+import { getResourcePolicy } from "@/features/access/server";
+import { getAgentHubDatabase } from "@/lib/agenthub/database";
+import type { Visibility } from "@/features/access/types";
+import { AuthError } from "@/features/auth/errors";
 
 import { getAppFactoryDatabase } from "@/app_factory/server/database";
 import type { RuntimeId } from "@/app_factory/runtimes/types";
@@ -17,6 +22,9 @@ import type {
 export type PublicationJobLease = {
   id: string;
   project_id: string;
+  requested_by: string;
+  visibility: Visibility;
+  policy_revision: number;
   status: PublicationStatus;
   stage: PublicationStage;
   step: string;
@@ -58,9 +66,12 @@ type DeploymentRow = {
 };
 
 function jobDto(row: PublicationJobLease): PublicationJob {
+  const result = row.result_json ? JSON.parse(row.result_json) as PublicationResult : null;
   return {
     id: row.id,
     projectId: row.project_id,
+    visibility: row.visibility,
+    policyRevision: row.policy_revision,
     status: row.status,
     stage: row.stage,
     step: row.step,
@@ -69,7 +80,7 @@ function jobDto(row: PublicationJobLease): PublicationJob {
     error: row.error,
     attempts: row.attempts,
     releaseId: row.release_id,
-    result: row.result_json ? JSON.parse(row.result_json) as PublicationResult : null,
+    result: result ? { ...result, entryUrl: `/applications/${encodeURIComponent(result.applicationId)}/open` } : null,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -104,8 +115,14 @@ function deploymentDto(row: DeploymentRow): PublicationDeployment {
   };
 }
 
-export function enqueuePublication(projectId: string): PublicationJob {
+export function enqueuePublication(projectId: string, visibility?: Visibility, expectedRevision?: number): PublicationJob {
   const database = getAppFactoryDatabase();
+  const user = requireRequestUser();
+  const registered = getAgentHubDatabase().prepare("SELECT id FROM applications WHERE producer='appfactory' AND external_id=?").get(projectId) as { id: string } | undefined;
+  const policy = registered ? getResourcePolicy("application", registered.id) : undefined;
+  const project = database.prepare("SELECT owner_id FROM projects WHERE id=?").get(projectId) as { owner_id: string } | undefined;
+  if (project?.owner_id !== user.id) throw new AuthError("项目不存在或无权访问", 404);
+  if (expectedRevision !== undefined && expectedRevision !== (policy?.revision ?? 0)) throw new AuthError("访问范围已变化，请重新打开发布设置", 409);
   return database.transaction(() => {
     const existing = database.prepare(
       "SELECT * FROM publication_jobs WHERE project_id=? AND status IN ('queued','running') ORDER BY created_at DESC LIMIT 1",
@@ -114,8 +131,8 @@ export function enqueuePublication(projectId: string): PublicationJob {
     const id = `publication-${randomUUID()}`;
     const now = new Date().toISOString();
     database.prepare(
-      "INSERT INTO publication_jobs(id,project_id,status,stage,step,completed,total,created_at,updated_at) VALUES (?,?,'queued','queued','等待 Worker 处理',0,8,?,?)",
-    ).run(id, projectId, now, now);
+      "INSERT INTO publication_jobs(id,project_id,requested_by,visibility,policy_revision,status,stage,step,completed,total,created_at,updated_at) VALUES (?,?,?,?,?,'queued','queued','等待 Worker 处理',0,8,?,?)",
+    ).run(id, projectId, user.id, visibility ?? policy?.visibility ?? "internal", policy?.revision ?? 0, now, now);
     appendPublicationEvent(id, "queued", "info", "发布任务已创建");
     return getPublicationJob(id)!;
   })();
@@ -128,9 +145,8 @@ export function getPublicationJob(id: string): PublicationJob | null {
 
 export function listPublicationJobs(projectId?: string): PublicationJob[] {
   const database = getAppFactoryDatabase();
-  const rows = projectId
-    ? database.prepare("SELECT * FROM publication_jobs WHERE project_id=? ORDER BY created_at DESC LIMIT 30").all(projectId)
-    : database.prepare("SELECT * FROM publication_jobs ORDER BY created_at DESC LIMIT 30").all();
+  const user = requireRequestUser();
+  const rows = database.prepare("SELECT j.* FROM publication_jobs j JOIN projects p ON p.id=j.project_id WHERE p.owner_id=? AND (? IS NULL OR j.project_id=?) ORDER BY j.created_at DESC LIMIT 30").all(user.id, projectId ?? null, projectId ?? null);
   return (rows as PublicationJobLease[]).map(jobDto);
 }
 

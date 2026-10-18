@@ -1,3 +1,4 @@
+import { withApiAuth } from "@/features/auth/api";
 import fs from "node:fs/promises";
 import path from "node:path";
 
@@ -41,7 +42,7 @@ function unifiedDiff(relative: string, before: string | undefined, after: string
   return lines.join("\n");
 }
 
-export async function GET(request: Request, context: { params: Promise<{ id: string }> }) {
+async function handleGET(request: Request, context: { params: Promise<{ id: string }> }) {
   const { id } = await context.params;
   const project = getProject(id);
   if (!project) return apiError("项目不存在", 404);
@@ -75,7 +76,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
   return apiOk(files);
 }
 
-export async function PUT(request: Request, context: { params: Promise<{ id: string }> }) {
+async function handlePUT(request: Request, context: { params: Promise<{ id: string }> }) {
   const { id } = await context.params;
   const project = getProject(id);
   if (!project) return apiError("项目不存在", 404);
@@ -94,3 +95,6 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
     return apiError(error instanceof Error ? error.message : "文件写入失败", 422);
   }
 }
+
+export const GET = withApiAuth(handleGET);
+export const PUT = withApiAuth(handlePUT);

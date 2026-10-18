@@ -8,12 +8,17 @@ import { useRef, useState } from "react";
 import { getActiveNavGroup, platformNavGroups } from "@/lib/nav";
 import { SkinSwitcher } from "@/features/appearance/skin-switcher";
 import { SKINS } from "@/features/appearance/skins";
+import { useCurrentUser } from "@/features/auth/auth-provider";
+import { UserMenu } from "@/features/auth/user-menu";
+import { hasPermission } from "@/features/auth/types";
 
 function isActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
 export function TopNav() {
+  const user = useCurrentUser();
+  const visibleGroups = platformNavGroups.filter((group) => !group.permission || hasPermission(user, group.permission));
   const pathname = usePathname();
   const routeGroupKey = getActiveNavGroup(pathname);
   const [openGroupKey, setOpenGroupKey] = useState<string | null>(null);
@@ -61,7 +66,7 @@ export function TopNav() {
           </div>
 
           <nav className="absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 items-center gap-2 xl:flex">
-            {platformNavGroups.map((group) => {
+            {visibleGroups.map((group) => {
               const active =
                 routeGroupKey === group.key || openGroupKey === group.key;
 
@@ -95,11 +100,7 @@ export function TopNav() {
                   <button
                     type="button"
                     onFocus={() => openGroupPanel(group.key)}
-                    onClick={() =>
-                      setOpenGroupKey((current) =>
-                        current === group.key ? null : group.key
-                      )
-                    }
+                    onClick={() => openGroupPanel(group.key)}
                     className={[
                       "border-b-2 px-3 py-[22px] text-[14px] font-semibold tracking-[-0.01em] transition-colors",
                       active
@@ -188,9 +189,7 @@ export function TopNav() {
 
           <div className="ml-auto flex shrink-0 items-center gap-3">
             <SkinSwitcher />
-            <div className="hidden h-9 w-9 items-center justify-center rounded-full border border-[var(--skin-border)] bg-[var(--skin-surface-accent)] text-sm font-semibold text-[var(--skin-primary)] md:flex">
-              U
-            </div>
+            <UserMenu />
           </div>
         </div>
       </div>

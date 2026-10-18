@@ -1,3 +1,4 @@
+import { withApiAuth } from "@/features/auth/api";
 import { z } from "zod";
 
 import { createProject, listProjects } from "@/app_factory/server/database";
@@ -13,11 +14,11 @@ const schema = z.object({
   templateId: z.string().trim().refine(isAppTemplateId, "项目模板不存在"),
 });
 
-export function GET() {
+function handleGET() {
   return apiOk(listProjects());
 }
 
-export async function POST(request: Request) {
+async function handlePOST(request: Request) {
   const input = schema.safeParse(await request.json());
   if (!input.success) return apiError("项目字段校验失败", 422, input.error.flatten());
   return apiOk(
@@ -25,3 +26,6 @@ export async function POST(request: Request) {
     { status: 201 },
   );
 }
+
+export const GET = withApiAuth(handleGET);
+export const POST = withApiAuth(handlePOST);

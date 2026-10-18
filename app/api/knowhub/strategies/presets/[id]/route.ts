@@ -1,3 +1,4 @@
+import { withApiAuth } from "@/features/auth/api";
 import { NextRequest, NextResponse } from "next/server";
 
 import { updateStrategyPreset } from "@/knowhub/features/strategies/service";
@@ -15,7 +16,7 @@ function createErrorResponse(error: unknown, status = 400) {
   );
 }
 
-export async function PATCH(
+async function handlePATCH(
   request: NextRequest,
   context: { params: Promise<{ id: string }> },
 ) {
@@ -42,3 +43,5 @@ export async function PATCH(
     return createErrorResponse(error);
   }
 }
+
+export const PATCH = withApiAuth(handlePATCH);

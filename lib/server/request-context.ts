@@ -1,17 +1,19 @@
-export type RequestActor = "local-user" | "system";
+import { requestIdentity } from "@/features/auth/context";
+
+export type RequestActor = string;
 
 export interface RequestContext {
   actor: RequestActor;
   requestId: string;
 }
 
-export function getRequestActor(request?: Request): RequestActor {
-  return request?.headers.get("x-agenthub-actor") === "system" ? "system" : "local-user";
+export function getRequestActor(): RequestActor {
+  return requestIdentity()?.user.id ?? "system";
 }
 
-export function getRequestContext(request?: Request): RequestContext {
+export function getRequestContext(): RequestContext {
   return {
-    actor: getRequestActor(request),
-    requestId: request?.headers.get("x-request-id") || crypto.randomUUID(),
+    actor: getRequestActor(),
+    requestId: requestIdentity()?.requestId ?? crypto.randomUUID(),
   };
 }

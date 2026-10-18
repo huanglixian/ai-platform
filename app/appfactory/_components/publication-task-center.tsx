@@ -27,42 +27,9 @@ import {
 
 import { parseSseBlock } from "@/app/appfactory/_lib/sse";
 
-type PublicationStage =
-  | "queued"
-  | "validating"
-  | "building"
-  | "packaging"
-  | "migrating"
-  | "deploying"
-  | "checking"
-  | "registering"
-  | "completed";
-type PublicationStatus = "queued" | "running" | "succeeded" | "failed" | "cancelled";
-type PublicationEvent = {
-  id: string;
-  sequence: number;
-  stage: PublicationStage;
-  level: "info" | "success" | "error";
-  message: string;
-  createdAt: string;
-};
-export type PublicationJob = {
-  id: string;
-  projectId: string;
-  status: PublicationStatus;
-  stage: PublicationStage;
-  step: string;
-  completed: number;
-  total: number;
-  error: string | null;
-  attempts: number;
-  result: {
-    entryUrl: string;
-    applicationCenterUrl: string;
-  } | null;
-  createdAt: string;
-  updatedAt: string;
-};
+import type { PublicationJob, PublicationEvent, PublicationStage } from "@/app_factory/server/publication/types";
+import { visibilityOptions, type Visibility } from "@/features/access/types";
+export type { PublicationJob } from "@/app_factory/server/publication/types";
 
 const stageLabels: Record<Exclude<PublicationStage, "completed">, string> = {
   queued: "排队等待",
@@ -78,7 +45,7 @@ const stages = Object.entries(stageLabels) as [keyof typeof stageLabels, string]
 
 type PublicationContextValue = {
   jobs: PublicationJob[];
-  publish: (projectId: string) => Promise<PublicationJob>;
+  publish: (projectId: string, visibility: Visibility, policyRevision: number) => Promise<PublicationJob>;
   cancel: (jobId: string) => Promise<void>;
   retry: (jobId: string) => Promise<void>;
   openTaskCenter: () => void;
@@ -126,6 +93,7 @@ function JobDetails({ job, events, onCancel, onRetry }: {
         <div>
           <p className="text-sm font-semibold text-[#173f6b]">发布应用</p>
           <p className="mt-1 text-xs text-[#667085]">{job.step}</p>
+          <p className="mt-1 text-[11px] text-[#98a2b3]">{visibilityOptions.find((option) => option.value === job.visibility)?.label}</p>
         </div>
         <JobStatusIcon job={job} />
       </div>
@@ -254,8 +222,8 @@ export function PublicationTaskCenterProvider({ children }: { children: ReactNod
     return () => { streams.forEach((source) => source.close()); window.clearInterval(poll); };
   }, [activeJobIds, receiveEvents, refreshEvents, refreshJob, reportConnectionError]);
 
-  const publish = useCallback(async (projectId: string) => {
-    const response = await fetch(`/api/appfactory/v1/projects/${projectId}/publication`, { method: "POST" });
+  const publish = useCallback(async (projectId: string, visibility: Visibility, policyRevision: number) => {
+    const response = await fetch(`/api/appfactory/v1/projects/${projectId}/publication`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ visibility, policyRevision }) });
     const payload = await response.json();
     if (!response.ok) throw new Error(messageFrom(payload, "创建发布任务失败"));
     const job = payload.data as PublicationJob;

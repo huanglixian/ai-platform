@@ -1,10 +1,11 @@
+import { withApiAuth } from "@/features/auth/api";
 import { getSession } from "@/app_factory/server/database";
 import { readTranscript } from "@/app_factory/server/transcript";
 import { apiError, apiOk } from "@/lib/server/api-response";
 
 export const runtime = "nodejs";
 
-export async function GET(
+async function handleGET(
   _: Request,
   context: { params: Promise<{ id: string }> },
 ) {
@@ -22,3 +23,5 @@ export async function GET(
     );
   }
 }
+
+export const GET = withApiAuth(handleGET);

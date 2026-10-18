@@ -1,3 +1,4 @@
+import { withApiAuth } from "@/features/auth/api";
 import { NextResponse } from "next/server";
 
 import { getKnowledgeById, listKnowledgeRuns } from "@/knowhub/features/knowledge/service";
@@ -10,7 +11,7 @@ type KnowledgeRouteContext = {
   }>;
 };
 
-export async function GET(
+async function handleGET(
   _request: Request,
   context: KnowledgeRouteContext,
 ) {
@@ -35,3 +36,5 @@ export async function GET(
     runs,
   });
 }
+
+export const GET = withApiAuth(handleGET);

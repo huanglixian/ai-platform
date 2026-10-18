@@ -1,3 +1,4 @@
+import { withApiAuth } from "@/features/auth/api";
 import {
   cancelPublicationJob,
   enqueuePublication,
@@ -7,7 +8,7 @@ import { apiError, apiOk } from "@/lib/server/api-response";
 
 export const runtime = "nodejs";
 
-export async function POST(
+async function handlePOST(
   request: Request,
   context: { params: Promise<{ jobId: string }> },
 ) {
@@ -27,5 +28,7 @@ export async function POST(
   if (job.status !== "failed" && job.status !== "cancelled") {
     return apiError("只有失败或已取消的发布任务可以重试", 409);
   }
-  return apiOk(enqueuePublication(job.projectId), { status: 201 });
+  return apiOk(enqueuePublication(job.projectId, job.visibility, job.policyRevision), { status: 201 });
 }
+
+export const POST = withApiAuth(handlePOST);

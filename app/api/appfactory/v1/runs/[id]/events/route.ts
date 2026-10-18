@@ -1,3 +1,4 @@
+import { withApiAuth } from "@/features/auth/api";
 import { getRun, getSession, type AppFactoryRunStatus } from "@/app_factory/server/database";
 import {
   subscribeToPiRun,
@@ -33,7 +34,7 @@ function isRunEvent(value: unknown, runId: string): value is PiRunEvent {
   );
 }
 
-export async function GET(
+async function handleGET(
   request: Request,
   context: { params: Promise<{ id: string }> },
 ) {
@@ -133,3 +134,5 @@ export async function GET(
     },
   });
 }
+
+export const GET = withApiAuth(handleGET);
