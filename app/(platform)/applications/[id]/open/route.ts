@@ -3,6 +3,7 @@ import { requirePageUser } from "@/features/auth/server";
 import { canUseResource, getResourcePolicy } from "@/features/access/server";
 import { applicationEntry } from "@/features/apps/server";
 import { isolatedApplicationUrl } from "@/features/auth/origin";
+import { canOpenApplication } from "@/features/apps/availability";
 
 export async function GET(
   _request: Request,
@@ -19,7 +20,7 @@ export async function GET(
   if (
     !app ||
     app.status !== "active" ||
-    (app.source === "external" && app.launchStatus !== "running")
+    !canOpenApplication(app)
   )
     return new Response("应用暂不可用，请返回首页查看状态", {
       status: 409,

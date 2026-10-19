@@ -48,8 +48,9 @@ export function authorizeApiRequest(request: Request, user: Principal) {
         requirePermission(user, "applications.manage");
       return;
     }
-    if (tail[0] === "stop")
+    if (tail[0] === "stop" || tail[0] === "import")
       return requirePermission(user, "applications.manage");
+    if (tail[1] === "deployment") requirePermission(user, "applications.manage");
     const policy = getResourcePolicy(
       "application",
       decodeURIComponent(tail[0]),

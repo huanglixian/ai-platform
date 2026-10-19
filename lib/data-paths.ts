@@ -9,6 +9,7 @@ export const dataPaths = {
   builtinSkills: path.join(dataRoot, "builtin", "skills"),
   agentHub: path.join(storageRoot, "agenthub"),
   agentHubSkills: path.join(storageRoot, "agenthub", "skills"),
+  externalApps: path.join(storageRoot, "external-apps"),
   appFactory: path.join(storageRoot, "appfactory"),
   appFactoryPiSessions: path.join(storageRoot, "appfactory", "pi-sessions"),
   appFactoryPiAgent: path.join(storageRoot, "appfactory", "pi-agent"),

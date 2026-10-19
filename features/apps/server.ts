@@ -3,7 +3,6 @@ import { currentUser, requireRequestUser } from "@/features/auth/context";
 import { AuthError } from "@/features/auth/errors";
 import { hasPermission } from "@/features/auth/types";
 import { audit, canManageApplication, canUseResource, getResourcePolicy, writeResourcePolicy } from "@/features/access/server";
-import type { Visibility } from "@/features/access/types";
 import { stopPublishedApplication } from "@/app_factory/server/publication/runtime";
 import { hasActivePublicationForProject } from "@/app_factory/server/publication/repository";
 import { getAgentHubDatabase } from "@/lib/agenthub/database";
@@ -11,11 +10,13 @@ import { EXTERNAL_APP_SEEDS } from "./external-app-seed";
 import { isProcessGroupRunning, isUrlReady, startExternalProcess, stopExternalProcess } from "./external-launcher";
 import { INITIAL_APPS } from "./mock-data";
 import type { ExternalLaunchStatus, ExternalStopResult, PlatformSource, PublishedApp } from "./types";
+import { deploymentSummary, getDeployment, isDeploymentActive, readDeploymentRuntime } from "./deployment/repository";
 
 const platformSources = ["appfactory", "external", "dify", "n8n"] as const;
 const platformSourceSchema = z.enum(platformSources);
 const visibilitySchema = z.enum(["private", "internal", "all"]);
 const webUrlSchema = z.string().trim().url().refine((value) => ["http:", "https:"].includes(new URL(value).protocol), "应用地址必须使用 HTTP 或 HTTPS");
+const pendingExternalStarts = new Set<string>();
 
 export const applicationInputSchema = z.object({
   name: z.string().trim().min(1).max(120),
@@ -28,11 +29,8 @@ export const applicationInputSchema = z.object({
   visibility: visibilitySchema.default("internal"),
   version: z.string().trim().max(40).default("1.0.0"),
   externalId: z.string().trim().max(120).optional(),
-  launchCommand: z.string().trim().min(1).max(5_000).optional(),
+  launchCommand: z.string().trim().max(5_000).nullable().optional(),
 }).strict().superRefine((input, context) => {
-  if (input.producer === "external" && !input.launchCommand) {
-    context.addIssue({ code: "custom", path: ["launchCommand"], message: "外部应用必须提供启动命令" });
-  }
   if (input.producer !== "external" && input.launchCommand) {
     context.addIssue({ code: "custom", path: ["launchCommand"], message: "只有外部应用可以设置启动命令" });
   }
@@ -53,7 +51,7 @@ export const applicationUpdateSchema = z.object({
 }).strict();
 
 export const externalApplicationUpdateSchema = applicationUpdateSchema.extend({
-  launchCommand: z.string().trim().min(1).max(5_000).optional(),
+  launchCommand: z.string().trim().max(5_000).nullable().optional(),
 }).strict();
 
 type ApplicationInput = z.infer<typeof applicationInputSchema>;
@@ -76,6 +74,7 @@ function rowToApp(row: Record<string, unknown>): PublishedApp {
   const policy = getResourcePolicy("application", String(row.id));
   const canOperate = Boolean(user && hasPermission(user, "applications.manage") && canManageApplication(user, policy));
   const canManage = Boolean(user && canManageApplication(user, policy) && (source === "appfactory" || canOperate));
+  const deployment = source === "external" ? getDeployment(String(row.id)) : undefined;
   return {
     id: String(row.id),
     name: String(row.name),
@@ -85,6 +84,8 @@ function rowToApp(row: Record<string, unknown>): PublishedApp {
     url: !user || canManage ? String(row.entry_url) : `/applications/${encodeURIComponent(String(row.id))}/open`,
     launchCommand: (!user || canOperate) && typeof row.launch_command === "string" ? row.launch_command : null,
     launchStatus: getLaunchStatus(source, row),
+    launchMode: source === "external" && (row.launch_command || deployment) ? "managed" : "link",
+    ...(deployment ? { deployment: canManage ? deploymentSummary(deployment) : { status: deployment.status, message: "", error: null, missingConfig: [] } } : {}),
     createdAt: String(row.created_at),
     updatedAt: String(row.updated_at),
     ...(user ? { canManage, canOperate, canUse: canUseResource(user, policy), ...(canManage ? { access: policy } : {}) } : {}),
@@ -190,7 +191,7 @@ export function listApplications() {
   return rows.filter((row) => canUseResource(user, getResourcePolicy("application", String(row.id)))).map(rowToApp);
 }
 
-export function createApplication(input: ApplicationInput, options?: { ownerId: string; expectedRevision: number; actorId: string }) {
+export function createApplication(input: ApplicationInput, options?: { ownerId: string; expectedRevision: number; actorId: string; applicationId?: string }) {
   const db = getAgentHubDatabase();
   const user = currentUser();
   const ownerId = options?.ownerId ?? requireRequestUser().id;
@@ -204,12 +205,12 @@ export function createApplication(input: ApplicationInput, options?: { ownerId: 
     }
     if (options && options.expectedRevision !== 0) throw new AuthError("应用注册已变化，请重新发布", 409);
     const now = new Date().toISOString();
-    const id = `app-${crypto.randomUUID()}`;
+    const id = options?.applicationId ?? `app-${crypto.randomUUID()}`;
     getAgentHubDatabase().prepare(`INSERT INTO applications
       (id,name,description,producer,kind,runtime,status,entry_url,version,external_id,launch_command,created_at,updated_at,created_by,updated_by)
       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`).run(
       id, input.name, input.description, input.producer, input.kind, input.runtime, input.status,
-      input.entryUrl, input.version, input.externalId ?? null, input.launchCommand ?? null, now, now, options?.actorId ?? ownerId, options?.actorId ?? ownerId,
+      input.entryUrl, input.version, input.externalId ?? null, input.launchCommand || null, now, now, options?.actorId ?? ownerId, options?.actorId ?? ownerId,
     );
     writeResourcePolicy("application", id, ownerId, input.visibility);
     audit(options?.actorId ?? ownerId, "application.create", id, { visibility: input.visibility });
@@ -229,6 +230,13 @@ export function updateApplication(id: string, input: Partial<ApplicationInput> &
   return db.transaction(() => {
     const current = getApplicationRow(id);
     if (!current) return null;
+    const deployment = getDeployment(id);
+    if (deployment && (input.launchCommand !== undefined || input.entryUrl !== undefined)) throw new AuthError("源码应用的运行配置由部署流程维护", 409);
+    const changesRuntime = (input.launchCommand !== undefined && input.launchCommand !== current.launch_command)
+      || (input.entryUrl !== undefined && input.entryUrl !== current.entry_url);
+    if (changesRuntime && (pendingExternalStarts.has(id) || getLaunchStatus("external", current) !== null)) {
+      throw new AuthError("请先停止应用，再修改启动配置", 409);
+    }
     const next = {
       name: String(current.name),
       description: String(current.description ?? ""),
@@ -252,7 +260,7 @@ export function updateApplication(id: string, input: Partial<ApplicationInput> &
       SET name=?,description=?,producer=?,kind=?,runtime=?,status=?,entry_url=?,version=?,external_id=?,launch_command=?,updated_at=?,updated_by=?
       WHERE id=?`).run(
       next.name, next.description, next.producer, next.kind, next.runtime, next.status,
-      next.entryUrl, next.version, next.externalId ?? null, next.launchCommand ?? null,
+      next.entryUrl, next.version, next.externalId ?? null, next.launchCommand || null,
       new Date().toISOString(), actorId, id,
     );
     audit(actorId, "application.update", id);
@@ -261,9 +269,21 @@ export function updateApplication(id: string, input: Partial<ApplicationInput> &
 }
 
 export async function startExternalApplication(id: string) {
+  if (pendingExternalStarts.has(id)) throw new Error("应用正在启动，请稍后再试。");
+  pendingExternalStarts.add(id);
+  try { return await launchExternalApplication(id); }
+  finally { pendingExternalStarts.delete(id); }
+}
+
+async function launchExternalApplication(id: string) {
   seedApplications();
   let current = getExternalApplicationRow(id);
   if (!current) return null;
+  const deployment = getDeployment(id);
+  if (deployment && deployment.status !== "ready") throw new Error("源码应用尚未部署就绪，请先完成部署。");
+  if (!current.launch_command) throw new Error("该应用通过 URL 直接访问，无需启动。");
+  const deployedRuntime = deployment ? await readDeploymentRuntime(id) : null;
+  if (deployedRuntime && deployedRuntime.config.status !== "ready") throw new Error("应用运行配置尚未就绪，请重新完成部署。");
   const currentPid = getLaunchPid(current);
   if (currentPid !== null && !isProcessGroupRunning(currentPid)) {
     updateLaunchState(id, null, null, null, currentPid);
@@ -272,11 +292,12 @@ export async function startExternalApplication(id: string) {
   }
 
   const url = String(current.entry_url);
-  if (await isUrlReady(url)) {
+  if (await isUrlReady(deployedRuntime?.healthUrl ?? url)) {
     const managedPid = getLaunchPid(current);
     if (managedPid !== null && isProcessGroupRunning(managedPid)) {
       updateLaunchState(id, managedPid, String(current.launch_started_at ?? new Date().toISOString()), "running", managedPid);
     }
+    if (getLaunchPid(current) === null) throw new Error("该地址已由其他服务提供，请使用 URL 直达方式接入。");
     return getApplication(id);
   }
 
@@ -292,7 +313,8 @@ export async function startExternalApplication(id: string) {
   try {
     const launched = await startExternalProcess({
       command: launchCommand,
-      url,
+      url: deployedRuntime?.healthUrl ?? url,
+      ...(deployedRuntime ? { cwd: deployedRuntime.cwd, environment: deployedRuntime.environment, logPath: deployedRuntime.logPath, timeoutMs: deployedRuntime.timeoutMs, requireNewProcess: true } : {}),
       onSpawn: async (pid) => {
         spawnedPid = pid;
         updateLaunchState(id, pid, new Date().toISOString(), "starting");
@@ -325,10 +347,13 @@ export async function stopExternalApplication(id: string) {
 }
 
 export async function removeApplication(id: string) {
+  if (pendingExternalStarts.has(id)) throw new Error("应用正在启动，请等待启动结束后再删除。");
   const current = getApplicationRow(id);
   if (!current) return false;
   const source = platformSourceSchema.parse(current.producer) as PlatformSource;
   if (source === "external") {
+    const deployment = getDeployment(id);
+    if (deployment && (isDeploymentActive(deployment.status) || deployment.lease_token)) throw new Error("请先取消部署任务，待任务停止后再删除应用。");
     const pid = getLaunchPid(current);
     if (pid !== null) await stopExternalProcess(pid);
   } else if (source === "appfactory") {
@@ -378,5 +403,5 @@ export function publishedApplicationAccess(projectId: string) {
 
 export function applicationEntry(id: string) {
   const row = getApplicationRow(id);
-  return row ? { url: String(row.entry_url), status: String(row.status), source: String(row.producer), launchStatus: getLaunchStatus(platformSourceSchema.parse(row.producer), row) } : null;
+  return row ? { url: String(row.entry_url), status: String(row.status), source: platformSourceSchema.parse(row.producer), launchMode: row.launch_command || getDeployment(id) ? "managed" as const : "link" as const, launchStatus: getLaunchStatus(platformSourceSchema.parse(row.producer), row) } : null;
 }

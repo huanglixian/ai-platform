@@ -111,6 +111,24 @@ export function ApplicationCatalog() {
     setList((current) => current.map((item) => item.id === updated.id ? updated : item));
   }
 
+  const hasPendingDeployments = list.some((app) => app.deployment?.status === "queued" || app.deployment?.status === "running");
+  useEffect(() => {
+    if (!hasPendingDeployments) return;
+    const controller = new AbortController();
+    const timer = setInterval(async () => {
+      try {
+        const response = await fetch("/api/agenthub/v1/applications", { signal: controller.signal });
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload.error?.message || "刷新部署状态失败");
+        setList(payload.data);
+        setLoadError("");
+      } catch (error) {
+        if (!controller.signal.aborted) setLoadError(error instanceof Error ? error.message : "刷新部署状态失败");
+      }
+    }, 3_000);
+    return () => { clearInterval(timer); controller.abort(); };
+  }, [hasPendingDeployments]);
+
   async function handleServiceAction(app: PublishedApp, action: "start" | "stop") {
     if (stoppingAll || pendingService) return;
     setPendingService({ appId: app.id, action });
@@ -259,7 +277,7 @@ export function ApplicationCatalog() {
           </div>
         ) : <EmptyApps />}
       </section>
-      {editingApp !== undefined ? <ApplicationForm key={editingApp?.id ?? "new"} app={editingApp} source={newApplicationSource} onClose={() => setEditingApp(undefined)} onSaved={handleSaved} /> : null}
+      {editingApp !== undefined ? <ApplicationForm key={editingApp?.id ?? "new"} app={editingApp} source={newApplicationSource} onClose={() => setEditingApp(undefined)} onSaved={handleSaved} onUpdated={replaceApplication} /> : null}
       <ConfirmDialog
         open={removingApp !== null}
         onOpenChange={(open) => { if (!open) setRemovingApp(null); }}

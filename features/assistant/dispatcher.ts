@@ -4,6 +4,7 @@ import { generateText } from "ai";
 import { z } from "zod";
 
 import { listApplications } from "@/features/apps/server";
+import { canOpenApplication } from "@/features/apps/availability";
 import { listCapabilities } from "@/features/capabilities/server";
 import { getActiveModelRuntime } from "@/features/models/provider";
 import { listEnabledSkills } from "@/features/skills/registry";
@@ -45,7 +46,7 @@ function allowedSkills() { return hasPermission(requireRequestUser(), "platform.
 
 function getCandidates(): DispatchCandidate[] {
   const applications = listApplications().map((app) => {
-    const unavailableExternalApp = app.source === "external" && app.launchStatus !== "running";
+    const unavailableExternalApp = !canOpenApplication(app);
     return {
       kind: "application" as const,
       id: app.id,

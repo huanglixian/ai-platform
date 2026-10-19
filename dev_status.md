@@ -2,12 +2,12 @@
 
 ## 项目概况
 
-AI Platform 是带账号登录和角色授权的单机协作系统。`/` 是统一首页：初始态在上方提供 AI 助手输入区、下方按来源展示应用；发送消息后切换为沉浸式沟通界面。`/appfactory` 用于以 Pi Harness 协作开发 Next.js 应用，并将可运行的 Release 自动加入首页应用目录；其中企业模板可交付自己的 PostgreSQL、Web 与 Worker 运行时。应用目录也可接入、启动和停止本机外部 Web 应用。
+AI Platform 是带账号登录和角色授权的单机协作系统。`/` 是统一首页：初始态在上方提供 AI 助手输入区、下方按来源展示应用；发送消息后切换为沉浸式沟通界面。`/appfactory` 用于以 Pi Harness 协作开发 Next.js 应用，并将可运行的 Release 自动加入首页应用目录；其中企业模板可交付自己的 PostgreSQL、Web 与 Worker 运行时。应用目录支持 URL 直达、已有环境按需启动，以及上传可信源码由 Pi 准备依赖后纳入启停管理。
 
 ## 技术与运行
 
 - 技术栈：Next.js 16 App Router、TypeScript、SQLite、Pi Harness、Next.js standalone runtime；生成的企业应用使用 PostgreSQL。
-- 启动：`npm run dev` 同时启动平台与 AppFactory 发布 Worker；发布不使用 Docker。
+- 启动：`npm run dev` 和 `npm run start` 同时启动平台、AppFactory 发布 Worker 与外部应用部署 Worker；发布不使用 Docker。
 - 模块：项目以 ESM 模式运行，Node 直接加载 TypeScript 启动脚本时不会重复解析模块格式。
 - 环境：`.env.local` 必须设置 `AGENT_HUB_BASE_URL`，单机默认是 `http://localhost:19844`。
 - 数据：`data/builtin` 是 Git 跟踪的内置资源；`data/storage` 是本机运行数据。AppFactory 的项目、会话、任务与 Release 在 `data/storage/appfactory`；应用中心数据在 `data/storage/agenthub/agenthub.db`。各模块会在首次使用时按需创建自己的运行目录。
@@ -33,7 +33,7 @@ features/assistant/             AI 助手客户端、会话 UI 与服务端编�
 features/auth/                  账号、会话、内置角色与接口鉴权
 features/access/                资源所有权与三种可见范围
 features/admin/                 用户管理界面
-features/apps/                  应用目录数据、运行时与分组 UI
+features/apps/                  应用目录、启停、源码部署与分组 UI
 data/builtin/                   随 Git 发布的内置技能资源
 data/storage/                   本机数据库、工作区与知识库运行数据（忽略）
 scripts/app.mts                 平台与发布 Worker 统一启动器
@@ -97,13 +97,17 @@ scripts/app.mts                 平台与发布 Worker 统一启动器
 
 - 服务与数据：`features/apps/server.ts`、`features/apps/external-app-seed.ts`、`features/apps/external-launcher.ts`；应用记录保存在 `data/storage/agenthub/agenthub.db`。
 - 接口：`/api/agenthub/v1/applications` 提供按当前用户过滤的目录与管理员接入；AppFactory 发布由 Worker 直接调用受控注册服务；所有来源的注册信息编辑与移除使用 `applications/[id]`，外部应用启动和停止使用 `applications/[id]/start`、`applications/[id]/stop`；`POST applications/stop` 批量停止平台托管的外部应用，返回成功 ID、逐项失败原因和最新应用列表。
-- 当前状态：首页不使用应用详情抽屉。有管理权限的卡片可编辑和删除；AppFactory、Dify 与 n8n 卡片点击后经授权入口在新页签打开，外部应用未启动时卡片本体不可点击，启动后可点击直达，应用管理员和超级管理员可在有权管理的卡片上启动或停止。AppFactory 的运行地址由发布流程维护，首页编辑只修改名称和说明。外部应用、Dify 与 n8n 可从各自分组接入。
+- 当前状态：外部应用接入默认选中 URL 直达，不要求启动命令，点击后经授权入口在新页签打开；选择已有环境时填写命令，保留平台启停。服务端派生公开的 `launchMode`，卡片、授权打开入口和助手推荐共用 `features/apps/availability.ts` 判断可用性，普通用户不依赖已脱敏的启动命令判断模式。修改运行中的启动配置需先停止；平台不能接管其他方式启动的服务。AppFactory 的运行地址由发布流程维护，首页编辑只修改名称、说明和可见范围。外部应用、Dify 与 n8n 可从各自分组接入。
+- 源码部署：`features/apps/deployment/` 集中维护服务、任务存储、Worker、ZIP 校验脚本和简短的 `SKILL.md`。`POST applications/import` 接收不超过 100 MB 的可信 Node.js / Python Web 源码 ZIP；解压使用宿主 `python3` 标准库，拒绝越界路径、符号链接、加密包及过大的解压内容，忽略已有依赖和构建目录。`applications/[id]/deployment` 提供管理员进度、脱敏日志、取消和补充环境变量后重试；配置只写入本应用文件，不回传已有值。
+- 部署运行：`scripts/external-app-worker.mts` 串行领取 SQLite `external_app_deployments` 任务，复用 AppFactory 当前默认模型、思考档位与 Pi 事件适配，为每个应用建立独立会话；不触发 AppFactory Preview。Pi 按应用 Skill 安装项目依赖、构建并写入运行配置，平台实际启动和检查 HTTP 成功后停止验证进程并标记就绪，之后沿用现有启停。缺少条件进入待配置；取消、超时和 Worker 中断回收已记录进程，过期任务标记中断，需显式重试。部署及日志权限在服务端检查。
+- 应用目录：源码应用存放在 `data/storage/external-apps/<应用ID>/`，包含 `source.zip`、`workspace/`、`config/app.env`、`config/runtime.json`、`data/` 和 `logs/`；Python 使用应用自己的 `.venv`，Node.js 使用自己的依赖目录。工作目录限制在 Workspace，端口由平台分配；启动器注入应用配置、`PORT` 和 `APP_DATA_DIR`，不继承平台密钥。源码应用的地址和命令由部署流程维护；删除仅移除注册并停止运行进程，保留源码、配置及业务数据。已有本机项目保持原目录。
 - 批量停止：外部应用分组提供“全部停止”，覆盖所有平台托管的启动中和运行中应用，不受搜索筛选影响；执行期间禁用冲突操作，完成后同步卡片状态并反馈成功数量及失败原因。逐项失败不会中断其余停止任务；停止进程组会先发送 SIGTERM，最多等待 5 秒后发送 SIGKILL，并确认退出后清理托管记录。独立数据库容器和其他方式启动的服务继续运行。
 - 删除与运行边界：所有删除操作都会物理删除应用注册；删除外部应用前会停止平台记录的进程组，删除 AppFactory 应用前会停止运行时并标记部署已停止，但保留项目、源码与 Release 历史，之后可再次发布。预置应用仅在数据库首次初始化时写入，之后的删除不会被重新插入。外部应用以 `starting / running / null` 记录平台托管状态；启动器会剥离平台自身的 `PORT`、Node 运行参数和 Turbopack 开关，让外部应用自行采用启动命令、`.env` 或代码中的端口配置。AI-CRM-demo、侨银AI-CRM 与大鸽饭 AI 销售与订单中心均以已构建产物通过 `npm run start` 启动，源码更新后需先在各自目录执行 `npm run build`；大鸽饭项目为同级 `dagefan-LTC`，端口为 19848。外部应用前五项固定为 AI-CRM-demo、侨银AI-CRM、大鸽饭、AI招投标、中大产业服务平台，之后依次为数智输变电业务智能体平台、输电杆塔智能匹配、广东院数据资源管理平台、数据预处理工具集、文档切片实验室、文档知识库问答、表格数据提取与知识图谱、投资参考知识库、智能文档评审；未指定的应用排在末尾并按创建时间倒序。侨银项目为同级 `AI-CRM`，端口为 19855；启动命令先等待项目已有 PostgreSQL 容器就绪，再启动 Web，平台停止时仅回收 Web 进程组，保留数据库容器。外部应用的新增与编辑通过应用接口更新当前数据库；`external-app-seed.ts` 仅提供新数据库的初始配置，删除后不会自动恢复。`scripts/app.mts` 在 Ctrl+C、SIGTERM 或主子进程异常退出时回收所有平台记录的外部进程组，并在平台启动时清理异常退出遗留的进程。平台不会停止已经由其他方式运行的服务。
 
 ## 关键限制
 
 - AppFactory 是单机演示运行时：发布端口从 4100 起分配，不具备多主机调度或公网反向代理能力；平台认证不替代应用自身认证。
+- 上传源码部署仅面向可信内部源码，依赖宿主已有的 Node.js / Python 运行时；缺少系统软件或外部服务时等待用户补充条件，不自动安装全局软件或修改系统。应用目录与依赖分开管理不构成操作系统沙箱。
 - AppFactory 允许 Pi 执行 Bash，与其他项目共享宿主环境；个人项目隔离针对平台接口和页面，不是操作系统沙箱，开发工作区仅面向可信内部成员。全局仍只有一个 Preview，新的预览会占用共享预览资源。
 - Pi Run 与浏览器连接解耦，离开项目页面不会停止任务；但执行仍由当前平台 Node 进程托管，平台重启或崩溃时不具备独立 Worker 级的任务续跑能力。
 - `app.yaml` 的 `healthPath` 必须是站内路径，并与 capability bindings 一同参与发布校验。

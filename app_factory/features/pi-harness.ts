@@ -17,7 +17,7 @@ import {
 import type { HarnessEvent, HarnessRunOptions, HarnessRuntime, HarnessSessionRef } from "@/app_factory/types/harness";
 
 function piEnvironment(options: HarnessRunOptions): NodeJS.ProcessEnv {
-  const environment = { ...process.env };
+  const environment = { ...(options.task === "external-deployment" ? options.environment : process.env) };
   delete environment.NODE_OPTIONS;
   delete environment.npm_config_node_options;
   delete environment.NPM_CONFIG_NODE_OPTIONS;
@@ -39,10 +39,11 @@ export function createPiRunArgs(
   options: HarnessRunOptions,
 ) {
   const profile = getModelProfile(options.modelProfileId);
-  const template = getAppTemplate(options.templateId);
+  const template = options.task === "external-deployment" ? null : getAppTemplate(options.templateId);
   if (!isThinkingLevel(profile.id, options.thinkingLevel)) throw new Error(`${profile.label} 不支持 ${options.thinkingLevel} 思考程度`);
-  const shortRulesPath = path.join(template.rootPath, "rules", "short-rules.md");
-  if (template.id === "nextjs-enterprise" && !fs.existsSync(shortRulesPath)) {
+  const skillPath = template?.rootPath ?? path.join(process.cwd(), "features", "apps", "deployment");
+  const shortRulesPath = path.join(skillPath, "rules", "short-rules.md");
+  if (template?.id === "nextjs-enterprise" && !fs.existsSync(shortRulesPath)) {
     throw new Error("Next.js 企业模板缺少平台短规则");
   }
   return [
@@ -50,11 +51,11 @@ export function createPiRunArgs(
     "--model", getModelName(profile),
     "--thinking", options.thinkingLevel,
     "--mode", "json",
-    "--approve",
+    ...(template ? ["--approve"] : ["--no-approve", "--no-extensions", "--no-skills", "--no-prompt-templates"]),
     "--session-id", session.id,
-    "--session-dir", dataPaths.appFactoryPiSessions,
-    "--skill", template.rootPath,
-    ...(template.id === "nextjs-enterprise"
+    "--session-dir", template ? dataPaths.appFactoryPiSessions : path.join(dataPaths.externalApps, session.projectId, "logs", "pi-sessions"),
+    "--skill", skillPath,
+    ...(template?.id === "nextjs-enterprise"
       ? ["--append-system-prompt", shortRulesPath]
       : []),
     "--",
@@ -76,8 +77,24 @@ export class PiHarnessRuntime implements HarnessRuntime {
     const profile = getModelProfile(options.modelProfileId);
     const configurationError = getModelConfigurationError(profile);
     if (configurationError) throw new Error(configurationError);
-    const child = spawn(piBin, createPiRunArgs(session, prompt, options), { cwd: session.cwd, env: piEnvironment(options), stdio: ["ignore", "pipe", "pipe"] });
+    options.signal?.throwIfAborted();
+    const child = spawn(piBin, createPiRunArgs(session, prompt, options), { cwd: session.cwd, env: piEnvironment(options), detached: options.task === "external-deployment", stdio: ["ignore", "pipe", "pipe"] });
     this.children.set(session.id, child);
+    let killTimer: ReturnType<typeof setTimeout> | undefined;
+    const abort = () => {
+      if (!child.pid) return;
+      const kill = (signal: NodeJS.Signals) => {
+        try {
+          if (options.task === "external-deployment") process.kill(-child.pid!, signal);
+          else child.kill(signal);
+        } catch (error) {
+          if ((error as NodeJS.ErrnoException).code !== "ESRCH") throw error;
+        }
+      };
+      kill("SIGTERM");
+      killTimer = setTimeout(() => kill("SIGKILL"), 3_000);
+    };
+    options.signal?.addEventListener("abort", abort, { once: true });
     try {
       const queue: HarnessEvent[] = [];
       let done = false;
@@ -118,8 +135,13 @@ export class PiHarnessRuntime implements HarnessRuntime {
         const diagnostic = chunk.toString().trim();
         if (diagnostic) diagnostics.push(diagnostic.slice(0, 280));
       });
-      const completion = new Promise<number | null>((resolve, reject) => {
-        child.once("error", reject);
+      const completion = new Promise<number | null>((resolve) => {
+        child.once("error", (error) => {
+          diagnostics.push(error.message);
+          done = true;
+          wake?.();
+          resolve(1);
+        });
         child.once("close", (code) => {
           if (stdoutBuffer.trim()) {
             consumeLine(stdoutBuffer);
@@ -130,6 +152,7 @@ export class PiHarnessRuntime implements HarnessRuntime {
           resolve(code);
         });
       });
+      if (child.pid) options.onSpawn?.(child.pid);
       while (!done || queue.length) { if (!queue.length) await new Promise<void>((resolve) => { wake = resolve; }); while (queue.length) yield queue.shift()!; }
       const code = await completion;
       if (code === 0) {
@@ -138,7 +161,16 @@ export class PiHarnessRuntime implements HarnessRuntime {
         const detail = diagnostics.at(-1);
         yield { type: "error", content: detail || `Pi 进程退出（code=${code ?? "unknown"}）`, timestamp: new Date().toISOString() };
       }
-    } finally { this.children.delete(session.id); }
+    } finally {
+      options.signal?.removeEventListener("abort", abort);
+      if (killTimer) clearTimeout(killTimer);
+      if (options.task === "external-deployment" && child.pid) {
+        try { process.kill(-child.pid, "SIGKILL"); } catch (error) {
+          if ((error as NodeJS.ErrnoException).code !== "ESRCH") throw error;
+        }
+      }
+      this.children.delete(session.id);
+    }
   }
   async cancel(session: HarnessSessionRef) { this.children.get(session.id)?.kill("SIGTERM"); }
   async release(session: HarnessSessionRef) { await this.cancel(session); }

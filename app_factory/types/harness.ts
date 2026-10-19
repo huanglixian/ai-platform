@@ -25,8 +25,13 @@ export type HarnessSessionRef = { id: string; projectId: string; harness: "pi"; 
 export type HarnessRunOptions = {
   modelProfileId: ModelProfileId;
   thinkingLevel: ThinkingLevel;
-  templateId: AppTemplateId;
-};
+  signal?: AbortSignal;
+  onSpawn?: (pid: number) => void;
+} & ({ templateId: AppTemplateId; task?: never; environment?: never } | {
+  task: "external-deployment";
+  templateId?: never;
+  environment: NodeJS.ProcessEnv;
+});
 export interface HarnessRuntime { createSession(projectId: string, cwd: string): Promise<HarnessSessionRef>; run(session: HarnessSessionRef, prompt: string, options: HarnessRunOptions): AsyncIterable<HarnessEvent>; cancel(session: HarnessSessionRef): Promise<void>; release(session: HarnessSessionRef): Promise<void>; }
 import type { AppTemplateId } from "@/app_factory/template-catalog";
 import type {

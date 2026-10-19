@@ -19,3 +19,8 @@ export const typeLabels = {
   business: "业务类应用",
   general: "通用类应用",
 } as const;
+
+export const deploymentStatusLabels = {
+  queued: "等待部署", running: "部署中", needs_config: "待补充配置", ready: "已就绪",
+  failed: "部署失败", cancelled: "已取消", interrupted: "部署中断",
+} as const;

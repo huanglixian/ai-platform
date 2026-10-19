@@ -3,7 +3,8 @@
 import { Menu } from "@base-ui/react/menu";
 import { ArrowUpRight, LoaderCircle, MoreHorizontal, Pencil, Play, Square, Trash2 } from "lucide-react";
 import type { PublishedApp } from "@/features/apps/types";
-import { sourceAccents, typeLabels } from "./application-presentation";
+import { deploymentStatusLabels, sourceAccents, typeLabels } from "./application-presentation";
+import { canOpenApplication } from "../availability";
 
 type AppCardProps = {
   app: PublishedApp;
@@ -20,9 +21,9 @@ export function AppCard({ app, pendingAction, serviceDisabled, menuDisabled, onO
   const accent = sourceAccents[app.source];
   const Icon = accent.icon;
   const isExternal = app.source === "external";
-  const isRunning = app.launchStatus === "running";
   const isManaged = app.launchStatus !== null;
-  const canOpen = !isExternal || isRunning;
+  const canOpen = canOpenApplication(app);
+  const deploymentPending = app.deployment && app.deployment.status !== "ready";
   const launchIndicator = app.launchStatus === "starting" && pendingAction !== "start"
     ? { label: "启动中", style: "text-sky-700", dot: "animate-pulse bg-sky-500" }
     : app.launchStatus === "running"
@@ -40,11 +41,14 @@ export function AppCard({ app, pendingAction, serviceDisabled, menuDisabled, onO
       <div className="pointer-events-none relative mt-auto flex min-h-7 items-center gap-2 pt-1.5">
         <span className="truncate text-[11px] text-[var(--skin-text-subtle)]">{typeLabels[app.appType]}</span>
         {launchIndicator ? <span className={`flex shrink-0 items-center gap-1 text-[11px] ${launchIndicator.style}`}><span className={`h-1 w-1 rounded-full ${launchIndicator.dot}`} />{launchIndicator.label}</span> : null}
+        {app.deployment && !launchIndicator ? <span className="truncate text-[11px] text-[var(--skin-text-subtle)]">{deploymentStatusLabels[app.deployment.status]}</span> : null}
         <div className="pointer-events-auto ml-auto flex shrink-0 items-center gap-1">
           {canOpen ? (
             <button type="button" onClick={() => onOpen(app)} aria-label={`打开${app.name}`} title="打开应用" className="grid h-6 w-6 place-items-center rounded text-[var(--skin-primary)] hover:bg-[var(--skin-surface-accent)] hover:text-[var(--skin-primary)] focus-visible:outline-2 focus-visible:outline-[var(--skin-ring)]"><ArrowUpRight size={14} /></button>
           ) : null}
-          {isExternal && app.canOperate ? isManaged ? (
+          {isExternal && app.launchMode === "managed" && app.canOperate ? deploymentPending ? (
+            <button type="button" onClick={() => onEdit(app)} className="h-6 rounded px-1.5 text-[11px] font-medium text-[var(--skin-primary)]">查看部署</button>
+          ) : isManaged ? (
             <button type="button" disabled={serviceDisabled || pendingAction !== null} onClick={() => onServiceAction(app, "stop")} className="inline-flex h-6 items-center gap-1 rounded px-1.5 text-[11px] font-medium text-[#a25a56] hover:bg-[#f9eceb] hover:text-[#913f3b] focus-visible:outline-2 focus-visible:outline-[#b77975] disabled:cursor-not-allowed disabled:opacity-60">
               {pendingAction ? <LoaderCircle size={12} className="animate-spin" /> : <Square size={11} fill="currentColor" />}{pendingAction === "start" ? "启动中" : pendingAction === "stop" ? "停止中" : "停止"}
             </button>

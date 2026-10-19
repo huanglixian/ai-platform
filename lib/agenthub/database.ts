@@ -21,6 +21,14 @@ CREATE TABLE IF NOT EXISTS applications (
   created_at TEXT NOT NULL, updated_at TEXT NOT NULL
 );
 CREATE UNIQUE INDEX IF NOT EXISTS applications_source_external_id ON applications(producer,external_id) WHERE external_id IS NOT NULL;
+CREATE TABLE IF NOT EXISTS external_app_deployments (
+  application_id TEXT PRIMARY KEY REFERENCES applications(id) ON DELETE CASCADE,
+  status TEXT NOT NULL, message TEXT NOT NULL DEFAULT '', error TEXT,
+  port INTEGER NOT NULL UNIQUE, model_profile_id TEXT NOT NULL, thinking_level TEXT NOT NULL,
+  requested_by TEXT NOT NULL, session_id TEXT NOT NULL, instructions TEXT NOT NULL DEFAULT '',
+  missing_config TEXT NOT NULL DEFAULT '[]', lease_token TEXT, lease_expires_at INTEGER, agent_pid INTEGER,
+  created_at TEXT NOT NULL, updated_at TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS workflows (
   id TEXT PRIMARY KEY, name TEXT NOT NULL, description TEXT NOT NULL DEFAULT '',
   status TEXT NOT NULL, definition_json TEXT NOT NULL DEFAULT '{}', version INTEGER NOT NULL DEFAULT 1,

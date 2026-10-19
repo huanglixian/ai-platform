@@ -10,6 +10,7 @@ const nextArgs = mode === "dev" ? ["dev", "--port", "19844"] : ["start", "--port
 const definitions = [
   { name: "Next.js", args: [...runtimeArgs, "./node_modules/next/dist/bin/next", ...nextArgs] },
   { name: "AppFactory Worker", args: [...runtimeArgs, "./scripts/appfactory-worker.mts"] },
+  { name: "外部应用部署 Worker", args: [...runtimeArgs, "./scripts/external-app-worker.mts"] },
 ];
 const children: ChildProcess[] = [];
 let stopping = false;
